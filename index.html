@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flat Payments Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+</head>
+<body>
+
+  <div class="app-wrapper">
+
+    <!-- Top Nav -->
+    <nav class="navbar">
+      <div class="nav-brand">
+        <i class="ti ti-building" aria-hidden="true"></i>
+        <span>Flat Payments Tracker</span>
+      </div>
+      <div class="nav-right">
+        <span class="nav-month" id="navMonth"></span>
+        <button class="nav-btn" onclick="openAddExpense()">
+          <i class="ti ti-plus" aria-hidden="true"></i> Add Expense
+        </button>
+      </div>
+    </nav>
+
+    <!-- Summary Bar -->
+    <section class="summary-section" aria-label="Payment summary">
+      <div class="summary-grid" id="summaryBar"></div>
+    </section>
+
+    <!-- Controls -->
+    <section class="controls-section">
+      <div class="controls-row">
+        <select id="monthFilter" aria-label="Filter by month">
+          <option value="may">May 2026</option>
+          <option value="apr">April 2026</option>
+          <option value="mar">March 2026</option>
+        </select>
+        <select id="statusFilter" aria-label="Filter by status">
+          <option value="all">All statuses</option>
+          <option value="paid">Paid</option>
+          <option value="partial">Partial</option>
+          <option value="pending">Pending</option>
+        </select>
+        <div class="search-wrap">
+          <i class="ti ti-search" aria-hidden="true"></i>
+          <input type="text" id="searchInput" placeholder="Search flat or owner…" aria-label="Search flat or owner" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Block Tabs -->
+    <div class="tab-bar" id="tabBar" role="tablist" aria-label="Blocks"></div>
+
+    <!-- Block Content -->
+    <main class="block-section" id="blockContent" aria-live="polite"></main>
+
+  </div>
+
+  <!-- Flat Detail Modal -->
+  <div class="modal-bg" id="flatModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal">
+      <div class="modal-head">
+        <div>
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-sub" id="modalSub"></div>
+        </div>
+        <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+
+  <!-- Add Expense Modal -->
+  <div class="modal-bg" id="addModal" role="dialog" aria-modal="true" aria-label="Add expense form">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Add Expense / Payment</div>
+        <button class="modal-close" onclick="closeAddModal()" aria-label="Close dialog">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fBlock">Block</label>
+          <select id="fBlock">
+            <option value="A">Block A</option>
+            <option value="B">Block B</option>
+            <option value="C">Block C</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fFlat">Flat No.</label>
+          <select id="fFlat"></select>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fCat">Category</label>
+          <select id="fCat">
+            <option>Maintenance</option>
+            <option>Water</option>
+            <option>Electricity</option>
+            <option>Parking</option>
+            <option>Lift</option>
+            <option>Security</option>
+            <option>Cleaning</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="fAmt">Amount (₹)</label>
+          <input type="number" id="fAmt" placeholder="0" min="0" />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="fDate">Date</label>
+          <input type="date" id="fDate" />
+        </div>
+        <div class="form-group">
+          <label for="fStatus">Payment Status</label>
+          <select id="fStatus">
+            <option value="paid">Paid</option>
+            <option value="partial">Partial</option>
+            <option value="pending">Pending</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="fNote">Note (optional)</label>
+        <input type="text" id="fNote" placeholder="e.g. advance paid, cheque received…" />
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
+        <button class="btn-primary" onclick="saveExpense()">
+          <i class="ti ti-device-floppy" aria-hidden="true"></i> Save
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
