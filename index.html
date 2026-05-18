@@ -2,521 +2,778 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Flat Payments Tracker</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResidentHub — Society Management</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <style>
-/* ══════════════════════════════════════
-   RESET & TOKENS
-══════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#f4f3f0;
-  --surface:#ffffff;
-  --surface2:#f0efeb;
-  --border:rgba(0,0,0,0.10);
-  --border2:rgba(0,0,0,0.20);
-  --text:#1a1a18;
-  --text2:#5f5e5a;
-  --muted:#9a9890;
-  --blue:#185FA5;
-  --blue2:#0C447C;
-  --green:#1D9E75;
-  --green-bg:#E1F5EE;
-  --green-txt:#085041;
-  --amber:#BA7517;
-  --amber-bg:#FAEEDA;
-  --amber-txt:#633806;
-  --red:#A32D2D;
-  --red-bg:#FCEBEB;
-  --red-txt:#791F1F;
-  --r-sm:6px;--r-md:8px;--r-lg:12px;--r-xl:16px;
-  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
-  --shadow:0 1px 4px rgba(0,0,0,0.08);
-  --shadow-md:0 4px 20px rgba(0,0,0,0.12);
+  /* ── Core palette ── */
+  --bg:         #F0F4FF;
+  --bg2:        #E8EDFF;
+  --surface:    #FFFFFF;
+  --surface2:   #F7F9FF;
+  --surface3:   #EDF0FB;
+
+  /* ── Borders ── */
+  --border:     rgba(99,102,241,0.10);
+  --border2:    rgba(99,102,241,0.18);
+  --border3:    rgba(99,102,241,0.30);
+
+  /* ── Text ── */
+  --text:       #1E1B4B;
+  --text2:      #6366A8;
+  --muted:      #A5A8D0;
+
+  /* ── Brand / Accent ── */
+  --indigo:     #6366F1;
+  --indigo2:    #4F46E5;
+  --indigo-bg:  rgba(99,102,241,0.08);
+  --indigo-glow:rgba(99,102,241,0.20);
+
+  /* ── Semantic ── */
+  --green:      #059669;
+  --green-light:#10B981;
+  --green-bg:   #ECFDF5;
+  --green-border:#A7F3D0;
+  --green-txt:  #065F46;
+
+  --amber:      #D97706;
+  --amber-light:#F59E0B;
+  --amber-bg:   #FFFBEB;
+  --amber-border:#FCD34D;
+  --amber-txt:  #92400E;
+
+  --red:        #DC2626;
+  --red-light:  #EF4444;
+  --red-bg:     #FEF2F2;
+  --red-border: #FECACA;
+  --red-txt:    #991B1B;
+
+  --sky:        #0284C7;
+  --sky-bg:     #F0F9FF;
+  --sky-border: #BAE6FD;
+  --sky-txt:    #0C4A6E;
+
+  --purple:     #7C3AED;
+  --purple-bg:  #F5F3FF;
+  --purple-border:#DDD6FE;
+  --purple-txt: #4C1D95;
+
+  --pink:       #DB2777;
+  --pink-bg:    #FDF2F8;
+
+  /* ── Shape / Shadow ── */
+  --r-sm: 8px; --r-md:12px; --r-lg:16px; --r-xl:20px; --r-2xl:28px;
+  --shadow-sm:  0 1px 3px rgba(99,102,241,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow:     0 4px 16px rgba(99,102,241,0.10), 0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:  0 12px 40px rgba(99,102,241,0.14), 0 4px 12px rgba(0,0,0,0.06);
+  --shadow-xl:  0 24px 64px rgba(99,102,241,0.18);
+
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
 }
-@media(prefers-color-scheme:dark){
-  :root{
-    --bg:#191917;--surface:#242422;--surface2:#2d2d2b;
-    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);
-    --text:#f0eeea;--text2:#b0ae a7;--muted:#7a7875;
-    --green-bg:#04332c;--green-txt:#9fe1cb;
-    --amber-bg:#3f2302;--amber-txt:#f5c874;
-    --red-bg:#4e1212;--red-txt:#f5c0c0;
-  }
-}
+
 html{font-size:16px;-webkit-font-smoothing:antialiased}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ══════════════════════════════════════
-   LOADING OVERLAY
-══════════════════════════════════════ */
-#loadingOverlay{
-  position:fixed;inset:0;background:var(--bg);z-index:9999;
+/* ════════════════════════════════
+   LOADING
+════════════════════════════════ */
+#lo{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
+  display:flex;align-items:center;justify-content:center;flex-direction:column;gap:20px;
+}
+.lo-card{
+  background:#fff;border-radius:var(--r-2xl);
+  padding:40px 48px;text-align:center;
+  box-shadow:var(--shadow-xl);
+  display:flex;flex-direction:column;align-items:center;gap:18px;
+  border:1px solid var(--border2);
+}
+.lo-icon{
+  width:72px;height:72px;border-radius:20px;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
   display:flex;align-items:center;justify-content:center;
+  font-size:32px;color:#fff;
+  box-shadow:0 8px 24px rgba(99,102,241,0.35);
+  animation:loPulse 2s ease-in-out infinite;
 }
-.loading-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
-.spinner{
-  width:44px;height:44px;
-  border:3px solid var(--border2);border-top-color:var(--blue);
-  border-radius:50%;animation:spin .7s linear infinite;
-}
-@keyframes spin{to{transform:rotate(360deg)}}
-.loading-text{font-size:14px;color:var(--text2)}
-.loading-logo{font-size:28px;color:var(--blue)}
+@keyframes loPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.lo-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.lo-title span{background:linear-gradient(90deg,#6366F1,#8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lo-sub{font-size:13px;color:var(--text2)}
+.lo-bar{width:200px;height:4px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.lo-fill{height:100%;background:linear-gradient(90deg,#6366F1,#8B5CF6,#06B6D4);background-size:200%;animation:loSlide 1.6s ease-in-out infinite}
+@keyframes loSlide{0%{background-position:0%}100%{background-position:200%}}
 
-/* ══════════════════════════════════════
+/* ════════════════════════════════
    NAVBAR
-══════════════════════════════════════ */
+════════════════════════════════ */
 .navbar{
-  position:sticky;top:0;z-index:50;
-  background:var(--surface);border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  padding:0 1.5rem;height:58px;gap:12px;
-  box-shadow:var(--shadow);
+  position:sticky;top:0;z-index:100;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);
+  padding:0 2rem;height:64px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  box-shadow:0 2px 12px rgba(99,102,241,0.06);
 }
-.nav-brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;color:var(--text)}
-.nav-brand i{font-size:22px;color:var(--blue)}
-.nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.nav-month{font-size:12px;color:var(--text2);white-space:nowrap}
+.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo{
+  width:38px;height:38px;border-radius:11px;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;color:#fff;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(99,102,241,0.30);
+}
+.nav-name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.nav-name em{font-style:normal;color:var(--indigo)}
 
-/* Sync dot */
-.sync-wrap{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
-.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
-.sync-dot.live{background:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.2)}
-.sync-dot.saving{background:var(--amber);animation:pulse 1s infinite}
-.sync-dot.error{background:var(--red)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.nav-pills{display:flex;gap:4px;background:var(--surface3);border:1px solid var(--border2);border-radius:var(--r-md);padding:4px}
+.nav-pill{
+  padding:7px 18px;border-radius:var(--r-sm);font-size:13px;font-weight:600;
+  color:var(--text2);cursor:pointer;border:none;background:transparent;
+  font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:6px;
+}
+.nav-pill i{font-size:16px}
+.nav-pill.active{background:#fff;color:var(--indigo);box-shadow:var(--shadow-sm)}
+.nav-pill:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.6)}
+.nav-pill .nbadge{
+  font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);
+}
+.nav-pill.active .nbadge{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
 
-/* Buttons */
+.nav-right{display:flex;align-items:center;gap:10px}
+.sync-chip{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:99px;background:var(--surface);border:1px solid var(--border2);
+  font-size:12px;font-weight:600;color:var(--text2);
+  box-shadow:var(--shadow-sm);
+}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.sdot.live{background:var(--green-light);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+.sdot.saving{background:var(--amber-light);animation:sPulse 1s infinite}
+.sdot.error{background:var(--red-light)}
+@keyframes sPulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ════════════════════════════════
+   BUTTONS
+════════════════════════════════ */
 .btn{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:7px 14px;border-radius:var(--r-md);
-  font-size:13px;font-weight:500;font-family:var(--font);
-  cursor:pointer;border:none;transition:background .15s,transform .1s;
-  white-space:nowrap;
+  display:inline-flex;align-items:center;gap:7px;
+  padding:9px 20px;border-radius:var(--r-md);
+  font-size:13px;font-weight:700;font-family:var(--font);
+  cursor:pointer;border:none;transition:all .18s;letter-spacing:.1px;white-space:nowrap;
 }
-.btn:active{transform:scale(.97)}
-.btn-primary{background:var(--blue);color:#fff}
-.btn-primary:hover{background:var(--blue2)}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
-.btn-ghost:hover{background:var(--border)}
-.btn-sm{padding:5px 12px;font-size:12px}
 .btn i{font-size:16px}
+.btn:active{transform:scale(.97)}
+.btn-indigo{background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,0.30)}
+.btn-indigo:hover{box-shadow:0 6px 24px rgba(99,102,241,0.45);transform:translateY(-1px)}
+.btn-white{background:#fff;color:var(--text);border:1.5px solid var(--border2);box-shadow:var(--shadow-sm)}
+.btn-white:hover{border-color:var(--border3);background:var(--surface2);box-shadow:var(--shadow)}
+.btn-green{background:linear-gradient(135deg,#059669,#10B981);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.25)}
+.btn-green:hover{box-shadow:0 6px 20px rgba(5,150,105,0.35);transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;font-size:12px}
 
-/* ══════════════════════════════════════
-   LAYOUT WRAPPER
-══════════════════════════════════════ */
-.app{max-width:1160px;margin:0 auto;padding-bottom:3rem}
+/* ════════════════════════════════
+   LAYOUT
+════════════════════════════════ */
+.app{max-width:1320px;margin:0 auto;padding:0 2rem 5rem}
 
-/* ══════════════════════════════════════
-   SUMMARY BAR
-══════════════════════════════════════ */
-.summary-section{padding:1.25rem 1.5rem 0}
-.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
-.metric{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:14px 16px;
-  box-shadow:var(--shadow);
+/* ── Page header ── */
+.page-header{
+  padding:2rem 0 1.5rem;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap;
 }
-.metric-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.4px}
-.metric-label i{font-size:14px}
-.metric-value{font-size:22px;font-weight:600;color:var(--text)}
-.metric-value.blue{color:var(--blue)}
-.metric-value.green{color:var(--green)}
-.metric-value.amber{color:var(--amber)}
-.metric-value.red{color:var(--red)}
+.ph-left h1{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.6px;line-height:1.1}
+.ph-left h1 span{background:linear-gradient(90deg,#6366F1,#8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ph-left p{font-size:14px;color:var(--text2);margin-top:6px;font-weight:500}
+.ph-actions{display:flex;gap:10px;flex-wrap:wrap}
 
-/* ══════════════════════════════════════
+/* ════════════════════════════════
+   STAT CARDS
+════════════════════════════════ */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:2rem}
+.scard{
+  background:#fff;border-radius:var(--r-xl);
+  padding:20px 22px 18px;border:1.5px solid transparent;
+  box-shadow:var(--shadow-sm);transition:all .22s;position:relative;overflow:hidden;
+}
+.scard:hover{transform:translateY(-3px);box-shadow:var(--shadow)}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;border-radius:var(--r-xl) var(--r-xl) 0 0}
+.scard.indigo{border-color:rgba(99,102,241,.12)}.scard.indigo::before{background:linear-gradient(90deg,#6366F1,#8B5CF6)}
+.scard.green {border-color:rgba(5,150,105,.12)} .scard.green::before {background:linear-gradient(90deg,#059669,#10B981)}
+.scard.amber {border-color:rgba(217,119,6,.12)} .scard.amber::before {background:linear-gradient(90deg,#D97706,#F59E0B)}
+.scard.red   {border-color:rgba(220,38,38,.12)}  .scard.red::before   {background:linear-gradient(90deg,#DC2626,#EF4444)}
+.scard.sky   {border-color:rgba(2,132,199,.12)}  .scard.sky::before   {background:linear-gradient(90deg,#0284C7,#0EA5E9)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.sc-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px}
+.scard.indigo .sc-icon{background:var(--indigo-bg);color:var(--indigo)}
+.scard.green  .sc-icon{background:var(--green-bg); color:var(--green)}
+.scard.amber  .sc-icon{background:var(--amber-bg); color:var(--amber)}
+.scard.red    .sc-icon{background:var(--red-bg);   color:var(--red)}
+.scard.sky    .sc-icon{background:var(--sky-bg);   color:var(--sky)}
+.sc-trend{font-size:11px;font-weight:700;padding:3px 9px;border-radius:99px}
+.sc-trend.up{background:var(--green-bg);color:var(--green-txt)}
+.sc-trend.dn{background:var(--red-bg);  color:var(--red-txt)}
+.sc-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:5px}
+.sc-value{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-.8px;line-height:1}
+.sc-sub{font-size:12px;color:var(--text2);margin-top:5px;font-weight:500}
+.sc-bar{height:5px;background:var(--bg2);border-radius:99px;margin-top:14px;overflow:hidden}
+.sc-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.scard.green .sc-fill{background:linear-gradient(90deg,#059669,#10B981)}
+.scard.amber .sc-fill{background:linear-gradient(90deg,#D97706,#EF4444)}
+.scard.red   .sc-fill{background:linear-gradient(90deg,#DC2626,#7C3AED)}
+
+/* ════════════════════════════════
+   SECTION HEADER
+════════════════════════════════ */
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.sec-title{font-size:17px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
+.sec-title i{font-size:20px;color:var(--indigo)}
+
+/* ════════════════════════════════
    CONTROLS
-══════════════════════════════════════ */
-.controls-section{padding:1rem 1.5rem 0}
-.controls-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
-.controls-row select,.controls-row input{
-  height:36px;padding:0 10px;
-  border-radius:var(--r-md);border:1px solid var(--border2);
-  background:var(--surface);color:var(--text);
-  font-size:13px;font-family:var(--font);outline:none;
-  transition:border-color .15s,box-shadow .15s;
+════════════════════════════════ */
+.controls{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+.ctrl{
+  height:40px;padding:0 14px;background:#fff;
+  border:1.5px solid var(--border2);color:var(--text);
+  font-family:var(--font);font-size:13px;font-weight:600;
+  border-radius:var(--r-md);outline:none;
+  transition:border-color .18s,box-shadow .18s;
+  box-shadow:var(--shadow-sm);
 }
-.controls-row select:focus,.controls-row input:focus{
-  border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.15);
-}
-.search-wrap{position:relative;flex:1;min-width:190px}
-.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
-.search-wrap input{width:100%;padding-left:32px}
+.ctrl:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.ctrl option{background:#fff}
+.sw{position:relative;flex:1;min-width:200px}
+.sw i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+.sw .ctrl{width:100%;padding-left:38px}
 
-/* ══════════════════════════════════════
+/* ════════════════════════════════
    BLOCK TABS
-══════════════════════════════════════ */
-.tab-bar{display:flex;gap:4px;padding:1rem 1.5rem 0;overflow-x:auto;scrollbar-width:none}
-.tab-bar::-webkit-scrollbar{display:none}
-.tab{
-  display:flex;align-items:center;gap:7px;
-  padding:8px 18px;border-radius:var(--r-md);
-  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
-  background:transparent;border:1px solid transparent;
-  color:var(--text2);font-family:var(--font);
-  transition:all .15s;
+════════════════════════════════ */
+.btabs{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap}
+.btab{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 20px;background:#fff;
+  border:1.5px solid var(--border2);border-radius:var(--r-lg);
+  font-size:13px;font-weight:700;color:var(--text2);
+  cursor:pointer;font-family:var(--font);transition:all .2s;
+  box-shadow:var(--shadow-sm);
 }
-.tab:hover:not(.active){background:var(--surface);color:var(--text);border-color:var(--border)}
-.tab.active{background:var(--surface);border-color:var(--border2);color:var(--text);box-shadow:var(--shadow)}
-.tab i{font-size:16px}
-.tab-badge{
-  font-size:11px;padding:1px 7px;border-radius:99px;
-  background:var(--surface2);color:var(--text2);
-  border:1px solid var(--border);
+.btab:hover:not(.active){border-color:var(--border3);color:var(--text);box-shadow:var(--shadow)}
+.btab.active{
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  border-color:transparent;color:#fff;
+  box-shadow:0 4px 16px rgba(99,102,241,0.30);
 }
-.tab.active .tab-badge{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btab-badge{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:700}
+.btab.active .btab-badge{background:rgba(255,255,255,0.22);color:#fff}
+.btab:not(.active) .btab-badge{background:var(--surface3);color:var(--text2)}
 
-/* ══════════════════════════════════════
-   BLOCK SECTION
-══════════════════════════════════════ */
-.block-section{padding:1rem 1.5rem 0}
-.block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
-.block-title{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:600;color:var(--text)}
-.block-title i{font-size:22px}
-.block-badge{
-  font-size:11px;padding:2px 10px;border-radius:99px;
-  background:var(--surface2);color:var(--text2);border:1px solid var(--border);
-  font-weight:400;
+/* ════════════════════════════════
+   BLOCK HEADER
+════════════════════════════════ */
+.bhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.bhead-left{display:flex;align-items:center;gap:12px}
+.bstripe{width:5px;height:38px;border-radius:99px;background:linear-gradient(180deg,#6366F1,#8B5CF6);flex-shrink:0}
+.btitle{font-size:18px;font-weight:800;color:var(--text)}
+.bbadge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.bcollected{font-size:13px;color:var(--text2);font-weight:600}
+.bcollected strong{color:var(--text)}
+
+/* ════════════════════════════════
+   FLAT CARDS
+════════════════════════════════ */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:2rem}
+.fcard{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:var(--r-xl);padding:18px;cursor:pointer;
+  position:relative;overflow:hidden;
+  transition:all .22s;
+  box-shadow:var(--shadow-sm);
 }
-.block-collected{font-size:13px;color:var(--text2)}
-.block-collected strong{color:var(--text);font-weight:600}
-
-/* ══════════════════════════════════════
-   FLAT CARDS GRID
-══════════════════════════════════════ */
-.flats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:11px}
-
-.flat-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:var(--r-lg);padding:15px;
-  cursor:pointer;position:relative;overflow:hidden;
-  transition:transform .13s,box-shadow .13s,border-color .13s;
+.fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:5px}
+.fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
+.fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.fcard.pending::before{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.fcard.paid   {border-color:rgba(5,150,105,.15)}
+.fcard.partial{border-color:rgba(217,119,6,.15)}
+.fcard.pending{border-color:rgba(220,38,38,.15)}
+.fcard:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg)}
+.fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px;gap:8px}
+.fc-num{font-size:16px;font-weight:800;color:var(--text)}
+.fc-owner{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;font-weight:500}
+.fc-indicator{
+  width:32px;height:32px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
 }
-.flat-card::before{
-  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+.fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
+.fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
+.fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
+.fc-amount{font-size:26px;font-weight:800;letter-spacing:-.8px;line-height:1;margin-bottom:3px}
+.fcard.paid    .fc-amount{color:var(--green)}
+.fcard.partial .fc-amount{color:var(--amber)}
+.fcard.pending .fc-amount{color:var(--red)}
+.fc-due{font-size:11px;color:var(--muted);font-weight:600}
+.fprog{height:5px;background:var(--bg2);border-radius:99px;margin:12px 0 10px;overflow:hidden}
+.fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
+.fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.spill{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;padding:3px 10px;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.5px;
 }
-.flat-card.paid::before{background:var(--green)}
-.flat-card.partial::before{background:var(--amber)}
-.flat-card.pending::before{background:var(--red)}
-.flat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--border2)}
-.flat-card:focus{outline:2px solid var(--blue);outline-offset:2px}
+.spill i{font-size:11px}
+.spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.empty-grid{grid-column:1/-1;text-align:center;padding:4rem 0;color:var(--text2)}
+.empty-grid i{font-size:44px;display:block;margin-bottom:12px;color:var(--muted)}
 
-.flat-num{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px}
-.flat-owner{font-size:12px;color:var(--text2);margin-bottom:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.flat-paid{font-size:21px;font-weight:700}
-.flat-paid.paid{color:var(--green)}
-.flat-paid.partial{color:var(--amber)}
-.flat-paid.pending{color:var(--red)}
-.flat-due{font-size:11px;color:var(--muted);margin-top:2px}
+/* ════════════════════════════════
+   ISSUES
+════════════════════════════════ */
+.iss-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.iss-filters{display:flex;gap:6px;flex-wrap:wrap}
+.iff{
+  padding:6px 16px;border-radius:99px;font-size:12px;font-weight:700;
+  border:1.5px solid var(--border2);background:#fff;color:var(--text2);
+  cursor:pointer;font-family:var(--font);transition:all .15s;
+  box-shadow:var(--shadow-sm);
+}
+.iff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.iff:hover:not(.active){border-color:var(--border3);color:var(--text)}
 
-.progress{height:5px;background:var(--surface2);border-radius:99px;margin-top:12px;overflow:hidden}
-.progress-bar{height:100%;border-radius:99px;transition:width .4s}
-
-.status-pill{
+.iss-list{display:flex;flex-direction:column;gap:12px}
+.icard{
+  background:#fff;border:1.5px solid var(--border);
+  border-radius:var(--r-xl);padding:20px 22px;
+  display:grid;grid-template-columns:5px 1fr auto;gap:18px;
+  align-items:start;transition:all .2s;cursor:pointer;
+  box-shadow:var(--shadow-sm);
+}
+.icard:hover{border-color:var(--border3);transform:translateX(5px);box-shadow:var(--shadow)}
+.ipbar{border-radius:99px;align-self:stretch;min-height:50px;width:5px}
+.ipbar.high  {background:linear-gradient(180deg,#DC2626,#7C3AED)}
+.ipbar.medium{background:linear-gradient(180deg,#D97706,#F59E0B)}
+.ipbar.low   {background:linear-gradient(180deg,#059669,#0EA5E9)}
+.ic-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.ic-title i{font-size:16px;color:var(--indigo)}
+.ic-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:500}
+.ic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.itag{
   display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;margin-top:10px;
-  text-transform:uppercase;letter-spacing:.3px;
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;
+  text-transform:uppercase;letter-spacing:.4px;
 }
-.status-pill i{font-size:11px}
-.status-pill.paid{background:var(--green-bg);color:var(--green-txt)}
-.status-pill.partial{background:var(--amber-bg);color:var(--amber-txt)}
-.status-pill.pending{background:var(--red-bg);color:var(--red-txt)}
+.itag i{font-size:10px}
+.itag.flat  {background:var(--sky-bg);   color:var(--sky-txt);  border:1px solid var(--sky-border)}
+.itag.cat   {background:var(--purple-bg);color:var(--purple-txt);border:1px solid var(--purple-border)}
+.itag.date  {background:var(--surface3); color:var(--text2);    border:1px solid var(--border2)}
+.iright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.istatus{padding:4px 13px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.istatus.open       {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.istatus.in-progress{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.istatus.resolved   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.ipriority{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700}
+.ipriority.high  {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.ipriority.medium{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.ipriority.low   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.iss-empty{text-align:center;padding:4rem 0;color:var(--text2)}
+.iss-empty i{font-size:52px;color:var(--muted);display:block;margin-bottom:14px}
+.iss-empty h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
+.iss-empty p{font-size:13px;color:var(--text2)}
 
-.no-results{
-  grid-column:1/-1;text-align:center;padding:3rem 0;
-  color:var(--text2);font-size:14px;
-}
-.no-results i{font-size:36px;display:block;margin-bottom:10px;color:var(--muted)}
-
-/* ══════════════════════════════════════
+/* ════════════════════════════════
    MODALS
-══════════════════════════════════════ */
-.modal-bg{
-  display:none;position:fixed;inset:0;
-  background:rgba(0,0,0,.48);z-index:200;
+════════════════════════════════ */
+.mbg{
+  display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(30,27,75,0.45);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   align-items:center;justify-content:center;padding:1rem;
 }
-.modal-bg.open{display:flex}
+.mbg.open{display:flex}
 .modal{
-  background:var(--surface);border-radius:var(--r-xl);
-  border:1px solid var(--border2);
-  width:min(510px,100%);max-height:90vh;overflow-y:auto;
-  padding:1.5rem;box-shadow:var(--shadow-md);
-  animation:modalIn .18s ease;
+  background:#fff;border:1.5px solid var(--border2);
+  border-radius:var(--r-2xl);
+  width:min(560px,100%);max-height:92vh;overflow-y:auto;
+  padding:28px;
+  box-shadow:var(--shadow-xl);
+  animation:mIn .22s cubic-bezier(.34,1.4,.64,1);
 }
-@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
-.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;gap:12px}
-.modal-title{font-size:17px;font-weight:600;color:var(--text)}
-.modal-sub{font-size:13px;color:var(--text2);margin-top:2px}
-.modal-close{
-  font-size:20px;cursor:pointer;color:var(--text2);
-  background:none;border:none;line-height:1;padding:4px;
-  border-radius:var(--r-sm);transition:background .1s,color .1s;flex-shrink:0;
+@keyframes mIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px}
+.micon{
+  width:48px;height:48px;border-radius:14px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:22px;
 }
-.modal-close:hover{background:var(--surface2);color:var(--text)}
+.micon.pay   {background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));color:var(--indigo)}
+.micon.issue {background:linear-gradient(135deg,rgba(220,38,38,.10),rgba(217,119,6,.07));color:var(--red)}
+.micon.flat  {background:linear-gradient(135deg,rgba(5,150,105,.10),rgba(2,132,199,.07));color:var(--green)}
+.micon.detail{background:linear-gradient(135deg,rgba(124,58,237,.10),rgba(99,102,241,.07));color:var(--purple)}
+.micon.idtl  {background:linear-gradient(135deg,rgba(220,38,38,.10),rgba(124,58,237,.07));color:var(--red)}
+.mtitle{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.msub{font-size:12px;color:var(--text2);margin-top:3px;font-weight:500}
+.mclose{
+  width:34px;height:34px;border-radius:10px;
+  background:var(--surface3);border:1.5px solid var(--border2);
+  color:var(--text2);font-size:18px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0;
+}
+.mclose:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
 
-/* Detail modal metrics */
-.detail-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:1.25rem}
-.d-metric{background:var(--surface2);border-radius:var(--r-md);padding:11px 13px}
-.d-metric-label{font-size:11px;color:var(--text2);margin-bottom:4px}
-.d-metric-value{font-size:18px;font-weight:600;color:var(--text)}
+/* Detail metrics strip */
+.dm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.dm-card{background:var(--surface3);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 14px}
+.dm-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.dm-value{font-size:20px;font-weight:800;color:var(--text)}
 
 /* Expense list */
-.exp-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:9px}
-.exp-list{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
-.exp-row{
-  display:grid;grid-template-columns:1fr auto;
-  align-items:center;padding:10px 13px;
-  border-bottom:1px solid var(--border);font-size:13px;
-}
-.exp-row:last-child{border-bottom:none}
-.exp-row:nth-child(even){background:var(--surface2)}
-.exp-cat{font-weight:600;color:var(--text)}
-.exp-date{font-size:11px;color:var(--muted);margin-top:1px}
-.exp-note{font-size:11px;color:var(--text2);font-style:italic;margin-top:1px}
-.exp-amt{font-weight:600;color:var(--text);text-align:right}
-.exp-empty{padding:1.5rem;text-align:center;color:var(--muted);font-size:13px}
-.exp-empty i{font-size:26px;display:block;margin-bottom:6px}
-.total-row{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:11px 13px;background:var(--surface2);
-  border-radius:var(--r-md);border:1px solid var(--border);margin-bottom:12px;
-}
-.total-label{font-size:13px;font-weight:600;color:var(--text)}
-.total-val{font-size:16px;font-weight:700;color:var(--text)}
-
-/* Form */
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
-.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
-.form-group label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
-.form-group input,.form-group select{
-  width:100%;height:39px;padding:0 11px;
-  border-radius:var(--r-md);border:1px solid var(--border2);
-  background:var(--surface);color:var(--text);
-  font-size:13px;font-family:var(--font);outline:none;
-  transition:border-color .15s,box-shadow .15s;
-}
-.form-group input:focus,.form-group select:focus{
-  border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.15);
-}
-.modal-actions{
-  display:flex;gap:8px;justify-content:flex-end;
-  margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);
-}
-.btn-add-pay{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:8px 16px;border-radius:var(--r-md);
-  background:var(--blue);color:#fff;border:none;
-  font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;
+.etitle{font-size:13px;font-weight:800;color:var(--text);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.etitle i{font-size:16px;color:var(--indigo)}
+.elist{border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px}
+.erow{
+  display:grid;grid-template-columns:1fr auto;align-items:center;
+  padding:12px 15px;border-bottom:1px solid var(--border);
   transition:background .15s;
 }
-.btn-add-pay:hover{background:var(--blue2)}
-.btn-add-pay i{font-size:16px}
+.erow:last-child{border-bottom:none}
+.erow:hover{background:var(--surface2)}
+.ecat{font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;font-size:13px}
+.ecat i{font-size:15px;color:var(--indigo)}
+.edate{font-size:11px;color:var(--muted);margin-top:2px;font-weight:600}
+.enote{font-size:11px;color:var(--text2);font-style:italic;margin-top:1px}
+.eamt{font-weight:800;color:var(--text);font-size:14px;text-align:right}
+.eempty{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+.eempty i{font-size:26px;display:block;margin-bottom:6px}
+.etotal{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 15px;margin-bottom:14px;
+  background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.04));
+  border:1.5px solid rgba(99,102,241,.15);border-radius:var(--r-lg);
+}
+.etotal-label{font-size:13px;font-weight:700;color:var(--text2)}
+.etotal-val{font-size:18px;font-weight:800;color:var(--text)}
 
-/* ══════════════════════════════════════
-   TOAST NOTIFICATION
-══════════════════════════════════════ */
+/* Form */
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fg label{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px}
+.fg input,.fg select,.fg textarea{
+  background:var(--surface2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;
+  border-radius:var(--r-md);padding:10px 13px;outline:none;width:100%;
+  transition:border-color .18s,box-shadow .18s;
+}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--muted);font-weight:400}
+.fg textarea{resize:vertical;min-height:80px;line-height:1.6}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.12);background:#fff;
+}
+.fg select option{background:#fff}
+.mactions{
+  display:flex;gap:10px;justify-content:flex-end;
+  margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border2);
+}
+
+/* ── Toast ── */
 #toast{
-  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
-  padding:11px 18px;border-radius:var(--r-md);
-  font-size:13px;font-weight:500;color:#fff;
-  background:var(--text);box-shadow:var(--shadow-md);
-  opacity:0;transform:translateY(8px);
-  transition:opacity .25s,transform .25s;pointer-events:none;
+  position:fixed;bottom:24px;right:24px;z-index:9999;
+  padding:13px 20px;border-radius:var(--r-lg);
+  font-size:13px;font-weight:700;font-family:var(--font);
+  display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateY(10px);transition:all .25s;
+  pointer-events:none;background:#fff;color:var(--text);
+  box-shadow:var(--shadow-xl);border:1.5px solid var(--border2);
 }
 #toast.show{opacity:1;transform:none}
-#toast.success{background:var(--green)}
-#toast.error{background:var(--red)}
+#toast i{font-size:18px}
+#toast.success{border-color:var(--green-border);color:var(--green-txt)}
+#toast.success i{color:var(--green)}
+#toast.error  {border-color:var(--red-border); color:var(--red-txt)}
+#toast.error i{color:var(--red)}
 
-/* ══════════════════════════════════════
+/* ════════════════════════════════
    RESPONSIVE
-══════════════════════════════════════ */
-@media(max-width:640px){
-  .navbar{padding:0 1rem}
-  .nav-month,.sync-wrap .sync-label{display:none}
-  .summary-section,.controls-section,.tab-bar,.block-section{padding-left:1rem;padding-right:1rem}
-  .form-grid{grid-template-columns:1fr}
-  .detail-metrics{grid-template-columns:1fr 1fr}
-  .flats-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+════════════════════════════════ */
+@media(max-width:700px){
+  .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
+  .nav-pills{display:none}.fg2{grid-template-columns:1fr}
+  .dm{grid-template-columns:1fr 1fr}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
+  .icard{grid-template-columns:5px 1fr}.iright{display:none}
 }
 </style>
 </head>
 <body>
 
-<!-- ── Loading overlay ── -->
-<div id="loadingOverlay">
-  <div class="loading-box">
-    <i class="ti ti-building loading-logo"></i>
-    <div class="spinner"></div>
-    <div class="loading-text" id="loadingText">Connecting to Firebase…</div>
+<!-- ── LOADING ── -->
+<div id="lo">
+  <div class="lo-card">
+    <div class="lo-icon"><i class="ti ti-building-community"></i></div>
+    <div class="lo-title">Resident<span>Hub</span></div>
+    <div class="lo-sub" id="loSub">Connecting to your society database…</div>
+    <div class="lo-bar"><div class="lo-fill"></div></div>
   </div>
 </div>
 
-<!-- ══════════════ APP ══════════════ -->
-<div class="app" id="appWrapper" style="display:none">
+<div id="app" style="display:none">
 
-  <nav class="navbar">
-    <div class="nav-brand">
-      <i class="ti ti-building"></i>
-      <span>Flat Payments Tracker</span>
+<!-- ── NAVBAR ── -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo"><i class="ti ti-building-community"></i></div>
+    <span class="nav-name">Resident<em>Hub</em></span>
+  </div>
+
+  <div class="nav-pills" id="navPills">
+    <button class="nav-pill active" data-v="payments" onclick="switchView('payments')">
+      <i class="ti ti-credit-card"></i> Payments
+    </button>
+    <button class="nav-pill" data-v="issues" onclick="switchView('issues')">
+      <i class="ti ti-alert-circle"></i> Issues
+      <span class="nbadge" id="openCnt">0</span>
+    </button>
+  </div>
+
+  <div class="nav-right">
+    <div class="sync-chip"><span class="sdot" id="sdot"></span><span id="slbl">–</span></div>
+    <span style="font-size:12px;font-weight:600;color:var(--text2)" id="navMonth"></span>
+  </div>
+</nav>
+
+<!-- ── APP ── -->
+<div class="app">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="ph-left">
+      <h1>Apartment <span>Management</span></h1>
+      <p id="phSub">Loading your society data…</p>
     </div>
-    <div class="nav-right">
-      <div class="sync-wrap">
-        <span class="sync-dot" id="syncDot"></span>
-        <span class="sync-label" id="syncLabel">–</span>
-      </div>
-      <span class="nav-month" id="navMonth"></span>
-      <button class="btn btn-ghost btn-sm" onclick="window._openAddFlatModal()">
-        <i class="ti ti-home-plus"></i> New Flat
-      </button>
-      <button class="btn btn-primary btn-sm" onclick="window._openAddExpense()">
-        <i class="ti ti-plus"></i> Add Expense
-      </button>
-    </div>
-  </nav>
+    <div class="ph-actions" id="phAct"></div>
+  </div>
 
-  <section class="summary-section"><div class="summary-grid" id="summaryBar"></div></section>
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow"></div>
 
-  <section class="controls-section">
-    <div class="controls-row">
-      <select id="monthFilter">
+  <!-- ══ PAYMENTS VIEW ══ -->
+  <div id="pView">
+    <div class="controls">
+      <select class="ctrl" id="mf">
         <option value="2026-05">May 2026</option>
         <option value="2026-04">April 2026</option>
         <option value="2026-03">March 2026</option>
       </select>
-      <select id="statusFilter">
+      <select class="ctrl" id="sf">
         <option value="all">All statuses</option>
-        <option value="paid">Paid</option>
-        <option value="partial">Partial</option>
-        <option value="pending">Pending</option>
+        <option value="paid">✅ Paid</option>
+        <option value="partial">⚠️ Partial</option>
+        <option value="pending">❌ Pending</option>
       </select>
-      <div class="search-wrap">
+      <div class="sw">
         <i class="ti ti-search"></i>
-        <input type="text" id="searchInput" placeholder="Search flat or owner…"/>
+        <input class="ctrl" type="text" id="qi" placeholder="Search flat or owner…"/>
       </div>
     </div>
-  </section>
+    <div class="btabs" id="btabs"></div>
+    <div id="bcon"></div>
+  </div>
 
-  <div class="tab-bar" id="tabBar"></div>
-  <main class="block-section" id="blockContent"></main>
-</div>
-
-<!-- ══════════════ FLAT DETAIL MODAL ══════════════ -->
-<div class="modal-bg" id="flatModal">
-  <div class="modal">
-    <div class="modal-head">
-      <div><div class="modal-title" id="mdTitle"></div><div class="modal-sub" id="mdSub"></div></div>
-      <button class="modal-close" onclick="window._closeModal()"><i class="ti ti-x"></i></button>
+  <!-- ══ ISSUES VIEW ══ -->
+  <div id="iView" style="display:none">
+    <div class="iss-toolbar">
+      <div class="iss-filters" id="iFil">
+        <button class="iff active" data-f="all"  onclick="fIss('all')">All Issues</button>
+        <button class="iff" data-f="open"         onclick="fIss('open')">🔴 Open</button>
+        <button class="iff" data-f="in-progress"  onclick="fIss('in-progress')">🟡 In Progress</button>
+        <button class="iff" data-f="resolved"     onclick="fIss('resolved')">🟢 Resolved</button>
+      </div>
+      <button class="btn btn-indigo" onclick="window._oRI()">
+        <i class="ti ti-urgent"></i> Raise Issue
+      </button>
     </div>
-    <div id="mdContent"></div>
+    <div class="iss-list" id="iList"></div>
+  </div>
+
+</div><!-- /.app -->
+</div><!-- /#app -->
+
+
+<!-- ════════ FLAT DETAIL MODAL ════════ -->
+<div class="mbg" id="flatM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-home"></i></div>
+        <div><div class="mtitle" id="mdT"></div><div class="msub" id="mdS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cM()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="mdC"></div>
   </div>
 </div>
 
-<!-- ══════════════ ADD EXPENSE MODAL ══════════════ -->
-<div class="modal-bg" id="addModal">
+<!-- ════════ ADD EXPENSE MODAL ════════ -->
+<div class="mbg" id="addM">
   <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">Add Expense / Payment</div>
-      <button class="modal-close" onclick="window._closeAdd()"><i class="ti ti-x"></i></button>
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-receipt"></i></div>
+        <div><div class="mtitle">Record Payment / Expense</div><div class="msub">Add a charge or payment for a flat</div></div>
+      </div>
+      <button class="mclose" onclick="window._cA()"><i class="ti ti-x"></i></button>
     </div>
-    <div class="form-grid">
-      <div class="form-group"><label>Block</label><select id="fBlock"></select></div>
-      <div class="form-group"><label>Flat No.</label><select id="fFlat"></select></div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="fB"></select></div>
+      <div class="fg"><label>Flat No.</label><select id="fF"></select></div>
     </div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Category</label>
-        <select id="fCat">
+    <div class="fg2">
+      <div class="fg"><label>Category</label>
+        <select id="fC">
           <option>Maintenance</option><option>Water</option><option>Electricity</option>
           <option>Parking</option><option>Lift</option><option>Security</option>
           <option>Cleaning</option><option>Other</option>
         </select>
       </div>
-      <div class="form-group"><label>Amount (₹)</label><input type="number" id="fAmt" placeholder="0" min="1"/></div>
+      <div class="fg"><label>Amount (₹)</label><input type="number" id="fA" placeholder="0" min="1"/></div>
     </div>
-    <div class="form-grid">
-      <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
-      <div class="form-group">
-        <label>Payment Status</label>
-        <select id="fStatus"><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select>
+    <div class="fg2">
+      <div class="fg"><label>Date</label><input type="date" id="fD"/></div>
+      <div class="fg"><label>Payment Status</label>
+        <select id="fS"><option value="paid">✅ Paid</option><option value="partial">⚠️ Partial</option><option value="pending">❌ Pending</option></select>
       </div>
     </div>
-    <div class="form-group"><label>Note (optional)</label><input type="text" id="fNote" placeholder="e.g. cheque received, advance…"/></div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="window._closeAdd()">Cancel</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="window._saveExpense()">
-        <i class="ti ti-device-floppy"></i><span id="saveLbl">Save</span>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="fN" placeholder="e.g. UPI transfer, cheque no. 1234…"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cA()">Cancel</button>
+      <button class="btn btn-indigo" id="svBtn" onclick="window._sE()">
+        <i class="ti ti-device-floppy"></i><span id="svLbl">Save Payment</span>
       </button>
     </div>
   </div>
 </div>
 
-<!-- ══════════════ ADD FLAT MODAL ══════════════ -->
-<div class="modal-bg" id="addFlatModal">
+<!-- ════════ ADD FLAT MODAL ════════ -->
+<div class="mbg" id="flatAddM">
   <div class="modal">
-    <div class="modal-head">
-      <div class="modal-title">Register New Flat</div>
-      <button class="modal-close" onclick="window._closeAddFlat()"><i class="ti ti-x"></i></button>
-    </div>
-    <div class="form-grid">
-      <div class="form-group">
-        <label>Block</label>
-        <select id="nfBlock"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select>
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon flat"><i class="ti ti-home-plus"></i></div>
+        <div><div class="mtitle">Register New Flat</div><div class="msub">Add a resident flat to the society</div></div>
       </div>
-      <div class="form-group"><label>Flat No. (e.g. A-101)</label><input type="text" id="nfId" placeholder="A-101"/></div>
+      <button class="mclose" onclick="window._cAF()"><i class="ti ti-x"></i></button>
     </div>
-    <div class="form-grid">
-      <div class="form-group"><label>Owner Name</label><input type="text" id="nfOwner" placeholder="Full name"/></div>
-      <div class="form-group"><label>Monthly Due (₹)</label><input type="number" id="nfDue" placeholder="5000" min="1"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label>
+        <select id="nB"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select>
+      </div>
+      <div class="fg"><label>Flat No.</label><input type="text" id="nI" placeholder="A-101"/></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="window._closeAddFlat()">Cancel</button>
-      <button class="btn btn-primary" onclick="window._saveNewFlat()"><i class="ti ti-plus"></i> Register</button>
+    <div class="fg2">
+      <div class="fg"><label>Owner Name</label><input type="text" id="nO" placeholder="Full name"/></div>
+      <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="nD" placeholder="5000" min="1"/></div>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
+      <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div id="toast"></div>
+<!-- ════════ RAISE ISSUE MODAL ════════ -->
+<div class="mbg" id="rIM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon issue"><i class="ti ti-urgent"></i></div>
+        <div><div class="mtitle">Raise a Complaint / Issue</div><div class="msub">Report a problem — we'll track it until resolved</div></div>
+      </div>
+      <button class="mclose" onclick="window._cRI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Issue Title *</label><input type="text" id="iT" placeholder="e.g. Water leakage near lift on 2nd floor"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category *</label>
+        <select id="iCa">
+          <option value="Plumbing">🔧 Plumbing</option><option value="Electrical">⚡ Electrical</option>
+          <option value="Lift">🛗 Lift / Elevator</option><option value="Security">🔒 Security</option>
+          <option value="Cleaning">🧹 Cleaning</option><option value="Parking">🚗 Parking</option>
+          <option value="Noise">🔊 Noise Complaint</option><option value="Internet">📡 Internet / Cable</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Priority *</label>
+        <select id="iP">
+          <option value="high">🔴 High — Urgent fix needed</option>
+          <option value="medium" selected>🟡 Medium — Normal priority</option>
+          <option value="low">🟢 Low — When convenient</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label>
+        <select id="iBl"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option><option value="Common">Common Area</option></select>
+      </div>
+      <div class="fg"><label>Flat No. (optional)</label><input type="text" id="iFl" placeholder="e.g. A-101 or blank"/></div>
+    </div>
+    <div class="fg"><label>Description *</label><textarea id="iDe" placeholder="Describe the issue clearly — what happened, since when, how severe is it…"></textarea></div>
+    <div class="fg"><label>Your Name / Flat No. *</label><input type="text" id="iRe" placeholder="e.g. Ramesh Kumar / A-101"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cRI()">Cancel</button>
+      <button class="btn btn-indigo" id="issBtn" onclick="window._sI()">
+        <i class="ti ti-send"></i><span id="issBtnL">Submit Complaint</span>
+      </button>
+    </div>
+  </div>
+</div>
 
-<!-- ══════════════════════════════════════════════════════════
-     FIREBASE + APP LOGIC  (type=module for ESM imports)
-══════════════════════════════════════════════════════════ -->
+<!-- ════════ ISSUE DETAIL MODAL ════════ -->
+<div class="mbg" id="idM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon idtl"><i class="ti ti-clipboard-list"></i></div>
+        <div><div class="mtitle" id="idT">Issue Detail</div><div class="msub" id="idS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cID()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="idC"></div>
+  </div>
+</div>
+
+<div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
+
 <script type="module">
-/* ── Firebase SDK from CDN ── */
-import { initializeApp }  from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-import { getAnalytics }   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
-import {
-  getFirestore, collection, doc,
-  getDocs, addDoc, setDoc, updateDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp,
-} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import{initializeApp}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+import{getAnalytics}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
+import{getFirestore,collection,doc,getDocs,addDoc,setDoc,updateDoc,onSnapshot,query,where,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
-/* ── Init ── */
-const app = initializeApp({
-  apiKey:            'AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM',
-  authDomain:        'gatebook-17065.firebaseapp.com',
-  projectId:         'gatebook-17065',
-  storageBucket:     'gatebook-17065.firebasestorage.app',
-  messagingSenderId: '732765572762',
-  appId:             '1:732765572762:web:55f1cb897bb5804a831923',
-  measurementId:     'G-6YKLV11L0G',
+const fbApp=initializeApp({
+  apiKey:'AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM',
+  authDomain:'gatebook-17065.firebaseapp.com',
+  projectId:'gatebook-17065',
+  storageBucket:'gatebook-17065.firebasestorage.app',
+  messagingSenderId:'732765572762',
+  appId:'1:732765572762:web:55f1cb897bb5804a831923',
+  measurementId:'G-6YKLV11L0G'
 });
-getAnalytics(app);
-const db = getFirestore(app);
+getAnalytics(fbApp);
+const db=getFirestore(fbApp);
 
-/* ══════════════════════════════════════
-   BLOCK COLORS
-══════════════════════════════════════ */
-const COLORS = { A:'#185FA5', B:'#1D9E75', C:'#BA7517', D:'#7F5AF0', E:'#E8572A' };
-
-/* ══════════════════════════════════════
-   SEED DATA  (runs once if Firestore empty)
-══════════════════════════════════════ */
-const SEED_FLATS = [
+/* ── Seed ── */
+const SF=[
   {id:'A-101',block:'A',owner:'Ramesh Kumar',  due:5000,paid:4500,month:'2026-05'},
   {id:'A-102',block:'A',owner:'Sunita Sharma', due:5000,paid:5000,month:'2026-05'},
   {id:'A-103',block:'A',owner:'Priya Nair',    due:5000,paid:0,   month:'2026-05'},
@@ -533,7 +790,7 @@ const SEED_FLATS = [
   {id:'C-103',block:'C',owner:'Harish Patel',  due:5000,paid:0,   month:'2026-05'},
   {id:'C-104',block:'C',owner:'Leela Nair',    due:5000,paid:5000,month:'2026-05'},
 ];
-const SEED_EXP = [
+const SE=[
   {flatId:'A-101',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'partial',month:'2026-05'},
   {flatId:'A-101',block:'A',cat:'Water',      date:'05 May',amt:1500,note:'',status:'partial',month:'2026-05'},
   {flatId:'A-102',block:'A',cat:'Maintenance',date:'02 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
@@ -553,321 +810,403 @@ const SEED_EXP = [
   {flatId:'C-102',block:'C',cat:'Water',      date:'04 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
   {flatId:'C-104',block:'C',cat:'Parking',    date:'03 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
 ];
+const SI=[
+  {title:'Water leakage — B corridor ceiling',cat:'Plumbing',priority:'high',  block:'B',flat:'B-102',desc:'Water dripping from ceiling slab near lift lobby on B-Block ground floor. Started 3 days ago after heavy rain. Needs urgent attention.',reporter:'Manoj Pillai / B-102',status:'open',      month:'2026-05'},
+  {title:'Lift stuck between floors — Block A',cat:'Lift',    priority:'high',  block:'A',flat:'',    desc:'Main lift stopped between Ground and 1st floor. Door not opening. Residents using staircase. Please escalate to elevator company.',reporter:'Security Guard',                             status:'in-progress',month:'2026-05'},
+  {title:'Street lights not working at Gate 2', cat:'Electrical',priority:'medium',block:'Common',flat:'',desc:'Two street lights near the main Gate 2 entrance have been out for a week. Safety concern at night.',reporter:'Rajan Verma / C-101',                                               status:'open',      month:'2026-05'},
+  {title:'Garbage area not cleaned — Gate 2',  cat:'Cleaning', priority:'low',  block:'Common',flat:'',desc:'Garbage area near Gate 2 was not cleared Monday or Tuesday. Strong smell affecting residents.',reporter:'Anita Singh / B-201',                                                       status:'resolved',  month:'2026-05'},
+];
 
 async function seedIfEmpty(){
-  const snap = await getDocs(collection(db,'flats'));
-  if(!snap.empty) return;
-  for(const f of SEED_FLATS){ const {id,...d}=f; await setDoc(doc(db,'flats',id),d); }
-  for(const e of SEED_EXP)  { await addDoc(collection(db,'expenses'),{...e,createdAt:serverTimestamp()}); }
+  const s=await getDocs(collection(db,'flats'));
+  if(!s.empty)return;
+  for(const f of SF){const{id,...d}=f;await setDoc(doc(db,'flats',id),d);}
+  for(const e of SE){await addDoc(collection(db,'expenses'),{...e,createdAt:serverTimestamp()});}
+  for(const i of SI){await addDoc(collection(db,'issues'),  {...i,createdAt:serverTimestamp()});}
 }
 
-/* ══════════════════════════════════════
-   CACHE & STATE
-══════════════════════════════════════ */
-const flats = new Map();    // flatId → {flatId,...}
-const exps  = new Map();    // flatId → [{...}]
-let activeBlock  = 'A';
-let filterStatus = 'all';
-let searchTerm   = '';
-let activeMonth  = '2026-05';
-let expUnsub     = null;
+/* ── Cache / State ── */
+const flats=new Map(),exps=new Map(),issues=[];
+let AB='A',FS='all',SQ='',AM='2026-05',AV='payments',IF='all';
+let eu=null,iu=null;
 
-/* ══════════════════════════════════════
-   HELPERS
-══════════════════════════════════════ */
-const status  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
-const slabel  = s => ({paid:'Paid in full',partial:'Partial',pending:'Not paid'}[s]);
-const sicon   = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
-const inr     = n => '₹'+Number(n||0).toLocaleString('en-IN');
-const fmtD    = s => new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-const blocks  = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
-const blockFlats = b => [...flats.values()].filter(f=>f.block===b && f.month===activeMonth);
-const flatExps   = id => exps.get(id)||[];
+/* ── Helpers ── */
+const st=f=>f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
+const sl=s=>({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
+const si=s=>({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
+const inr=n=>'₹'+Number(n||0).toLocaleString('en-IN');
+const fd=s=>new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+const fdt=ts=>{if(!ts)return'–';const d=ts.toDate?ts.toDate():new Date(ts);return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})};
+const bks=()=>[...new Set([...flats.values()].map(f=>f.block))].sort();
+const bfl=b=>[...flats.values()].filter(f=>f.block===b&&f.month===AM);
+const fex=id=>exps.get(id)||[];
 
-/* ══════════════════════════════════════
-   SYNC DOT
-══════════════════════════════════════ */
+/* ── Sync ── */
 function sync(s){
-  const dot=document.getElementById('syncDot'), lbl=document.getElementById('syncLabel');
-  dot.className='sync-dot '+s;
-  lbl.textContent={live:'Live',saving:'Saving…',error:'Error'}[s];
+  const d=document.getElementById('sdot'),l=document.getElementById('slbl');
+  if(!d)return;d.className='sdot '+s;
+  l.textContent={live:'Live',saving:'Saving…',error:'Error'}[s];
 }
 
-/* ══════════════════════════════════════
-   TOAST
-══════════════════════════════════════ */
-function toast(msg,type='success'){
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.className=type+' show';
-  setTimeout(()=>t.className='',3000);
+/* ── Toast ── */
+function toast(msg,t='success'){
+  const el=document.getElementById('toast');
+  document.getElementById('tMsg').textContent=msg;
+  document.getElementById('tIco').className=t==='success'?'ti ti-circle-check':'ti ti-alert-circle';
+  el.className=t+' show';setTimeout(()=>el.className='',3200);
 }
 
-/* ══════════════════════════════════════
-   RENDER — SUMMARY
-══════════════════════════════════════ */
-function renderSummary(){
-  const all=[ ...flats.values()].filter(f=>f.month===activeMonth);
+/* ── Stats ── */
+function rStats(){
+  const all=[...flats.values()].filter(f=>f.month===AM);
   const due=all.reduce((s,f)=>s+f.due,0);
   const paid=all.reduce((s,f)=>s+f.paid,0);
-  const pc=all.filter(f=>status(f)==='paid').length;
-  const pen=all.filter(f=>status(f)==='pending').length;
-  const par=all.filter(f=>status(f)==='partial').length;
-  document.getElementById('summaryBar').innerHTML=`
-    <div class="metric"><div class="metric-label"><i class="ti ti-receipt"></i>Total Due</div><div class="metric-value blue">${inr(due)}</div></div>
-    <div class="metric"><div class="metric-label"><i class="ti ti-circle-check"></i>Collected</div><div class="metric-value green">${inr(paid)}</div></div>
-    <div class="metric"><div class="metric-label"><i class="ti ti-building"></i>Flats Paid</div><div class="metric-value green">${pc}/${all.length}</div></div>
-    <div class="metric"><div class="metric-label"><i class="ti ti-alert-circle"></i>Outstanding</div><div class="metric-value red">${inr(due-paid)}</div></div>
-    <div class="metric"><div class="metric-label"><i class="ti ti-clock"></i>Partial / Pending</div><div class="metric-value amber">${par} / ${pen}</div></div>
+  const pc=all.filter(f=>st(f)==='paid').length;
+  const pen=all.filter(f=>st(f)==='pending').length;
+  const pct=due?Math.round(paid/due*100):0;
+  const oi=issues.filter(i=>i.status==='open').length;
+  const ip=issues.filter(i=>i.status==='in-progress').length;
+
+  document.getElementById('phSub').textContent=`${all.length} flats across ${bks().length} blocks · ${new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  document.getElementById('openCnt').textContent=oi;
+  document.getElementById('phAct').innerHTML=`
+    <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
+    <button class="btn btn-white"   onclick="window._oAF()"><i class="ti ti-home-plus"></i> New Flat</button>
+    <button class="btn btn-white"   onclick="window._oRI()"><i class="ti ti-urgent"></i> Raise Issue</button>
+  `;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="scard indigo">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">This month</span></div>
+      <div class="sc-label">Total Due</div>
+      <div class="sc-value">${inr(due)}</div>
+      <div class="sc-sub">${bks().length} blocks · ${all.length} flats</div>
+    </div>
+    <div class="scard green">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div><span class="sc-trend up">${pct}% collected</span></div>
+      <div class="sc-label">Amount Collected</div>
+      <div class="sc-value">${inr(paid)}</div>
+      <div class="sc-sub">${pc} of ${all.length} flats fully paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="scard amber">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
+      <div class="sc-label">Outstanding Balance</div>
+      <div class="sc-value">${inr(due-paid)}</div>
+      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
+    </div>
+    <div class="scard red">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-tool"></i></div><span class="sc-trend dn">${ip} in progress</span></div>
+      <div class="sc-label">Open Issues</div>
+      <div class="sc-value">${oi}</div>
+      <div class="sc-sub">${issues.filter(i=>i.status==='resolved').length} resolved this month</div>
+    </div>
+    <div class="scard sky">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-building"></i></div><span class="sc-trend up">${bks().length} blocks</span></div>
+      <div class="sc-label">Total Flats</div>
+      <div class="sc-value">${all.length}</div>
+      <div class="sc-sub">Managed in society</div>
+    </div>
   `;
 }
 
-/* ══════════════════════════════════════
-   RENDER — TABS
-══════════════════════════════════════ */
-function renderTabs(){
-  const bs=blocks();
-  if(!bs.includes(activeBlock)) activeBlock=bs[0]||'A';
-  document.getElementById('tabBar').innerHTML=bs.map(b=>{
-    const bf=blockFlats(b);
-    const pc=bf.filter(f=>status(f)==='paid').length;
-    return `<button class="tab${b===activeBlock?' active':''}" onclick="window._setBlock('${b}')">
+/* ── Block tabs ── */
+function rBTabs(){
+  const bs=bks();
+  if(!bs.includes(AB))AB=bs[0]||'A';
+  document.getElementById('btabs').innerHTML=bs.map(b=>{
+    const bf=bfl(b);
+    const pc=bf.filter(f=>st(f)==='paid').length;
+    return`<button class="btab${b===AB?' active':''}" onclick="window._sB('${b}')">
       <i class="ti ti-building"></i> Block ${b}
-      <span class="tab-badge">${pc}/${bf.length}</span>
+      <span class="btab-badge">${pc}/${bf.length}</span>
     </button>`;
   }).join('');
 }
 
-/* ══════════════════════════════════════
-   RENDER — CARDS
-══════════════════════════════════════ */
-function renderBlock(){
-  const color=COLORS[activeBlock]||'#888';
-  const bf=blockFlats(activeBlock);
-  const visible=bf.filter(f=>{
-    if(filterStatus!=='all' && status(f)!==filterStatus) return false;
-    if(searchTerm && !f.flatId.toLowerCase().includes(searchTerm) && !f.owner.toLowerCase().includes(searchTerm)) return false;
+/* ── Flat cards ── */
+function rBlock(){
+  const bf=bfl(AB);
+  const vis=bf.filter(f=>{
+    if(FS!=='all'&&st(f)!==FS)return false;
+    if(SQ&&!f.flatId.toLowerCase().includes(SQ)&&!f.owner.toLowerCase().includes(SQ))return false;
     return true;
   });
-  const pc=bf.filter(f=>status(f)==='paid').length;
+  const pc=bf.filter(f=>st(f)==='paid').length;
   const col=bf.reduce((s,f)=>s+f.paid,0);
-
-  let html=`<div class="block-header">
-    <div class="block-title"><i class="ti ti-building" style="color:${color}"></i>Block ${activeBlock}<span class="block-badge">${pc}/${bf.length} paid</span></div>
-    <div class="block-collected">Collected: <strong>${inr(col)}</strong></div>
-  </div><div class="flats-grid">`;
-
-  if(!visible.length){
-    html+=`<div class="no-results"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
-  } else {
-    visible.forEach(f=>{
-      const st=status(f);
+  let h=`<div class="bhead">
+    <div class="bhead-left">
+      <div class="bstripe"></div>
+      <div class="btitle">Block ${AB}</div>
+      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
+    </div>
+    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
+  </div><div class="fgrid">`;
+  if(!vis.length){
+    h+=`<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
+  }else{
+    vis.forEach(f=>{
+      const s=st(f);
       const pct=Math.round(Math.min(f.paid/f.due*100,100));
-      const bc=st==='paid'?'#1D9E75':st==='partial'?'#BA7517':'#A32D2D';
-      html+=`<div class="flat-card ${st}" onclick="window._openFlat('${f.flatId}')" role="button" tabindex="0"
-        onkeydown="if(event.key==='Enter')window._openFlat('${f.flatId}')">
-        <div class="flat-num">${f.flatId}</div>
-        <div class="flat-owner">${f.owner}</div>
-        <div class="flat-paid ${st}">${inr(f.paid)}</div>
-        <div class="flat-due">of ${inr(f.due)} due</div>
-        <div class="progress"><div class="progress-bar" style="width:${pct}%;background:${bc}"></div></div>
-        <div class="status-pill ${st}"><i class="ti ${sicon(st)}"></i>${slabel(st)}</div>
+      const ico={paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s];
+      h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
+        onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
+        <div class="fc-top">
+          <div><div class="fc-num">${f.flatId}</div><div class="fc-owner">${f.owner}</div></div>
+          <div class="fc-indicator"><i class="ti ${ico}"></i></div>
+        </div>
+        <div class="fc-amount ${s}">${inr(f.paid)}</div>
+        <div class="fc-due">of ${inr(f.due)} monthly due</div>
+        <div class="fprog"><div class="fpbar ${s}" style="width:${pct}%"></div></div>
+        <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
       </div>`;
     });
   }
-  document.getElementById('blockContent').innerHTML=html+'</div>';
+  document.getElementById('bcon').innerHTML=h+'</div>';
 }
 
-function renderAll(){ renderSummary(); renderTabs(); renderBlock(); }
-
-/* ══════════════════════════════════════
-   FIRESTORE LISTENERS
-══════════════════════════════════════ */
-function listenFlats(){
-  onSnapshot(collection(db,'flats'), snap=>{
-    snap.docChanges().forEach(ch=>{
-      const d={flatId:ch.doc.id,...ch.doc.data()};
-      ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
-    });
-    renderAll(); sync('live');
-    document.getElementById('loadingOverlay').style.display='none';
-    document.getElementById('appWrapper').style.display='';
-  }, err=>{ console.error(err); sync('error'); });
+/* ── Issues ── */
+function rIssues(){
+  const fil=IF==='all'?[...issues]:issues.filter(i=>i.status===IF);
+  const icons={Plumbing:'ti-tool',Electrical:'ti-bolt',Lift:'ti-elevator',Security:'ti-shield',Cleaning:'ti-vacuum-cleaner',Parking:'ti-car',Noise:'ti-volume',Internet:'ti-wifi',Other:'ti-clipboard'};
+  if(!fil.length){
+    document.getElementById('iList').innerHTML=`<div class="iss-empty">
+      <i class="ti ti-mood-happy"></i>
+      <h3>${IF==='all'?'No issues raised yet':'No '+IF+' issues found'}</h3>
+      <p>${IF==='all'?'Everything is running smoothly! Use "Raise Issue" to report a problem.':'All clear in this category.'}</p>
+    </div>`;return;
+  }
+  document.getElementById('iList').innerHTML=fil.map(iss=>{
+    const sLabel=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
+    const pLabel=iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1);
+    return`<div class="icard" onclick="window._oID('${iss.id}')">
+      <div class="ipbar ${iss.priority}"></div>
+      <div>
+        <div class="ic-title"><i class="ti ${icons[iss.cat]||'ti-clipboard'}"></i>${iss.title}</div>
+        <div class="ic-desc">${iss.desc.length>130?iss.desc.slice(0,130)+'…':iss.desc}</div>
+        <div class="ic-meta">
+          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat||iss.block}</span>
+          <span class="itag cat">${iss.cat}</span>
+          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
+          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
+        </div>
+      </div>
+      <div class="iright">
+        <span class="istatus ${iss.status}">${sLabel}</span>
+        <span class="ipriority ${iss.priority}">${pLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
 }
 
-function listenExpenses(){
-  if(expUnsub) expUnsub();
-  // Try with orderBy first; if index missing, fall back to unordered
-  const q=query(collection(db,'expenses'),where('month','==',activeMonth),orderBy('createdAt','asc'));
-  expUnsub=onSnapshot(q, snap=>{
-    exps.clear();
-    snap.forEach(d=>{ const e={expId:d.id,...d.data()}; const a=exps.get(e.flatId)||[]; a.push(e); exps.set(e.flatId,a); });
-    renderAll();
-  }, err=>{
-    console.warn('Ordered query failed (index may be missing), falling back:',err.message);
-    // Fallback — no orderBy
-    const qFallback=query(collection(db,'expenses'),where('month','==',activeMonth));
-    expUnsub=onSnapshot(qFallback, snap=>{
-      exps.clear();
-      snap.forEach(d=>{ const e={expId:d.id,...d.data()}; const a=exps.get(e.flatId)||[]; a.push(e); exps.set(e.flatId,a); });
-      renderAll();
-    });
-  });
+function rAll(){rStats();rBTabs();rBlock();rIssues()}
+
+/* ── View switch ── */
+function switchView(v){
+  AV=v;
+  document.getElementById('pView').style.display=v==='payments'?'block':'none';
+  document.getElementById('iView').style.display=v==='issues'?'block':'none';
+  document.querySelectorAll('.nav-pill').forEach(p=>p.classList.toggle('active',p.dataset.v===v));
 }
 
-/* ══════════════════════════════════════
-   FLAT DETAIL MODAL
-══════════════════════════════════════ */
-function openFlat(fid){
-  const f=flats.get(fid); if(!f) return;
-  const st=status(f), bal=f.due-f.paid, exp=flatExps(fid), tot=exp.reduce((s,e)=>s+e.amt,0);
-  document.getElementById('mdTitle').textContent=`${f.flatId} — ${f.owner}`;
-  document.getElementById('mdSub').textContent=`Block ${f.block} · ${new Date(activeMonth+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
-  const rows=exp.length?exp.map(e=>`<div class="exp-row">
-    <div><div class="exp-cat">${e.cat}</div><div class="exp-date">${e.date}</div>${e.note?`<div class="exp-note">${e.note}</div>`:''}</div>
-    <div class="exp-amt">${inr(e.amt)}</div>
-  </div>`).join(''):`<div class="exp-empty"><i class="ti ti-inbox"></i>No expenses recorded yet.</div>`;
-  const sc=st==='paid'?'var(--green)':st==='partial'?'var(--amber)':'var(--red)';
-  document.getElementById('mdContent').innerHTML=`
-    <div class="detail-metrics">
-      <div class="d-metric"><div class="d-metric-label">Paid</div><div class="d-metric-value" style="color:var(--green)">${inr(f.paid)}</div></div>
-      <div class="d-metric"><div class="d-metric-label">Balance</div><div class="d-metric-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
-      <div class="d-metric"><div class="d-metric-label">Status</div><div class="d-metric-value" style="color:${sc};font-size:13px">${slabel(st)}</div></div>
+function fIss(f){
+  IF=f;
+  document.querySelectorAll('.iff').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+  rIssues();
+}
+
+/* ── Flat detail modal ── */
+function oFl(fid){
+  const f=flats.get(fid);if(!f)return;
+  const s=st(f),bal=f.due-f.paid,ex=fex(fid),tot=ex.reduce((a,e)=>a+e.amt,0);
+  const sc=s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
+  document.getElementById('mdT').textContent=`${f.flatId} — ${f.owner}`;
+  document.getElementById('mdS').textContent=`Block ${f.block} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  const rows=ex.length?ex.map(e=>`<div class="erow">
+    <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div><div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
+    <div class="eamt">${inr(e.amt)}</div></div>`).join(''):`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
+  document.getElementById('mdC').innerHTML=`
+    <div class="dm">
+      <div class="dm-card"><div class="dm-label">Paid</div><div class="dm-value" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
+      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:13px;color:${sc}">${sl(s)}</div></div>
     </div>
-    <div class="exp-title">Expense History</div>
-    <div class="exp-list">${rows}</div>
-    ${exp.length?`<div class="total-row"><span class="total-label">Total Expenses</span><span class="total-val">${inr(tot)}</span></div>`:''}
-    <div class="modal-actions">
-      <button class="btn-add-pay" onclick="window._closeModal();window._openAddFor('${f.block}','${fid}')">
-        <i class="ti ti-plus"></i> Add Payment / Expense
+    <div class="etitle"><i class="ti ti-list"></i>Payment History</div>
+    <div class="elist">${rows}</div>
+    ${ex.length?`<div class="etotal"><span class="etotal-label">Total Expenses</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
+    <div class="mactions">
+      <button class="btn btn-indigo btn-sm" onclick="window._cM();window._oAFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add Payment
       </button>
     </div>`;
-  document.getElementById('flatModal').classList.add('open');
+  document.getElementById('flatM').classList.add('open');
 }
-function closeModal(){ document.getElementById('flatModal').classList.remove('open'); }
+const cM=()=>document.getElementById('flatM').classList.remove('open');
 
-/* ══════════════════════════════════════
-   ADD EXPENSE MODAL
-══════════════════════════════════════ */
-function fillBlockSelect(){
-  document.getElementById('fBlock').innerHTML=blocks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
-  document.getElementById('fBlock').value=activeBlock;
+/* ── Add expense ── */
+function fBS(){
+  document.getElementById('fB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('fB').value=AB;
 }
-function fillFlatSelect(){
-  const b=document.getElementById('fBlock').value;
-  document.getElementById('fFlat').innerHTML=blockFlats(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner}</option>`).join('');
+function fFS(){
+  const b=document.getElementById('fB').value;
+  document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner}</option>`).join('');
 }
-function openAddExpense(){
-  fillBlockSelect(); fillFlatSelect();
-  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('fAmt').value=''; document.getElementById('fNote').value='';
-  document.getElementById('fStatus').value='paid';
-  document.getElementById('addModal').classList.add('open');
-}
-function openAddFor(block,fid){
-  fillBlockSelect();
-  document.getElementById('fBlock').value=block; fillFlatSelect();
-  setTimeout(()=>document.getElementById('fFlat').value=fid,10);
-  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('fAmt').value=''; document.getElementById('fNote').value='';
-  document.getElementById('fStatus').value='paid';
-  document.getElementById('addModal').classList.add('open');
-}
-function closeAdd(){ document.getElementById('addModal').classList.remove('open'); }
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
+const cA=()=>document.getElementById('addM').classList.remove('open');
+document.getElementById('fB').addEventListener('change',fFS);
 
-document.getElementById('fBlock').addEventListener('change', fillFlatSelect);
-
-async function saveExpense(){
-  const block=document.getElementById('fBlock').value;
-  const fid=document.getElementById('fFlat').value;
-  const cat=document.getElementById('fCat').value;
-  const amt=parseInt(document.getElementById('fAmt').value)||0;
-  const dateVal=document.getElementById('fDate').value;
-  const st=document.getElementById('fStatus').value;
-  const note=document.getElementById('fNote').value.trim();
-  if(!amt||amt<=0){ toast('Please enter a valid amount.','error'); return; }
-  const f=flats.get(fid); if(!f){ toast('Flat not found.','error'); return; }
-  const formatted=dateVal?fmtD(dateVal):fmtD(new Date().toISOString());
+async function sE(){
+  const block=document.getElementById('fB').value,fid=document.getElementById('fF').value;
+  const cat=document.getElementById('fC').value,amt=parseInt(document.getElementById('fA').value)||0;
+  const dv=document.getElementById('fD').value,s=document.getElementById('fS').value;
+  const note=document.getElementById('fN').value.trim();
+  if(!amt||amt<=0){toast('Please enter a valid amount.','error');return;}
+  const f=flats.get(fid);if(!f){toast('Flat not found.','error');return;}
   sync('saving');
-  const btn=document.getElementById('saveBtn'); btn.disabled=true;
-  document.getElementById('saveLbl').textContent='Saving…';
+  const btn=document.getElementById('svBtn');btn.disabled=true;
+  document.getElementById('svLbl').textContent='Saving…';
   try{
-    await addDoc(collection(db,'expenses'),{flatId:fid,block,cat,amt,date:formatted,note,status:st,month:activeMonth,createdAt:serverTimestamp()});
+    await addDoc(collection(db,'expenses'),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),note,status:s,month:AM,createdAt:serverTimestamp()});
     let np=f.paid;
-    if(st==='paid') np=f.due;
-    else if(st==='partial') np=Math.min(f.paid+amt,f.due-1);
+    if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(doc(db,'flats',fid),{paid:np});
-    sync('live'); closeAdd(); toast('Expense saved ✓');
-  } catch(err){ console.error(err); sync('error'); toast('Save failed — check console.','error'); }
-  finally{ btn.disabled=false; document.getElementById('saveLbl').textContent='Save'; }
+    sync('live');cA();toast('Payment saved ✓');
+  }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
+  finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
 
-/* ══════════════════════════════════════
-   ADD FLAT MODAL
-══════════════════════════════════════ */
-function openAddFlatModal(){
-  document.getElementById('nfId').value=''; document.getElementById('nfOwner').value='';
-  document.getElementById('nfDue').value='5000';
-  document.getElementById('addFlatModal').classList.add('open');
-}
-function closeAddFlat(){ document.getElementById('addFlatModal').classList.remove('open'); }
-async function saveNewFlat(){
-  const block=document.getElementById('nfBlock').value;
-  const id=document.getElementById('nfId').value.trim().toUpperCase();
-  const owner=document.getElementById('nfOwner').value.trim();
-  const due=parseInt(document.getElementById('nfDue').value)||5000;
-  if(!id){ toast('Enter a flat number.','error'); return; }
-  if(!owner){ toast('Enter owner name.','error'); return; }
-  if(flats.has(id)){ toast(`Flat ${id} already exists.`,'error'); return; }
+/* ── Add flat ── */
+function oAF(){document.getElementById('nI').value='';document.getElementById('nO').value='';document.getElementById('nD').value='5000';document.getElementById('flatAddM').classList.add('open')}
+const cAF=()=>document.getElementById('flatAddM').classList.remove('open');
+async function sNF(){
+  const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
+  const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||5000;
+  if(!id){toast('Enter a flat number.','error');return;}
+  if(!owner){toast('Enter owner name.','error');return;}
+  if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
   sync('saving');
-  try{
-    await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:activeMonth});
-    sync('live'); closeAddFlat(); toast(`Flat ${id} registered ✓`);
-    activeBlock=block; renderTabs(); renderBlock();
-  } catch(err){ console.error(err); sync('error'); toast('Failed to register flat.','error'); }
+  try{await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:AM});sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();}
+  catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
 
-/* ══════════════════════════════════════
-   DOM EVENTS
-══════════════════════════════════════ */
-document.getElementById('statusFilter').addEventListener('change',e=>{ filterStatus=e.target.value; renderBlock(); });
-document.getElementById('searchInput').addEventListener('input',e=>{ searchTerm=e.target.value.toLowerCase().trim(); renderBlock(); });
-document.getElementById('monthFilter').addEventListener('change',e=>{ activeMonth=e.target.value; listenExpenses(); });
+/* ── Raise issue ── */
+function oRI(){
+  ['iT','iDe','iFl','iRe'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iP').value='medium';
+  document.getElementById('rIM').classList.add('open');
+}
+const cRI=()=>document.getElementById('rIM').classList.remove('open');
+async function sI(){
+  const title=document.getElementById('iT').value.trim(),cat=document.getElementById('iCa').value;
+  const priority=document.getElementById('iP').value,block=document.getElementById('iBl').value;
+  const flat=document.getElementById('iFl').value.trim().toUpperCase();
+  const desc=document.getElementById('iDe').value.trim(),reporter=document.getElementById('iRe').value.trim();
+  if(!title){toast('Enter an issue title.','error');return;}
+  if(!desc){toast('Please describe the issue.','error');return;}
+  if(!reporter){toast('Enter your name.','error');return;}
+  sync('saving');
+  const btn=document.getElementById('issBtn');btn.disabled=true;
+  document.getElementById('issBtnL').textContent='Submitting…';
+  try{
+    await addDoc(collection(db,'issues'),{title,cat,priority,block,flat,desc,reporter,status:'open',month:AM,createdAt:serverTimestamp()});
+    sync('live');cRI();toast('Issue submitted ✓');switchView('issues');
+  }catch(e){console.error(e);sync('error');toast('Failed to submit.','error');}
+  finally{btn.disabled=false;document.getElementById('issBtnL').textContent='Submit Complaint';}
+}
 
-['flatModal','addModal','addFlatModal'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{ if(e.target.id===id){ closeModal();closeAdd();closeAddFlat(); } });
+/* ── Issue detail ── */
+function oID(id){
+  const iss=issues.find(i=>i.id===id);if(!iss)return;
+  const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
+  const pc={high:'var(--red)',medium:'var(--amber)',low:'var(--green)'}[iss.priority];
+  document.getElementById('idT').textContent=iss.title;
+  document.getElementById('idS').textContent=`${iss.cat} · Reported by ${iss.reporter}`;
+  const sL=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
+  document.getElementById('idC').innerHTML=`
+    <div class="dm">
+      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:14px;color:${sc}">${sL}</div></div>
+      <div class="dm-card"><div class="dm-label">Priority</div><div class="dm-value" style="font-size:14px;color:${pc}">${iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1)}</div></div>
+      <div class="dm-card"><div class="dm-label">Location</div><div class="dm-value" style="font-size:14px">${iss.flat||iss.block}</div></div>
+    </div>
+    <div class="etitle"><i class="ti ti-file-description"></i>Full Description</div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:15px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-weight:500">${iss.desc}</div>
+    <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:20px">
+      <span><i class="ti ti-user" style="vertical-align:-2px;margin-right:4px"></i>${iss.reporter}</span>
+      <span><i class="ti ti-calendar" style="vertical-align:-2px;margin-right:4px"></i>${fdt(iss.createdAt)}</span>
+    </div>
+    ${iss.status!=='resolved'?`<div style="display:flex;gap:10px;flex-wrap:wrap">
+      ${iss.status==='open'?`<button class="btn btn-white btn-sm" onclick="window._uIS('${id}','in-progress')"><i class="ti ti-progress"></i> Mark In Progress</button>`:''}
+      <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Mark as Resolved</button>
+    </div>`:`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
+  `;
+  document.getElementById('idM').classList.add('open');
+}
+const cID=()=>document.getElementById('idM').classList.remove('open');
+async function uIS(id,ns){
+  sync('saving');
+  try{await updateDoc(doc(db,'issues',id),{status:ns});sync('live');cID();toast(ns==='resolved'?'Marked as resolved ✓':'Status updated ✓');}
+  catch(e){console.error(e);sync('error');toast('Update failed.','error');}
+}
+
+/* ── Listeners ── */
+function listenFlats(){
+  onSnapshot(collection(db,'flats'),snap=>{
+    snap.docChanges().forEach(ch=>{
+      const d={flatId:ch.doc.id,...ch.doc.data()};
+      ch.type==='removed'?flats.delete(ch.doc.id):flats.set(ch.doc.id,d);
+    });
+    rAll();sync('live');
+    document.getElementById('lo').style.display='none';
+    document.getElementById('app').style.display='';
+  },e=>{console.error(e);sync('error');});
+}
+function listenExp(){
+  if(eu)eu();
+  const q=query(collection(db,'expenses'),where('month','==',AM),orderBy('createdAt','asc'));
+  eu=onSnapshot(q,snap=>{
+    exps.clear();
+    snap.forEach(d=>{const e={expId:d.id,...d.data()};const a=exps.get(e.flatId)||[];a.push(e);exps.set(e.flatId,a);});
+    rAll();
+  },()=>{
+    const q2=query(collection(db,'expenses'),where('month','==',AM));
+    eu=onSnapshot(q2,snap=>{exps.clear();snap.forEach(d=>{const e={expId:d.id,...d.data()};const a=exps.get(e.flatId)||[];a.push(e);exps.set(e.flatId,a);});rAll();});
+  });
+}
+function listenIssues(){
+  if(iu)iu();
+  const q=query(collection(db,'issues'),orderBy('createdAt','desc'));
+  iu=onSnapshot(q,snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();},
+  ()=>{iu=onSnapshot(collection(db,'issues'),snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();});});
+}
+
+/* ── DOM events ── */
+document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock()});
+document.getElementById('qi').addEventListener('input',e=>{SQ=e.target.value.toLowerCase().trim();rBlock()});
+document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp()});
+['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{if(e.target.id===id){cM();cA();cAF();cRI();cID();}});
 });
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal();closeAdd();closeAddFlat(); } });
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();}});
 
-/* ══════════════════════════════════════
-   EXPOSE TO window (needed for inline onclick in non-module scope)
-══════════════════════════════════════ */
-window._setBlock      = b=>{ activeBlock=b; renderTabs(); renderBlock(); };
-window._openFlat      = openFlat;
-window._closeModal    = closeModal;
-window._openAddExpense= openAddExpense;
-window._openAddFor    = openAddFor;
-window._closeAdd      = closeAdd;
-window._saveExpense   = saveExpense;
-window._openAddFlatModal = openAddFlatModal;
-window._closeAddFlat  = closeAddFlat;
-window._saveNewFlat   = saveNewFlat;
-// nav buttons use these directly
-window.openAddExpense    = openAddExpense;
-window.openAddFlatModal  = openAddFlatModal;
+/* ── Window expose ── */
+window._sB=b=>{AB=b;rBTabs();rBlock()};
+window._oFl=oFl; window._cM=cM;
+window._oA=oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
+window._oAF=oAF; window._cAF=cAF;     window._sNF=sNF;
+window._oRI=oRI; window._cRI=cRI;     window._sI=sI;
+window._oID=oID; window._cID=cID;     window._uIS=uIS;
+window.switchView=switchView; window.fIss=fIss;
 
-/* ══════════════════════════════════════
-   BOOT
-══════════════════════════════════════ */
-document.getElementById('navMonth').textContent=
-  new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-
+/* ── Boot ── */
+document.getElementById('navMonth').textContent=new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 try{
   await seedIfEmpty();
-  listenFlats();
-  listenExpenses();
-} catch(err){
+  listenFlats();listenExp();listenIssues();
+}catch(err){
   console.error('Boot error:',err);
-  document.getElementById('loadingText').textContent='⚠ Firebase connection failed. Check console.';
+  document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
 }
 </script>
 </body>
