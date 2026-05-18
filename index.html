@@ -1,221 +1,874 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Flat Payments Tracker</title>
-  <link rel="stylesheet" href="style.css" />
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Flat Payments Tracker</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+/* ══════════════════════════════════════
+   RESET & TOKENS
+══════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f3f0;
+  --surface:#ffffff;
+  --surface2:#f0efeb;
+  --border:rgba(0,0,0,0.10);
+  --border2:rgba(0,0,0,0.20);
+  --text:#1a1a18;
+  --text2:#5f5e5a;
+  --muted:#9a9890;
+  --blue:#185FA5;
+  --blue2:#0C447C;
+  --green:#1D9E75;
+  --green-bg:#E1F5EE;
+  --green-txt:#085041;
+  --amber:#BA7517;
+  --amber-bg:#FAEEDA;
+  --amber-txt:#633806;
+  --red:#A32D2D;
+  --red-bg:#FCEBEB;
+  --red-txt:#791F1F;
+  --r-sm:6px;--r-md:8px;--r-lg:12px;--r-xl:16px;
+  --font:'Segoe UI',system-ui,-apple-system,sans-serif;
+  --shadow:0 1px 4px rgba(0,0,0,0.08);
+  --shadow-md:0 4px 20px rgba(0,0,0,0.12);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --bg:#191917;--surface:#242422;--surface2:#2d2d2b;
+    --border:rgba(255,255,255,0.09);--border2:rgba(255,255,255,0.18);
+    --text:#f0eeea;--text2:#b0ae a7;--muted:#7a7875;
+    --green-bg:#04332c;--green-txt:#9fe1cb;
+    --amber-bg:#3f2302;--amber-txt:#f5c874;
+    --red-bg:#4e1212;--red-txt:#f5c0c0;
+  }
+}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ══════════════════════════════════════
+   LOADING OVERLAY
+══════════════════════════════════════ */
+#loadingOverlay{
+  position:fixed;inset:0;background:var(--bg);z-index:9999;
+  display:flex;align-items:center;justify-content:center;
+}
+.loading-box{text-align:center;display:flex;flex-direction:column;align-items:center;gap:18px}
+.spinner{
+  width:44px;height:44px;
+  border:3px solid var(--border2);border-top-color:var(--blue);
+  border-radius:50%;animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:14px;color:var(--text2)}
+.loading-logo{font-size:28px;color:var(--blue)}
+
+/* ══════════════════════════════════════
+   NAVBAR
+══════════════════════════════════════ */
+.navbar{
+  position:sticky;top:0;z-index:50;
+  background:var(--surface);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 1.5rem;height:58px;gap:12px;
+  box-shadow:var(--shadow);
+}
+.nav-brand{display:flex;align-items:center;gap:9px;font-size:15px;font-weight:600;color:var(--text)}
+.nav-brand i{font-size:22px;color:var(--blue)}
+.nav-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nav-month{font-size:12px;color:var(--text2);white-space:nowrap}
+
+/* Sync dot */
+.sync-wrap{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--text2)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.sync-dot.live{background:var(--green);box-shadow:0 0 0 3px rgba(29,158,117,.2)}
+.sync-dot.saving{background:var(--amber);animation:pulse 1s infinite}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* Buttons */
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:var(--r-md);
+  font-size:13px;font-weight:500;font-family:var(--font);
+  cursor:pointer;border:none;transition:background .15s,transform .1s;
+  white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--blue);color:#fff}
+.btn-primary:hover{background:var(--blue2)}
+.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.btn-ghost:hover{background:var(--border)}
+.btn-sm{padding:5px 12px;font-size:12px}
+.btn i{font-size:16px}
+
+/* ══════════════════════════════════════
+   LAYOUT WRAPPER
+══════════════════════════════════════ */
+.app{max-width:1160px;margin:0 auto;padding-bottom:3rem}
+
+/* ══════════════════════════════════════
+   SUMMARY BAR
+══════════════════════════════════════ */
+.summary-section{padding:1.25rem 1.5rem 0}
+.summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.metric{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:14px 16px;
+  box-shadow:var(--shadow);
+}
+.metric-label{font-size:11px;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px;text-transform:uppercase;letter-spacing:.4px}
+.metric-label i{font-size:14px}
+.metric-value{font-size:22px;font-weight:600;color:var(--text)}
+.metric-value.blue{color:var(--blue)}
+.metric-value.green{color:var(--green)}
+.metric-value.amber{color:var(--amber)}
+.metric-value.red{color:var(--red)}
+
+/* ══════════════════════════════════════
+   CONTROLS
+══════════════════════════════════════ */
+.controls-section{padding:1rem 1.5rem 0}
+.controls-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+.controls-row select,.controls-row input{
+  height:36px;padding:0 10px;
+  border-radius:var(--r-md);border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);
+  font-size:13px;font-family:var(--font);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.controls-row select:focus,.controls-row input:focus{
+  border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.15);
+}
+.search-wrap{position:relative;flex:1;min-width:190px}
+.search-wrap i{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+.search-wrap input{width:100%;padding-left:32px}
+
+/* ══════════════════════════════════════
+   BLOCK TABS
+══════════════════════════════════════ */
+.tab-bar{display:flex;gap:4px;padding:1rem 1.5rem 0;overflow-x:auto;scrollbar-width:none}
+.tab-bar::-webkit-scrollbar{display:none}
+.tab{
+  display:flex;align-items:center;gap:7px;
+  padding:8px 18px;border-radius:var(--r-md);
+  font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;
+  background:transparent;border:1px solid transparent;
+  color:var(--text2);font-family:var(--font);
+  transition:all .15s;
+}
+.tab:hover:not(.active){background:var(--surface);color:var(--text);border-color:var(--border)}
+.tab.active{background:var(--surface);border-color:var(--border2);color:var(--text);box-shadow:var(--shadow)}
+.tab i{font-size:16px}
+.tab-badge{
+  font-size:11px;padding:1px 7px;border-radius:99px;
+  background:var(--surface2);color:var(--text2);
+  border:1px solid var(--border);
+}
+.tab.active .tab-badge{background:var(--blue);color:#fff;border-color:var(--blue)}
+
+/* ══════════════════════════════════════
+   BLOCK SECTION
+══════════════════════════════════════ */
+.block-section{padding:1rem 1.5rem 0}
+.block-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
+.block-title{display:flex;align-items:center;gap:9px;font-size:16px;font-weight:600;color:var(--text)}
+.block-title i{font-size:22px}
+.block-badge{
+  font-size:11px;padding:2px 10px;border-radius:99px;
+  background:var(--surface2);color:var(--text2);border:1px solid var(--border);
+  font-weight:400;
+}
+.block-collected{font-size:13px;color:var(--text2)}
+.block-collected strong{color:var(--text);font-weight:600}
+
+/* ══════════════════════════════════════
+   FLAT CARDS GRID
+══════════════════════════════════════ */
+.flats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:11px}
+
+.flat-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:15px;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:transform .13s,box-shadow .13s,border-color .13s;
+}
+.flat-card::before{
+  content:'';position:absolute;left:0;top:0;bottom:0;width:4px;
+}
+.flat-card.paid::before{background:var(--green)}
+.flat-card.partial::before{background:var(--amber)}
+.flat-card.pending::before{background:var(--red)}
+.flat-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md);border-color:var(--border2)}
+.flat-card:focus{outline:2px solid var(--blue);outline-offset:2px}
+
+.flat-num{font-size:15px;font-weight:600;color:var(--text);margin-bottom:2px}
+.flat-owner{font-size:12px;color:var(--text2);margin-bottom:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flat-paid{font-size:21px;font-weight:700}
+.flat-paid.paid{color:var(--green)}
+.flat-paid.partial{color:var(--amber)}
+.flat-paid.pending{color:var(--red)}
+.flat-due{font-size:11px;color:var(--muted);margin-top:2px}
+
+.progress{height:5px;background:var(--surface2);border-radius:99px;margin-top:12px;overflow:hidden}
+.progress-bar{height:100%;border-radius:99px;transition:width .4s}
+
+.status-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;margin-top:10px;
+  text-transform:uppercase;letter-spacing:.3px;
+}
+.status-pill i{font-size:11px}
+.status-pill.paid{background:var(--green-bg);color:var(--green-txt)}
+.status-pill.partial{background:var(--amber-bg);color:var(--amber-txt)}
+.status-pill.pending{background:var(--red-bg);color:var(--red-txt)}
+
+.no-results{
+  grid-column:1/-1;text-align:center;padding:3rem 0;
+  color:var(--text2);font-size:14px;
+}
+.no-results i{font-size:36px;display:block;margin-bottom:10px;color:var(--muted)}
+
+/* ══════════════════════════════════════
+   MODALS
+══════════════════════════════════════ */
+.modal-bg{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.48);z-index:200;
+  align-items:center;justify-content:center;padding:1rem;
+}
+.modal-bg.open{display:flex}
+.modal{
+  background:var(--surface);border-radius:var(--r-xl);
+  border:1px solid var(--border2);
+  width:min(510px,100%);max-height:90vh;overflow-y:auto;
+  padding:1.5rem;box-shadow:var(--shadow-md);
+  animation:modalIn .18s ease;
+}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
+.modal-head{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;gap:12px}
+.modal-title{font-size:17px;font-weight:600;color:var(--text)}
+.modal-sub{font-size:13px;color:var(--text2);margin-top:2px}
+.modal-close{
+  font-size:20px;cursor:pointer;color:var(--text2);
+  background:none;border:none;line-height:1;padding:4px;
+  border-radius:var(--r-sm);transition:background .1s,color .1s;flex-shrink:0;
+}
+.modal-close:hover{background:var(--surface2);color:var(--text)}
+
+/* Detail modal metrics */
+.detail-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:1.25rem}
+.d-metric{background:var(--surface2);border-radius:var(--r-md);padding:11px 13px}
+.d-metric-label{font-size:11px;color:var(--text2);margin-bottom:4px}
+.d-metric-value{font-size:18px;font-weight:600;color:var(--text)}
+
+/* Expense list */
+.exp-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:9px}
+.exp-list{border:1px solid var(--border);border-radius:var(--r-md);overflow:hidden;margin-bottom:12px}
+.exp-row{
+  display:grid;grid-template-columns:1fr auto;
+  align-items:center;padding:10px 13px;
+  border-bottom:1px solid var(--border);font-size:13px;
+}
+.exp-row:last-child{border-bottom:none}
+.exp-row:nth-child(even){background:var(--surface2)}
+.exp-cat{font-weight:600;color:var(--text)}
+.exp-date{font-size:11px;color:var(--muted);margin-top:1px}
+.exp-note{font-size:11px;color:var(--text2);font-style:italic;margin-top:1px}
+.exp-amt{font-weight:600;color:var(--text);text-align:right}
+.exp-empty{padding:1.5rem;text-align:center;color:var(--muted);font-size:13px}
+.exp-empty i{font-size:26px;display:block;margin-bottom:6px}
+.total-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:11px 13px;background:var(--surface2);
+  border-radius:var(--r-md);border:1px solid var(--border);margin-bottom:12px;
+}
+.total-label{font-size:13px;font-weight:600;color:var(--text)}
+.total-val{font-size:16px;font-weight:700;color:var(--text)}
+
+/* Form */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column;gap:4px;margin-bottom:10px}
+.form-group label{font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.4px}
+.form-group input,.form-group select{
+  width:100%;height:39px;padding:0 11px;
+  border-radius:var(--r-md);border:1px solid var(--border2);
+  background:var(--surface);color:var(--text);
+  font-size:13px;font-family:var(--font);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.form-group input:focus,.form-group select:focus{
+  border-color:var(--blue);box-shadow:0 0 0 3px rgba(24,95,165,.15);
+}
+.modal-actions{
+  display:flex;gap:8px;justify-content:flex-end;
+  margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border);
+}
+.btn-add-pay{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:var(--r-md);
+  background:var(--blue);color:#fff;border:none;
+  font-size:13px;font-weight:600;font-family:var(--font);cursor:pointer;
+  transition:background .15s;
+}
+.btn-add-pay:hover{background:var(--blue2)}
+.btn-add-pay i{font-size:16px}
+
+/* ══════════════════════════════════════
+   TOAST NOTIFICATION
+══════════════════════════════════════ */
+#toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;
+  padding:11px 18px;border-radius:var(--r-md);
+  font-size:13px;font-weight:500;color:#fff;
+  background:var(--text);box-shadow:var(--shadow-md);
+  opacity:0;transform:translateY(8px);
+  transition:opacity .25s,transform .25s;pointer-events:none;
+}
+#toast.show{opacity:1;transform:none}
+#toast.success{background:var(--green)}
+#toast.error{background:var(--red)}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media(max-width:640px){
+  .navbar{padding:0 1rem}
+  .nav-month,.sync-wrap .sync-label{display:none}
+  .summary-section,.controls-section,.tab-bar,.block-section{padding-left:1rem;padding-right:1rem}
+  .form-grid{grid-template-columns:1fr}
+  .detail-metrics{grid-template-columns:1fr 1fr}
+  .flats-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+}
+</style>
 </head>
 <body>
 
-  <!-- Loading overlay — shown while Firebase loads data -->
-  <div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-box">
-      <div class="spinner"></div>
-      <div class="loading-text">Connecting to Firebase…</div>
-    </div>
+<!-- ── Loading overlay ── -->
+<div id="loadingOverlay">
+  <div class="loading-box">
+    <i class="ti ti-building loading-logo"></i>
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Connecting to Firebase…</div>
   </div>
+</div>
 
-  <div class="app-wrapper" id="appWrapper" style="display:none">
+<!-- ══════════════ APP ══════════════ -->
+<div class="app" id="appWrapper" style="display:none">
 
-    <!-- ── Top Nav ── -->
-    <nav class="navbar">
-      <div class="nav-brand">
-        <i class="ti ti-building" aria-hidden="true"></i>
-        <span>Flat Payments Tracker</span>
-      </div>
-      <div class="nav-right">
-        <!-- Real-time sync dot -->
-        <div class="sync-indicator" id="syncIndicator" title="Firebase sync status">
-          <span class="sync-dot" id="syncDot"></span>
-          <span class="sync-label" id="syncLabel">Live</span>
-        </div>
-        <span class="nav-month" id="navMonth"></span>
-        <button class="nav-btn secondary-btn" onclick="openAddFlatModal()" title="Register a new flat">
-          <i class="ti ti-home-plus" aria-hidden="true"></i> New Flat
-        </button>
-        <button class="nav-btn" onclick="openAddExpense()">
-          <i class="ti ti-plus" aria-hidden="true"></i> Add Expense
-        </button>
-      </div>
-    </nav>
-
-    <!-- ── Summary Bar ── -->
-    <section class="summary-section" aria-label="Payment summary">
-      <div class="summary-grid" id="summaryBar"></div>
-    </section>
-
-    <!-- ── Controls ── -->
-    <section class="controls-section">
-      <div class="controls-row">
-        <select id="monthFilter" aria-label="Filter by month">
-          <option value="2026-05">May 2026</option>
-          <option value="2026-04">April 2026</option>
-          <option value="2026-03">March 2026</option>
-        </select>
-        <select id="statusFilter" aria-label="Filter by status">
-          <option value="all">All statuses</option>
-          <option value="paid">Paid</option>
-          <option value="partial">Partial</option>
-          <option value="pending">Pending</option>
-        </select>
-        <div class="search-wrap">
-          <i class="ti ti-search" aria-hidden="true"></i>
-          <input type="text" id="searchInput" placeholder="Search flat or owner…" aria-label="Search flat or owner" />
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Block Tabs ── -->
-    <div class="tab-bar" id="tabBar" role="tablist" aria-label="Blocks"></div>
-
-    <!-- ── Block Content ── -->
-    <main class="block-section" id="blockContent" aria-live="polite"></main>
-
-  </div><!-- /.app-wrapper -->
-
-
-  <!-- ══════════════════════════════════════
-       FLAT DETAIL MODAL
-  ══════════════════════════════════════ -->
-  <div class="modal-bg" id="flatModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal">
-      <div class="modal-head">
-        <div>
-          <div class="modal-title" id="modalTitle"></div>
-          <div class="modal-sub"   id="modalSub"></div>
-        </div>
-        <button class="modal-close" onclick="window.__closeModal()" aria-label="Close dialog">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-      <div id="modalContent"></div>
+  <nav class="navbar">
+    <div class="nav-brand">
+      <i class="ti ti-building"></i>
+      <span>Flat Payments Tracker</span>
     </div>
+    <div class="nav-right">
+      <div class="sync-wrap">
+        <span class="sync-dot" id="syncDot"></span>
+        <span class="sync-label" id="syncLabel">–</span>
+      </div>
+      <span class="nav-month" id="navMonth"></span>
+      <button class="btn btn-ghost btn-sm" onclick="window._openAddFlatModal()">
+        <i class="ti ti-home-plus"></i> New Flat
+      </button>
+      <button class="btn btn-primary btn-sm" onclick="window._openAddExpense()">
+        <i class="ti ti-plus"></i> Add Expense
+      </button>
+    </div>
+  </nav>
+
+  <section class="summary-section"><div class="summary-grid" id="summaryBar"></div></section>
+
+  <section class="controls-section">
+    <div class="controls-row">
+      <select id="monthFilter">
+        <option value="2026-05">May 2026</option>
+        <option value="2026-04">April 2026</option>
+        <option value="2026-03">March 2026</option>
+      </select>
+      <select id="statusFilter">
+        <option value="all">All statuses</option>
+        <option value="paid">Paid</option>
+        <option value="partial">Partial</option>
+        <option value="pending">Pending</option>
+      </select>
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="searchInput" placeholder="Search flat or owner…"/>
+      </div>
+    </div>
+  </section>
+
+  <div class="tab-bar" id="tabBar"></div>
+  <main class="block-section" id="blockContent"></main>
+</div>
+
+<!-- ══════════════ FLAT DETAIL MODAL ══════════════ -->
+<div class="modal-bg" id="flatModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div><div class="modal-title" id="mdTitle"></div><div class="modal-sub" id="mdSub"></div></div>
+      <button class="modal-close" onclick="window._closeModal()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="mdContent"></div>
   </div>
+</div>
 
-  <!-- ══════════════════════════════════════
-       ADD EXPENSE MODAL
-  ══════════════════════════════════════ -->
-  <div class="modal-bg" id="addModal" role="dialog" aria-modal="true" aria-label="Add expense form">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title">Add Expense / Payment</div>
-        <button class="modal-close" onclick="window.__closeAddModal()" aria-label="Close dialog">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="fBlock">Block</label>
-          <select id="fBlock"></select>
-        </div>
-        <div class="form-group">
-          <label for="fFlat">Flat No.</label>
-          <select id="fFlat"></select>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="fCat">Category</label>
-          <select id="fCat">
-            <option>Maintenance</option>
-            <option>Water</option>
-            <option>Electricity</option>
-            <option>Parking</option>
-            <option>Lift</option>
-            <option>Security</option>
-            <option>Cleaning</option>
-            <option>Other</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="fAmt">Amount (₹)</label>
-          <input type="number" id="fAmt" placeholder="0" min="1" />
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="fDate">Date</label>
-          <input type="date" id="fDate" />
-        </div>
-        <div class="form-group">
-          <label for="fStatus">Payment Status</label>
-          <select id="fStatus">
-            <option value="paid">Paid</option>
-            <option value="partial">Partial</option>
-            <option value="pending">Pending</option>
-          </select>
-        </div>
-      </div>
-
+<!-- ══════════════ ADD EXPENSE MODAL ══════════════ -->
+<div class="modal-bg" id="addModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Add Expense / Payment</div>
+      <button class="modal-close" onclick="window._closeAdd()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Block</label><select id="fBlock"></select></div>
+      <div class="form-group"><label>Flat No.</label><select id="fFlat"></select></div>
+    </div>
+    <div class="form-grid">
       <div class="form-group">
-        <label for="fNote">Note (optional)</label>
-        <input type="text" id="fNote" placeholder="e.g. advance paid, cheque received…" />
+        <label>Category</label>
+        <select id="fCat">
+          <option>Maintenance</option><option>Water</option><option>Electricity</option>
+          <option>Parking</option><option>Lift</option><option>Security</option>
+          <option>Cleaning</option><option>Other</option>
+        </select>
       </div>
-
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="window.__closeAddModal()">Cancel</button>
-        <button class="btn-primary" id="saveBtn" onclick="window.__saveExpense()">
-          <i class="ti ti-device-floppy" aria-hidden="true"></i>
-          <span id="saveBtnLabel">Save</span>
-        </button>
+      <div class="form-group"><label>Amount (₹)</label><input type="number" id="fAmt" placeholder="0" min="1"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Date</label><input type="date" id="fDate"/></div>
+      <div class="form-group">
+        <label>Payment Status</label>
+        <select id="fStatus"><option value="paid">Paid</option><option value="partial">Partial</option><option value="pending">Pending</option></select>
       </div>
     </div>
-  </div>
-
-  <!-- ══════════════════════════════════════
-       ADD NEW FLAT MODAL
-  ══════════════════════════════════════ -->
-  <div class="modal-bg" id="addFlatModal" role="dialog" aria-modal="true" aria-label="Register new flat">
-    <div class="modal">
-      <div class="modal-head">
-        <div class="modal-title">Register New Flat</div>
-        <button class="modal-close" onclick="window.__closeAddFlatModal()" aria-label="Close dialog">
-          <i class="ti ti-x"></i>
-        </button>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="nfBlock">Block</label>
-          <select id="nfBlock">
-            <option value="A">Block A</option>
-            <option value="B">Block B</option>
-            <option value="C">Block C</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label for="nfId">Flat No. (e.g. A-101)</label>
-          <input type="text" id="nfId" placeholder="A-101" />
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <div class="form-group">
-          <label for="nfOwner">Owner Name</label>
-          <input type="text" id="nfOwner" placeholder="Full name" />
-        </div>
-        <div class="form-group">
-          <label for="nfDue">Monthly Due (₹)</label>
-          <input type="number" id="nfDue" placeholder="5000" min="1" />
-        </div>
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-secondary" onclick="window.__closeAddFlatModal()">Cancel</button>
-        <button class="btn-primary" onclick="window.__saveNewFlat()">
-          <i class="ti ti-plus" aria-hidden="true"></i> Register Flat
-        </button>
-      </div>
+    <div class="form-group"><label>Note (optional)</label><input type="text" id="fNote" placeholder="e.g. cheque received, advance…"/></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="window._closeAdd()">Cancel</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="window._saveExpense()">
+        <i class="ti ti-device-floppy"></i><span id="saveLbl">Save</span>
+      </button>
     </div>
   </div>
+</div>
 
-  <!-- app.js MUST be type="module" so Firebase ESM imports work -->
-  <script type="module" src="app.js"></script>
+<!-- ══════════════ ADD FLAT MODAL ══════════════ -->
+<div class="modal-bg" id="addFlatModal">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Register New Flat</div>
+      <button class="modal-close" onclick="window._closeAddFlat()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Block</label>
+        <select id="nfBlock"><option value="A">Block A</option><option value="B">Block B</option><option value="C">Block C</option></select>
+      </div>
+      <div class="form-group"><label>Flat No. (e.g. A-101)</label><input type="text" id="nfId" placeholder="A-101"/></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group"><label>Owner Name</label><input type="text" id="nfOwner" placeholder="Full name"/></div>
+      <div class="form-group"><label>Monthly Due (₹)</label><input type="number" id="nfDue" placeholder="5000" min="1"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="window._closeAddFlat()">Cancel</button>
+      <button class="btn btn-primary" onclick="window._saveNewFlat()"><i class="ti ti-plus"></i> Register</button>
+    </div>
+  </div>
+</div>
 
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════════════════
+     FIREBASE + APP LOGIC  (type=module for ESM imports)
+══════════════════════════════════════════════════════════ -->
+<script type="module">
+/* ── Firebase SDK from CDN ── */
+import { initializeApp }  from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
+import { getAnalytics }   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
+import {
+  getFirestore, collection, doc,
+  getDocs, addDoc, setDoc, updateDoc,
+  onSnapshot, query, where, orderBy, serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+
+/* ── Init ── */
+const app = initializeApp({
+  apiKey:            'AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM',
+  authDomain:        'gatebook-17065.firebaseapp.com',
+  projectId:         'gatebook-17065',
+  storageBucket:     'gatebook-17065.firebasestorage.app',
+  messagingSenderId: '732765572762',
+  appId:             '1:732765572762:web:55f1cb897bb5804a831923',
+  measurementId:     'G-6YKLV11L0G',
+});
+getAnalytics(app);
+const db = getFirestore(app);
+
+/* ══════════════════════════════════════
+   BLOCK COLORS
+══════════════════════════════════════ */
+const COLORS = { A:'#185FA5', B:'#1D9E75', C:'#BA7517', D:'#7F5AF0', E:'#E8572A' };
+
+/* ══════════════════════════════════════
+   SEED DATA  (runs once if Firestore empty)
+══════════════════════════════════════ */
+const SEED_FLATS = [
+  {id:'A-101',block:'A',owner:'Ramesh Kumar',  due:5000,paid:4500,month:'2026-05'},
+  {id:'A-102',block:'A',owner:'Sunita Sharma', due:5000,paid:5000,month:'2026-05'},
+  {id:'A-103',block:'A',owner:'Priya Nair',    due:5000,paid:0,   month:'2026-05'},
+  {id:'A-104',block:'A',owner:'Anil Gupta',    due:5000,paid:5000,month:'2026-05'},
+  {id:'A-201',block:'A',owner:'Kavita Reddy',  due:5000,paid:2000,month:'2026-05'},
+  {id:'A-202',block:'A',owner:'Suresh Mehta',  due:5000,paid:5000,month:'2026-05'},
+  {id:'B-101',block:'B',owner:'Deepa Iyer',    due:5000,paid:5000,month:'2026-05'},
+  {id:'B-102',block:'B',owner:'Manoj Pillai',  due:5000,paid:3000,month:'2026-05'},
+  {id:'B-103',block:'B',owner:'Rekha Joshi',   due:5000,paid:0,   month:'2026-05'},
+  {id:'B-104',block:'B',owner:'Venkat Rao',    due:5000,paid:5000,month:'2026-05'},
+  {id:'B-201',block:'B',owner:'Anita Singh',   due:5000,paid:5000,month:'2026-05'},
+  {id:'C-101',block:'C',owner:'Rajan Verma',   due:5000,paid:4000,month:'2026-05'},
+  {id:'C-102',block:'C',owner:'Meena Krishnan',due:5000,paid:5000,month:'2026-05'},
+  {id:'C-103',block:'C',owner:'Harish Patel',  due:5000,paid:0,   month:'2026-05'},
+  {id:'C-104',block:'C',owner:'Leela Nair',    due:5000,paid:5000,month:'2026-05'},
+];
+const SEED_EXP = [
+  {flatId:'A-101',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'partial',month:'2026-05'},
+  {flatId:'A-101',block:'A',cat:'Water',      date:'05 May',amt:1500,note:'',status:'partial',month:'2026-05'},
+  {flatId:'A-102',block:'A',cat:'Maintenance',date:'02 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'A-102',block:'A',cat:'Electricity',date:'04 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'A-104',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'A-104',block:'A',cat:'Parking',    date:'03 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'A-201',block:'A',cat:'Maintenance',date:'06 May',amt:2000,note:'partial advance',status:'partial',month:'2026-05'},
+  {flatId:'A-202',block:'A',cat:'Maintenance',date:'01 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'B-101',block:'B',cat:'Maintenance',date:'02 May',amt:3500,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'B-101',block:'B',cat:'Lift',       date:'05 May',amt:1500,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'B-102',block:'B',cat:'Maintenance',date:'03 May',amt:3000,note:'',status:'partial',month:'2026-05'},
+  {flatId:'B-104',block:'B',cat:'Security',   date:'01 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'B-104',block:'B',cat:'Cleaning',   date:'04 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'B-201',block:'B',cat:'Maintenance',date:'01 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'C-101',block:'C',cat:'Maintenance',date:'02 May',amt:4000,note:'',status:'partial',month:'2026-05'},
+  {flatId:'C-102',block:'C',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'C-102',block:'C',cat:'Water',      date:'04 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
+  {flatId:'C-104',block:'C',cat:'Parking',    date:'03 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
+];
+
+async function seedIfEmpty(){
+  const snap = await getDocs(collection(db,'flats'));
+  if(!snap.empty) return;
+  for(const f of SEED_FLATS){ const {id,...d}=f; await setDoc(doc(db,'flats',id),d); }
+  for(const e of SEED_EXP)  { await addDoc(collection(db,'expenses'),{...e,createdAt:serverTimestamp()}); }
+}
+
+/* ══════════════════════════════════════
+   CACHE & STATE
+══════════════════════════════════════ */
+const flats = new Map();    // flatId → {flatId,...}
+const exps  = new Map();    // flatId → [{...}]
+let activeBlock  = 'A';
+let filterStatus = 'all';
+let searchTerm   = '';
+let activeMonth  = '2026-05';
+let expUnsub     = null;
+
+/* ══════════════════════════════════════
+   HELPERS
+══════════════════════════════════════ */
+const status  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
+const slabel  = s => ({paid:'Paid in full',partial:'Partial',pending:'Not paid'}[s]);
+const sicon   = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
+const inr     = n => '₹'+Number(n||0).toLocaleString('en-IN');
+const fmtD    = s => new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+const blocks  = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
+const blockFlats = b => [...flats.values()].filter(f=>f.block===b && f.month===activeMonth);
+const flatExps   = id => exps.get(id)||[];
+
+/* ══════════════════════════════════════
+   SYNC DOT
+══════════════════════════════════════ */
+function sync(s){
+  const dot=document.getElementById('syncDot'), lbl=document.getElementById('syncLabel');
+  dot.className='sync-dot '+s;
+  lbl.textContent={live:'Live',saving:'Saving…',error:'Error'}[s];
+}
+
+/* ══════════════════════════════════════
+   TOAST
+══════════════════════════════════════ */
+function toast(msg,type='success'){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className=type+' show';
+  setTimeout(()=>t.className='',3000);
+}
+
+/* ══════════════════════════════════════
+   RENDER — SUMMARY
+══════════════════════════════════════ */
+function renderSummary(){
+  const all=[ ...flats.values()].filter(f=>f.month===activeMonth);
+  const due=all.reduce((s,f)=>s+f.due,0);
+  const paid=all.reduce((s,f)=>s+f.paid,0);
+  const pc=all.filter(f=>status(f)==='paid').length;
+  const pen=all.filter(f=>status(f)==='pending').length;
+  const par=all.filter(f=>status(f)==='partial').length;
+  document.getElementById('summaryBar').innerHTML=`
+    <div class="metric"><div class="metric-label"><i class="ti ti-receipt"></i>Total Due</div><div class="metric-value blue">${inr(due)}</div></div>
+    <div class="metric"><div class="metric-label"><i class="ti ti-circle-check"></i>Collected</div><div class="metric-value green">${inr(paid)}</div></div>
+    <div class="metric"><div class="metric-label"><i class="ti ti-building"></i>Flats Paid</div><div class="metric-value green">${pc}/${all.length}</div></div>
+    <div class="metric"><div class="metric-label"><i class="ti ti-alert-circle"></i>Outstanding</div><div class="metric-value red">${inr(due-paid)}</div></div>
+    <div class="metric"><div class="metric-label"><i class="ti ti-clock"></i>Partial / Pending</div><div class="metric-value amber">${par} / ${pen}</div></div>
+  `;
+}
+
+/* ══════════════════════════════════════
+   RENDER — TABS
+══════════════════════════════════════ */
+function renderTabs(){
+  const bs=blocks();
+  if(!bs.includes(activeBlock)) activeBlock=bs[0]||'A';
+  document.getElementById('tabBar').innerHTML=bs.map(b=>{
+    const bf=blockFlats(b);
+    const pc=bf.filter(f=>status(f)==='paid').length;
+    return `<button class="tab${b===activeBlock?' active':''}" onclick="window._setBlock('${b}')">
+      <i class="ti ti-building"></i> Block ${b}
+      <span class="tab-badge">${pc}/${bf.length}</span>
+    </button>`;
+  }).join('');
+}
+
+/* ══════════════════════════════════════
+   RENDER — CARDS
+══════════════════════════════════════ */
+function renderBlock(){
+  const color=COLORS[activeBlock]||'#888';
+  const bf=blockFlats(activeBlock);
+  const visible=bf.filter(f=>{
+    if(filterStatus!=='all' && status(f)!==filterStatus) return false;
+    if(searchTerm && !f.flatId.toLowerCase().includes(searchTerm) && !f.owner.toLowerCase().includes(searchTerm)) return false;
+    return true;
+  });
+  const pc=bf.filter(f=>status(f)==='paid').length;
+  const col=bf.reduce((s,f)=>s+f.paid,0);
+
+  let html=`<div class="block-header">
+    <div class="block-title"><i class="ti ti-building" style="color:${color}"></i>Block ${activeBlock}<span class="block-badge">${pc}/${bf.length} paid</span></div>
+    <div class="block-collected">Collected: <strong>${inr(col)}</strong></div>
+  </div><div class="flats-grid">`;
+
+  if(!visible.length){
+    html+=`<div class="no-results"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
+  } else {
+    visible.forEach(f=>{
+      const st=status(f);
+      const pct=Math.round(Math.min(f.paid/f.due*100,100));
+      const bc=st==='paid'?'#1D9E75':st==='partial'?'#BA7517':'#A32D2D';
+      html+=`<div class="flat-card ${st}" onclick="window._openFlat('${f.flatId}')" role="button" tabindex="0"
+        onkeydown="if(event.key==='Enter')window._openFlat('${f.flatId}')">
+        <div class="flat-num">${f.flatId}</div>
+        <div class="flat-owner">${f.owner}</div>
+        <div class="flat-paid ${st}">${inr(f.paid)}</div>
+        <div class="flat-due">of ${inr(f.due)} due</div>
+        <div class="progress"><div class="progress-bar" style="width:${pct}%;background:${bc}"></div></div>
+        <div class="status-pill ${st}"><i class="ti ${sicon(st)}"></i>${slabel(st)}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('blockContent').innerHTML=html+'</div>';
+}
+
+function renderAll(){ renderSummary(); renderTabs(); renderBlock(); }
+
+/* ══════════════════════════════════════
+   FIRESTORE LISTENERS
+══════════════════════════════════════ */
+function listenFlats(){
+  onSnapshot(collection(db,'flats'), snap=>{
+    snap.docChanges().forEach(ch=>{
+      const d={flatId:ch.doc.id,...ch.doc.data()};
+      ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
+    });
+    renderAll(); sync('live');
+    document.getElementById('loadingOverlay').style.display='none';
+    document.getElementById('appWrapper').style.display='';
+  }, err=>{ console.error(err); sync('error'); });
+}
+
+function listenExpenses(){
+  if(expUnsub) expUnsub();
+  // Try with orderBy first; if index missing, fall back to unordered
+  const q=query(collection(db,'expenses'),where('month','==',activeMonth),orderBy('createdAt','asc'));
+  expUnsub=onSnapshot(q, snap=>{
+    exps.clear();
+    snap.forEach(d=>{ const e={expId:d.id,...d.data()}; const a=exps.get(e.flatId)||[]; a.push(e); exps.set(e.flatId,a); });
+    renderAll();
+  }, err=>{
+    console.warn('Ordered query failed (index may be missing), falling back:',err.message);
+    // Fallback — no orderBy
+    const qFallback=query(collection(db,'expenses'),where('month','==',activeMonth));
+    expUnsub=onSnapshot(qFallback, snap=>{
+      exps.clear();
+      snap.forEach(d=>{ const e={expId:d.id,...d.data()}; const a=exps.get(e.flatId)||[]; a.push(e); exps.set(e.flatId,a); });
+      renderAll();
+    });
+  });
+}
+
+/* ══════════════════════════════════════
+   FLAT DETAIL MODAL
+══════════════════════════════════════ */
+function openFlat(fid){
+  const f=flats.get(fid); if(!f) return;
+  const st=status(f), bal=f.due-f.paid, exp=flatExps(fid), tot=exp.reduce((s,e)=>s+e.amt,0);
+  document.getElementById('mdTitle').textContent=`${f.flatId} — ${f.owner}`;
+  document.getElementById('mdSub').textContent=`Block ${f.block} · ${new Date(activeMonth+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  const rows=exp.length?exp.map(e=>`<div class="exp-row">
+    <div><div class="exp-cat">${e.cat}</div><div class="exp-date">${e.date}</div>${e.note?`<div class="exp-note">${e.note}</div>`:''}</div>
+    <div class="exp-amt">${inr(e.amt)}</div>
+  </div>`).join(''):`<div class="exp-empty"><i class="ti ti-inbox"></i>No expenses recorded yet.</div>`;
+  const sc=st==='paid'?'var(--green)':st==='partial'?'var(--amber)':'var(--red)';
+  document.getElementById('mdContent').innerHTML=`
+    <div class="detail-metrics">
+      <div class="d-metric"><div class="d-metric-label">Paid</div><div class="d-metric-value" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="d-metric"><div class="d-metric-label">Balance</div><div class="d-metric-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
+      <div class="d-metric"><div class="d-metric-label">Status</div><div class="d-metric-value" style="color:${sc};font-size:13px">${slabel(st)}</div></div>
+    </div>
+    <div class="exp-title">Expense History</div>
+    <div class="exp-list">${rows}</div>
+    ${exp.length?`<div class="total-row"><span class="total-label">Total Expenses</span><span class="total-val">${inr(tot)}</span></div>`:''}
+    <div class="modal-actions">
+      <button class="btn-add-pay" onclick="window._closeModal();window._openAddFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add Payment / Expense
+      </button>
+    </div>`;
+  document.getElementById('flatModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('flatModal').classList.remove('open'); }
+
+/* ══════════════════════════════════════
+   ADD EXPENSE MODAL
+══════════════════════════════════════ */
+function fillBlockSelect(){
+  document.getElementById('fBlock').innerHTML=blocks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('fBlock').value=activeBlock;
+}
+function fillFlatSelect(){
+  const b=document.getElementById('fBlock').value;
+  document.getElementById('fFlat').innerHTML=blockFlats(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner}</option>`).join('');
+}
+function openAddExpense(){
+  fillBlockSelect(); fillFlatSelect();
+  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('fAmt').value=''; document.getElementById('fNote').value='';
+  document.getElementById('fStatus').value='paid';
+  document.getElementById('addModal').classList.add('open');
+}
+function openAddFor(block,fid){
+  fillBlockSelect();
+  document.getElementById('fBlock').value=block; fillFlatSelect();
+  setTimeout(()=>document.getElementById('fFlat').value=fid,10);
+  document.getElementById('fDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('fAmt').value=''; document.getElementById('fNote').value='';
+  document.getElementById('fStatus').value='paid';
+  document.getElementById('addModal').classList.add('open');
+}
+function closeAdd(){ document.getElementById('addModal').classList.remove('open'); }
+
+document.getElementById('fBlock').addEventListener('change', fillFlatSelect);
+
+async function saveExpense(){
+  const block=document.getElementById('fBlock').value;
+  const fid=document.getElementById('fFlat').value;
+  const cat=document.getElementById('fCat').value;
+  const amt=parseInt(document.getElementById('fAmt').value)||0;
+  const dateVal=document.getElementById('fDate').value;
+  const st=document.getElementById('fStatus').value;
+  const note=document.getElementById('fNote').value.trim();
+  if(!amt||amt<=0){ toast('Please enter a valid amount.','error'); return; }
+  const f=flats.get(fid); if(!f){ toast('Flat not found.','error'); return; }
+  const formatted=dateVal?fmtD(dateVal):fmtD(new Date().toISOString());
+  sync('saving');
+  const btn=document.getElementById('saveBtn'); btn.disabled=true;
+  document.getElementById('saveLbl').textContent='Saving…';
+  try{
+    await addDoc(collection(db,'expenses'),{flatId:fid,block,cat,amt,date:formatted,note,status:st,month:activeMonth,createdAt:serverTimestamp()});
+    let np=f.paid;
+    if(st==='paid') np=f.due;
+    else if(st==='partial') np=Math.min(f.paid+amt,f.due-1);
+    await updateDoc(doc(db,'flats',fid),{paid:np});
+    sync('live'); closeAdd(); toast('Expense saved ✓');
+  } catch(err){ console.error(err); sync('error'); toast('Save failed — check console.','error'); }
+  finally{ btn.disabled=false; document.getElementById('saveLbl').textContent='Save'; }
+}
+
+/* ══════════════════════════════════════
+   ADD FLAT MODAL
+══════════════════════════════════════ */
+function openAddFlatModal(){
+  document.getElementById('nfId').value=''; document.getElementById('nfOwner').value='';
+  document.getElementById('nfDue').value='5000';
+  document.getElementById('addFlatModal').classList.add('open');
+}
+function closeAddFlat(){ document.getElementById('addFlatModal').classList.remove('open'); }
+async function saveNewFlat(){
+  const block=document.getElementById('nfBlock').value;
+  const id=document.getElementById('nfId').value.trim().toUpperCase();
+  const owner=document.getElementById('nfOwner').value.trim();
+  const due=parseInt(document.getElementById('nfDue').value)||5000;
+  if(!id){ toast('Enter a flat number.','error'); return; }
+  if(!owner){ toast('Enter owner name.','error'); return; }
+  if(flats.has(id)){ toast(`Flat ${id} already exists.`,'error'); return; }
+  sync('saving');
+  try{
+    await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:activeMonth});
+    sync('live'); closeAddFlat(); toast(`Flat ${id} registered ✓`);
+    activeBlock=block; renderTabs(); renderBlock();
+  } catch(err){ console.error(err); sync('error'); toast('Failed to register flat.','error'); }
+}
+
+/* ══════════════════════════════════════
+   DOM EVENTS
+══════════════════════════════════════ */
+document.getElementById('statusFilter').addEventListener('change',e=>{ filterStatus=e.target.value; renderBlock(); });
+document.getElementById('searchInput').addEventListener('input',e=>{ searchTerm=e.target.value.toLowerCase().trim(); renderBlock(); });
+document.getElementById('monthFilter').addEventListener('change',e=>{ activeMonth=e.target.value; listenExpenses(); });
+
+['flatModal','addModal','addFlatModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{ if(e.target.id===id){ closeModal();closeAdd();closeAddFlat(); } });
+});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal();closeAdd();closeAddFlat(); } });
+
+/* ══════════════════════════════════════
+   EXPOSE TO window (needed for inline onclick in non-module scope)
+══════════════════════════════════════ */
+window._setBlock      = b=>{ activeBlock=b; renderTabs(); renderBlock(); };
+window._openFlat      = openFlat;
+window._closeModal    = closeModal;
+window._openAddExpense= openAddExpense;
+window._openAddFor    = openAddFor;
+window._closeAdd      = closeAdd;
+window._saveExpense   = saveExpense;
+window._openAddFlatModal = openAddFlatModal;
+window._closeAddFlat  = closeAddFlat;
+window._saveNewFlat   = saveNewFlat;
+// nav buttons use these directly
+window.openAddExpense    = openAddExpense;
+window.openAddFlatModal  = openAddFlatModal;
+
+/* ══════════════════════════════════════
+   BOOT
+══════════════════════════════════════ */
+document.getElementById('navMonth').textContent=
+  new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+try{
+  await seedIfEmpty();
+  listenFlats();
+  listenExpenses();
+} catch(err){
+  console.error('Boot error:',err);
+  document.getElementById('loadingText').textContent='⚠ Firebase connection failed. Check console.';
+}
+</script>
 </body>
 </html>
