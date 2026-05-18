@@ -9,34 +9,50 @@
 </head>
 <body>
 
-  <div class="app-wrapper">
+  <!-- Loading overlay — shown while Firebase loads data -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-box">
+      <div class="spinner"></div>
+      <div class="loading-text">Connecting to Firebase…</div>
+    </div>
+  </div>
 
-    <!-- Top Nav -->
+  <div class="app-wrapper" id="appWrapper" style="display:none">
+
+    <!-- ── Top Nav ── -->
     <nav class="navbar">
       <div class="nav-brand">
         <i class="ti ti-building" aria-hidden="true"></i>
         <span>Flat Payments Tracker</span>
       </div>
       <div class="nav-right">
+        <!-- Real-time sync dot -->
+        <div class="sync-indicator" id="syncIndicator" title="Firebase sync status">
+          <span class="sync-dot" id="syncDot"></span>
+          <span class="sync-label" id="syncLabel">Live</span>
+        </div>
         <span class="nav-month" id="navMonth"></span>
+        <button class="nav-btn secondary-btn" onclick="openAddFlatModal()" title="Register a new flat">
+          <i class="ti ti-home-plus" aria-hidden="true"></i> New Flat
+        </button>
         <button class="nav-btn" onclick="openAddExpense()">
           <i class="ti ti-plus" aria-hidden="true"></i> Add Expense
         </button>
       </div>
     </nav>
 
-    <!-- Summary Bar -->
+    <!-- ── Summary Bar ── -->
     <section class="summary-section" aria-label="Payment summary">
       <div class="summary-grid" id="summaryBar"></div>
     </section>
 
-    <!-- Controls -->
+    <!-- ── Controls ── -->
     <section class="controls-section">
       <div class="controls-row">
         <select id="monthFilter" aria-label="Filter by month">
-          <option value="may">May 2026</option>
-          <option value="apr">April 2026</option>
-          <option value="mar">March 2026</option>
+          <option value="2026-05">May 2026</option>
+          <option value="2026-04">April 2026</option>
+          <option value="2026-03">March 2026</option>
         </select>
         <select id="statusFilter" aria-label="Filter by status">
           <option value="all">All statuses</option>
@@ -51,23 +67,26 @@
       </div>
     </section>
 
-    <!-- Block Tabs -->
+    <!-- ── Block Tabs ── -->
     <div class="tab-bar" id="tabBar" role="tablist" aria-label="Blocks"></div>
 
-    <!-- Block Content -->
+    <!-- ── Block Content ── -->
     <main class="block-section" id="blockContent" aria-live="polite"></main>
 
-  </div>
+  </div><!-- /.app-wrapper -->
 
-  <!-- Flat Detail Modal -->
+
+  <!-- ══════════════════════════════════════
+       FLAT DETAIL MODAL
+  ══════════════════════════════════════ -->
   <div class="modal-bg" id="flatModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
     <div class="modal">
       <div class="modal-head">
         <div>
           <div class="modal-title" id="modalTitle"></div>
-          <div class="modal-sub" id="modalSub"></div>
+          <div class="modal-sub"   id="modalSub"></div>
         </div>
-        <button class="modal-close" onclick="closeModal()" aria-label="Close dialog">
+        <button class="modal-close" onclick="window.__closeModal()" aria-label="Close dialog">
           <i class="ti ti-x"></i>
         </button>
       </div>
@@ -75,12 +94,14 @@
     </div>
   </div>
 
-  <!-- Add Expense Modal -->
+  <!-- ══════════════════════════════════════
+       ADD EXPENSE MODAL
+  ══════════════════════════════════════ -->
   <div class="modal-bg" id="addModal" role="dialog" aria-modal="true" aria-label="Add expense form">
     <div class="modal">
       <div class="modal-head">
         <div class="modal-title">Add Expense / Payment</div>
-        <button class="modal-close" onclick="closeAddModal()" aria-label="Close dialog">
+        <button class="modal-close" onclick="window.__closeAddModal()" aria-label="Close dialog">
           <i class="ti ti-x"></i>
         </button>
       </div>
@@ -88,11 +109,7 @@
       <div class="form-grid">
         <div class="form-group">
           <label for="fBlock">Block</label>
-          <select id="fBlock">
-            <option value="A">Block A</option>
-            <option value="B">Block B</option>
-            <option value="C">Block C</option>
-          </select>
+          <select id="fBlock"></select>
         </div>
         <div class="form-group">
           <label for="fFlat">Flat No.</label>
@@ -116,7 +133,7 @@
         </div>
         <div class="form-group">
           <label for="fAmt">Amount (₹)</label>
-          <input type="number" id="fAmt" placeholder="0" min="0" />
+          <input type="number" id="fAmt" placeholder="0" min="1" />
         </div>
       </div>
 
@@ -141,14 +158,64 @@
       </div>
 
       <div class="modal-actions">
-        <button class="btn-secondary" onclick="closeAddModal()">Cancel</button>
-        <button class="btn-primary" onclick="saveExpense()">
-          <i class="ti ti-device-floppy" aria-hidden="true"></i> Save
+        <button class="btn-secondary" onclick="window.__closeAddModal()">Cancel</button>
+        <button class="btn-primary" id="saveBtn" onclick="window.__saveExpense()">
+          <i class="ti ti-device-floppy" aria-hidden="true"></i>
+          <span id="saveBtnLabel">Save</span>
         </button>
       </div>
     </div>
   </div>
 
-  <script src="app.js"></script>
+  <!-- ══════════════════════════════════════
+       ADD NEW FLAT MODAL
+  ══════════════════════════════════════ -->
+  <div class="modal-bg" id="addFlatModal" role="dialog" aria-modal="true" aria-label="Register new flat">
+    <div class="modal">
+      <div class="modal-head">
+        <div class="modal-title">Register New Flat</div>
+        <button class="modal-close" onclick="window.__closeAddFlatModal()" aria-label="Close dialog">
+          <i class="ti ti-x"></i>
+        </button>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nfBlock">Block</label>
+          <select id="nfBlock">
+            <option value="A">Block A</option>
+            <option value="B">Block B</option>
+            <option value="C">Block C</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="nfId">Flat No. (e.g. A-101)</label>
+          <input type="text" id="nfId" placeholder="A-101" />
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="nfOwner">Owner Name</label>
+          <input type="text" id="nfOwner" placeholder="Full name" />
+        </div>
+        <div class="form-group">
+          <label for="nfDue">Monthly Due (₹)</label>
+          <input type="number" id="nfDue" placeholder="5000" min="1" />
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="window.__closeAddFlatModal()">Cancel</button>
+        <button class="btn-primary" onclick="window.__saveNewFlat()">
+          <i class="ti ti-plus" aria-hidden="true"></i> Register Flat
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- app.js MUST be type="module" so Firebase ESM imports work -->
+  <script type="module" src="app.js"></script>
+
 </body>
 </html>
