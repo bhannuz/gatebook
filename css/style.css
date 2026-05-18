@@ -719,6 +719,72 @@ body {
 
 .btn-add-payment:hover { background: #0C447C; }
 
+/* ---- Loading overlay ---- */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-bg);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-box {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-blue);
+  border-radius: 50%;
+  animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-text {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+/* ---- Sync indicator ---- */
+.sync-indicator {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}
+
+.sync-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #888;
+  flex-shrink: 0;
+}
+
+.sync-dot.live    { background: var(--color-paid); box-shadow: 0 0 0 2px rgba(29,158,117,.25); }
+.sync-dot.saving  { background: var(--color-partial); animation: pulse 1s infinite; }
+.sync-dot.error   { background: var(--color-pending); }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+/* ---- Secondary nav button ---- */
+.secondary-btn {
+  background: var(--color-surface) !important;
+  color: var(--color-text-primary) !important;
+  border: 0.5px solid var(--color-border-mid) !important;
+}
+.secondary-btn:hover { background: var(--color-surface-2) !important; }
+
 /* ---- Responsive ---- */
 @media (max-width: 600px) {
   .app-wrapper { padding-bottom: 2rem; }
