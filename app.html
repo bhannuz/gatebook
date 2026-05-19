@@ -203,7 +203,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── FLAT CARDS ── */
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
 .fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);
-  padding:12px 14px 10px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
+  padding:9px 11px 8px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
 .fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
@@ -213,9 +213,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard.pending{border-color:rgba(220,38,38,.15)}
 .fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
-.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:6px}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:4px}
 .fc-num{font-size:13px;font-weight:800;color:var(--text)}
-.fc-owner{font-size:10px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;font-weight:500}
+.fc-owner{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;font-weight:500}
+.fc-type{font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;display:inline-block;margin-top:2px}
+.fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
+.fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
 .fc-indicator{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
@@ -225,7 +228,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
 .fc-due{font-size:10px;color:var(--muted);font-weight:600}
-.fprog{height:4px;background:var(--bg2);border-radius:99px;margin:8px 0 6px;overflow:hidden}
+.fprog{height:3px;background:var(--bg2);border-radius:99px;margin:5px 0 4px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
@@ -802,7 +805,7 @@ function rStats() {
     <div class="scard indigo">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">This month</span></div>
       <div class="sc-label">Total Due</div><div class="sc-value">${inr(due)}</div>
-      <div class="sc-sub">${bks().length} blocks · ${all.length} flats</div>
+      <div class="sc-sub">${all.filter(f=>f.resType!=='tenant').length} owners · ${all.filter(f=>f.resType==='tenant').length} tenants</div>
     </div>
     <div class="scard green">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div><span class="sc-trend up">${pct}% collected</span></div>
@@ -862,7 +865,7 @@ function rBlock() {
       h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
         onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
         <div class="fc-top">
-          <div><div class="fc-num">${f.flatId}</div><div class="fc-owner">${f.owner||'(No owner)'}</div></div>
+          <div><div class="fc-num">${f.flatId}</div><div class="fc-owner">${f.owner||'(No owner)'}</div><span class="fc-type ${f.resType||'owner'}">${f.resType==='tenant'?'Tenant':'Owner'}</span></div>
           <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
         </div>
         <div class="fc-amount">${inr(f.paid)}</div>
@@ -941,25 +944,38 @@ function oFl(fid) {
     ?ex.map(e=>`<div class="erow">
       <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
       <div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
-      <div class="eamt">${inr(e.amt)}</div></div>`).join('')
+      <div style="display:flex;align-items:center;gap:6px">
+        <input type="number" value="${e.amt}" min="0"
+          style="width:80px;text-align:right;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;font-size:13px;font-weight:800;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none"
+          onfocus="this.style.borderColor='var(--indigo)'"
+          onblur="window._saveExpAmt('${e.expId}',this.value,'${fid}')"/>
+      </div></div>`).join('')
     :`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
   document.getElementById('mdC').innerHTML=`
-    <div class="fg2" style="margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
       <div class="fg" style="margin-bottom:0">
-        <label style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Name</label>
-        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Owner name" style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:9px 13px;outline:none;width:100%;margin-top:6px"/>
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Name</label>
+        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Name"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px;transition:border-color .15s"
+          onfocus="this.style.borderColor='var(--indigo)'"
+          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
       </div>
       <div class="fg" style="margin-bottom:0">
-        <label style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Monthly Due (₹)</label>
-        <input type="number" id="edDue" value="${f.due||''}" placeholder="e.g. 2000" min="0" style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:9px 13px;outline:none;width:100%;margin-top:6px"/>
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Type</label>
+        <select id="edType" onchange="window._autoSaveFlat('${fid}')"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px">
+          <option value="owner" ${(f.resType||'owner')==='owner'?'selected':''}>🏠 Owner</option>
+          <option value="tenant" ${f.resType==='tenant'?'selected':''}>🔑 Tenant</option>
+        </select>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Monthly Due (₹)</label>
+        <input type="number" id="edDue" value="${f.due||''}" placeholder="0" min="0" onblur="window._autoSaveFlat('${fid}')"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px;transition:border-color .15s"
+          onfocus="this.style.borderColor='var(--indigo)'"/>
       </div>
     </div>
-    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
-      <button class="btn btn-white btn-sm" onclick="window._saveFlat('${fid}')">
-        <i class="ti ti-device-floppy"></i> Save Changes
-      </button>
-    </div>
-    <div style="height:1px;background:var(--border2);margin-bottom:16px"></div>
+    <div style="height:1px;background:var(--border2);margin-bottom:14px"></div>
     <div class="dm">
       <div class="dm-card"><div class="dm-label">Paid</div><div class="dm-value" style="color:var(--green)">${inr(f.paid)}</div></div>
       <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
@@ -977,22 +993,37 @@ function oFl(fid) {
 }
 const cM=()=>document.getElementById('flatM').classList.remove('open');
 
-async function saveFlat(fid) {
-  const owner = document.getElementById('edOwner').value.trim();
-  const due   = parseInt(document.getElementById('edDue').value)||0;
-  const btn   = event.currentTarget;
-  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Saving…';
+/* auto-save flat fields on blur / select change — no button needed */
+let _autoSaveTimer=null;
+async function autoSaveFlat(fid) {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(async()=>{
+    const owner   = (document.getElementById('edOwner')?.value||'').trim();
+    const resType = document.getElementById('edType')?.value||'owner';
+    const due     = parseInt(document.getElementById('edDue')?.value)||0;
+    sync('saving');
+    try {
+      await updateDoc(flatRef(fid),{owner,resType,due});
+      sync('live');
+      document.getElementById('mdT').textContent=`${fid} — ${owner||'(No resident)'}`;
+      toast('Saved ✓');
+    } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
+  }, 400);
+}
+
+/* inline edit of a payment amount in history */
+async function saveExpAmt(expId, rawVal, fid) {
+  const amt = parseInt(rawVal)||0;
+  const expDocRef = doc(db,'apartments',UID,'expenses',expId);
   sync('saving');
   try {
-    await updateDoc(flatRef(fid),{owner,due});
-    sync('live');toast('Flat updated ✓');
-    // refresh modal header
-    document.getElementById('mdT').textContent=`${fid} — ${owner||'(No owner)'}`;
-    btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> Save Changes';
-  } catch(e) {
-    console.error(e);sync('error');toast('Save failed.','error');
-    btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> Save Changes';
-  }
+    await updateDoc(expDocRef,{amt});
+    // recalculate flat paid from all its expenses
+    const allEx = exps.get(fid)||[];
+    const totalPaid = allEx.reduce((s,e)=> e.expId===expId ? s+amt : s+e.amt, 0);
+    await updateDoc(flatRef(fid),{paid:totalPaid});
+    sync('live'); toast('Payment updated ✓');
+  } catch(e){ console.error(e);sync('error');toast('Update failed.','error'); }
 }
 
 /* ════════════════════════════════
@@ -1048,7 +1079,7 @@ async function sNF(){
   if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
   sync('saving');
   try{
-    await setDoc(flatRef(id),{block,owner,due,paid:0,month:AM});
+    await setDoc(flatRef(id),{block,owner,resType:'owner',due:0,paid:0,month:AM});
     sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();
   }catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
@@ -1215,7 +1246,9 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI
    WINDOW EXPOSE
 ════════════════════════════════ */
 window._sB   =b=>{AB=b;rBTabs();rBlock();};
-window._oFl  =oFl;  window._cM=cM; window._saveFlat=saveFlat;
+window._oFl  =oFl;  window._cM=cM;
+window._autoSaveFlat=autoSaveFlat;
+window._saveExpAmt=saveExpAmt;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
@@ -1328,7 +1361,7 @@ window._wizLaunch = async function() {
       for(let fl=1; fl<=b.floors; fl++) {
         for(let f=1; f<=b.flatsPerFloor; f++) {
           const fid = `${b.name}-${fl}${String(f).padStart(2,'0')}`;
-          await setDoc(flatRef(fid), { block:b.name, floor:fl, owner:'', due:0, paid:0, month:AM });
+          await setDoc(flatRef(fid), { block:b.name, floor:fl, owner:'', resType:'owner', due:0, paid:0, month:AM });
         }
       }
     }
