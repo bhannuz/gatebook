@@ -1,11 +1,10 @@
-// firebase.js — Firebase initialisation
-// ─────────────────────────────────────
-// Your project credentials (keep this file out of public repos — use
-// environment variables or Firebase App Hosting secrets in production).
+// firebase.js — shared Firebase initialisation
+// Keep this file out of public repos in production; use environment variables.
 
-import { initializeApp }              from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore }               from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
-import { getAnalytics }               from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
+import { initializeApp }  from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
+import { getFirestore }   from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+import { getAuth }        from "https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js";
+import { getAnalytics }   from "https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js";
 
 const firebaseConfig = {
   apiKey:            "AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM",
@@ -17,6 +16,7 @@ const firebaseConfig = {
   measurementId:     "G-6YKLV11L0G",
 };
 
-const app       = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+export const app  = initializeApp(firebaseConfig);
+export const db   = getFirestore(app);
+export const auth = getAuth(app);
 getAnalytics(app);
