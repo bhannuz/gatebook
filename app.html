@@ -1,0 +1,1377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ResidentHub — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F0F4FF;--bg2:#E8EDFF;--surface:#FFFFFF;--surface2:#F7F9FF;--surface3:#EDF0FB;
+  --border:rgba(99,102,241,0.10);--border2:rgba(99,102,241,0.18);--border3:rgba(99,102,241,0.30);
+  --text:#1E1B4B;--text2:#6366A8;--muted:#A5A8D0;
+  --indigo:#6366F1;--indigo2:#4F46E5;--indigo-bg:rgba(99,102,241,0.08);--indigo-glow:rgba(99,102,241,0.20);
+  --green:#059669;--green-light:#10B981;--green-bg:#ECFDF5;--green-border:#A7F3D0;--green-txt:#065F46;
+  --amber:#D97706;--amber-light:#F59E0B;--amber-bg:#FFFBEB;--amber-border:#FCD34D;--amber-txt:#92400E;
+  --red:#DC2626;--red-light:#EF4444;--red-bg:#FEF2F2;--red-border:#FECACA;--red-txt:#991B1B;
+  --sky:#0284C7;--sky-bg:#F0F9FF;--sky-border:#BAE6FD;--sky-txt:#0C4A6E;
+  --purple:#7C3AED;--purple-bg:#F5F3FF;--purple-border:#DDD6FE;--purple-txt:#4C1D95;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-2xl:28px;
+  --shadow-sm:0 1px 3px rgba(99,102,241,0.06),0 1px 2px rgba(0,0,0,0.04);
+  --shadow:0 4px 16px rgba(99,102,241,0.10),0 1px 4px rgba(0,0,0,0.05);
+  --shadow-lg:0 12px 40px rgba(99,102,241,0.14),0 4px 12px rgba(0,0,0,0.06);
+  --shadow-xl:0 24px 64px rgba(99,102,241,0.18);
+  --font:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;
+}
+html{font-size:16px;-webkit-font-smoothing:antialiased}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+
+/* ── Loading overlay ── */
+#lo{
+  position:fixed;inset:0;z-index:9999;
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
+  display:flex;align-items:center;justify-content:center;
+}
+.lo-card{background:#fff;border-radius:var(--r-2xl);padding:40px 48px;text-align:center;
+  box-shadow:var(--shadow-xl);display:flex;flex-direction:column;align-items:center;gap:18px;
+  border:1px solid var(--border2)}
+.lo-icon{width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;
+  box-shadow:0 8px 24px rgba(99,102,241,0.35);animation:loPulse 2s ease-in-out infinite}
+@keyframes loPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.lo-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.lo-title span{background:linear-gradient(90deg,#6366F1,#8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.lo-sub{font-size:13px;color:var(--text2)}
+.lo-bar{width:200px;height:4px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.lo-fill{height:100%;background:linear-gradient(90deg,#6366F1,#8B5CF6,#06B6D4);background-size:200%;animation:loSlide 1.6s ease-in-out infinite}
+@keyframes loSlide{0%{background-position:0%}100%{background-position:200%}}
+
+/* ── Issue timeline ── */
+.iss-timeline{margin-top:14px}
+.itl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.itl-item:last-child{border-bottom:none}
+.itl-dot-col{display:flex;flex-direction:column;align-items:center}
+.itl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.itl-line{width:2px;flex:1;background:var(--border2);margin-top:3px}
+.itl-body{flex:1}
+.itl-action{font-size:12px;font-weight:700;color:var(--text)}
+.itl-by{font-size:11px;color:var(--muted);font-weight:500}
+.itl-dot.open{background:var(--red)}.itl-dot.in-progress{background:var(--amber)}.itl-dot.resolved{background:var(--green)}.itl-dot.created{background:var(--indigo)}
+
+/* ── NAVBAR ── */
+.navbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border2);padding:0 2rem;height:64px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;
+  box-shadow:0 2px 12px rgba(99,102,241,0.06)}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(99,102,241,0.30)}
+.nav-name-wrap{display:flex;align-items:center;gap:6px}
+.nav-name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.nav-name em{font-style:normal;color:var(--indigo)}
+.flat-count-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+  background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow);white-space:nowrap}
+
+.nav-pills{display:none} /* tabs moved below stats */
+
+/* ── View tabs (Payments / Issues) below stats ── */
+.view-tabs{display:flex;gap:0;background:var(--surface3);border:1px solid var(--border2);
+  border-radius:var(--r-md);padding:4px;margin-bottom:1.4rem;width:fit-content}
+.vtab{padding:6px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:700;
+  color:var(--text2);cursor:pointer;border:none;background:transparent;
+  font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
+.vtab i{font-size:14px}
+.vtab.active{background:#fff;color:var(--indigo);box-shadow:var(--shadow-sm)}
+.vtab:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.6)}
+.vtab-badge{font-size:10px;padding:1px 6px;border-radius:99px;font-weight:700;
+  background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
+.vtab.active .vtab-badge{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
+
+.nav-right{display:flex;align-items:center;gap:10px}
+.sync-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;
+  border-radius:99px;background:var(--surface);border:1px solid var(--border2);
+  font-size:12px;font-weight:600;color:var(--text2);box-shadow:var(--shadow-sm)}
+.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.sdot.live{background:var(--green-light);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+.sdot.saving{background:var(--amber-light);animation:sPulse 1s infinite}
+.sdot.error{background:var(--red-light)}
+@keyframes sPulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* User chip */
+.user-chip{display:flex;align-items:center;gap:8px;padding:5px 10px;
+  border-radius:99px;background:var(--surface);border:1px solid var(--border2);
+  font-size:12px;font-weight:600;color:var(--text2);box-shadow:var(--shadow-sm);cursor:pointer;
+  transition:all .15s}
+.user-chip:hover{border-color:var(--border3);background:var(--surface2)}
+.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--r-md);
+  font-size:13px;font-weight:700;font-family:var(--font);cursor:pointer;border:none;
+  transition:all .18s;letter-spacing:.1px;white-space:nowrap}
+.btn i{font-size:16px}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.65;cursor:not-allowed;transform:none}
+.btn-indigo{background:linear-gradient(135deg,#6366F1,#8B5CF6);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,0.30)}
+.btn-indigo:hover:not(:disabled){box-shadow:0 6px 24px rgba(99,102,241,0.45);transform:translateY(-1px)}
+.btn-white{background:#fff;color:var(--text);border:1.5px solid var(--border2);box-shadow:var(--shadow-sm)}
+.btn-white:hover:not(:disabled){border-color:var(--border3);background:var(--surface2);box-shadow:var(--shadow)}
+.btn-green{background:linear-gradient(135deg,#059669,#10B981);color:#fff;box-shadow:0 4px 14px rgba(5,150,105,0.25)}
+.btn-green:hover:not(:disabled){box-shadow:0 6px 20px rgba(5,150,105,0.35);transform:translateY(-1px)}
+.btn-red{background:linear-gradient(135deg,#DC2626,#EF4444);color:#fff;box-shadow:0 4px 14px rgba(220,38,38,0.20)}
+.btn-red:hover:not(:disabled){box-shadow:0 6px 20px rgba(220,38,38,0.30);transform:translateY(-1px)}
+.btn-sm{padding:6px 14px;font-size:12px}
+
+/* ── LAYOUT ── */
+.app{max-width:1320px;margin:0 auto;padding:0 1.5rem 4rem}
+.page-header{padding:1.2rem 0 1rem;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.ph-left h1{font-size:20px;font-weight:800;color:var(--text);letter-spacing:-.4px;line-height:1.1}
+.ph-left h1 span{background:linear-gradient(90deg,#6366F1,#8B5CF6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.ph-left p{font-size:12px;color:var(--text2);margin-top:3px;font-weight:500}
+.ph-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* ── STAT CARDS ── */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.2rem}
+.scard{background:#fff;border-radius:var(--r-lg);padding:12px 14px 10px;border:1.5px solid transparent;
+  box-shadow:var(--shadow-sm);transition:all .22s;position:relative;overflow:hidden}
+.scard:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.scard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:var(--r-lg) var(--r-lg) 0 0}
+.scard.indigo{border-color:rgba(99,102,241,.12)}.scard.indigo::before{background:linear-gradient(90deg,#6366F1,#8B5CF6)}
+.scard.green {border-color:rgba(5,150,105,.12)} .scard.green::before {background:linear-gradient(90deg,#059669,#10B981)}
+.scard.amber {border-color:rgba(217,119,6,.12)} .scard.amber::before {background:linear-gradient(90deg,#D97706,#F59E0B)}
+.scard.red   {border-color:rgba(220,38,38,.12)}  .scard.red::before   {background:linear-gradient(90deg,#DC2626,#EF4444)}
+.scard.sky   {border-color:rgba(2,132,199,.12)}  .scard.sky::before   {background:linear-gradient(90deg,#0284C7,#0EA5E9)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.sc-icon{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px}
+.scard.indigo .sc-icon{background:var(--indigo-bg);color:var(--indigo)}
+.scard.green  .sc-icon{background:var(--green-bg); color:var(--green)}
+.scard.amber  .sc-icon{background:var(--amber-bg); color:var(--amber)}
+.scard.red    .sc-icon{background:var(--red-bg);   color:var(--red)}
+.scard.sky    .sc-icon{background:var(--sky-bg);   color:var(--sky)}
+.sc-trend{font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px}
+.sc-trend.up{background:var(--green-bg);color:var(--green-txt)}
+.sc-trend.dn{background:var(--red-bg);  color:var(--red-txt)}
+.sc-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.sc-value{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.5px;line-height:1}
+.sc-sub{font-size:10px;color:var(--text2);margin-top:3px;font-weight:500}
+.sc-bar{height:4px;background:var(--bg2);border-radius:99px;margin-top:8px;overflow:hidden}
+.sc-fill{height:100%;border-radius:99px;transition:width .7s cubic-bezier(.4,0,.2,1)}
+.scard.green .sc-fill{background:linear-gradient(90deg,#059669,#10B981)}
+.scard.amber .sc-fill{background:linear-gradient(90deg,#D97706,#EF4444)}
+.scard.red   .sc-fill{background:linear-gradient(90deg,#DC2626,#7C3AED)}
+
+/* ── CONTROLS ── */
+.controls{display:flex;gap:10px;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
+.ctrl{height:40px;padding:0 14px;background:#fff;border:1.5px solid var(--border2);color:var(--text);
+  font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none;
+  transition:border-color .18s,box-shadow .18s;box-shadow:var(--shadow-sm)}
+.ctrl:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.12)}
+.ctrl option{background:#fff}
+.sw{position:relative;flex:1;min-width:200px}
+.sw i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+.sw .ctrl{width:100%;padding-left:38px}
+
+/* ── BLOCK TABS ── */
+.btabs{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
+.btab{display:flex;align-items:center;gap:5px;padding:5px 12px;background:#fff;
+  border:1.5px solid var(--border2);border-radius:var(--r-md);
+  font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;font-family:var(--font);
+  transition:all .2s;box-shadow:var(--shadow-sm)}
+.btab:hover:not(.active){border-color:var(--border3);color:var(--text);box-shadow:var(--shadow)}
+.btab.active{background:linear-gradient(135deg,#6366F1,#8B5CF6);border-color:transparent;color:#fff;
+  box-shadow:0 4px 14px rgba(99,102,241,0.28)}
+.btab-badge{font-size:10px;padding:1px 6px;border-radius:99px;font-weight:700}
+.btab.active .btab-badge{background:rgba(255,255,255,0.22);color:#fff}
+.btab:not(.active) .btab-badge{background:var(--surface3);color:var(--text2)}
+
+/* ── BLOCK HEADER ── */
+.bhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.bhead-left{display:flex;align-items:center;gap:12px}
+.bstripe{width:5px;height:38px;border-radius:99px;background:linear-gradient(180deg,#6366F1,#8B5CF6);flex-shrink:0}
+.btitle{font-size:18px;font-weight:800;color:var(--text)}
+.bbadge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.bcollected{font-size:13px;color:var(--text2);font-weight:600}
+.bcollected strong{color:var(--text)}
+
+/* ── FLAT CARDS ── */
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
+.fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);
+  padding:12px 14px 10px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
+.fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
+.fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.fcard.pending::before{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.fcard.paid   {border-color:rgba(5,150,105,.15)}
+.fcard.partial{border-color:rgba(217,119,6,.15)}
+.fcard.pending{border-color:rgba(220,38,38,.15)}
+.fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:6px}
+.fc-num{font-size:13px;font-weight:800;color:var(--text)}
+.fc-owner{font-size:10px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;font-weight:500}
+.fc-indicator{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
+.fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
+.fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
+.fc-amount{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:2px}
+.fcard.paid    .fc-amount{color:var(--green)}
+.fcard.partial .fc-amount{color:var(--amber)}
+.fcard.pending .fc-amount{color:var(--red)}
+.fc-due{font-size:10px;color:var(--muted);font-weight:600}
+.fprog{height:4px;background:var(--bg2);border-radius:99px;margin:8px 0 6px;overflow:hidden}
+.fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
+.fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.5px}
+.spill i{font-size:10px}
+.spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.empty-grid{grid-column:1/-1;text-align:center;padding:4rem 0;color:var(--text2)}
+.empty-grid i{font-size:44px;display:block;margin-bottom:12px;color:var(--muted)}
+
+/* ── ISSUES ── */
+.iss-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.iss-filters{display:flex;gap:6px;flex-wrap:wrap}
+.iff{padding:6px 16px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
+  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;box-shadow:var(--shadow-sm)}
+.iff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.iff:hover:not(.active){border-color:var(--border3);color:var(--text)}
+.iss-list{display:flex;flex-direction:column;gap:12px}
+.icard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-xl);
+  padding:20px 22px;display:grid;grid-template-columns:5px 1fr auto;gap:18px;
+  align-items:start;transition:all .2s;cursor:pointer;box-shadow:var(--shadow-sm)}
+.icard:hover{border-color:var(--border3);transform:translateX(5px);box-shadow:var(--shadow)}
+.ipbar{border-radius:99px;align-self:stretch;min-height:50px;width:5px}
+.ipbar.high  {background:linear-gradient(180deg,#DC2626,#7C3AED)}
+.ipbar.medium{background:linear-gradient(180deg,#D97706,#F59E0B)}
+.ipbar.low   {background:linear-gradient(180deg,#059669,#0EA5E9)}
+.ic-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:8px}
+.ic-title i{font-size:16px;color:var(--indigo)}
+.ic-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:500}
+.ic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.itag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.4px}
+.itag i{font-size:10px}
+.itag.flat  {background:var(--sky-bg);   color:var(--sky-txt);  border:1px solid var(--sky-border)}
+.itag.cat   {background:var(--purple-bg);color:var(--purple-txt);border:1px solid var(--purple-border)}
+.itag.date  {background:var(--surface3); color:var(--text2);    border:1px solid var(--border2)}
+.iright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.istatus{padding:4px 13px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.istatus.open       {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.istatus.in-progress{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.istatus.resolved   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.ipriority{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700}
+.ipriority.high  {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.ipriority.medium{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.ipriority.low   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.iss-empty{text-align:center;padding:4rem 0;color:var(--text2)}
+.iss-empty i{font-size:52px;color:var(--muted);display:block;margin-bottom:14px}
+.iss-empty h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
+.iss-empty p{font-size:13px;color:var(--text2)}
+
+/* ── MODALS ── */
+.mbg{display:none;position:fixed;inset:0;z-index:500;
+  background:rgba(30,27,75,0.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  align-items:center;justify-content:center;padding:1rem}
+.mbg.open{display:flex}
+.modal{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-2xl);
+  width:min(560px,100%);max-height:92vh;overflow-y:auto;padding:28px;
+  box-shadow:var(--shadow-xl);animation:mIn .22s cubic-bezier(.34,1.4,.64,1)}
+@keyframes mIn{from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+.mhead{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:12px}
+.micon{width:48px;height:48px;border-radius:14px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:22px}
+.micon.pay   {background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));color:var(--indigo)}
+.micon.issue {background:linear-gradient(135deg,rgba(220,38,38,.10),rgba(217,119,6,.07));color:var(--red)}
+.micon.flat  {background:linear-gradient(135deg,rgba(5,150,105,.10),rgba(2,132,199,.07));color:var(--green)}
+.micon.detail{background:linear-gradient(135deg,rgba(124,58,237,.10),rgba(99,102,241,.07));color:var(--purple)}
+.micon.idtl  {background:linear-gradient(135deg,rgba(220,38,38,.10),rgba(124,58,237,.07));color:var(--red)}
+.mtitle{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.msub{font-size:12px;color:var(--text2);margin-top:3px;font-weight:500}
+.mclose{width:34px;height:34px;border-radius:10px;background:var(--surface3);border:1.5px solid var(--border2);
+  color:var(--text2);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;flex-shrink:0}
+.mclose:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.dm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px}
+.dm-card{background:var(--surface3);border:1px solid var(--border);border-radius:var(--r-lg);padding:13px 14px}
+.dm-label{font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.dm-value{font-size:20px;font-weight:800;color:var(--text)}
+.etitle{font-size:13px;font-weight:800;color:var(--text);margin-bottom:9px;display:flex;align-items:center;gap:7px}
+.etitle i{font-size:16px;color:var(--indigo)}
+.elist{border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;margin-bottom:14px}
+.erow{display:grid;grid-template-columns:1fr auto;align-items:center;padding:12px 15px;
+  border-bottom:1px solid var(--border);transition:background .15s}
+.erow:last-child{border-bottom:none}
+.erow:hover{background:var(--surface2)}
+.ecat{font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px;font-size:13px}
+.ecat i{font-size:15px;color:var(--indigo)}
+.edate{font-size:11px;color:var(--muted);margin-top:2px;font-weight:600}
+.enote{font-size:11px;color:var(--text2);font-style:italic;margin-top:1px}
+.eamt{font-weight:800;color:var(--text);font-size:14px;text-align:right}
+.eempty{padding:20px;text-align:center;color:var(--muted);font-size:13px}
+.eempty i{font-size:26px;display:block;margin-bottom:6px}
+.etotal{display:flex;justify-content:space-between;align-items:center;padding:13px 15px;margin-bottom:14px;
+  background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.04));
+  border:1.5px solid rgba(99,102,241,.15);border-radius:var(--r-lg)}
+.etotal-label{font-size:13px;font-weight:700;color:var(--text2)}
+.etotal-val{font-size:18px;font-weight:800;color:var(--text)}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.fg label{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px}
+.fg input,.fg select,.fg textarea{background:var(--surface2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;
+  border-radius:var(--r-md);padding:10px 13px;outline:none;width:100%;
+  transition:border-color .18s,box-shadow .18s}
+.fg input::placeholder,.fg textarea::placeholder{color:var(--muted);font-weight:400}
+.fg textarea{resize:vertical;min-height:80px;line-height:1.6}
+.fg input:focus,.fg select:focus,.fg textarea:focus{
+  border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.12);background:#fff}
+.fg select option{background:#fff}
+.mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px;padding-top:18px;border-top:1.5px solid var(--border2)}
+
+/* ── Toast ── */
+#toast{position:fixed;bottom:24px;right:24px;z-index:9999;padding:13px 20px;border-radius:var(--r-lg);
+  font-size:13px;font-weight:700;font-family:var(--font);display:flex;align-items:center;gap:10px;
+  opacity:0;transform:translateY(10px);transition:all .25s;pointer-events:none;
+  background:#fff;color:var(--text);box-shadow:var(--shadow-xl);border:1.5px solid var(--border2)}
+#toast.show{opacity:1;transform:none}
+#toast i{font-size:18px}
+#toast.success{border-color:var(--green-border);color:var(--green-txt)}
+#toast.success i{color:var(--green)}
+#toast.error  {border-color:var(--red-border); color:var(--red-txt)}
+#toast.error i{color:var(--red)}
+
+/* ── In-app Wizard block rows ── */
+.wiz-block-row{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end;
+  margin-bottom:10px;padding:12px;background:var(--surface2);
+  border-radius:var(--r-md);border:1px solid var(--border)}
+.wiz-block-row label{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;
+  letter-spacing:.5px;display:block;margin-bottom:4px}
+.wiz-block-row input{height:36px;padding:0 10px;border:1.5px solid var(--border2);
+  border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:var(--font);
+  outline:none;width:100%;background:#fff;color:var(--text)}
+.wiz-block-row input:focus{border-color:var(--indigo)}
+.wiz-rm{width:32px;height:32px;border-radius:var(--r-sm);border:1.5px solid var(--red-border);
+  background:var(--red-bg);color:var(--red);cursor:pointer;font-size:15px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;margin-bottom:1px}
+.wiz-rm:hover{background:var(--red);color:#fff}
+
+/* ── Responsive ── */
+@media(max-width:700px){
+  .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
+  .fg2{grid-template-columns:1fr}
+  .dm{grid-template-columns:1fr 1fr}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
+  .icard{grid-template-columns:5px 1fr}.iright{display:none}
+  .user-chip span{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- Loading -->
+<div id="lo">
+  <div class="lo-card">
+    <div class="lo-icon"><i class="ti ti-building-community"></i></div>
+    <div class="lo-title">Resident<span>Hub</span></div>
+    <div class="lo-sub" id="loSub">Connecting to your society database…</div>
+    <div class="lo-bar"><div class="lo-fill"></div></div>
+  </div>
+</div>
+
+<!-- ══ IN-APP SETUP WIZARD (shown when user has no flats yet) ══ -->
+<div id="setupWiz" style="display:none;position:fixed;inset:0;z-index:9998;
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
+  align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:var(--r-2xl);padding:36px 40px;
+    width:min(560px,100%);max-height:92vh;overflow-y:auto;
+    box-shadow:var(--shadow-xl);border:1.5px solid var(--border2)">
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:28px" id="wizDots">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--indigo);width:24px;border-radius:99px;height:8px" id="wd0"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--surface3)" id="wd1"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--surface3)" id="wd2"></div>
+    </div>
+
+    <!-- Step 0: Name -->
+    <div id="ws0">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.3)"><i class="ti ti-building-community"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Name your Apartment</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Give your society a name. This will appear across the app.</p>
+      </div>
+      <div class="fg"><label>Apartment / Society Name *</label><input type="text" id="wAptName" placeholder="e.g. Green Valley Residency" maxlength="50"/></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-indigo" onclick="window._wizNext(0)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 1: Blocks -->
+    <div id="ws1" style="display:none">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.3)"><i class="ti ti-building"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Configure Blocks & Floors</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Add one block or multiple. Each block can have a different number of floors and flats per floor.</p>
+      </div>
+      <div id="wBlocks"></div>
+      <button style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px dashed var(--border3);border-radius:var(--r-md);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:4px" onclick="window._wizAddBlock()"><i class="ti ti-plus"></i> Add another block</button>
+      <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;margin-top:12px;font-size:13px;color:var(--text2);font-weight:500;line-height:1.8" id="wPreview"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-white" onclick="window._wizBack(1)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-indigo" onclick="window._wizNext(1)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm -->
+    <div id="ws2" style="display:none">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(5,150,105,.3)"><i class="ti ti-rocket"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Ready to Launch!</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Review your setup. We'll create all your flats automatically.</p>
+      </div>
+      <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;font-size:14px;color:var(--text2);font-weight:500;line-height:1.8" id="wConfirm"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-white" onclick="window._wizBack(2)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-green" id="wLaunchBtn" onclick="window._wizLaunch()"><i class="ti ti-rocket"></i><span id="wLaunchLbl"> Launch App</span></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo"><i class="ti ti-building-community"></i></div>
+    <div class="nav-name-wrap">
+      <span class="nav-name" id="aptNameDisplay">Gate<em>book</em></span>
+      <span class="flat-count-badge" id="flatCountBadge" style="display:none"></span>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <div class="sync-chip"><span class="sdot" id="sdot"></span><span id="slbl">–</span></div>
+    <div class="user-chip" onclick="window._doSignOut()">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userName">Admin</span>
+      <i class="ti ti-logout" style="font-size:14px;color:var(--muted)"></i>
+    </div>
+  </div>
+</nav>
+
+<!-- APP -->
+<div class="app">
+  <div class="ph-actions" id="phAct" style="margin:1rem 0 0.5rem"></div>
+
+  <div class="stats-row" id="statsRow"></div>
+
+  <!-- VIEW TABS -->
+  <div class="view-tabs" id="viewTabs">
+    <button class="vtab active" data-v="payments" onclick="switchView('payments')">
+      <i class="ti ti-credit-card"></i> Payments
+    </button>
+    <button class="vtab" data-v="issues" onclick="switchView('issues')">
+      <i class="ti ti-alert-circle"></i> Issues
+      <span class="vtab-badge" id="openCnt">0</span>
+    </button>
+  </div>
+
+  <!-- PAYMENTS VIEW -->
+  <div id="pView">
+    <div class="controls">
+      <select class="ctrl" id="mf"></select>
+      <select class="ctrl" id="sf">
+        <option value="all">All statuses</option>
+        <option value="paid">✅ Paid</option>
+        <option value="partial">⚠️ Partial</option>
+        <option value="pending">❌ Pending</option>
+      </select>
+      <div class="sw">
+        <i class="ti ti-search"></i>
+        <input class="ctrl" type="text" id="qi" placeholder="Search flat or owner…"/>
+      </div>
+    </div>
+    <div class="btabs" id="btabs"></div>
+    <div id="bcon"></div>
+  </div>
+
+  <!-- ISSUES VIEW -->
+  <div id="iView" style="display:none">
+    <div class="iss-toolbar">
+      <div class="iss-filters" id="iFil">
+        <button class="iff active" data-f="all"         onclick="fIss('all')">All Issues</button>
+        <button class="iff" data-f="open"               onclick="fIss('open')">🔴 Open</button>
+        <button class="iff" data-f="in-progress"        onclick="fIss('in-progress')">🟡 In Progress</button>
+        <button class="iff" data-f="resolved"           onclick="fIss('resolved')">🟢 Resolved</button>
+      </div>
+      <button class="btn btn-indigo" onclick="window._oRI()">
+        <i class="ti ti-urgent"></i> Raise Issue
+      </button>
+    </div>
+    <div class="iss-list" id="iList"></div>
+  </div>
+</div>
+</div><!-- /#app -->
+
+<!-- FLAT DETAIL MODAL -->
+<div class="mbg" id="flatM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-home"></i></div>
+        <div><div class="mtitle" id="mdT"></div><div class="msub" id="mdS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cM()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="mdC"></div>
+  </div>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="mbg" id="addM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-receipt"></i></div>
+        <div><div class="mtitle">Record Payment / Expense</div><div class="msub">Add a charge or payment for a flat</div></div>
+      </div>
+      <button class="mclose" onclick="window._cA()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="fB"></select></div>
+      <div class="fg"><label>Flat No.</label><select id="fF"></select></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Category</label>
+        <select id="fC">
+          <option>Maintenance</option><option>Water</option><option>Electricity</option>
+          <option>Parking</option><option>Lift</option><option>Security</option>
+          <option>Cleaning</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (₹)</label><input type="number" id="fA" placeholder="0" min="1"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Date</label><input type="date" id="fD"/></div>
+      <div class="fg"><label>Payment Status</label>
+        <select id="fS"><option value="paid">✅ Paid</option><option value="partial">⚠️ Partial</option><option value="pending">❌ Pending</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="fN" placeholder="e.g. UPI transfer, cheque no. 1234…"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cA()">Cancel</button>
+      <button class="btn btn-indigo" id="svBtn" onclick="window._sE()">
+        <i class="ti ti-device-floppy"></i><span id="svLbl">Save Payment</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FLAT MODAL -->
+<div class="mbg" id="flatAddM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon flat"><i class="ti ti-home-plus"></i></div>
+        <div><div class="mtitle">Register New Flat</div><div class="msub">Add a resident flat to the society</div></div>
+      </div>
+      <button class="mclose" onclick="window._cAF()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="nB"></select></div>
+      <div class="fg"><label>Flat No.</label><input type="text" id="nI" placeholder="A-101"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Owner Name</label><input type="text" id="nO" placeholder="Full name"/></div>
+      <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="nD" placeholder="5000" min="1"/></div>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
+      <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
+    </div>
+  </div>
+</div>
+
+<!-- RAISE ISSUE MODAL -->
+<div class="mbg" id="rIM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon issue"><i class="ti ti-urgent"></i></div>
+        <div><div class="mtitle">Raise a Complaint / Issue</div><div class="msub">Report a problem — we'll track it until resolved</div></div>
+      </div>
+      <button class="mclose" onclick="window._cRI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Issue Title *</label><input type="text" id="iT" placeholder="e.g. Water leakage near lift on 2nd floor"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category *</label>
+        <select id="iCa">
+          <option value="Plumbing">🔧 Plumbing</option><option value="Electrical">⚡ Electrical</option>
+          <option value="Lift">🛗 Lift / Elevator</option><option value="Security">🔒 Security</option>
+          <option value="Cleaning">🧹 Cleaning</option><option value="Parking">🚗 Parking</option>
+          <option value="Noise">🔊 Noise Complaint</option><option value="Internet">📡 Internet / Cable</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Priority *</label>
+        <select id="iP">
+          <option value="high">🔴 High — Urgent fix needed</option>
+          <option value="medium" selected>🟡 Medium — Normal priority</option>
+          <option value="low">🟢 Low — When convenient</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="iBl"></select></div>
+      <div class="fg"><label>Flat No. (optional)</label><input type="text" id="iFl" placeholder="e.g. A-101 or blank"/></div>
+    </div>
+    <div class="fg"><label>Description *</label><textarea id="iDe" placeholder="Describe the issue clearly — what happened, since when, how severe is it…"></textarea></div>
+    <div class="fg"><label>Your Name / Flat No. *</label><input type="text" id="iRe" placeholder="e.g. Ramesh Kumar / A-101"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cRI()">Cancel</button>
+      <button class="btn btn-indigo" id="issBtn" onclick="window._sI()">
+        <i class="ti ti-send"></i><span id="issBtnL">Submit Complaint</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUE DETAIL MODAL -->
+<div class="mbg" id="idM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon idtl"><i class="ti ti-clipboard-list"></i></div>
+        <div><div class="mtitle" id="idT">Issue Detail</div><div class="msub" id="idS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cID()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="idC"></div>
+    <div class="iss-timeline" id="idTL"></div>
+  </div>
+</div>
+
+<div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
+
+<script type="module">
+import { auth, db } from './js/firebase.js';
+import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import {
+  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc,
+  onSnapshot, query, where, orderBy, serverTimestamp,
+} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+
+/* ════════════════════════════════
+   AUTH GUARD
+════════════════════════════════ */
+let UID = null;
+
+onAuthStateChanged(auth, user => {
+  if (!user) {
+    window.location.replace('index.html');
+    return;
+  }
+  UID = user.uid;
+  // Show user info in nav
+  const initials = (user.displayName||user.email||'A').charAt(0).toUpperCase();
+  document.getElementById('userAvatar').textContent = initials;
+  document.getElementById('userName').textContent   = user.displayName || user.email.split('@')[0];
+  boot();
+});
+
+window._doSignOut = async function() {
+  await signOut(auth);
+  window.location.replace('index.html');
+};
+
+/* ════════════════════════════════
+   HELPERS for scoped Firestore paths
+   All data lives under apartments/{uid}/...
+════════════════════════════════ */
+const flatsColl   = () => collection(db, 'apartments', UID, 'flats');
+const expColl     = () => collection(db, 'apartments', UID, 'expenses');
+const issuesColl  = () => collection(db, 'apartments', UID, 'issues');
+const aptDocRef   = () => doc(db, 'apartments', UID);
+const flatRef     = id => doc(db, 'apartments', UID, 'flats', id);
+const issueRef    = id => doc(db, 'apartments', UID, 'issues', id);
+
+/* ════════════════════════════════
+   STATE
+════════════════════════════════ */
+const flats  = new Map();
+const exps   = new Map();
+const issues = [];
+
+let AB='A', FS='all', SQ='', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
+let eu=null, iu=null;
+let APT_NAME = 'ResidentHub';
+
+/* ════════════════════════════════
+   HELPERS
+════════════════════════════════ */
+const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
+const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
+const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
+const inr = n => '₹'+Number(n||0).toLocaleString('en-IN');
+const fd  = s => new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+const fdt = ts => {
+  if(!ts)return'–';
+  const d=ts.toDate?ts.toDate():new Date(ts);
+  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+};
+const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
+const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
+const fex = id => exps.get(id)||[];
+
+/* ── Month selector ── */
+function buildMonthSelect() {
+  const sel = document.getElementById('mf');
+  const opts = [];
+  for (let i=0; i<12; i++) {
+    const d = new Date();
+    d.setMonth(d.getMonth()-i);
+    const val = d.toISOString().slice(0,7);
+    const lbl = d.toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+    opts.push(`<option value="${val}"${val===AM?' selected':''}>${lbl}</option>`);
+  }
+  sel.innerHTML = opts.join('');
+}
+
+/* ════════════════════════════════
+   APT NAME
+════════════════════════════════ */
+function applyAptName(name) {
+  APT_NAME = name||'ResidentHub';
+  document.getElementById('aptNameDisplay').innerHTML =
+    `${APT_NAME.replace(/(\w+)$/,'<em>$1</em>')}`;
+  document.title = `${APT_NAME} — Society Management`;
+}
+
+
+/* ════════════════════════════════
+   SYNC & TOAST
+════════════════════════════════ */
+function sync(s) {
+  const d=document.getElementById('sdot'),l=document.getElementById('slbl');
+  if(!d)return;
+  d.className='sdot '+s;
+  l.textContent={live:'Live',saving:'Saving…',error:'Error'}[s];
+}
+
+function toast(msg, t='success') {
+  const el=document.getElementById('toast');
+  document.getElementById('tMsg').textContent=msg;
+  document.getElementById('tIco').className=t==='success'?'ti ti-circle-check':'ti ti-alert-circle';
+  el.className=t+' show';
+  setTimeout(()=>el.className='',3200);
+}
+
+/* ════════════════════════════════
+   RENDER
+════════════════════════════════ */
+function rStats() {
+  const all=([...flats.values()]).filter(f=>f.month===AM);
+  const due=all.reduce((s,f)=>s+f.due,0);
+  const paid=all.reduce((s,f)=>s+f.paid,0);
+  const pc=all.filter(f=>st(f)==='paid').length;
+  const pen=all.filter(f=>st(f)==='pending').length;
+  const pct=due?Math.round(paid/due*100):0;
+  const oi=issues.filter(i=>i.status==='open').length;
+  const ip=issues.filter(i=>i.status==='in-progress').length;
+
+  document.getElementById('openCnt').textContent=oi;
+  // Update flat count badge in navbar
+  const badge=document.getElementById('flatCountBadge');
+  if(badge){badge.textContent=`${all.length} flats`;badge.style.display='';}
+  document.getElementById('phAct').innerHTML=`
+    <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
+    <button class="btn btn-white"   onclick="window._oRI()"><i class="ti ti-urgent"></i> Raise Issue</button>
+  `;
+  document.getElementById('statsRow').innerHTML=`
+    <div class="scard indigo">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">This month</span></div>
+      <div class="sc-label">Total Due</div><div class="sc-value">${inr(due)}</div>
+      <div class="sc-sub">${bks().length} blocks · ${all.length} flats</div>
+    </div>
+    <div class="scard green">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div><span class="sc-trend up">${pct}% collected</span></div>
+      <div class="sc-label">Amount Collected</div><div class="sc-value">${inr(paid)}</div>
+      <div class="sc-sub">${pc} of ${all.length} flats fully paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="scard amber">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
+      <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
+      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
+    </div>
+    <div class="scard red">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-tool"></i></div><span class="sc-trend dn">${ip} in progress</span></div>
+      <div class="sc-label">Open Issues</div><div class="sc-value">${oi}</div>
+      <div class="sc-sub">${issues.filter(i=>i.status==='resolved').length} resolved</div>
+    </div>
+  `;
+}
+
+function rBTabs() {
+  const bs=bks();
+  if(!bs.includes(AB))AB=bs[0]||'A';
+  document.getElementById('btabs').innerHTML=bs.map(b=>{
+    const bf=bfl(b);
+    const pc=bf.filter(f=>st(f)==='paid').length;
+    return`<button class="btab${b===AB?' active':''}" onclick="window._sB('${b}')">
+      <i class="ti ti-building"></i> Block ${b}
+      <span class="btab-badge">${pc}/${bf.length}</span>
+    </button>`;
+  }).join('');
+}
+
+function rBlock() {
+  const bf=bfl(AB);
+  const vis=bf.filter(f=>{
+    if(FS!=='all'&&st(f)!==FS)return false;
+    if(SQ&&!f.flatId.toLowerCase().includes(SQ)&&!f.owner.toLowerCase().includes(SQ))return false;
+    return true;
+  });
+  const pc=bf.filter(f=>st(f)==='paid').length;
+  const col=bf.reduce((s,f)=>s+f.paid,0);
+  let h=`<div class="bhead">
+    <div class="bhead-left">
+      <div class="bstripe"></div>
+      <div class="btitle">Block ${AB}</div>
+      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
+    </div>
+    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
+  </div><div class="fgrid">`;
+  if(!vis.length){
+    h+=`<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
+  } else {
+    vis.forEach(f=>{
+      const s=st(f),pct=Math.round(Math.min(f.paid/f.due*100,100));
+      h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
+        onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
+        <div class="fc-top">
+          <div><div class="fc-num">${f.flatId}</div><div class="fc-owner">${f.owner||'(No owner)'}</div></div>
+          <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
+        </div>
+        <div class="fc-amount">${inr(f.paid)}</div>
+        <div class="fc-due">of ${inr(f.due)} monthly due</div>
+        <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
+        <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
+      </div>`;
+    });
+  }
+  document.getElementById('bcon').innerHTML=h+'</div>';
+}
+
+function rIssues() {
+  const fil=IF==='all'?[...issues]:issues.filter(i=>i.status===IF);
+  const icons={Plumbing:'ti-tool',Electrical:'ti-bolt',Lift:'ti-elevator',Security:'ti-shield',
+    Cleaning:'ti-vacuum-cleaner',Parking:'ti-car',Noise:'ti-volume',Internet:'ti-wifi',Other:'ti-clipboard'};
+  if(!fil.length){
+    document.getElementById('iList').innerHTML=`<div class="iss-empty">
+      <i class="ti ti-mood-happy"></i>
+      <h3>${IF==='all'?'No issues raised yet':'No '+IF+' issues found'}</h3>
+      <p>${IF==='all'?'Everything is running smoothly!':'All clear in this category.'}</p>
+    </div>`;return;
+  }
+  document.getElementById('iList').innerHTML=fil.map(iss=>{
+    const sLabel=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
+    const pLabel=iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1);
+    return`<div class="icard" onclick="window._oID('${iss.id}')">
+      <div class="ipbar ${iss.priority}"></div>
+      <div>
+        <div class="ic-title"><i class="ti ${icons[iss.cat]||'ti-clipboard'}"></i>${iss.title}</div>
+        <div class="ic-desc">${iss.desc.length>130?iss.desc.slice(0,130)+'…':iss.desc}</div>
+        <div class="ic-meta">
+          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat||iss.block}</span>
+          <span class="itag cat">${iss.cat}</span>
+          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
+          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
+        </div>
+      </div>
+      <div class="iright">
+        <span class="istatus ${iss.status}">${sLabel}</span>
+        <span class="ipriority ${iss.priority}">${pLabel}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function rAll(){rStats();rBTabs();rBlock();rIssues();}
+
+/* ════════════════════════════════
+   VIEW SWITCH
+════════════════════════════════ */
+function switchView(v) {
+  AV=v;
+  document.getElementById('pView').style.display=v==='payments'?'block':'none';
+  document.getElementById('iView').style.display=v==='issues'?'block':'none';
+  document.querySelectorAll('.vtab').forEach(p=>p.classList.toggle('active',p.dataset.v===v));
+}
+function fIss(f) {
+  IF=f;
+  document.querySelectorAll('.iff').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+  rIssues();
+}
+window.switchView=switchView;
+window.fIss=fIss;
+
+/* ════════════════════════════════
+   FLAT DETAIL MODAL
+════════════════════════════════ */
+function oFl(fid) {
+  const f=flats.get(fid);if(!f)return;
+  const s=st(f),bal=f.due-f.paid,ex=fex(fid),tot=ex.reduce((a,e)=>a+e.amt,0);
+  const sc=s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
+  document.getElementById('mdT').textContent=`${f.flatId} — ${f.owner||'(No owner)'}`;
+  document.getElementById('mdS').textContent=`Block ${f.block} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  const rows=ex.length
+    ?ex.map(e=>`<div class="erow">
+      <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
+      <div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
+      <div class="eamt">${inr(e.amt)}</div></div>`).join('')
+    :`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
+  document.getElementById('mdC').innerHTML=`
+    <div class="fg2" style="margin-bottom:14px">
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Name</label>
+        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Owner name" style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:9px 13px;outline:none;width:100%;margin-top:6px"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Monthly Due (₹)</label>
+        <input type="number" id="edDue" value="${f.due||''}" placeholder="e.g. 2000" min="0" style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:9px 13px;outline:none;width:100%;margin-top:6px"/>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:16px">
+      <button class="btn btn-white btn-sm" onclick="window._saveFlat('${fid}')">
+        <i class="ti ti-device-floppy"></i> Save Changes
+      </button>
+    </div>
+    <div style="height:1px;background:var(--border2);margin-bottom:16px"></div>
+    <div class="dm">
+      <div class="dm-card"><div class="dm-label">Paid</div><div class="dm-value" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
+      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:13px;color:${sc}">${sl(s)}</div></div>
+    </div>
+    <div class="etitle"><i class="ti ti-list"></i>Payment History</div>
+    <div class="elist">${rows}</div>
+    ${ex.length?`<div class="etotal"><span class="etotal-label">Total Expenses</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
+    <div class="mactions">
+      <button class="btn btn-indigo btn-sm" onclick="window._cM();window._oAFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add Payment
+      </button>
+    </div>`;
+  document.getElementById('flatM').classList.add('open');
+}
+const cM=()=>document.getElementById('flatM').classList.remove('open');
+
+async function saveFlat(fid) {
+  const owner = document.getElementById('edOwner').value.trim();
+  const due   = parseInt(document.getElementById('edDue').value)||0;
+  const btn   = event.currentTarget;
+  btn.disabled=true;btn.innerHTML='<i class="ti ti-loader"></i> Saving…';
+  sync('saving');
+  try {
+    await updateDoc(flatRef(fid),{owner,due});
+    sync('live');toast('Flat updated ✓');
+    // refresh modal header
+    document.getElementById('mdT').textContent=`${fid} — ${owner||'(No owner)'}`;
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> Save Changes';
+  } catch(e) {
+    console.error(e);sync('error');toast('Save failed.','error');
+    btn.disabled=false;btn.innerHTML='<i class="ti ti-device-floppy"></i> Save Changes';
+  }
+}
+
+/* ════════════════════════════════
+   ADD EXPENSE MODAL
+════════════════════════════════ */
+function fBS(){
+  document.getElementById('fB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('fB').value=AB;
+}
+function fFS(){
+  const b=document.getElementById('fB').value;
+  document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
+}
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
+const cA=()=>document.getElementById('addM').classList.remove('open');
+document.getElementById('fB').addEventListener('change',fFS);
+
+async function sE(){
+  const block=document.getElementById('fB').value,fid=document.getElementById('fF').value;
+  const cat=document.getElementById('fC').value,amt=parseInt(document.getElementById('fA').value)||0;
+  const dv=document.getElementById('fD').value,s=document.getElementById('fS').value;
+  const note=document.getElementById('fN').value.trim();
+  if(!amt||amt<=0){toast('Please enter a valid amount.','error');return;}
+  const f=flats.get(fid);if(!f){toast('Flat not found.','error');return;}
+  sync('saving');
+  const btn=document.getElementById('svBtn');btn.disabled=true;
+  document.getElementById('svLbl').textContent='Saving…';
+  try{
+    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),note,status:s,month:AM,createdAt:serverTimestamp()});
+    let np=f.paid;
+    if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
+    await updateDoc(flatRef(fid),{paid:np});
+    sync('live');cA();toast('Payment saved ✓');
+  }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
+  finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
+}
+
+/* ════════════════════════════════
+   ADD FLAT MODAL
+════════════════════════════════ */
+function oAF(){
+  document.getElementById('nB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('nI').value='';document.getElementById('nO').value='';document.getElementById('nD').value='';
+  document.getElementById('flatAddM').classList.add('open');
+}
+const cAF=()=>document.getElementById('flatAddM').classList.remove('open');
+async function sNF(){
+  const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
+  const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||0;
+  if(!id){toast('Enter a flat number.','error');return;}
+  if(!owner){toast('Enter owner name.','error');return;}
+  if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
+  sync('saving');
+  try{
+    await setDoc(flatRef(id),{block,owner,due,paid:0,month:AM});
+    sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();
+  }catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
+}
+
+/* ════════════════════════════════
+   RAISE ISSUE MODAL
+════════════════════════════════ */
+function oRI(){
+  ['iT','iDe','iFl','iRe'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('iP').value='medium';
+  document.getElementById('iBl').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('')+'<option value="Common">Common Area</option>';
+  const btn=document.getElementById('issBtn');btn.disabled=false;
+  document.getElementById('issBtnL').textContent='Submit Complaint';
+  document.getElementById('rIM').classList.add('open');
+}
+const cRI=()=>{
+  document.getElementById('rIM').classList.remove('open');
+  document.getElementById('issBtn').disabled=false;
+  document.getElementById('issBtnL').textContent='Submit Complaint';
+};
+async function sI(){
+  const title=document.getElementById('iT').value.trim();
+  const cat=document.getElementById('iCa').value;
+  const priority=document.getElementById('iP').value;
+  const block=document.getElementById('iBl').value;
+  const flat=document.getElementById('iFl').value.trim().toUpperCase();
+  const desc=document.getElementById('iDe').value.trim();
+  const reporter=document.getElementById('iRe').value.trim();
+  if(!title){toast('Enter an issue title.','error');return;}
+  if(!desc){toast('Please describe the issue.','error');return;}
+  if(!reporter){toast('Enter your name.','error');return;}
+  const btn=document.getElementById('issBtn');btn.disabled=true;
+  document.getElementById('issBtnL').textContent='Submitting…';
+  sync('saving');
+  try{
+    const now=new Date().toISOString();
+    await addDoc(issuesColl(),{
+      title,cat,priority,block,flat,desc,reporter,
+      status:'open',month:AM,
+      timeline:[{action:'Issue reported',by:reporter,status:'open',ts:now}],
+      createdAt:serverTimestamp(),
+    });
+    sync('live');cRI();toast('Issue submitted ✓');switchView('issues');
+  }catch(e){
+    console.error(e);sync('error');toast('Failed to submit. Try again.','error');
+    btn.disabled=false;document.getElementById('issBtnL').textContent='Submit Complaint';
+  }
+}
+
+/* ════════════════════════════════
+   ISSUE DETAIL MODAL
+════════════════════════════════ */
+function oID(id){
+  const iss=issues.find(i=>i.id===id);if(!iss)return;
+  const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
+  const pc={high:'var(--red)',medium:'var(--amber)',low:'var(--green)'}[iss.priority];
+  document.getElementById('idT').textContent=iss.title;
+  document.getElementById('idS').textContent=`${iss.cat} · Reported by ${iss.reporter}`;
+  const sL=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
+  document.getElementById('idC').innerHTML=`
+    <div class="dm">
+      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:14px;color:${sc}">${sL}</div></div>
+      <div class="dm-card"><div class="dm-label">Priority</div><div class="dm-value" style="font-size:14px;color:${pc}">${iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1)}</div></div>
+      <div class="dm-card"><div class="dm-label">Location</div><div class="dm-value" style="font-size:14px">${iss.flat||iss.block}</div></div>
+    </div>
+    <div class="etitle"><i class="ti ti-file-description"></i>Full Description</div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:15px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-weight:500">${iss.desc}</div>
+    <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:20px">
+      <span><i class="ti ti-user" style="vertical-align:-2px;margin-right:4px"></i>${iss.reporter}</span>
+      <span><i class="ti ti-calendar" style="vertical-align:-2px;margin-right:4px"></i>${fdt(iss.createdAt)}</span>
+    </div>
+    ${iss.status!=='resolved'
+      ?`<div style="display:flex;gap:10px;flex-wrap:wrap">
+          ${iss.status==='open'?`<button class="btn btn-white btn-sm" onclick="window._uIS('${id}','in-progress')"><i class="ti ti-progress"></i> Mark In Progress</button>`:''}
+          <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Mark as Resolved</button>
+        </div>`
+      :`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
+  `;
+  const tl=iss.timeline||[{action:'Issue reported',by:iss.reporter,status:'open',ts:null}];
+  const tlDotColor={open:'var(--red)',created:'var(--indigo)','in-progress':'var(--amber)',resolved:'var(--green)'};
+  document.getElementById('idTL').innerHTML=`
+    <div class="etitle" style="margin-top:18px"><i class="ti ti-timeline"></i>Activity Timeline</div>
+    ${tl.map((t,i)=>`
+      <div class="itl-item">
+        <div class="itl-dot-col">
+          <div class="itl-dot" style="background:${tlDotColor[t.status]||'var(--indigo)'}"></div>
+          ${i<tl.length-1?'<div class="itl-line"></div>':''}
+        </div>
+        <div class="itl-body">
+          <div class="itl-action">${t.action}</div>
+          <div class="itl-by">By ${t.by||'System'} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
+        </div>
+      </div>`).join('')}
+  `;
+  document.getElementById('idM').classList.add('open');
+}
+const cID=()=>document.getElementById('idM').classList.remove('open');
+
+async function uIS(id,ns){
+  const iss=issues.find(i=>i.id===id);if(!iss)return;
+  sync('saving');
+  const actionLabel={open:'Issue opened','in-progress':'Marked as In Progress',resolved:'Marked as Resolved'}[ns]||ns;
+  const updatedTimeline=[...(iss.timeline||[]),{action:actionLabel,by:'Admin',status:ns,ts:new Date().toISOString()}];
+  try{
+    await updateDoc(issueRef(id),{status:ns,timeline:updatedTimeline});
+    sync('live');cID();toast(ns==='resolved'?'Marked as resolved ✓':'Status updated ✓');
+  }catch(e){console.error(e);sync('error');toast('Update failed.','error');}
+}
+
+/* ════════════════════════════════
+   FIRESTORE LISTENERS
+   (scoped under apartments/{uid}/...)
+════════════════════════════════ */
+function listenFlats(){
+  onSnapshot(flatsColl(),snap=>{
+    snap.docChanges().forEach(ch=>{
+      const d={flatId:ch.doc.id,...ch.doc.data()};
+      ch.type==='removed'?flats.delete(ch.doc.id):flats.set(ch.doc.id,d);
+    });
+    rAll();sync('live');
+    document.getElementById('lo').style.display='none';
+    document.getElementById('app').style.display='';
+  },e=>{
+    console.error('Flats listener error:',e);
+    sync('error');
+    document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
+  });
+}
+
+function listenExp(){
+  if(eu)eu();
+  const q=query(expColl(),where('month','==',AM),orderBy('createdAt','asc'));
+  eu=onSnapshot(q,snap=>{
+    exps.clear();
+    snap.forEach(d=>{const e={expId:d.id,...d.data()};const a=exps.get(e.flatId)||[];a.push(e);exps.set(e.flatId,a);});
+    rAll();
+  },()=>{
+    const q2=query(expColl(),where('month','==',AM));
+    eu=onSnapshot(q2,snap=>{exps.clear();snap.forEach(d=>{const e={expId:d.id,...d.data()};const a=exps.get(e.flatId)||[];a.push(e);exps.set(e.flatId,a);});rAll();});
+  });
+}
+
+function listenIssues(){
+  if(iu)iu();
+  const q=query(issuesColl(),orderBy('createdAt','desc'));
+  iu=onSnapshot(q,snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();},
+    ()=>{iu=onSnapshot(issuesColl(),snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();});});
+}
+
+/* ════════════════════════════════
+   DOM EVENTS
+════════════════════════════════ */
+document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock();});
+document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
+document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp();});
+['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{
+    if(e.target.id===id){cM();cA();cAF();cRI();cID();}
+  });
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();}});
+
+/* ════════════════════════════════
+   WINDOW EXPOSE
+════════════════════════════════ */
+window._sB   =b=>{AB=b;rBTabs();rBlock();};
+window._oFl  =oFl;  window._cM=cM; window._saveFlat=saveFlat;
+window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
+window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
+window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
+window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
+
+/* ════════════════════════════════
+   IN-APP SETUP WIZARD
+   Shown when the account has no flats yet
+════════════════════════════════ */
+let WIZ_BLOCKS = [{ name:'A', floors:4, flatsPerFloor:4 }];
+
+function wizSetStep(n) {
+  [0,1,2].forEach(i => {
+    document.getElementById('ws'+i).style.display = i===n ? '' : 'none';
+  });
+  // Update dots
+  const dots = document.getElementById('wizDots').children;
+  [0,1,2].forEach(i => {
+    const d = dots[i];
+    if(i < n)       d.style.cssText = 'width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0';
+    else if(i === n) d.style.cssText = 'width:24px;height:8px;border-radius:99px;background:var(--indigo);flex-shrink:0';
+    else             d.style.cssText = 'width:8px;height:8px;border-radius:50%;background:var(--surface3);flex-shrink:0';
+  });
+}
+
+function wizRenderBlocks() {
+  document.getElementById('wBlocks').innerHTML = WIZ_BLOCKS.map((b,i) => `
+    <div class="wiz-block-row">
+      <div>
+        <label>Block Name</label>
+        <input type="text" value="${b.name}" maxlength="3" placeholder="A"
+          oninput="WIZ_BLOCKS[${i}].name=this.value.toUpperCase();wizUpdatePreview()"/>
+      </div>
+      <div>
+        <label>Floors</label>
+        <input type="number" value="${b.floors}" min="1" max="50"
+          oninput="WIZ_BLOCKS[${i}].floors=parseInt(this.value)||1;wizUpdatePreview()"/>
+      </div>
+      <div>
+        <label>Flats / Floor</label>
+        <input type="number" value="${b.flatsPerFloor}" min="1" max="20"
+          oninput="WIZ_BLOCKS[${i}].flatsPerFloor=parseInt(this.value)||1;wizUpdatePreview()"/>
+      </div>
+      ${WIZ_BLOCKS.length > 1
+        ? `<button class="wiz-rm" onclick="wizRemoveBlock(${i})"><i class="ti ti-trash"></i></button>`
+        : '<div></div>'}
+    </div>`).join('');
+  wizUpdatePreview();
+}
+
+function wizRemoveBlock(i) { WIZ_BLOCKS.splice(i,1); wizRenderBlocks(); }
+
+window.WIZ_BLOCKS = WIZ_BLOCKS;
+window.wizUpdatePreview = function() {
+  let total=0, lines=[];
+  WIZ_BLOCKS.forEach(b => {
+    const cnt = b.floors * (b.flatsPerFloor||1);
+    total += cnt;
+    lines.push(`<strong>Block ${b.name||'?'}</strong> — ${b.floors} floor${b.floors!==1?'s':''}, ${b.flatsPerFloor} flat${b.flatsPerFloor!==1?'s':''}/floor = ${cnt} flats`);
+  });
+  const p = document.getElementById('wPreview');
+  if(p) p.innerHTML = lines.join('<br>') + `<br><strong>Total: ${total} flats</strong> will be created`;
+};
+window.wizRemoveBlock = wizRemoveBlock;
+
+window._wizAddBlock = function() {
+  const letters = 'ABCDEFGHIJKLMNOP';
+  WIZ_BLOCKS.push({ name: letters[WIZ_BLOCKS.length] || String(WIZ_BLOCKS.length+1), floors:4, flatsPerFloor:4 });
+  wizRenderBlocks();
+};
+
+window._wizBack = n => wizSetStep(n-1);
+
+window._wizNext = function(from) {
+  if(from === 0) {
+    const n = document.getElementById('wAptName').value.trim();
+    if(!n) { toast('Please enter your apartment name.','error'); return; }
+    APT_NAME = n; applyAptName(n);
+    wizRenderBlocks();
+    wizSetStep(1);
+  } else if(from === 1) {
+    if(WIZ_BLOCKS.some(b=>!b.name.trim())) { toast('Every block needs a name.','error'); return; }
+    // Build confirm preview
+    let html = `<strong>${APT_NAME}</strong><br><br>`;
+    WIZ_BLOCKS.forEach(b => {
+      html += `🏢 <strong>Block ${b.name}</strong>: ${b.floors} floors × ${b.flatsPerFloor} flats = ${b.floors*b.flatsPerFloor} flats<br>`;
+      for(let fl=1; fl<=Math.min(b.floors,3); fl++) {
+        const ids=[];
+        for(let f=1; f<=b.flatsPerFloor; f++) ids.push(`${b.name}-${fl}${String(f).padStart(2,'0')}`);
+        html+=`&nbsp;&nbsp;&nbsp;Floor ${fl}: ${ids.join(', ')}<br>`;
+      }
+      if(b.floors>3) html += `&nbsp;&nbsp;&nbsp;… and ${b.floors-3} more floor${b.floors-3!==1?'s':''}<br>`;
+    });
+    const tot = WIZ_BLOCKS.reduce((s,b)=>s+b.floors*b.flatsPerFloor,0);
+    html += `<br><strong>Total: ${tot} flats</strong> will be auto-created.`;
+    document.getElementById('wConfirm').innerHTML = html;
+    wizSetStep(2);
+  }
+};
+
+window._wizLaunch = async function() {
+  const btn = document.getElementById('wLaunchBtn');
+  btn.disabled = true;
+  document.getElementById('wLaunchLbl').textContent = ' Creating…';
+  try {
+    // Save apt config (merge so name is preserved if set)
+    await setDoc(aptDocRef(), { name: APT_NAME, blocks: WIZ_BLOCKS }, { merge: true });
+    // Create flats
+    for(const b of WIZ_BLOCKS) {
+      for(let fl=1; fl<=b.floors; fl++) {
+        for(let f=1; f<=b.flatsPerFloor; f++) {
+          const fid = `${b.name}-${fl}${String(f).padStart(2,'0')}`;
+          await setDoc(flatRef(fid), { block:b.name, floor:fl, owner:'', due:0, paid:0, month:AM });
+        }
+      }
+    }
+    document.getElementById('setupWiz').style.display = 'none';
+    document.getElementById('lo').style.display = '';
+    listenFlats(); listenExp(); listenIssues();
+    toast(`${APT_NAME} launched ✓`);
+  } catch(e) {
+    console.error(e);
+    toast('Launch failed. Check console.','error');
+    btn.disabled = false;
+    document.getElementById('wLaunchLbl').textContent = ' Launch App';
+  }
+};
+async function boot(){
+  buildMonthSelect();
+  try{
+    // Load apartment config
+    const aptDoc = await getDoc(aptDocRef());
+    if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
+
+    // Check if any flats exist
+    const snap = await getDocs(flatsColl());
+    if(snap.empty){
+      // No flats yet — show in-app setup wizard
+      document.getElementById('lo').style.display = 'none';
+      const wiz = document.getElementById('setupWiz');
+      wiz.style.display = 'flex';
+      // Pre-fill name from config if available
+      if(aptDoc.exists() && aptDoc.data().name){
+        document.getElementById('wAptName').value = aptDoc.data().name;
+      }
+      wizSetStep(0);
+    } else {
+      listenFlats();
+      listenExp();
+      listenIssues();
+    }
+  }catch(err){
+    console.error('Boot error:',err);
+    document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
+  }
+}
+</script>
+</body>
+</html>

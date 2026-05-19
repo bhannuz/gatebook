@@ -1,0 +1,16 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Each apartment is scoped to the owner's uid.
+    // Only the authenticated user who created the apartment can read/write it.
+    match /apartments/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // All sub-collections (flats, expenses, issues) inherit the same rule
+      match /{collection}/{docId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+  }
+}
