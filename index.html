@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ResidentHub — Society Management</title>
+<title id="pageTitle">ResidentHub — Society Management</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -79,9 +79,66 @@
 html{font-size:16px;-webkit-font-smoothing:antialiased}
 body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
 
-/* ════════════════════════════════
-   LOADING
-════════════════════════════════ */
+/* ── Editable apartment name ── */
+.nav-name-wrap{display:flex;align-items:center;gap:6px}
+.edit-name-btn{
+  width:24px;height:24px;border-radius:6px;border:none;background:transparent;
+  color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;transition:all .15s;padding:0;
+}
+.edit-name-btn:hover{background:var(--indigo-bg);color:var(--indigo)}
+.name-edit-input{
+  font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px;
+  border:none;border-bottom:2px solid var(--indigo);background:transparent;
+  outline:none;width:160px;font-family:var(--font);padding:0 2px;
+}
+
+/* ── Setup Wizard ── */
+#setupWiz{
+  position:fixed;inset:0;z-index:9998;
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+}
+.wiz-card{
+  background:#fff;border-radius:var(--r-2xl);padding:36px 40px;
+  width:min(560px,100%);max-height:92vh;overflow-y:auto;
+  box-shadow:var(--shadow-xl);border:1.5px solid var(--border2);
+}
+.wiz-step{display:none}.wiz-step.active{display:block}
+.wiz-head{text-align:center;margin-bottom:28px}
+.wiz-icon{
+  width:64px;height:64px;border-radius:18px;margin:0 auto 14px;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.3);
+}
+.wiz-head h2{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-.4px;margin-bottom:6px}
+.wiz-head p{font-size:13px;color:var(--text2);font-weight:500;line-height:1.6}
+.wiz-step-indicator{display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:28px}
+.ws-dot{width:8px;height:8px;border-radius:50%;background:var(--bg2);transition:all .3s}
+.ws-dot.active{background:var(--indigo);width:24px;border-radius:99px}
+.ws-dot.done{background:var(--green)}
+.wiz-nav{display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)}
+.block-config-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;align-items:center;margin-bottom:10px;padding:12px;background:var(--surface2);border-radius:var(--r-md);border:1px solid var(--border)}
+.block-config-row label{font-size:13px;font-weight:700;color:var(--text)}
+.block-config-row input{height:36px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-sm);font-size:13px;font-weight:600;font-family:var(--font);outline:none;width:100%;background:#fff;color:var(--text)}
+.block-config-row input:focus{border-color:var(--indigo)}
+.add-block-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px dashed var(--border3);border-radius:var(--r-md);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:4px}
+.add-block-btn:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.wiz-preview{background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;margin-top:12px;font-size:13px;color:var(--text2);font-weight:500;line-height:1.8}
+.wiz-preview strong{color:var(--text)}
+
+/* ── Issue timeline ── */
+.iss-timeline{margin-top:14px}
+.itl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
+.itl-item:last-child{border-bottom:none}
+.itl-dot-col{display:flex;flex-direction:column;align-items:center;gap:0}
+.itl-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.itl-line{width:2px;flex:1;background:var(--border2);margin-top:3px}
+.itl-body{flex:1}
+.itl-action{font-size:12px;font-weight:700;color:var(--text)}
+.itl-by{font-size:11px;color:var(--muted);font-weight:500}
+.itl-dot.open{background:var(--red)}.itl-dot.in-progress{background:var(--amber)}.itl-dot.resolved{background:var(--green)}.itl-dot.created{background:var(--indigo)}
 #lo{
   position:fixed;inset:0;z-index:9999;
   background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
@@ -143,7 +200,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .nav-pill.active{background:#fff;color:var(--indigo);box-shadow:var(--shadow-sm)}
 .nav-pill:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.6)}
 .nav-pill .nbadge{
-  font-size:11px;padding:2px 9px;border-radius:99px;font-weight:700;
+  font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700;
   background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);
 }
 .nav-pill.active .nbadge{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
@@ -273,7 +330,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-color:transparent;color:#fff;
   box-shadow:0 4px 16px rgba(99,102,241,0.30);
 }
-.btab-badge{font-size:12px;padding:3px 11px;border-radius:99px;font-weight:700}
+.btab-badge{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:700}
 .btab.active .btab-badge{background:rgba(255,255,255,0.22);color:#fff}
 .btab:not(.active) .btab-badge{background:var(--surface3);color:var(--text2)}
 
@@ -329,23 +386,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
 .fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
 .spill{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:12px;font-weight:700;padding:5px 13px;
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;padding:3px 10px;
   border-radius:99px;text-transform:uppercase;letter-spacing:.5px;
 }
-.spill i{font-size:13px}
+.spill i{font-size:11px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
 .spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
 .spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
-
-/* Resident type chip */
-.rtype{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:11px;font-weight:700;padding:4px 11px;
-  border-radius:99px;letter-spacing:.3px;
-}
-.rtype.owner {background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow)}
-.rtype.tenant{background:var(--sky-bg);   color:var(--sky-txt);border:1px solid var(--sky-border)}
 .empty-grid{grid-column:1/-1;text-align:center;padding:4rem 0;color:var(--text2)}
 .empty-grid i{font-size:44px;display:block;margin-bottom:12px;color:var(--muted)}
 
@@ -355,7 +403,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .iss-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
 .iss-filters{display:flex;gap:6px;flex-wrap:wrap}
 .iff{
-  padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;
+  padding:6px 16px;border-radius:99px;font-size:12px;font-weight:700;
   border:1.5px solid var(--border2);background:#fff;color:var(--text2);
   cursor:pointer;font-family:var(--font);transition:all .15s;
   box-shadow:var(--shadow-sm);
@@ -381,11 +429,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .ic-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:500}
 .ic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .itag{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;
   text-transform:uppercase;letter-spacing:.4px;
 }
-.itag i{font-size:12px}
+.itag i{font-size:10px}
 .itag.flat  {background:var(--sky-bg);   color:var(--sky-txt);  border:1px solid var(--sky-border)}
 .itag.cat   {background:var(--purple-bg);color:var(--purple-txt);border:1px solid var(--purple-border)}
 .itag.date  {background:var(--surface3); color:var(--text2);    border:1px solid var(--border2)}
@@ -528,6 +576,63 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </head>
 <body>
 
+<!-- ── SETUP WIZARD ── -->
+<div id="setupWiz" style="display:none">
+  <div class="wiz-card">
+    <div class="wiz-step-indicator" id="wizDots">
+      <div class="ws-dot active" id="wd0"></div>
+      <div class="ws-dot" id="wd1"></div>
+      <div class="ws-dot" id="wd2"></div>
+    </div>
+
+    <!-- Step 1: Apartment Name -->
+    <div class="wiz-step active" id="ws0">
+      <div class="wiz-head">
+        <div class="wiz-icon"><i class="ti ti-building-community"></i></div>
+        <h2>Name your Apartment</h2>
+        <p>Give your society a name. This will appear across the app.</p>
+      </div>
+      <div class="fg">
+        <label>Apartment / Society Name *</label>
+        <input type="text" id="wAptName" placeholder="e.g. Green Valley Residency" maxlength="50"/>
+      </div>
+      <div class="wiz-nav">
+        <button class="btn btn-indigo" onclick="window._wizNext(0)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 2: Block & Floor Setup -->
+    <div class="wiz-step" id="ws1">
+      <div class="wiz-head">
+        <div class="wiz-icon"><i class="ti ti-building"></i></div>
+        <h2>Configure Blocks & Floors</h2>
+        <p>Add one block or multiple. Each block can have a different number of floors and flats per floor.</p>
+      </div>
+      <div id="wBlocks"></div>
+      <button class="add-block-btn" onclick="window._wizAddBlock()"><i class="ti ti-plus"></i> Add another block</button>
+      <div class="wiz-preview" id="wPreview"></div>
+      <div class="wiz-nav">
+        <button class="btn btn-white" onclick="window._wizBack(1)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-indigo" onclick="window._wizNext(1)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 3: Confirm & Launch -->
+    <div class="wiz-step" id="ws2">
+      <div class="wiz-head">
+        <div class="wiz-icon"><i class="ti ti-rocket"></i></div>
+        <h2>Ready to Launch!</h2>
+        <p>Review your setup below. We'll create all your flats automatically.</p>
+      </div>
+      <div class="wiz-preview" id="wConfirm" style="font-size:14px"></div>
+      <div class="wiz-nav">
+        <button class="btn btn-white" onclick="window._wizBack(2)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-green" id="wLaunchBtn" onclick="window._wizLaunch()"><i class="ti ti-rocket"></i><span id="wLaunchLbl"> Launch App</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ── LOADING ── -->
 <div id="lo">
   <div class="lo-card">
@@ -544,7 +649,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <nav class="navbar">
   <div class="nav-brand">
     <div class="nav-logo"><i class="ti ti-building-community"></i></div>
-    <span class="nav-name">Resident<em>Hub</em></span>
+    <div class="nav-name-wrap">
+      <span class="nav-name" id="aptNameDisplay">Resident<em>Hub</em></span>
+      <button class="edit-name-btn" onclick="window._startEditName()" title="Edit apartment name"><i class="ti ti-pencil"></i></button>
+    </div>
   </div>
 
   <div class="nav-pills" id="navPills">
@@ -591,11 +699,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <option value="paid">✅ Paid</option>
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
-      </select>
-      <select class="ctrl" id="rtf">
-        <option value="all">All residents</option>
-        <option value="owner">🏠 Owners</option>
-        <option value="tenant">🔑 Tenants</option>
       </select>
       <div class="sw">
         <i class="ti ti-search"></i>
@@ -700,13 +803,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="fg"><label>Owner Name</label><input type="text" id="nO" placeholder="Full name"/></div>
       <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="nD" placeholder="5000" min="1"/></div>
     </div>
-    <div class="fg">
-      <label>Resident Type</label>
-      <select id="nRT">
-        <option value="owner">🏠 Owner — Flat owner residing</option>
-        <option value="tenant">🔑 Tenant — Renting from owner</option>
-      </select>
-    </div>
     <div class="mactions">
       <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
       <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
@@ -771,6 +867,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="mclose" onclick="window._cID()"><i class="ti ti-x"></i></button>
     </div>
     <div id="idC"></div>
+    <div class="iss-timeline" id="idTL"></div>
   </div>
 </div>
 
@@ -779,7 +876,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <script type="module">
 import{initializeApp}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
 import{getAnalytics}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
-import{getFirestore,collection,doc,getDocs,addDoc,setDoc,updateDoc,onSnapshot,query,where,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import{getFirestore,collection,doc,getDocs,getDoc,addDoc,setDoc,updateDoc,onSnapshot,query,where,orderBy,serverTimestamp}from'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 const fbApp=initializeApp({
   apiKey:'AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM',
@@ -793,63 +890,13 @@ const fbApp=initializeApp({
 getAnalytics(fbApp);
 const db=getFirestore(fbApp);
 
-/* ── Seed ── */
-const SF=[
-  {id:'A-101',block:'A',owner:'Ramesh Kumar',  due:5000,paid:4500,month:'2026-05',residentType:'owner'},
-  {id:'A-102',block:'A',owner:'Sunita Sharma', due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
-  {id:'A-103',block:'A',owner:'Priya Nair',    due:5000,paid:0,   month:'2026-05',residentType:'owner'},
-  {id:'A-104',block:'A',owner:'Anil Gupta',    due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
-  {id:'A-201',block:'A',owner:'Kavita Reddy',  due:5000,paid:2000,month:'2026-05',residentType:'owner'},
-  {id:'A-202',block:'A',owner:'Suresh Mehta',  due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
-  {id:'B-101',block:'B',owner:'Deepa Iyer',    due:5000,paid:5000,month:'2026-05',residentType:'owner'},
-  {id:'B-102',block:'B',owner:'Manoj Pillai',  due:5000,paid:3000,month:'2026-05',residentType:'tenant'},
-  {id:'B-103',block:'B',owner:'Rekha Joshi',   due:5000,paid:0,   month:'2026-05',residentType:'owner'},
-  {id:'B-104',block:'B',owner:'Venkat Rao',    due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
-  {id:'B-201',block:'B',owner:'Anita Singh',   due:5000,paid:5000,month:'2026-05',residentType:'owner'},
-  {id:'C-101',block:'C',owner:'Rajan Verma',   due:5000,paid:4000,month:'2026-05',residentType:'tenant'},
-  {id:'C-102',block:'C',owner:'Meena Krishnan',due:5000,paid:5000,month:'2026-05',residentType:'owner'},
-  {id:'C-103',block:'C',owner:'Harish Patel',  due:5000,paid:0,   month:'2026-05',residentType:'tenant'},
-  {id:'C-104',block:'C',owner:'Leela Nair',    due:5000,paid:5000,month:'2026-05',residentType:'owner'},
-];
-const SE=[
-  {flatId:'A-101',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'partial',month:'2026-05'},
-  {flatId:'A-101',block:'A',cat:'Water',      date:'05 May',amt:1500,note:'',status:'partial',month:'2026-05'},
-  {flatId:'A-102',block:'A',cat:'Maintenance',date:'02 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'A-102',block:'A',cat:'Electricity',date:'04 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'A-104',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'A-104',block:'A',cat:'Parking',    date:'03 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'A-201',block:'A',cat:'Maintenance',date:'06 May',amt:2000,note:'partial advance',status:'partial',month:'2026-05'},
-  {flatId:'A-202',block:'A',cat:'Maintenance',date:'01 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'B-101',block:'B',cat:'Maintenance',date:'02 May',amt:3500,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'B-101',block:'B',cat:'Lift',       date:'05 May',amt:1500,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'B-102',block:'B',cat:'Maintenance',date:'03 May',amt:3000,note:'',status:'partial',month:'2026-05'},
-  {flatId:'B-104',block:'B',cat:'Security',   date:'01 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'B-104',block:'B',cat:'Cleaning',   date:'04 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'B-201',block:'B',cat:'Maintenance',date:'01 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'C-101',block:'C',cat:'Maintenance',date:'02 May',amt:4000,note:'',status:'partial',month:'2026-05'},
-  {flatId:'C-102',block:'C',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'C-102',block:'C',cat:'Water',      date:'04 May',amt:2000,note:'',status:'paid',   month:'2026-05'},
-  {flatId:'C-104',block:'C',cat:'Parking',    date:'03 May',amt:5000,note:'',status:'paid',   month:'2026-05'},
-];
-const SI=[
-  {title:'Water leakage — B corridor ceiling',cat:'Plumbing',priority:'high',  block:'B',flat:'B-102',desc:'Water dripping from ceiling slab near lift lobby on B-Block ground floor. Started 3 days ago after heavy rain. Needs urgent attention.',reporter:'Manoj Pillai / B-102',status:'open',      month:'2026-05'},
-  {title:'Lift stuck between floors — Block A',cat:'Lift',    priority:'high',  block:'A',flat:'',    desc:'Main lift stopped between Ground and 1st floor. Door not opening. Residents using staircase. Please escalate to elevator company.',reporter:'Security Guard',                             status:'in-progress',month:'2026-05'},
-  {title:'Street lights not working at Gate 2', cat:'Electrical',priority:'medium',block:'Common',flat:'',desc:'Two street lights near the main Gate 2 entrance have been out for a week. Safety concern at night.',reporter:'Rajan Verma / C-101',                                               status:'open',      month:'2026-05'},
-  {title:'Garbage area not cleaned — Gate 2',  cat:'Cleaning', priority:'low',  block:'Common',flat:'',desc:'Garbage area near Gate 2 was not cleared Monday or Tuesday. Strong smell affecting residents.',reporter:'Anita Singh / B-201',                                                       status:'resolved',  month:'2026-05'},
-];
-
-async function seedIfEmpty(){
-  const s=await getDocs(collection(db,'flats'));
-  if(!s.empty)return;
-  for(const f of SF){const{id,...d}=f;await setDoc(doc(db,'flats',id),d);}
-  for(const e of SE){await addDoc(collection(db,'expenses'),{...e,createdAt:serverTimestamp()});}
-  for(const i of SI){await addDoc(collection(db,'issues'),  {...i,createdAt:serverTimestamp()});}
-}
+/* ── Seed data removed — Setup Wizard handles first-time setup ── */
 
 /* ── Cache / State ── */
 const flats=new Map(),exps=new Map(),issues=[];
-let AB='A',FS='all',SQ='',AM='2026-05',AV='payments',IF='all',RTF='all';
+let AB='A',FS='all',SQ='',AM='2026-05',AV='payments',IF='all';
 let eu=null,iu=null;
+let APT_NAME='ResidentHub'; // apartment name state
 
 /* ── Helpers ── */
 const st=f=>f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
@@ -861,6 +908,31 @@ const fdt=ts=>{if(!ts)return'–';const d=ts.toDate?ts.toDate():new Date(ts);ret
 const bks=()=>[...new Set([...flats.values()].map(f=>f.block))].sort();
 const bfl=b=>[...flats.values()].filter(f=>f.block===b&&f.month===AM);
 const fex=id=>exps.get(id)||[];
+
+/* ── Apt Name ── */
+function applyAptName(name){
+  APT_NAME=name||'ResidentHub';
+  document.getElementById('aptNameDisplay').innerHTML=`${APT_NAME.replace(/(\w+)$/,'<em>$1</em>')}`;
+  document.getElementById('pageTitle').textContent=`${APT_NAME} — Society Management`;
+}
+window._startEditName=function(){
+  const wrap=document.getElementById('aptNameDisplay').parentElement;
+  const cur=APT_NAME;
+  wrap.innerHTML=`<input class="name-edit-input" id="nameInp" value="${cur}" maxlength="50"/>`;
+  const inp=document.getElementById('nameInp');
+  inp.focus();inp.select();
+  const save=async()=>{
+    const v=inp.value.trim()||cur;
+    await setDoc(doc(db,'config','apt'),{name:v},{merge:true});
+    applyAptName(v);
+    // restore button
+    wrap.innerHTML=`<span class="nav-name" id="aptNameDisplay"></span><button class="edit-name-btn" onclick="window._startEditName()" title="Edit apartment name"><i class="ti ti-pencil"></i></button>`;
+    applyAptName(v);
+    toast('Apartment name updated ✓');
+  };
+  inp.addEventListener('blur',save);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=cur;inp.blur();}});
+};
 
 /* ── Sync ── */
 function sync(s){
@@ -950,7 +1022,6 @@ function rBlock(){
   const bf=bfl(AB);
   const vis=bf.filter(f=>{
     if(FS!=='all'&&st(f)!==FS)return false;
-    if(RTF!=='all'&&(f.residentType||'owner')!==RTF)return false;
     if(SQ&&!f.flatId.toLowerCase().includes(SQ)&&!f.owner.toLowerCase().includes(SQ))return false;
     return true;
   });
@@ -971,9 +1042,6 @@ function rBlock(){
       const s=st(f);
       const pct=Math.round(Math.min(f.paid/f.due*100,100));
       const ico={paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s];
-      const rt=f.residentType||'owner';
-      const rtIcon=rt==='owner'?'ti-home':'ti-key';
-      const rtLabel=rt==='owner'?'Owner':'Tenant';
       h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
         onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
         <div class="fc-top">
@@ -983,10 +1051,7 @@ function rBlock(){
         <div class="fc-amount ${s}">${inr(f.paid)}</div>
         <div class="fc-due">of ${inr(f.due)} monthly due</div>
         <div class="fprog"><div class="fpbar ${s}" style="width:${pct}%"></div></div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px">
-          <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
-          <div class="rtype ${rt}"><i class="ti ${rtIcon}"></i>${rtLabel}</div>
-        </div>
+        <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
       </div>`;
     });
   }
@@ -1049,9 +1114,7 @@ function oFl(fid){
   const s=st(f),bal=f.due-f.paid,ex=fex(fid),tot=ex.reduce((a,e)=>a+e.amt,0);
   const sc=s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   document.getElementById('mdT').textContent=`${f.flatId} — ${f.owner}`;
-  const rt=f.residentType||'owner';
-  const rtLabel=rt==='owner'?'🏠 Owner':'🔑 Tenant';
-  document.getElementById('mdS').textContent=`Block ${f.block} · ${rtLabel} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  document.getElementById('mdS').textContent=`Block ${f.block} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
   const rows=ex.length?ex.map(e=>`<div class="erow">
     <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div><div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
     <div class="eamt">${inr(e.amt)}</div></div>`).join(''):`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
@@ -1113,41 +1176,73 @@ const cAF=()=>document.getElementById('flatAddM').classList.remove('open');
 async function sNF(){
   const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
   const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||5000;
-  const residentType=document.getElementById('nRT').value;
   if(!id){toast('Enter a flat number.','error');return;}
   if(!owner){toast('Enter owner name.','error');return;}
   if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
   sync('saving');
-  try{await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:AM,residentType});sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();}
+  try{await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:AM});sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();}
   catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
 
-/* ── Raise issue ── */
+/* ── Raise issue — FIXED ── */
 function oRI(){
+  // Reset all fields
   ['iT','iDe','iFl','iRe'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('iP').value='medium';
+  // Reset block options dynamically from current blocks
+  const blkSel=document.getElementById('iBl');
+  blkSel.innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('')+'<option value="Common">Common Area</option>';
+  // Re-enable button in case it was stuck
+  const btn=document.getElementById('issBtn');
+  btn.disabled=false;
+  document.getElementById('issBtnL').textContent='Submit Complaint';
   document.getElementById('rIM').classList.add('open');
 }
-const cRI=()=>document.getElementById('rIM').classList.remove('open');
+const cRI=()=>{
+  document.getElementById('rIM').classList.remove('open');
+  // Always reset button state on close
+  const btn=document.getElementById('issBtn');
+  btn.disabled=false;
+  document.getElementById('issBtnL').textContent='Submit Complaint';
+};
 async function sI(){
-  const title=document.getElementById('iT').value.trim(),cat=document.getElementById('iCa').value;
-  const priority=document.getElementById('iP').value,block=document.getElementById('iBl').value;
+  const title=document.getElementById('iT').value.trim();
+  const cat=document.getElementById('iCa').value;
+  const priority=document.getElementById('iP').value;
+  const block=document.getElementById('iBl').value;
   const flat=document.getElementById('iFl').value.trim().toUpperCase();
-  const desc=document.getElementById('iDe').value.trim(),reporter=document.getElementById('iRe').value.trim();
+  const desc=document.getElementById('iDe').value.trim();
+  const reporter=document.getElementById('iRe').value.trim();
   if(!title){toast('Enter an issue title.','error');return;}
   if(!desc){toast('Please describe the issue.','error');return;}
   if(!reporter){toast('Enter your name.','error');return;}
-  sync('saving');
-  const btn=document.getElementById('issBtn');btn.disabled=true;
+  const btn=document.getElementById('issBtn');
+  btn.disabled=true;
   document.getElementById('issBtnL').textContent='Submitting…';
+  sync('saving');
   try{
-    await addDoc(collection(db,'issues'),{title,cat,priority,block,flat,desc,reporter,status:'open',month:AM,createdAt:serverTimestamp()});
-    sync('live');cRI();toast('Issue submitted ✓');switchView('issues');
-  }catch(e){console.error(e);sync('error');toast('Failed to submit.','error');}
-  finally{btn.disabled=false;document.getElementById('issBtnL').textContent='Submit Complaint';}
+    const now=new Date().toISOString();
+    const timeline=[{action:'Issue reported',by:reporter,status:'open',ts:now}];
+    await addDoc(collection(db,'issues'),{
+      title,cat,priority,block,flat,desc,reporter,
+      status:'open',month:AM,
+      timeline,
+      createdAt:serverTimestamp()
+    });
+    sync('live');
+    cRI();
+    toast('Issue submitted ✓');
+    switchView('issues');
+  }catch(e){
+    console.error('Issue submit error:',e);
+    sync('error');
+    toast('Failed to submit. Try again.','error');
+    btn.disabled=false;
+    document.getElementById('issBtnL').textContent='Submit Complaint';
+  }
 }
 
-/* ── Issue detail ── */
+/* ── Issue detail with timeline ── */
 function oID(id){
   const iss=issues.find(i=>i.id===id);if(!iss)return;
   const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
@@ -1172,12 +1267,35 @@ function oID(id){
       <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Mark as Resolved</button>
     </div>`:`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
   `;
+  // Build timeline
+  const tl=iss.timeline||[{action:'Issue reported',by:iss.reporter,status:'open',ts:null}];
+  const tlDotColor={open:'var(--red)',created:'var(--indigo)','in-progress':'var(--amber)',resolved:'var(--green)'};
+  document.getElementById('idTL').innerHTML=`
+    <div class="etitle" style="margin-top:18px"><i class="ti ti-timeline"></i>Activity Timeline</div>
+    ${tl.map((t,i)=>`
+      <div class="itl-item">
+        <div class="itl-dot-col">
+          <div class="itl-dot" style="background:${tlDotColor[t.status]||'var(--indigo)'}"></div>
+          ${i<tl.length-1?'<div class="itl-line"></div>':''}
+        </div>
+        <div class="itl-body">
+          <div class="itl-action">${t.action}</div>
+          <div class="itl-by">By ${t.by||'System'} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
+        </div>
+      </div>`).join('')}
+  `;
   document.getElementById('idM').classList.add('open');
 }
 const cID=()=>document.getElementById('idM').classList.remove('open');
 async function uIS(id,ns){
+  const iss=issues.find(i=>i.id===id);if(!iss)return;
   sync('saving');
-  try{await updateDoc(doc(db,'issues',id),{status:ns});sync('live');cID();toast(ns==='resolved'?'Marked as resolved ✓':'Status updated ✓');}
+  const actionLabel={open:'Issue opened','in-progress':'Marked as In Progress',resolved:'Marked as Resolved'}[ns]||ns;
+  const updatedTimeline=[...(iss.timeline||[]),{action:actionLabel,by:'Admin',status:ns,ts:new Date().toISOString()}];
+  try{
+    await updateDoc(doc(db,'issues',id),{status:ns,timeline:updatedTimeline});
+    sync('live');cID();toast(ns==='resolved'?'Marked as resolved ✓':'Status updated ✓');
+  }
   catch(e){console.error(e);sync('error');toast('Update failed.','error');}
 }
 
@@ -1214,7 +1332,6 @@ function listenIssues(){
 
 /* ── DOM events ── */
 document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock()});
-document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;rBlock()});
 document.getElementById('qi').addEventListener('input',e=>{SQ=e.target.value.toLowerCase().trim();rBlock()});
 document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp()});
 ['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
@@ -1231,11 +1348,130 @@ window._oRI=oRI; window._cRI=cRI;     window._sI=sI;
 window._oID=oID; window._cID=cID;     window._uIS=uIS;
 window.switchView=switchView; window.fIss=fIss;
 
+/* ════════════════════════════════
+   SETUP WIZARD
+════════════════════════════════ */
+let WIZ_BLOCKS=[{name:'A',floors:4,flatsPerFloor:4}];
+
+function wizRenderBlocks(){
+  document.getElementById('wBlocks').innerHTML=WIZ_BLOCKS.map((b,i)=>`
+    <div class="block-config-row">
+      <div>
+        <label>Block Name</label>
+        <input type="text" value="${b.name}" maxlength="3" placeholder="A"
+          oninput="WIZ_BLOCKS[${i}].name=this.value.toUpperCase();wizPreview()"/>
+      </div>
+      <div>
+        <label>Floors</label>
+        <input type="number" value="${b.floors}" min="1" max="50"
+          oninput="WIZ_BLOCKS[${i}].floors=parseInt(this.value)||1;wizPreview()"/>
+      </div>
+      <div>
+        <label>Flats/Floor</label>
+        <input type="number" value="${b.flatsPerFloor}" min="1" max="20"
+          oninput="WIZ_BLOCKS[${i}].flatsPerFloor=parseInt(this.value)||1;wizPreview()"/>
+      </div>
+    </div>`).join('');
+  wizPreview();
+}
+
+function wizPreview(){
+  let total=0,lines=[];
+  WIZ_BLOCKS.forEach(b=>{
+    const cnt=b.floors*(b.flatsPerFloor||1);
+    total+=cnt;
+    lines.push(`<strong>Block ${b.name||'?'}</strong> — ${b.floors} floor${b.floors>1?'s':''}, ${b.flatsPerFloor} flat${b.flatsPerFloor>1?'s':''}/floor = ${cnt} flats`);
+  });
+  document.getElementById('wPreview').innerHTML=lines.join('<br>')+`<br><strong>Total: ${total} flats</strong> will be created`;
+}
+
+window._wizAddBlock=function(){
+  const letters='ABCDEFGHIJKLMNOP';
+  const next=letters[WIZ_BLOCKS.length]||String(WIZ_BLOCKS.length+1);
+  WIZ_BLOCKS.push({name:next,floors:4,flatsPerFloor:4});
+  wizRenderBlocks();
+};
+
+function wizSetStep(s){
+  document.querySelectorAll('.wiz-step').forEach((el,i)=>el.classList.toggle('active',i===s));
+  document.querySelectorAll('#wizDots .ws-dot').forEach((el,i)=>{
+    el.classList.toggle('active',i===s);
+    el.classList.toggle('done',i<s);
+  });
+}
+
+window._wizNext=function(from){
+  if(from===0){
+    const n=document.getElementById('wAptName').value.trim();
+    if(!n){toast('Please enter your apartment name.','error');return;}
+    APT_NAME=n;applyAptName(n);
+    wizRenderBlocks();
+    wizSetStep(1);
+  } else if(from===1){
+    if(WIZ_BLOCKS.some(b=>!b.name)){toast('Every block needs a name.','error');return;}
+    // Build confirm summary
+    let html=`<strong>${APT_NAME}</strong><br><br>`;
+    WIZ_BLOCKS.forEach(b=>{
+      html+=`🏢 <strong>Block ${b.name}</strong>: ${b.floors} floors × ${b.flatsPerFloor} flats = ${b.floors*b.flatsPerFloor} flats<br>`;
+      for(let fl=1;fl<=b.floors;fl++){
+        const ids=[];
+        for(let f=1;f<=b.flatsPerFloor;f++) ids.push(`${b.name}-${fl}0${f}`);
+        html+=`&nbsp;&nbsp;&nbsp;Floor ${fl}: ${ids.join(', ')}<br>`;
+      }
+    });
+    const tot=WIZ_BLOCKS.reduce((s,b)=>s+b.floors*b.flatsPerFloor,0);
+    html+=`<br><strong>Total: ${tot} flats</strong> will be auto-created (owner names can be filled in later).`;
+    document.getElementById('wConfirm').innerHTML=html;
+    wizSetStep(2);
+  }
+};
+
+window._wizBack=function(from){wizSetStep(from-1);};
+
+window._wizLaunch=async function(){
+  const btn=document.getElementById('wLaunchBtn');
+  btn.disabled=true;
+  document.getElementById('wLaunchLbl').textContent=' Creating…';
+  try{
+    // Save config
+    await setDoc(doc(db,'config','apt'),{name:APT_NAME,blocks:WIZ_BLOCKS});
+    // Create flats
+    for(const b of WIZ_BLOCKS){
+      for(let fl=1;fl<=b.floors;fl++){
+        for(let f=1;f<=b.flatsPerFloor;f++){
+          const fid=`${b.name}-${fl}0${f}`;
+          await setDoc(doc(db,'flats',fid),{block:b.name,floor:fl,owner:'',due:5000,paid:0,month:AM});
+        }
+      }
+    }
+    document.getElementById('setupWiz').style.display='none';
+    listenFlats();listenExp();listenIssues();
+    toast(`${APT_NAME} launched ✓`);
+  }catch(e){
+    console.error(e);
+    toast('Launch failed. Check console.','error');
+    btn.disabled=false;
+    document.getElementById('wLaunchLbl').textContent=' Launch App';
+  }
+};
+
 /* ── Boot ── */
 document.getElementById('navMonth').textContent=new Date().toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 try{
-  await seedIfEmpty();
-  listenFlats();listenExp();listenIssues();
+  // Load apartment name from config
+  const cfgDoc=await getDoc(doc(db,'config','apt'));
+  if(cfgDoc.exists()) applyAptName(cfgDoc.data().name);
+
+  // Check if any flats exist
+  const snap=await getDocs(collection(db,'flats'));
+  if(snap.empty){
+    // Show setup wizard
+    document.getElementById('lo').style.display='none';
+    document.getElementById('setupWiz').style.display='flex';
+    wizRenderBlocks();
+  } else {
+    listenFlats();listenExp();listenIssues();
+  }
 }catch(err){
   console.error('Boot error:',err);
   document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
