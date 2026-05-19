@@ -143,7 +143,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .nav-pill.active{background:#fff;color:var(--indigo);box-shadow:var(--shadow-sm)}
 .nav-pill:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.6)}
 .nav-pill .nbadge{
-  font-size:10px;padding:1px 7px;border-radius:99px;font-weight:700;
+  font-size:11px;padding:2px 9px;border-radius:99px;font-weight:700;
   background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);
 }
 .nav-pill.active .nbadge{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
@@ -273,7 +273,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-color:transparent;color:#fff;
   box-shadow:0 4px 16px rgba(99,102,241,0.30);
 }
-.btab-badge{font-size:11px;padding:2px 9px;border-radius:99px;font-weight:700}
+.btab-badge{font-size:12px;padding:3px 11px;border-radius:99px;font-weight:700}
 .btab.active .btab-badge{background:rgba(255,255,255,0.22);color:#fff}
 .btab:not(.active) .btab-badge{background:var(--surface3);color:var(--text2)}
 
@@ -329,14 +329,23 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
 .fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
 .spill{
-  display:inline-flex;align-items:center;gap:5px;
-  font-size:10px;font-weight:700;padding:3px 10px;
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:700;padding:5px 13px;
   border-radius:99px;text-transform:uppercase;letter-spacing:.5px;
 }
-.spill i{font-size:11px}
+.spill i{font-size:13px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
 .spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
 .spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+
+/* Resident type chip */
+.rtype{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:11px;font-weight:700;padding:4px 11px;
+  border-radius:99px;letter-spacing:.3px;
+}
+.rtype.owner {background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow)}
+.rtype.tenant{background:var(--sky-bg);   color:var(--sky-txt);border:1px solid var(--sky-border)}
 .empty-grid{grid-column:1/-1;text-align:center;padding:4rem 0;color:var(--text2)}
 .empty-grid i{font-size:44px;display:block;margin-bottom:12px;color:var(--muted)}
 
@@ -346,7 +355,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .iss-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
 .iss-filters{display:flex;gap:6px;flex-wrap:wrap}
 .iff{
-  padding:6px 16px;border-radius:99px;font-size:12px;font-weight:700;
+  padding:8px 18px;border-radius:99px;font-size:13px;font-weight:700;
   border:1.5px solid var(--border2);background:#fff;color:var(--text2);
   cursor:pointer;font-family:var(--font);transition:all .15s;
   box-shadow:var(--shadow-sm);
@@ -372,11 +381,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .ic-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:500}
 .ic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .itag{
-  display:inline-flex;align-items:center;gap:4px;
-  font-size:10px;font-weight:700;padding:3px 9px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:12px;font-weight:700;padding:5px 12px;border-radius:99px;
   text-transform:uppercase;letter-spacing:.4px;
 }
-.itag i{font-size:10px}
+.itag i{font-size:12px}
 .itag.flat  {background:var(--sky-bg);   color:var(--sky-txt);  border:1px solid var(--sky-border)}
 .itag.cat   {background:var(--purple-bg);color:var(--purple-txt);border:1px solid var(--purple-border)}
 .itag.date  {background:var(--surface3); color:var(--text2);    border:1px solid var(--border2)}
@@ -583,6 +592,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
       </select>
+      <select class="ctrl" id="rtf">
+        <option value="all">All residents</option>
+        <option value="owner">🏠 Owners</option>
+        <option value="tenant">🔑 Tenants</option>
+      </select>
       <div class="sw">
         <i class="ti ti-search"></i>
         <input class="ctrl" type="text" id="qi" placeholder="Search flat or owner…"/>
@@ -686,6 +700,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div class="fg"><label>Owner Name</label><input type="text" id="nO" placeholder="Full name"/></div>
       <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="nD" placeholder="5000" min="1"/></div>
     </div>
+    <div class="fg">
+      <label>Resident Type</label>
+      <select id="nRT">
+        <option value="owner">🏠 Owner — Flat owner residing</option>
+        <option value="tenant">🔑 Tenant — Renting from owner</option>
+      </select>
+    </div>
     <div class="mactions">
       <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
       <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
@@ -774,21 +795,21 @@ const db=getFirestore(fbApp);
 
 /* ── Seed ── */
 const SF=[
-  {id:'A-101',block:'A',owner:'Ramesh Kumar',  due:5000,paid:4500,month:'2026-05'},
-  {id:'A-102',block:'A',owner:'Sunita Sharma', due:5000,paid:5000,month:'2026-05'},
-  {id:'A-103',block:'A',owner:'Priya Nair',    due:5000,paid:0,   month:'2026-05'},
-  {id:'A-104',block:'A',owner:'Anil Gupta',    due:5000,paid:5000,month:'2026-05'},
-  {id:'A-201',block:'A',owner:'Kavita Reddy',  due:5000,paid:2000,month:'2026-05'},
-  {id:'A-202',block:'A',owner:'Suresh Mehta',  due:5000,paid:5000,month:'2026-05'},
-  {id:'B-101',block:'B',owner:'Deepa Iyer',    due:5000,paid:5000,month:'2026-05'},
-  {id:'B-102',block:'B',owner:'Manoj Pillai',  due:5000,paid:3000,month:'2026-05'},
-  {id:'B-103',block:'B',owner:'Rekha Joshi',   due:5000,paid:0,   month:'2026-05'},
-  {id:'B-104',block:'B',owner:'Venkat Rao',    due:5000,paid:5000,month:'2026-05'},
-  {id:'B-201',block:'B',owner:'Anita Singh',   due:5000,paid:5000,month:'2026-05'},
-  {id:'C-101',block:'C',owner:'Rajan Verma',   due:5000,paid:4000,month:'2026-05'},
-  {id:'C-102',block:'C',owner:'Meena Krishnan',due:5000,paid:5000,month:'2026-05'},
-  {id:'C-103',block:'C',owner:'Harish Patel',  due:5000,paid:0,   month:'2026-05'},
-  {id:'C-104',block:'C',owner:'Leela Nair',    due:5000,paid:5000,month:'2026-05'},
+  {id:'A-101',block:'A',owner:'Ramesh Kumar',  due:5000,paid:4500,month:'2026-05',residentType:'owner'},
+  {id:'A-102',block:'A',owner:'Sunita Sharma', due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
+  {id:'A-103',block:'A',owner:'Priya Nair',    due:5000,paid:0,   month:'2026-05',residentType:'owner'},
+  {id:'A-104',block:'A',owner:'Anil Gupta',    due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
+  {id:'A-201',block:'A',owner:'Kavita Reddy',  due:5000,paid:2000,month:'2026-05',residentType:'owner'},
+  {id:'A-202',block:'A',owner:'Suresh Mehta',  due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
+  {id:'B-101',block:'B',owner:'Deepa Iyer',    due:5000,paid:5000,month:'2026-05',residentType:'owner'},
+  {id:'B-102',block:'B',owner:'Manoj Pillai',  due:5000,paid:3000,month:'2026-05',residentType:'tenant'},
+  {id:'B-103',block:'B',owner:'Rekha Joshi',   due:5000,paid:0,   month:'2026-05',residentType:'owner'},
+  {id:'B-104',block:'B',owner:'Venkat Rao',    due:5000,paid:5000,month:'2026-05',residentType:'tenant'},
+  {id:'B-201',block:'B',owner:'Anita Singh',   due:5000,paid:5000,month:'2026-05',residentType:'owner'},
+  {id:'C-101',block:'C',owner:'Rajan Verma',   due:5000,paid:4000,month:'2026-05',residentType:'tenant'},
+  {id:'C-102',block:'C',owner:'Meena Krishnan',due:5000,paid:5000,month:'2026-05',residentType:'owner'},
+  {id:'C-103',block:'C',owner:'Harish Patel',  due:5000,paid:0,   month:'2026-05',residentType:'tenant'},
+  {id:'C-104',block:'C',owner:'Leela Nair',    due:5000,paid:5000,month:'2026-05',residentType:'owner'},
 ];
 const SE=[
   {flatId:'A-101',block:'A',cat:'Maintenance',date:'01 May',amt:3000,note:'',status:'partial',month:'2026-05'},
@@ -827,7 +848,7 @@ async function seedIfEmpty(){
 
 /* ── Cache / State ── */
 const flats=new Map(),exps=new Map(),issues=[];
-let AB='A',FS='all',SQ='',AM='2026-05',AV='payments',IF='all';
+let AB='A',FS='all',SQ='',AM='2026-05',AV='payments',IF='all',RTF='all';
 let eu=null,iu=null;
 
 /* ── Helpers ── */
@@ -929,6 +950,7 @@ function rBlock(){
   const bf=bfl(AB);
   const vis=bf.filter(f=>{
     if(FS!=='all'&&st(f)!==FS)return false;
+    if(RTF!=='all'&&(f.residentType||'owner')!==RTF)return false;
     if(SQ&&!f.flatId.toLowerCase().includes(SQ)&&!f.owner.toLowerCase().includes(SQ))return false;
     return true;
   });
@@ -949,6 +971,9 @@ function rBlock(){
       const s=st(f);
       const pct=Math.round(Math.min(f.paid/f.due*100,100));
       const ico={paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s];
+      const rt=f.residentType||'owner';
+      const rtIcon=rt==='owner'?'ti-home':'ti-key';
+      const rtLabel=rt==='owner'?'Owner':'Tenant';
       h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
         onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
         <div class="fc-top">
@@ -958,7 +983,10 @@ function rBlock(){
         <div class="fc-amount ${s}">${inr(f.paid)}</div>
         <div class="fc-due">of ${inr(f.due)} monthly due</div>
         <div class="fprog"><div class="fpbar ${s}" style="width:${pct}%"></div></div>
-        <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:2px">
+          <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
+          <div class="rtype ${rt}"><i class="ti ${rtIcon}"></i>${rtLabel}</div>
+        </div>
       </div>`;
     });
   }
@@ -1021,7 +1049,9 @@ function oFl(fid){
   const s=st(f),bal=f.due-f.paid,ex=fex(fid),tot=ex.reduce((a,e)=>a+e.amt,0);
   const sc=s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   document.getElementById('mdT').textContent=`${f.flatId} — ${f.owner}`;
-  document.getElementById('mdS').textContent=`Block ${f.block} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+  const rt=f.residentType||'owner';
+  const rtLabel=rt==='owner'?'🏠 Owner':'🔑 Tenant';
+  document.getElementById('mdS').textContent=`Block ${f.block} · ${rtLabel} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
   const rows=ex.length?ex.map(e=>`<div class="erow">
     <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div><div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
     <div class="eamt">${inr(e.amt)}</div></div>`).join(''):`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
@@ -1083,11 +1113,12 @@ const cAF=()=>document.getElementById('flatAddM').classList.remove('open');
 async function sNF(){
   const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
   const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||5000;
+  const residentType=document.getElementById('nRT').value;
   if(!id){toast('Enter a flat number.','error');return;}
   if(!owner){toast('Enter owner name.','error');return;}
   if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
   sync('saving');
-  try{await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:AM});sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();}
+  try{await setDoc(doc(db,'flats',id),{block,owner,due,paid:0,month:AM,residentType});sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();}
   catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
 
@@ -1183,6 +1214,7 @@ function listenIssues(){
 
 /* ── DOM events ── */
 document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock()});
+document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;rBlock()});
 document.getElementById('qi').addEventListener('input',e=>{SQ=e.target.value.toLowerCase().trim();rBlock()});
 document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp()});
 ['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
