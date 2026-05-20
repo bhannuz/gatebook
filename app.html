@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>ResidentHub — Dashboard</title>
+<title>Gatebook — Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
@@ -199,6 +199,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bbadge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
 .bcollected{font-size:13px;color:var(--text2);font-weight:600}
 .bcollected strong{color:var(--text)}
+.floor-divider{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;
+  color:var(--indigo);text-transform:uppercase;letter-spacing:.6px;
+  margin:16px 0 10px;padding-bottom:6px;border-bottom:1.5px solid var(--border2)}
+.floor-divider i{font-size:13px}
 
 /* ── FLAT CARDS ── */
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
@@ -418,8 +422,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 <div id="lo">
   <div class="lo-card">
     <div class="lo-icon"><i class="ti ti-building-community"></i></div>
-    <div class="lo-title">Resident<span>Hub</span></div>
-    <div class="lo-sub" id="loSub">Connecting to your society database…</div>
+    <div class="lo-title">Gate<span>book</span></div>
+    <div class="lo-sub" style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">Powered by AK Group</div>
+    <div class="lo-sub" id="loSub" style="margin-top:2px">Connecting to your society database…</div>
     <div class="lo-bar"><div class="lo-fill"></div></div>
   </div>
 </div>
@@ -535,6 +540,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <option value="paid">✅ Paid</option>
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
+      </select>
+      <select class="ctrl" id="rtf">
+        <option value="all">All types</option>
+        <option value="owner">🏠 Owners</option>
+        <option value="tenant">🔑 Tenants</option>
+        <option value="vacant">🚪 Vacant</option>
+      </select>
+      <select class="ctrl" id="flf" style="display:none">
+        <option value="all">All floors</option>
       </select>
       <div class="sw">
         <i class="ti ti-search"></i>
@@ -773,9 +787,9 @@ const flats  = new Map();
 const exps   = new Map();
 const issues = [];
 
-let AB='A', FS='all', SQ='', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
+let AB='', FS='all', SQ='', RTF='all', FLF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
 let eu=null, iu=null;
-let APT_NAME = 'ResidentHub';
+let APT_NAME = 'Gatebook';
 
 /* ════════════════════════════════
    HELPERS
@@ -796,9 +810,13 @@ const fex = id => exps.get(id)||[];
 
 /* ── Shared APP context for tab modules ── */
 function refreshAPP() {
-  window.APP = { flats, exps, issues, get AB(){return AB;}, get FS(){return FS;},
-    get SQ(){return SQ;}, get AM(){return AM;}, get IF(){return IF;},
-    set IF(v){IF=v;}, bks, bfl, fex, st, sl, si, inr, fd, fdt };
+  window.APP = { flats, exps, issues,
+    get AB(){return AB;}, get FS(){return FS;},
+    get SQ(){return SQ;}, get RTF(){return RTF;}, get FLF(){return FLF;},
+    get AM(){return AM;}, get IF(){return IF;},
+    set IF(v){IF=v;},
+    _setAB(v){AB=v;},
+    bks, bfl, fex, st, sl, si, inr, fd, fdt };
 }
 
 /* ── Month selector ── */
@@ -819,10 +837,10 @@ function buildMonthSelect() {
    APT NAME
 ════════════════════════════════ */
 function applyAptName(name) {
-  APT_NAME = name||'ResidentHub';
+  APT_NAME = name||'Gatebook';
   document.getElementById('aptNameDisplay').innerHTML =
     `${APT_NAME.replace(/(\w+)$/,'<em>$1</em>')}`;
-  document.title = `${APT_NAME} — Society Management`;
+  document.title = `${APT_NAME} — Powered by AK Group`;
 }
 
 
@@ -1239,6 +1257,8 @@ function listenIssues(){
    DOM EVENTS
 ════════════════════════════════ */
 document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock();});
+document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;rBlock();});
+document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
 document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
 document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp();});
 ['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
@@ -1251,7 +1271,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI
 /* ════════════════════════════════
    WINDOW EXPOSE
 ════════════════════════════════ */
-window._sB   =b=>{AB=b;rBTabs();rBlock();};
+window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
 window._oFl  =oFl;  window._cM=cM;
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
