@@ -250,6 +250,39 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .iff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
 .iff:hover:not(.active){border-color:var(--border3);color:var(--text)}
 .iss-list{display:flex;flex-direction:column;gap:12px}
+
+/* ── MEMBERS TAB ── */
+.mem-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.mem-filters{display:flex;gap:6px;flex-wrap:wrap}
+.mff{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
+  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
+.mff i{font-size:12px}
+.mff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.mff:hover:not(.active){border-color:var(--border3);color:var(--text)}
+.mem-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r-xl);overflow:hidden;
+  box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
+.mem-table th{background:var(--surface3);font-size:10px;font-weight:800;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;padding:10px 14px;text-align:left;
+  border-bottom:1.5px solid var(--border2)}
+.mem-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);
+  color:var(--text);vertical-align:middle}
+.mem-table tr:last-child td{border-bottom:none}
+.mem-table tr:hover td{background:var(--surface2)}
+.mem-type{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:99px}
+.mem-type.owner {background:var(--indigo-bg);color:var(--indigo)}
+.mem-type.tenant{background:var(--amber-bg); color:var(--amber)}
+.mem-type.vacant{background:var(--surface3); color:var(--muted)}
+.mem-name{font-weight:700;color:var(--text)}
+.mem-flat{font-size:11px;font-weight:800;color:var(--indigo)}
+.mem-tenure{font-size:11px;color:var(--text2);white-space:nowrap}
+.mem-tenure strong{color:var(--text);font-weight:700}
+.mem-paid{font-size:12px;font-weight:700;color:var(--green)}
+.mem-due {font-size:12px;font-weight:700;color:var(--red)}
+.mem-empty{text-align:center;padding:48px 24px;color:var(--muted)}
+.mem-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.4}
+.hist-chip{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;
+  border-radius:99px;background:var(--surface3);color:var(--text2);margin:1px}
 .icard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-xl);
   padding:20px 22px;display:grid;grid-template-columns:5px 1fr auto;gap:18px;
   align-items:start;transition:all .2s;cursor:pointer;box-shadow:var(--shadow-sm)}
@@ -488,6 +521,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <i class="ti ti-alert-circle"></i> Issues
       <span class="vtab-badge" id="openCnt">0</span>
     </button>
+    <button class="vtab" data-v="members" onclick="switchView('members')">
+      <i class="ti ti-users"></i> Members
+    </button>
   </div>
 
   <!-- PAYMENTS VIEW -->
@@ -523,7 +559,25 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </button>
     </div>
     <div class="iss-list" id="iList"></div>
-  </div>
+  </div><!-- /#iView -->
+
+  <!-- MEMBERS VIEW -->
+  <div id="mView" style="display:none">
+    <div class="mem-toolbar">
+      <div class="mem-filters" id="mFil">
+        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
+        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+      </div>
+      <div class="sw" style="min-width:200px">
+        <i class="ti ti-search"></i>
+        <input class="ctrl" type="text" id="memQ" placeholder="Search name or flat…" oninput="rMembers()"/>
+      </div>
+    </div>
+    <div id="memList"></div>
+  </div><!-- /#mView -->
+
 </div>
 </div><!-- /#app -->
 
@@ -912,7 +966,7 @@ function rIssues() {
   }).join('');
 }
 
-function rAll(){rStats();rBTabs();rBlock();rIssues();}
+function rAll(){rStats();rBTabs();rBlock();rIssues();if(AV==='members')rMembers();}
 
 /* ════════════════════════════════
    VIEW SWITCH
@@ -920,16 +974,92 @@ function rAll(){rStats();rBTabs();rBlock();rIssues();}
 function switchView(v) {
   AV=v;
   document.getElementById('pView').style.display=v==='payments'?'block':'none';
-  document.getElementById('iView').style.display=v==='issues'?'block':'none';
+  document.getElementById('iView').style.display=v==='issues'  ?'block':'none';
+  document.getElementById('mView').style.display=v==='members' ?'block':'none';
   document.querySelectorAll('.vtab').forEach(p=>p.classList.toggle('active',p.dataset.v===v));
+  if(v==='members') rMembers();
 }
 function fIss(f) {
   IF=f;
   document.querySelectorAll('.iff').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
   rIssues();
 }
+
+/* ── MEMBERS TAB ── */
+let MF='all'; // member filter
+
+function tenure(moveIn, moveOut) {
+  if (!moveIn) return '—';
+  const start = new Date(moveIn);
+  const end   = moveOut ? new Date(moveOut) : new Date();
+  const days  = Math.floor((end - start) / 86400000);
+  if (days < 0) return '—';
+  const yrs = Math.floor(days/365);
+  const mos = Math.floor((days%365)/30);
+  const parts = [];
+  if (yrs) parts.push(`${yrs}y`);
+  if (mos) parts.push(`${mos}m`);
+  if (!parts.length) parts.push(`${days}d`);
+  return parts.join(' ');
+}
+
+function fmtDate(d){ return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
+
+function fMem(t){ MF=t; document.querySelectorAll('.mff').forEach(b=>b.classList.toggle('active',b.dataset.t===t)); rMembers(); }
+
+function rMembers(){
+  const q=(document.getElementById('memQ')?.value||'').trim().toLowerCase();
+  let rows = [...flats.values()].filter(f=>{
+    if(MF==='owner'  && (f.resType||'owner')!=='owner')  return false;
+    if(MF==='tenant' && f.resType!=='tenant')             return false;
+    if(MF==='vacant' && (f.owner||'').trim())             return false;
+    if(q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
+
+  if(!rows.length){
+    document.getElementById('memList').innerHTML=`<div class="mem-empty"><i class="ti ti-users-off"></i>No members found.</div>`;
+    return;
+  }
+
+  const tRows = rows.map(f=>{
+    const isVacant  = !(f.owner||'').trim();
+    const rType     = isVacant ? 'vacant' : (f.resType||'owner');
+    const typeLabel = isVacant ? 'Vacant' : rType==='tenant' ? '🔑 Tenant' : '🏠 Owner';
+    const tenureStr = isVacant ? '—' : tenure(f.moveIn, f.moveOut);
+    const movedIn   = fmtDate(f.moveIn);
+    const movedOut  = fmtDate(f.moveOut);
+    const allEx     = fex(f.flatId);
+    const totalPaid = allEx.reduce((s,e)=>s+e.amt,0);
+    const balance   = (f.due||0) - (f.paid||0);
+    const payMonths = [...new Set(allEx.map(e=>e.month||e.date?.slice(0,7)))].filter(Boolean);
+    const statusColor = balance>0?'var(--red)':balance===0&&f.due>0?'var(--green)':'var(--muted)';
+
+    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
+      <td><span class="mem-flat">${f.flatId}</span>${f.block?`<br><span style="font-size:10px;color:var(--muted)">Block ${f.block}</span>`:''}</td>
+      <td><span class="mem-type ${rType}">${typeLabel}</span></td>
+      <td><div class="mem-name">${f.owner||'<span style="color:var(--muted);font-style:italic">Vacant</span>'}</div></td>
+      <td><div class="mem-tenure">${movedIn !== '—' ? `<div>In: <strong>${movedIn}</strong></div>` : ''}${movedOut !== '—' ? `<div>Out: <strong>${movedOut}</strong></div>` : ''}</div></td>
+      <td><span class="mem-tenure"><strong>${tenureStr}</strong>${f.moveOut?' <span style="font-size:10px;color:var(--muted)">(past)</span>':''}</span></td>
+      <td><span class="mem-paid">${totalPaid?inr(totalPaid):'—'}</span></td>
+      <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${f.due?inr(Math.abs(balance)):' —'}</span></td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:2px;max-width:140px">${payMonths.slice(-4).map(m=>`<span class="hist-chip">${m}</span>`).join('')}${payMonths.length>4?`<span class="hist-chip">+${payMonths.length-4}</span>`:''}</div></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('memList').innerHTML=`
+    <table class="mem-table">
+      <thead><tr>
+        <th>Flat</th><th>Type</th><th>Name</th><th>Move In / Out</th>
+        <th>Tenure</th><th>Total Paid</th><th>Balance</th><th>Payment Months</th>
+      </tr></thead>
+      <tbody>${tRows}</tbody>
+    </table>`;
+}
 window.switchView=switchView;
 window.fIss=fIss;
+window.fMem=fMem;
+window.rMembers=rMembers;
 
 /* ════════════════════════════════
    FLAT DETAIL MODAL
@@ -952,7 +1082,7 @@ function oFl(fid) {
       </div></div>`).join('')
     :`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
   document.getElementById('mdC').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:14px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
       <div class="fg" style="margin-bottom:0">
         <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Name</label>
         <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Name"
@@ -970,9 +1100,24 @@ function oFl(fid) {
       </div>
       <div class="fg" style="margin-bottom:0">
         <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Monthly Due (₹)</label>
-        <input type="number" id="edDue" value="${f.due||''}" placeholder="0" min="0" onblur="window._autoSaveFlat('${fid}')"
+        <input type="number" id="edDue" value="${f.due||''}" placeholder="0" min="0"
           style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px;transition:border-color .15s"
-          onfocus="this.style.borderColor='var(--indigo)'"/>
+          onfocus="this.style.borderColor='var(--indigo)'"
+          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">📅 Move-In Date</label>
+        <input type="date" id="edMoveIn" value="${f.moveIn||''}"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          onchange="window._autoSaveFlat('${fid}')"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">🚪 Move-Out Date <span style="font-weight:500;text-transform:none;font-size:9px">(if vacated)</span></label>
+        <input type="date" id="edMoveOut" value="${f.moveOut||''}"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          onchange="window._autoSaveFlat('${fid}')"/>
       </div>
     </div>
     <div style="height:1px;background:var(--border2);margin-bottom:14px"></div>
@@ -1001,9 +1146,11 @@ async function autoSaveFlat(fid) {
     const owner   = (document.getElementById('edOwner')?.value||'').trim();
     const resType = document.getElementById('edType')?.value||'owner';
     const due     = parseInt(document.getElementById('edDue')?.value)||0;
+    const moveIn  = document.getElementById('edMoveIn')?.value||'';
+    const moveOut = document.getElementById('edMoveOut')?.value||'';
     sync('saving');
     try {
-      await updateDoc(flatRef(fid),{owner,resType,due});
+      await updateDoc(flatRef(fid),{owner,resType,due,moveIn,moveOut});
       sync('live');
       document.getElementById('mdT').textContent=`${fid} — ${owner||'(No resident)'}`;
       toast('Saved ✓');
