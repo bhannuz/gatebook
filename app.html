@@ -1437,18 +1437,30 @@ async function uIS(id,ns){
    (scoped under apartments/{uid}/...)
 ════════════════════════════════ */
 function listenFlats(){
-  onSnapshot(flatsColl(),snap=>{
-    snap.docChanges().forEach(ch=>{
-      const d={flatId:ch.doc.id,...ch.doc.data()};
-      ch.type==='removed'?flats.delete(ch.doc.id):flats.set(ch.doc.id,d);
+  let firstLoad = true;
+  onSnapshot(flatsColl(), snap => {
+    snap.docChanges().forEach(ch => {
+      const d = {flatId:ch.doc.id,...ch.doc.data()};
+      ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
     });
-    rAll();sync('live');
-    document.getElementById('lo').style.display='none';
-    document.getElementById('app').style.display='';
-  },e=>{
-    console.error('Flats listener error:',e);
+    // Hide loader BEFORE rAll — so even if render fails the page shows
+    if (firstLoad) {
+      firstLoad = false;
+      document.getElementById('lo').style.display  = 'none';
+      document.getElementById('app').style.display = '';
+    }
+    try { refreshAPP(); rAll(); } catch(e) { console.error('rAll error:', e); }
+    sync('live');
+  }, e => {
+    console.error('Flats listener error:', e);
     sync('error');
-    document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
+    const code = e.code || e.message || 'unknown';
+    if (code.includes('permission-denied'))
+      document.getElementById('loSub').textContent = '⚠ Permission denied. Check Firestore rules in Firebase Console.';
+    else if (code.includes('unavailable'))
+      document.getElementById('loSub').textContent = '⚠ Firebase offline. Check internet connection.';
+    else
+      document.getElementById('loSub').textContent = '⚠ Firebase error: ' + code + '. Check console (F12).';
   });
 }
 
@@ -1969,7 +1981,7 @@ function switchView(v) {
   if(v==='president') rPresident();
 }
 
-function rAll(){rStats();rBTabs();rBlock();rIssues();rMembers();}
+function rAll(){ try{refreshAPP();}catch(e){} rStats();rBTabs();rBlock();rIssues();rMembers(); }
 
 
 /* ════════════════════════════════
@@ -2261,34 +2273,72 @@ function listenSocExp(){
 async function boot(){
   refreshAPP();
   buildMonthSelect();
-  try{
-    // Load apartment config
-    const aptDoc = await getDoc(aptDocRef());
-    if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
-    if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
 
-    // Check if any flats exist
+  // Safety net: if still loading after 12s, show actionable error
+  const _bootTimeout = setTimeout(() => {
+    if (document.getElementById('lo').style.display !== 'none') {
+      document.getElementById('loSub').textContent =
+        '⚠ Timeout. Check: 1) Firebase config in js/firebase.js  2) Email/Password enabled in Firebase Auth  3) Firestore rules  4) Internet connection';
+    }
+  }, 12000);
+
+  try {
+    document.getElementById('loSub').textContent = 'Authenticating…';
+    const aptDoc = await getDoc(aptDocRef());
+    if (aptDoc.exists() && aptDoc.data().name)     applyAptName(aptDoc.data().name);
+    if (aptDoc.exists() && aptDoc.data().president) president = aptDoc.data().president;
+
+    // Check plan status
+    if (aptDoc.exists()) {
+      const plan = aptDoc.data().plan;
+      if (plan) {
+        const banner = document.getElementById('planBanner');
+        const days = plan.expiresAt
+          ? Math.floor((new Date(plan.expiresAt) - new Date()) / 86400000) : null;
+        if (banner) {
+          if (plan.status === 'expired' || (days !== null && days < 0)) {
+            banner.className = 'plan-banner expired';
+            banner.innerHTML = '<i class="ti ti-alert-circle"></i> Your Gatebook plan has <strong>expired</strong>. Contact AK Group to renew.';
+          } else if (days !== null && days <= 30) {
+            banner.className = 'plan-banner soon';
+            banner.innerHTML = '<i class="ti ti-clock"></i> Your plan expires in <strong>' + days + ' day' + (days!==1?'s':'') + '</strong>. Contact AK Group to renew.';
+          }
+        }
+      }
+    }
+
+    document.getElementById('loSub').textContent = 'Loading society data…';
     const snap = await getDocs(flatsColl());
-    if(snap.empty){
-      // No flats yet — show in-app setup wizard
+    clearTimeout(_bootTimeout);
+
+    if (snap.empty) {
       document.getElementById('lo').style.display = 'none';
       const wiz = document.getElementById('setupWiz');
       wiz.style.display = 'flex';
-      // Pre-fill name from config if available
-      if(aptDoc.exists() && aptDoc.data().name){
+      if (aptDoc.exists() && aptDoc.data().name) {
         document.getElementById('wAptName').value = aptDoc.data().name;
       }
       wizSetStep(0);
     } else {
+      document.getElementById('loSub').textContent = 'Connecting live updates…';
       listenFlats();
       listenExp();
       listenIssues();
       listenVehicles();
       listenSocExp();
     }
-  }catch(err){
-    console.error('Boot error:',err);
-    document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
+  } catch(err) {
+    clearTimeout(_bootTimeout);
+    console.error('Boot error:', err);
+    const code = err.code || '';
+    const msg = code === 'permission-denied'
+      ? '⚠ Permission denied. Go to Firebase Console → Firestore → Rules and check your rules.'
+      : code === 'unavailable'
+      ? '⚠ Firebase offline. Check your internet connection and try refreshing.'
+      : code.includes('auth')
+      ? '⚠ Auth error. Make sure Email/Password is enabled in Firebase Console → Authentication.'
+      : '⚠ Error (' + (code||err.message) + '). Open browser console (F12) for details.';
+    document.getElementById('loSub').textContent = msg;
   }
 }
 </script>
