@@ -728,6 +728,9 @@ import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { rBTabs, rBlock }   from './js/payments.js';
+import { rIssues, fIss }    from './js/issues.js';
+import { rMembers, fMem }   from './js/members.js';
 
 /* ════════════════════════════════
    AUTH GUARD
@@ -790,6 +793,13 @@ const fdt = ts => {
 const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
 const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
 const fex = id => exps.get(id)||[];
+
+/* ── Shared APP context for tab modules ── */
+function refreshAPP() {
+  window.APP = { flats, exps, issues, get AB(){return AB;}, get FS(){return FS;},
+    get SQ(){return SQ;}, get AM(){return AM;}, get IF(){return IF;},
+    set IF(v){IF=v;}, bks, bfl, fex, st, sl, si, inr, fd, fdt };
+}
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -881,181 +891,6 @@ function rStats() {
   `;
 }
 
-function rBTabs() {
-  const bs=bks();
-  if(!bs.includes(AB))AB=bs[0]||'A';
-  document.getElementById('btabs').innerHTML=bs.map(b=>{
-    const bf=bfl(b);
-    const pc=bf.filter(f=>st(f)==='paid').length;
-    return`<button class="btab${b===AB?' active':''}" onclick="window._sB('${b}')">
-      <i class="ti ti-building"></i> Block ${b}
-      <span class="btab-badge">${pc}/${bf.length}</span>
-    </button>`;
-  }).join('');
-}
-
-function rBlock() {
-  const bf=bfl(AB);
-  const vis=bf.filter(f=>{
-    if(FS!=='all'&&st(f)!==FS)return false;
-    if(SQ&&!f.flatId.toLowerCase().includes(SQ)&&!f.owner.toLowerCase().includes(SQ))return false;
-    return true;
-  });
-  const pc=bf.filter(f=>st(f)==='paid').length;
-  const col=bf.reduce((s,f)=>s+f.paid,0);
-  let h=`<div class="bhead">
-    <div class="bhead-left">
-      <div class="bstripe"></div>
-      <div class="btitle">Block ${AB}</div>
-      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
-    </div>
-    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
-  </div><div class="fgrid">`;
-  if(!vis.length){
-    h+=`<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
-  } else {
-    vis.forEach(f=>{
-      const s=st(f),pct=Math.round(Math.min(f.paid/f.due*100,100));
-      h+=`<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
-        onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
-        <div class="fc-top">
-          <div><div class="fc-num">${f.flatId}</div><div class="fc-owner">${f.owner||'(No owner)'}</div><span class="fc-type ${f.resType||'owner'}">${f.resType==='tenant'?'Tenant':'Owner'}</span></div>
-          <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
-        </div>
-        <div class="fc-amount">${inr(f.paid)}</div>
-        <div class="fc-due">of ${inr(f.due)} monthly due</div>
-        <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
-        <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
-      </div>`;
-    });
-  }
-  document.getElementById('bcon').innerHTML=h+'</div>';
-}
-
-function rIssues() {
-  const fil=IF==='all'?[...issues]:issues.filter(i=>i.status===IF);
-  const icons={Plumbing:'ti-tool',Electrical:'ti-bolt',Lift:'ti-elevator',Security:'ti-shield',
-    Cleaning:'ti-vacuum-cleaner',Parking:'ti-car',Noise:'ti-volume',Internet:'ti-wifi',Other:'ti-clipboard'};
-  if(!fil.length){
-    document.getElementById('iList').innerHTML=`<div class="iss-empty">
-      <i class="ti ti-mood-happy"></i>
-      <h3>${IF==='all'?'No issues raised yet':'No '+IF+' issues found'}</h3>
-      <p>${IF==='all'?'Everything is running smoothly!':'All clear in this category.'}</p>
-    </div>`;return;
-  }
-  document.getElementById('iList').innerHTML=fil.map(iss=>{
-    const sLabel=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
-    const pLabel=iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1);
-    return`<div class="icard" onclick="window._oID('${iss.id}')">
-      <div class="ipbar ${iss.priority}"></div>
-      <div>
-        <div class="ic-title"><i class="ti ${icons[iss.cat]||'ti-clipboard'}"></i>${iss.title}</div>
-        <div class="ic-desc">${iss.desc.length>130?iss.desc.slice(0,130)+'…':iss.desc}</div>
-        <div class="ic-meta">
-          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat||iss.block}</span>
-          <span class="itag cat">${iss.cat}</span>
-          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
-          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
-        </div>
-      </div>
-      <div class="iright">
-        <span class="istatus ${iss.status}">${sLabel}</span>
-        <span class="ipriority ${iss.priority}">${pLabel}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function rAll(){rStats();rBTabs();rBlock();rIssues();if(AV==='members')rMembers();}
-
-/* ════════════════════════════════
-   VIEW SWITCH
-════════════════════════════════ */
-function switchView(v) {
-  AV=v;
-  document.getElementById('pView').style.display=v==='payments'?'block':'none';
-  document.getElementById('iView').style.display=v==='issues'  ?'block':'none';
-  document.getElementById('mView').style.display=v==='members' ?'block':'none';
-  document.querySelectorAll('.vtab').forEach(p=>p.classList.toggle('active',p.dataset.v===v));
-  if(v==='members') rMembers();
-}
-function fIss(f) {
-  IF=f;
-  document.querySelectorAll('.iff').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
-  rIssues();
-}
-
-/* ── MEMBERS TAB ── */
-let MF='all'; // member filter
-
-function tenure(moveIn, moveOut) {
-  if (!moveIn) return '—';
-  const start = new Date(moveIn);
-  const end   = moveOut ? new Date(moveOut) : new Date();
-  const days  = Math.floor((end - start) / 86400000);
-  if (days < 0) return '—';
-  const yrs = Math.floor(days/365);
-  const mos = Math.floor((days%365)/30);
-  const parts = [];
-  if (yrs) parts.push(`${yrs}y`);
-  if (mos) parts.push(`${mos}m`);
-  if (!parts.length) parts.push(`${days}d`);
-  return parts.join(' ');
-}
-
-function fmtDate(d){ return d ? new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : '—'; }
-
-function fMem(t){ MF=t; document.querySelectorAll('.mff').forEach(b=>b.classList.toggle('active',b.dataset.t===t)); rMembers(); }
-
-function rMembers(){
-  const q=(document.getElementById('memQ')?.value||'').trim().toLowerCase();
-  let rows = [...flats.values()].filter(f=>{
-    if(MF==='owner'  && (f.resType||'owner')!=='owner')  return false;
-    if(MF==='tenant' && f.resType!=='tenant')             return false;
-    if(MF==='vacant' && (f.owner||'').trim())             return false;
-    if(q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    return true;
-  }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
-
-  if(!rows.length){
-    document.getElementById('memList').innerHTML=`<div class="mem-empty"><i class="ti ti-users-off"></i>No members found.</div>`;
-    return;
-  }
-
-  const tRows = rows.map(f=>{
-    const isVacant  = !(f.owner||'').trim();
-    const rType     = isVacant ? 'vacant' : (f.resType||'owner');
-    const typeLabel = isVacant ? 'Vacant' : rType==='tenant' ? '🔑 Tenant' : '🏠 Owner';
-    const tenureStr = isVacant ? '—' : tenure(f.moveIn, f.moveOut);
-    const movedIn   = fmtDate(f.moveIn);
-    const movedOut  = fmtDate(f.moveOut);
-    const allEx     = fex(f.flatId);
-    const totalPaid = allEx.reduce((s,e)=>s+e.amt,0);
-    const balance   = (f.due||0) - (f.paid||0);
-    const payMonths = [...new Set(allEx.map(e=>e.month||e.date?.slice(0,7)))].filter(Boolean);
-    const statusColor = balance>0?'var(--red)':balance===0&&f.due>0?'var(--green)':'var(--muted)';
-
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
-      <td><span class="mem-flat">${f.flatId}</span>${f.block?`<br><span style="font-size:10px;color:var(--muted)">Block ${f.block}</span>`:''}</td>
-      <td><span class="mem-type ${rType}">${typeLabel}</span></td>
-      <td><div class="mem-name">${f.owner||'<span style="color:var(--muted);font-style:italic">Vacant</span>'}</div></td>
-      <td><div class="mem-tenure">${movedIn !== '—' ? `<div>In: <strong>${movedIn}</strong></div>` : ''}${movedOut !== '—' ? `<div>Out: <strong>${movedOut}</strong></div>` : ''}</div></td>
-      <td><span class="mem-tenure"><strong>${tenureStr}</strong>${f.moveOut?' <span style="font-size:10px;color:var(--muted)">(past)</span>':''}</span></td>
-      <td><span class="mem-paid">${totalPaid?inr(totalPaid):'—'}</span></td>
-      <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${f.due?inr(Math.abs(balance)):' —'}</span></td>
-      <td><div style="display:flex;flex-wrap:wrap;gap:2px;max-width:140px">${payMonths.slice(-4).map(m=>`<span class="hist-chip">${m}</span>`).join('')}${payMonths.length>4?`<span class="hist-chip">+${payMonths.length-4}</span>`:''}</div></td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('memList').innerHTML=`
-    <table class="mem-table">
-      <thead><tr>
-        <th>Flat</th><th>Type</th><th>Name</th><th>Move In / Out</th>
-        <th>Tenure</th><th>Total Paid</th><th>Balance</th><th>Payment Months</th>
-      </tr></thead>
-      <tbody>${tRows}</tbody>
-    </table>`;
-}
 window.switchView=switchView;
 window.fIss=fIss;
 window.fMem=fMem;
@@ -1092,7 +927,7 @@ function oFl(fid) {
       </div>
       <div class="fg" style="margin-bottom:0">
         <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Type</label>
-        <select id="edType" onchange="window._autoSaveFlat('${fid}')"
+        <select id="edType" onchange="window._autoSaveFlat('${fid}');window._toggleOwnerFields(this.value)"
           style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px">
           <option value="owner" ${(f.resType||'owner')==='owner'?'selected':''}>🏠 Owner</option>
           <option value="tenant" ${f.resType==='tenant'?'selected':''}>🔑 Tenant</option>
@@ -1120,6 +955,23 @@ function oFl(fid) {
           onchange="window._autoSaveFlat('${fid}')"/>
       </div>
     </div>
+    <div id="ownerSection" style="display:${f.resType==='tenant'?'grid':'none'};grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;background:var(--amber-bg);border:1.5px solid var(--amber-border);border-radius:var(--r-md);padding:12px">
+      <div style="grid-column:1/-1;font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">🏠 Flat Owner Details</div>
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Name</label>
+        <input type="text" id="edOwnerName" value="${f.ownerName||''}" placeholder="Owner's name"
+          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          onfocus="this.style.borderColor='var(--amber)'"
+          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
+      </div>
+      <div class="fg" style="margin-bottom:0">
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Phone</label>
+        <input type="tel" id="edOwnerPhone" value="${f.ownerPhone||''}" placeholder="Owner's contact"
+          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          onfocus="this.style.borderColor='var(--amber)'"
+          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
+      </div>
+    </div>
     <div style="height:1px;background:var(--border2);margin-bottom:14px"></div>
     <div class="dm">
       <div class="dm-card"><div class="dm-label">Paid</div><div class="dm-value" style="color:var(--green)">${inr(f.paid)}</div></div>
@@ -1143,19 +995,26 @@ let _autoSaveTimer=null;
 async function autoSaveFlat(fid) {
   clearTimeout(_autoSaveTimer);
   _autoSaveTimer = setTimeout(async()=>{
-    const owner   = (document.getElementById('edOwner')?.value||'').trim();
-    const resType = document.getElementById('edType')?.value||'owner';
-    const due     = parseInt(document.getElementById('edDue')?.value)||0;
-    const moveIn  = document.getElementById('edMoveIn')?.value||'';
-    const moveOut = document.getElementById('edMoveOut')?.value||'';
+    const owner      = (document.getElementById('edOwner')?.value||'').trim();
+    const resType    = document.getElementById('edType')?.value||'owner';
+    const due        = parseInt(document.getElementById('edDue')?.value)||0;
+    const moveIn     = document.getElementById('edMoveIn')?.value||'';
+    const moveOut    = document.getElementById('edMoveOut')?.value||'';
+    const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
+    const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
     sync('saving');
     try {
-      await updateDoc(flatRef(fid),{owner,resType,due,moveIn,moveOut});
+      await updateDoc(flatRef(fid),{owner,resType,due,moveIn,moveOut,ownerName,ownerPhone});
       sync('live');
       document.getElementById('mdT').textContent=`${fid} — ${owner||'(No resident)'}`;
       toast('Saved ✓');
     } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
   }, 400);
+}
+
+function toggleOwnerFields(resType) {
+  const sec = document.getElementById('ownerSection');
+  if (sec) sec.style.display = resType === 'tenant' ? 'grid' : 'none';
 }
 
 /* inline edit of a payment amount in history */
@@ -1395,6 +1254,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI
 window._sB   =b=>{AB=b;rBTabs();rBlock();};
 window._oFl  =oFl;  window._cM=cM;
 window._autoSaveFlat=autoSaveFlat;
+window._toggleOwnerFields=toggleOwnerFields;
 window._saveExpAmt=saveExpAmt;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
@@ -1524,6 +1384,7 @@ window._wizLaunch = async function() {
   }
 };
 async function boot(){
+  refreshAPP();
   buildMonthSelect();
   try{
     // Load apartment config
