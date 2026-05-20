@@ -405,6 +405,72 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   display:flex;align-items:center;justify-content:center;transition:all .15s;padding:0;margin-bottom:1px}
 .wiz-rm:hover{background:var(--red);color:#fff}
 
+
+/* ── VEHICLES TAB ── */
+.veh-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
+.veh-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
+.vscard{background:#fff;border-radius:var(--r-lg);padding:14px 16px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:12px}
+.vscard-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.vscard-icon.tw{background:rgba(99,102,241,.10);color:var(--indigo)}
+.vscard-icon.fw{background:var(--green-bg);color:var(--green)}
+.vscard-icon.tot{background:var(--sky-bg);color:var(--sky)}
+.vscard-icon.fl{background:var(--amber-bg);color:var(--amber)}
+.vscard-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.vscard-val{font-size:20px;font-weight:800;color:var(--text)}
+.veh-table-wrap{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
+.veh-table{width:100%;border-collapse:collapse}
+.veh-table th{background:var(--surface3);padding:9px 14px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border2)}
+.veh-table td{padding:10px 14px;font-size:13px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle}
+.veh-table tr:last-child td{border-bottom:none}
+.veh-table tr:hover td{background:var(--surface2)}
+.vbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
+.vbadge.tw{background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow)}
+.vbadge.fw{background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.vbadge.none{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
+.veh-search-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
+
+/* ── PRESIDENT / FUND TAB ── */
+.pres-banner{background:linear-gradient(135deg,#6366F1 0%,#8B5CF6 100%);border-radius:var(--r-xl);padding:20px 24px;color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:1.4rem;flex-wrap:wrap;box-shadow:0 6px 24px rgba(99,102,241,.28)}
+.pres-info{display:flex;align-items:center;gap:14px}
+.pres-avatar{width:52px;height:52px;border-radius:50%;background:rgba(255,255,255,.25);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;flex-shrink:0;border:2px solid rgba(255,255,255,.5)}
+.pres-name{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.pres-flat{font-size:12px;opacity:.8;margin-top:2px}
+.pres-crown{font-size:20px}
+.pres-empty{background:var(--surface3);border:1.5px dashed var(--border3);border-radius:var(--r-xl);padding:28px;text-align:center;color:var(--text2);margin-bottom:1.4rem}
+.pres-empty i{font-size:40px;color:var(--muted);display:block;margin-bottom:10px}
+.fund-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.4rem}
+.fcard2{background:#fff;border-radius:var(--r-lg);padding:14px 16px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
+.fcard2-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.fcard2-val{font-size:20px;font-weight:800;color:var(--text)}
+.fcard2-sub{font-size:11px;color:var(--text2);margin-top:2px}
+.exp-list{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
+.exp-list-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1.5px solid var(--border2);background:var(--surface3)}
+.exp-list-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
+.exp-list-title i{font-size:16px;color:var(--indigo)}
+.exp-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);transition:background .15s}
+.exp-row:last-child{border-bottom:none}
+.exp-row:hover{background:var(--surface2)}
+.exp-row-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.exp-row-cat{font-size:13px;font-weight:700;color:var(--text)}
+.exp-row-date{font-size:11px;color:var(--muted);margin-top:2px}
+.exp-row-note{font-size:11px;color:var(--text2);margin-top:1px;font-style:italic}
+.exp-row-amt{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap}
+.exp-row-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.exp-row-status.approved{background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
+.exp-row-status.pending{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
+.exp-row-status.rejected{background:var(--red-bg);color:var(--red-txt);border:1px solid var(--red-border)}
+.exp-empty{text-align:center;padding:36px;color:var(--muted)}
+.exp-empty i{font-size:36px;display:block;margin-bottom:8px}
+.micon.pres{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));color:var(--indigo)}
+.cat-icon-map-maintenance{background:var(--indigo-bg);color:var(--indigo)}
+.cat-icon-map-water{background:var(--sky-bg);color:var(--sky)}
+.cat-icon-map-electricity{background:var(--amber-bg);color:var(--amber)}
+.cat-icon-map-security{background:var(--red-bg);color:var(--red)}
+.cat-icon-map-cleaning{background:var(--green-bg);color:var(--green)}
+.cat-icon-map-lift{background:var(--purple-bg);color:var(--purple)}
+.cat-icon-map-other{background:var(--surface3);color:var(--text2)}
+
 /* ── Responsive ── */
 @media(max-width:700px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
@@ -529,6 +595,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <button class="vtab" data-v="members" onclick="switchView('members')">
       <i class="ti ti-users"></i> Members
     </button>
+    <button class="vtab" data-v="vehicles" onclick="switchView('vehicles')">
+      <i class="ti ti-motorbike"></i> Vehicles
+    </button>
+    <button class="vtab" data-v="president" onclick="switchView('president')">
+      <i class="ti ti-crown"></i> President
+    </button>
   </div>
 
   <!-- PAYMENTS VIEW -->
@@ -591,6 +663,54 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div id="memList"></div>
   </div><!-- /#mView -->
+
+  <!-- VEHICLES VIEW -->
+  <div id="vehView" style="display:none">
+    <div class="veh-toolbar">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px">Vehicle Registry</div>
+        <div style="font-size:12px;color:var(--text2)">Track 2-wheelers &amp; 4-wheelers per flat</div>
+      </div>
+      <button class="btn btn-indigo" onclick="window._oVehM()"><i class="ti ti-plus"></i> Add / Update Vehicles</button>
+    </div>
+    <div class="veh-sum" id="vehSum"></div>
+    <div class="veh-search-row">
+      <div class="sw" style="max-width:260px"><i class="ti ti-search"></i>
+        <input class="ctrl" type="text" id="vehQ" placeholder="Search flat or owner…" oninput="rVehicles()"/>
+      </div>
+      <select class="ctrl" id="vehBF" onchange="rVehicles()"><option value="all">All Blocks</option></select>
+      <select class="ctrl" id="vehTF" onchange="rVehicles()">
+        <option value="all">All Flats</option>
+        <option value="2w">🏍 Has 2-Wheeler</option>
+        <option value="4w">🚗 Has 4-Wheeler</option>
+        <option value="both">Both Types</option>
+        <option value="none">No Vehicles</option>
+      </select>
+    </div>
+    <div class="veh-table-wrap">
+      <table class="veh-table">
+        <thead><tr>
+          <th>Flat</th><th>Resident</th>
+          <th>🏍 2-Wheelers</th><th>🚗 4-Wheelers</th>
+          <th>Vehicle Numbers</th><th>Parking Slot</th><th>Actions</th>
+        </tr></thead>
+        <tbody id="vehBody"></tbody>
+      </table>
+    </div>
+  </div><!-- /#vehView -->
+
+  <!-- PRESIDENT VIEW -->
+  <div id="presView" style="display:none">
+    <div id="presBanner"></div>
+    <div class="fund-row" id="fundRow"></div>
+    <div class="exp-list">
+      <div class="exp-list-head">
+        <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
+        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+      </div>
+      <div id="presExpList"></div>
+    </div>
+  </div><!-- /#presView -->
 
 </div>
 </div><!-- /#app -->
@@ -733,6 +853,97 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
+<!-- VEHICLE MODAL -->
+<div class="mbg" id="vehM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon veh"><i class="ti ti-motorbike"></i></div>
+        <div><div class="mtitle">Vehicle Details</div><div class="msub" id="vehMSub">Enter vehicle info for this flat</div></div>
+      </div>
+      <button class="mclose" onclick="window._cVehM()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="vehFid"/>
+    <div class="fg2">
+      <div class="fg"><label>🏍 2-Wheelers (count)</label><input type="number" id="veh2w" min="0" max="10" placeholder="0"/></div>
+      <div class="fg"><label>🚗 4-Wheelers (count)</label><input type="number" id="veh4w" min="0" max="10" placeholder="0"/></div>
+    </div>
+    <div class="fg"><label>Vehicle Numbers (comma separated)</label>
+      <input type="text" id="vehNums" placeholder="e.g. MH12AB1234, KA01CD5678"/>
+    </div>
+    <div class="fg"><label>Parking Slot(s)</label>
+      <input type="text" id="vehSlot" placeholder="e.g. B1, B2"/>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cVehM()">Cancel</button>
+      <button class="btn btn-red btn-sm" id="vehDelBtn" onclick="window._delVeh()" style="display:none"><i class="ti ti-trash"></i> Clear</button>
+      <button class="btn btn-indigo" id="vehSaveBtn" onclick="window._sVeh()">
+        <i class="ti ti-device-floppy"></i><span id="vehSaveLbl">Save Vehicles</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ELECT PRESIDENT MODAL -->
+<div class="mbg" id="presM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pres"><i class="ti ti-crown"></i></div>
+        <div><div class="mtitle">Elect Society President</div><div class="msub">Select a flat member as president</div></div>
+      </div>
+      <button class="mclose" onclick="window._cPresM()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Select Flat / Member *</label><select id="presFlat"></select></div>
+    <div class="fg"><label>President Name *</label><input type="text" id="presName" placeholder="Full name"/></div>
+    <div class="fg"><label>Term Start Date</label><input type="date" id="presStart"/></div>
+    <div class="fg"><label>Term End Date (optional)</label><input type="date" id="presEnd"/></div>
+    <div class="fg"><label>Phone</label><input type="text" id="presPhone" placeholder="Contact number"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cPresM()">Cancel</button>
+      <button class="btn btn-indigo" id="presSaveBtn" onclick="window._sPres()">
+        <i class="ti ti-crown"></i><span id="presSaveLbl">Elect President</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SOCIETY EXPENSE MODAL -->
+<div class="mbg" id="presExpM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-receipt"></i></div>
+        <div><div class="mtitle">Society Expense</div><div class="msub">Record an expense from society fund</div></div>
+      </div>
+      <button class="mclose" onclick="window._cPresExp()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Expense Title *</label><input type="text" id="peTitle" placeholder="e.g. Generator repair"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category *</label>
+        <select id="peCat">
+          <option>Maintenance</option><option>Water</option><option>Electricity</option>
+          <option>Security</option><option>Cleaning</option><option>Lift</option>
+          <option>Gardening</option><option>Painting</option><option>Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="peAmt" placeholder="0" min="1"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Date *</label><input type="date" id="peDate"/></div>
+      <div class="fg"><label>Paid By</label><input type="text" id="pePaidBy" placeholder="President / Committee"/></div>
+    </div>
+    <div class="fg"><label>Vendor / Payee</label><input type="text" id="peVendor" placeholder="e.g. ABC Electrical Works"/></div>
+    <div class="fg"><label>Notes</label><input type="text" id="peNote" placeholder="Additional details…"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cPresExp()">Cancel</button>
+      <button class="btn btn-indigo" id="peBtn" onclick="window._sPresExp()">
+        <i class="ti ti-device-floppy"></i><span id="peLbl">Save Expense</span>
+      </button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 <script type="module">
@@ -777,6 +988,10 @@ const issuesColl  = () => collection(db, 'apartments', UID, 'issues');
 const aptDocRef   = () => doc(db, 'apartments', UID);
 const flatRef     = id => doc(db, 'apartments', UID, 'flats', id);
 const issueRef    = id => doc(db, 'apartments', UID, 'issues', id);
+const vehColl     = () => collection(db, 'apartments', UID, 'vehicles');
+const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
+const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
+const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
 
 /* ════════════════════════════════
    STATE
@@ -786,7 +1001,10 @@ const exps   = new Map();
 const issues = [];
 
 let AB='', FS='all', SQ='', RTF='all', FLF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
-let eu=null, iu=null;
+let eu=null, iu=null, vu=null, pu=null;
+const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
+const socExps  = [];          // society-level expenses
+let president  = null;        // current president object
 let APT_NAME = 'Gatebook';
 
 /* ════════════════════════════════
@@ -808,7 +1026,7 @@ const fex = id => exps.get(id)||[];
 
 /* ── Shared APP context for tab modules ── */
 function refreshAPP() {
-  window.APP = { flats, exps, issues,
+  window.APP = { flats, exps, issues, vehicles, socExps,
     get AB(){return AB;}, get FS(){return FS;},
     get SQ(){return SQ;}, get RTF(){return RTF;}, get FLF(){return FLF;},
     get AM(){return AM;}, get IF(){return IF;},
@@ -877,9 +1095,12 @@ function rStats() {
   // Update flat count badge in navbar
   const badge=document.getElementById('flatCountBadge');
   if(badge){badge.textContent=`${all.length} flats`;badge.style.display='';}
+  const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
+  const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   document.getElementById('phAct').innerHTML=`
     <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
     <button class="btn btn-white"   onclick="window._oRI()"><i class="ti ti-urgent"></i> Raise Issue</button>
+    <button class="btn btn-white"   onclick="switchView('vehicles')"><i class="ti ti-motorbike"></i> Vehicles: ${totTw+totFw}</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
@@ -1259,12 +1480,13 @@ document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;
 document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
 document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
 document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp();});
-['flatM','addM','flatAddM','rIM','idM'].forEach(id=>{
-  document.getElementById(id).addEventListener('click',e=>{
-    if(e.target.id===id){cM();cA();cAF();cRI();cID();}
+['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM'].forEach(id=>{
+  const el=document.getElementById(id);if(!el)return;
+  el.addEventListener('click',e=>{
+    if(e.target.id===id){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}
   });
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}});
 
 /* ════════════════════════════════
    WINDOW EXPOSE
@@ -1278,6 +1500,10 @@ window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
 window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
+window._oVehM=oVehM; window._oVehFor=oVehFor; window._cVehM=cVehM; window._sVeh=sVeh; window._delVeh=delVeh;
+window._oPresM=oPresM; window._cPresM=cPresM; window._sPres=sPres;
+window._oPresExp=oPresExp; window._cPresExp=cPresExp; window._sPresExp=sPresExp;
+window._updSEStatus=updSEStatus; window._delSE=delSE;
 
 /* ════════════════════════════════
    IN-APP SETUP WIZARD
@@ -1392,7 +1618,7 @@ window._wizLaunch = async function() {
     }
     document.getElementById('setupWiz').style.display = 'none';
     document.getElementById('lo').style.display = '';
-    listenFlats(); listenExp(); listenIssues();
+    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
     console.error(e);
@@ -1733,13 +1959,304 @@ function rMembers() {
 
 /* ── switchView (was missing) ── */
 function switchView(v) {
-  document.getElementById('pView').style.display = v==='payments' ? 'block' : 'none';
-  document.getElementById('iView').style.display = v==='issues'   ? 'block' : 'none';
-  document.getElementById('mView').style.display = v==='members'  ? 'block' : 'none';
+  document.getElementById('pView').style.display    = v==='payments'  ? 'block' : 'none';
+  document.getElementById('iView').style.display    = v==='issues'    ? 'block' : 'none';
+  document.getElementById('mView').style.display    = v==='members'   ? 'block' : 'none';
+  document.getElementById('vehView').style.display  = v==='vehicles'  ? 'block' : 'none';
+  document.getElementById('presView').style.display = v==='president' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
+  if(v==='vehicles')  rVehicles();
+  if(v==='president') rPresident();
 }
 
 function rAll(){rStats();rBTabs();rBlock();rIssues();rMembers();}
+
+
+/* ════════════════════════════════
+   VEHICLES
+════════════════════════════════ */
+function rVehicles(){
+  const q=(document.getElementById('vehQ')?.value||'').toLowerCase().trim();
+  const bf=document.getElementById('vehBF')?.value||'all';
+  const tf=document.getElementById('vehTF')?.value||'all';
+  const all=[...flats.values()].filter(f=>f.month===AM);
+
+  // rebuild block filter
+  const bs=bks();
+  const bfSel=document.getElementById('vehBF');
+  if(bfSel && bfSel.options.length<=1){
+    bs.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent='Block '+b;bfSel.appendChild(o);});
+  }
+
+  const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
+  const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
+  const withVeh=[...flats.values()].filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
+
+  document.getElementById('vehSum').innerHTML=`
+    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
+  `;
+
+  const rows=all.filter(f=>{
+    if(bf!=='all'&&f.block!==bf)return false;
+    if(q&&!f.flatId.toLowerCase().includes(q)&&!(f.owner||'').toLowerCase().includes(q))return false;
+    const v=vehicles.get(f.flatId)||{};
+    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
+    if(tf==='2w'&&tw===0)return false;
+    if(tf==='4w'&&fw===0)return false;
+    if(tf==='both'&&(tw===0||fw===0))return false;
+    if(tf==='none'&&(tw+fw)>0)return false;
+    return true;
+  });
+
+  if(!rows.length){
+    document.getElementById('vehBody').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-motorbike" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No records match your filter.</td></tr>`;
+    return;
+  }
+  document.getElementById('vehBody').innerHTML=rows.map(f=>{
+    const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
+    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
+    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
+    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
+    return`<tr>
+      <td><strong style="color:var(--indigo)">${f.flatId}</strong></td>
+      <td><div style="font-weight:600">${f.owner||'(No owner)'}</div><div style="font-size:10px;color:var(--muted)">${f.resType==='tenant'?'🔑 Tenant':'🏠 Owner'}</div></td>
+      <td>${twB}</td>
+      <td>${fwB}</td>
+      <td style="font-size:12px;color:var(--text2)">${v.nums||'—'}</td>
+      <td style="font-size:12px;color:var(--text2)">${v.slot||'—'}</td>
+      <td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')"><i class="ti ti-pencil"></i> Edit</button></td>
+    </tr>`;
+  }).join('');
+}
+
+function oVehM(){
+  const first=[...flats.values()].find(f=>f.month===AM);
+  if(first)oVehFor(first.flatId);
+  else toast('No flats found.','error');
+}
+function oVehFor(fid){
+  const f=flats.get(fid); const v=vehicles.get(fid)||{tw:0,fw:0,nums:'',slot:''};
+  document.getElementById('vehFid').value=fid;
+  document.getElementById('vehMSub').textContent=fid+(f&&f.owner?' — '+f.owner:'');
+  document.getElementById('veh2w').value=v.tw||0;
+  document.getElementById('veh4w').value=v.fw||0;
+  document.getElementById('vehNums').value=v.nums||'';
+  document.getElementById('vehSlot').value=v.slot||'';
+  const hasDat=vehicles.has(fid);
+  document.getElementById('vehDelBtn').style.display=hasDat?'':'none';
+  document.getElementById('vehSaveBtn').disabled=false;
+  document.getElementById('vehSaveLbl').textContent='Save Vehicles';
+  document.getElementById('vehM').classList.add('open');
+}
+const cVehM=()=>document.getElementById('vehM').classList.remove('open');
+async function sVeh(){
+  const fid=document.getElementById('vehFid').value;
+  const tw=parseInt(document.getElementById('veh2w').value)||0;
+  const fw=parseInt(document.getElementById('veh4w').value)||0;
+  const nums=document.getElementById('vehNums').value.trim();
+  const slot=document.getElementById('vehSlot').value.trim();
+  const btn=document.getElementById('vehSaveBtn');btn.disabled=true;document.getElementById('vehSaveLbl').textContent='Saving…';
+  sync('saving');
+  try{
+    await setDoc(vehRef(fid),{flatId:fid,tw,fw,nums,slot,updatedAt:serverTimestamp()});
+    sync('live');cVehM();toast('Vehicles saved ✓');
+  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
+  finally{btn.disabled=false;document.getElementById('vehSaveLbl').textContent='Save Vehicles';}
+}
+async function delVeh(){
+  const fid=document.getElementById('vehFid').value;
+  if(!confirm('Clear vehicle data for this flat?'))return;
+  sync('saving');
+  try{
+    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await dd(vehRef(fid));
+    sync('live');cVehM();toast('Vehicle data cleared ✓');
+  }catch(e){console.error(e);sync('error');toast('Delete failed.','error');}
+}
+
+/* ════════════════════════════════
+   PRESIDENT & SOCIETY EXPENSES
+════════════════════════════════ */
+function rPresident(){
+  const pres=president;
+  const catIcons={Maintenance:'ti-tool',Water:'ti-droplet',Electricity:'ti-bolt',
+    Security:'ti-shield',Cleaning:'ti-vacuum-cleaner',Lift:'ti-elevator',
+    Gardening:'ti-plant',Painting:'ti-paint',Other:'ti-clipboard'};
+  const catBg={Maintenance:'var(--indigo-bg)',Water:'var(--sky-bg)',Electricity:'var(--amber-bg)',
+    Security:'var(--red-bg)',Cleaning:'var(--green-bg)',Lift:'var(--purple-bg)',
+    Gardening:'var(--green-bg)',Painting:'var(--amber-bg)',Other:'var(--surface3)'};
+  const catClr={Maintenance:'var(--indigo)',Water:'var(--sky)',Electricity:'var(--amber)',
+    Security:'var(--red)',Cleaning:'var(--green)',Lift:'var(--purple)',
+    Gardening:'var(--green)',Painting:'var(--amber)',Other:'var(--text2)'};
+
+  if(!pres||!pres.name){
+    document.getElementById('presBanner').innerHTML=`
+      <div class="pres-empty">
+        <i class="ti ti-crown"></i>
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">No President Elected Yet</div>
+        <div style="font-size:13px;margin-bottom:16px">Elect a flat member as society president to track expenses.</div>
+        <button class="btn btn-indigo" onclick="window._oPresM()"><i class="ti ti-crown"></i> Elect President</button>
+      </div>`;
+  } else {
+    const ini=(pres.name||'P').charAt(0).toUpperCase();
+    const tenure=pres.termStart?`Since ${new Date(pres.termStart).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}${pres.termEnd?' — '+new Date(pres.termEnd).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):''}` :'';
+    document.getElementById('presBanner').innerHTML=`
+      <div class="pres-banner">
+        <div class="pres-info">
+          <div class="pres-avatar">${ini}</div>
+          <div>
+            <div style="font-size:11px;opacity:.7;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px">🏆 Current President</div>
+            <div class="pres-name">${pres.name}</div>
+            <div class="pres-flat">Flat ${pres.flatId}${pres.phone?' · '+pres.phone:''}</div>
+            ${tenure?`<div style="font-size:11px;opacity:.7;margin-top:3px">${tenure}</div>`:''}
+          </div>
+        </div>
+        <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.3)" onclick="window._oPresM()"><i class="ti ti-edit"></i> Change</button>
+      </div>`;
+  }
+
+  const totalSocExp=socExps.reduce((s,e)=>s+e.amt,0);
+  const totalFlats=[...flats.values()].filter(f=>f.month===AM).length;
+  const perFlat=totalFlats>0?Math.round(totalSocExp/totalFlats):0;
+  document.getElementById('fundRow').innerHTML=`
+    <div class="fcard2"><div class="fcard2-label">Total Society Expenses</div><div class="fcard2-val">${inr(totalSocExp)}</div><div class="fcard2-sub">${socExps.length} transactions</div></div>
+    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(socExps.filter(e=>e.month===AM).reduce((s,e)=>s+e.amt,0))}</div><div class="fcard2-sub">${AM}</div></div>
+    <div class="fcard2"><div class="fcard2-label">Per Flat (avg)</div><div class="fcard2-val">${inr(perFlat)}</div><div class="fcard2-sub">across ${totalFlats} flats</div></div>
+    <div class="fcard2"><div class="fcard2-label">Approved</div><div class="fcard2-val">${inr(socExps.filter(e=>e.status==='approved').reduce((s,e)=>s+e.amt,0))}</div><div class="fcard2-sub">${socExps.filter(e=>e.status==='approved').length} approved</div></div>
+  `;
+
+  if(!socExps.length){
+    document.getElementById('presExpList').innerHTML=`<div class="exp-empty"><i class="ti ti-receipt-off"></i>No society expenses recorded yet.</div>`;
+    return;
+  }
+  document.getElementById('presExpList').innerHTML=socExps.map(e=>{
+    const icon=catIcons[e.cat]||'ti-clipboard';
+    const bg=catBg[e.cat]||'var(--surface3)';
+    const clr=catClr[e.cat]||'var(--text2)';
+    const statusOptions=['pending','approved','rejected'].map(s=>`<option value="${s}"${e.status===s?' selected':''}>${{pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[s]}</option>`).join('');
+    return`<div class="exp-row">
+      <div class="exp-row-icon" style="background:${bg};color:${clr}"><i class="ti ${icon}"></i></div>
+      <div>
+        <div class="exp-row-cat">${e.title||e.cat}</div>
+        <div class="exp-row-date">${e.date||''}${e.paidBy?' · Paid by: '+e.paidBy:''}${e.vendor?' · '+e.vendor:''}</div>
+        ${e.note?`<div class="exp-row-note">${e.note}</div>`:''}
+      </div>
+      <div style="text-align:right">
+        <div class="exp-row-amt">${inr(e.amt)}</div>
+        <div style="margin-top:4px">
+          <select style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;border:1.5px solid var(--border2);background:#fff;font-family:var(--font);outline:none;cursor:pointer"
+            onchange="window._updSEStatus('${e.id}',this.value)">${statusOptions}</select>
+        </div>
+      </div>
+      <button class="btn btn-white btn-sm" onclick="window._delSE('${e.id}')" style="padding:5px 8px;min-width:0"><i class="ti ti-trash" style="margin:0;color:var(--red)"></i></button>
+    </div>`;
+  }).join('');
+}
+
+function oPresM(){
+  const pres=president;
+  document.getElementById('presFlat').innerHTML=[...flats.values()]
+    .filter(f=>f.month===AM&&(f.owner||'').trim())
+    .map(f=>`<option value="${f.flatId}"${pres&&pres.flatId===f.flatId?' selected':''}>
+      ${f.flatId} — ${f.owner}</option>`).join('');
+  document.getElementById('presName').value=pres?.name||'';
+  document.getElementById('presStart').value=pres?.termStart||new Date().toISOString().split('T')[0];
+  document.getElementById('presEnd').value=pres?.termEnd||'';
+  document.getElementById('presPhone').value=pres?.phone||'';
+  document.getElementById('presSaveBtn').disabled=false;
+  document.getElementById('presSaveLbl').textContent='Elect President';
+  document.getElementById('presM').classList.add('open');
+}
+const cPresM=()=>document.getElementById('presM').classList.remove('open');
+async function sPres(){
+  const flatId=document.getElementById('presFlat').value;
+  const name=document.getElementById('presName').value.trim();
+  const termStart=document.getElementById('presStart').value;
+  const termEnd=document.getElementById('presEnd').value;
+  const phone=document.getElementById('presPhone').value.trim();
+  if(!name){toast('Enter president name.','error');return;}
+  document.getElementById('presSaveBtn').disabled=true;
+  document.getElementById('presSaveLbl').textContent='Saving…';
+  sync('saving');
+  try{
+    await setDoc(doc(db,'apartments',UID),{president:{flatId,name,termStart,termEnd,phone,updatedAt:new Date().toISOString()}},{merge:true});
+    president={flatId,name,termStart,termEnd,phone};
+    sync('live');cPresM();toast('President elected ✓');rPresident();
+  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
+  finally{document.getElementById('presSaveBtn').disabled=false;document.getElementById('presSaveLbl').textContent='Elect President';}
+}
+
+function oPresExp(){
+  ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('peDate').value=new Date().toISOString().split('T')[0];
+  document.getElementById('peCat').value='Maintenance';
+  document.getElementById('peBtn').disabled=false;
+  document.getElementById('peLbl').textContent='Save Expense';
+  document.getElementById('presExpM').classList.add('open');
+}
+const cPresExp=()=>document.getElementById('presExpM').classList.remove('open');
+async function sPresExp(){
+  const title=document.getElementById('peTitle').value.trim();
+  const cat=document.getElementById('peCat').value;
+  const amt=parseInt(document.getElementById('peAmt').value)||0;
+  const date=document.getElementById('peDate').value;
+  const paidBy=document.getElementById('pePaidBy').value.trim()||president?.name||'President';
+  const vendor=document.getElementById('peVendor').value.trim();
+  const note=document.getElementById('peNote').value.trim();
+  if(!title){toast('Enter expense title.','error');return;}
+  if(!amt){toast('Enter amount.','error');return;}
+  document.getElementById('peBtn').disabled=true;document.getElementById('peLbl').textContent='Saving…';
+  sync('saving');
+  try{
+    const d=new Date(date);
+    const mth=d.toISOString().slice(0,7);
+    await addDoc(sexpColl(),{title,cat,amt,date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),month:mth,paidBy,vendor,note,status:'pending',createdAt:serverTimestamp()});
+    sync('live');cPresExp();toast('Society expense recorded ✓');
+  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
+  finally{document.getElementById('peBtn').disabled=false;document.getElementById('peLbl').textContent='Save Expense';}
+}
+async function updSEStatus(id,status){
+  sync('saving');
+  try{await updateDoc(sexpRef(id),{status});sync('live');toast('Status updated ✓');}
+  catch(e){console.error(e);sync('error');toast('Update failed.','error');}
+}
+async function delSE(id){
+  if(!confirm('Delete this expense?'))return;
+  sync('saving');
+  try{
+    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await dd(sexpRef(id));
+    sync('live');toast('Expense deleted ✓');
+  }catch(e){console.error(e);sync('error');toast('Delete failed.','error');}
+}
+
+/* ════════════════════════════════
+   LISTENERS for Vehicles + SocExp
+════════════════════════════════ */
+function listenVehicles(){
+  if(vu)vu();
+  vu=onSnapshot(vehColl(),snap=>{
+    vehicles.clear();
+    snap.forEach(d=>vehicles.set(d.id,{...d.data()}));
+    rStats();
+    if(document.getElementById('vehView').style.display!=='none')rVehicles();
+  },e=>console.error('veh listener',e));
+}
+function listenSocExp(){
+  if(pu)pu();
+  const q=query(sexpColl(),orderBy('createdAt','desc'));
+  pu=onSnapshot(q,snap=>{
+    socExps.length=0;
+    snap.forEach(d=>socExps.push({id:d.id,...d.data()}));
+    if(document.getElementById('presView').style.display!=='none')rPresident();
+  },()=>{
+    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));if(document.getElementById('presView').style.display!=='none')rPresident();});
+  });
+}
+
 
 async function boot(){
   refreshAPP();
@@ -1748,6 +2265,7 @@ async function boot(){
     // Load apartment config
     const aptDoc = await getDoc(aptDocRef());
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
+    if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
 
     // Check if any flats exist
     const snap = await getDocs(flatsColl());
@@ -1765,6 +2283,8 @@ async function boot(){
       listenFlats();
       listenExp();
       listenIssues();
+      listenVehicles();
+      listenSocExp();
     }
   }catch(err){
     console.error('Boot error:',err);
