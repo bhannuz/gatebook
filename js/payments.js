@@ -1,4 +1,4 @@
-/* ════════════════════════════════
+/* ═══════════════════════════════
    PAYMENTS TAB — js/payments.js
    Handles: block tabs OR floor tabs (no-block buildings)
    Custom filters: status, resident type, floor, search
