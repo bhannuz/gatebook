@@ -179,7 +179,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .sw .ctrl{width:100%;padding-left:38px}
 
 /* ── BLOCK TABS ── */
-.btabs{display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap}
+.btabs{display:none}
 .btab{display:flex;align-items:center;gap:5px;padding:5px 12px;background:#fff;
   border:1.5px solid var(--border2);border-radius:var(--r-md);
   font-size:11px;font-weight:700;color:var(--text2);cursor:pointer;font-family:var(--font);
@@ -199,15 +199,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .bbadge{padding:4px 12px;border-radius:99px;font-size:11px;font-weight:700;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
 .bcollected{font-size:13px;color:var(--text2);font-weight:600}
 .bcollected strong{color:var(--text)}
-.floor-divider{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;
-  color:var(--indigo);text-transform:uppercase;letter-spacing:.6px;
-  margin:16px 0 10px;padding-bottom:6px;border-bottom:1.5px solid var(--border2)}
-.floor-divider i{font-size:13px}
+.floor-divider{display:none}
+.floor-divider i{display:none}
 
 /* ── FLAT CARDS ── */
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:1.5rem}
-.fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);
-  padding:9px 11px 8px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;margin-bottom:1rem}
+.fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-md);
+  padding:5px 7px 4px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
 .fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
@@ -218,28 +216,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
 .fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:4px}
-.fc-num{font-size:13px;font-weight:800;color:var(--text)}
-.fc-owner{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;font-weight:500}
-.fc-type{font-size:9px;font-weight:700;padding:1px 5px;border-radius:99px;display:inline-block;margin-top:2px}
+.fc-num{font-size:11px;font-weight:800;color:var(--text)}
+.fc-owner{font-size:9px;color:var(--text2);margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;font-weight:500}
+.fc-type{font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block;margin-top:1px}
 .fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
 .fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
-.fc-indicator{width:26px;height:26px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:13px}
+.fc-indicator{width:20px;height:20px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
 .fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
-.fc-amount{font-size:18px;font-weight:800;letter-spacing:-.5px;line-height:1;margin-bottom:2px}
+.fc-amount{font-size:13px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:1px}
 .fcard.paid    .fc-amount{color:var(--green)}
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
-.fc-due{font-size:10px;color:var(--muted);font-weight:600}
-.fprog{height:3px;background:var(--bg2);border-radius:99px;margin:5px 0 4px;overflow:hidden}
+.fc-due{font-size:8px;color:var(--muted);font-weight:600}
+.fprog{height:2px;background:var(--bg2);border-radius:99px;margin:3px 0 2px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
 .fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
-.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;
-  border-radius:99px;text-transform:uppercase;letter-spacing:.5px}
-.spill i{font-size:10px}
+.spill{display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:700;padding:1px 5px;
+  border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
+.spill i{font-size:8px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
 .spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
 .spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
@@ -1733,7 +1731,7 @@ function rBlock() {
     const byFloor = {};
     vis.forEach(f => { const fl = f.floor ?? '—'; (byFloor[fl] = byFloor[fl] || []).push(f); });
     const sortedFloors = Object.keys(byFloor).sort((a,b) => Number(a) - Number(b));
-    const multiFloor = useBlocks && sortedFloors.length > 1;
+    const multiFloor = false; // floor dividers disabled for standalone apartment
 
     sortedFloors.forEach((fl, idx) => {
       if (multiFloor) {
