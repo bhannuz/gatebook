@@ -1025,15 +1025,7 @@ const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
 const fex = id => exps.get(id)||[];
 
 /* ── Shared APP context for tab modules ── */
-function refreshAPP() {
-  window.APP = { flats, exps, issues, vehicles, socExps,
-    get AB(){return AB;}, get FS(){return FS;},
-    get SQ(){return SQ;}, get RTF(){return RTF;}, get FLF(){return FLF;},
-    get AM(){return AM;}, get IF(){return IF;},
-    set IF(v){IF=v;},
-    _setAB(v){AB=v;},
-    bks, bfl, fex, st, sl, si, inr, fd, fdt };
-}
+function refreshAPP() { /* no-op: all functions use closure vars directly */ }
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -1638,11 +1630,10 @@ window._wizLaunch = async function() {
 ════════════════════════════════ */
 
 function hasBlocks() {
-  return [...window.APP.flats.values()].some(f => (f.block || '').trim() !== '');
+  return [...flats.values()].some(f => (f.block || '').trim() !== '');
 }
 
 function getFloors(blockOrAll) {
-  const { flats, AM } = window.APP;
   const all = [...flats.values()].filter(f => f.month === AM);
   const scoped = blockOrAll ? all.filter(f => f.block === blockOrAll) : all;
   return [...new Set(scoped.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
@@ -1967,7 +1958,7 @@ function switchView(v) {
   if(v==='president') rPresident();
 }
 
-function rAll(){refreshAPP();rStats();rBTabs();rBlock();rIssues();rMembers();}
+function rAll(){rStats();rBTabs();rBlock();rIssues();rMembers();}
 
 
 /* ════════════════════════════════
