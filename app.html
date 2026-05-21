@@ -1000,7 +1000,7 @@ const flats  = new Map();
 const exps   = new Map();
 const issues = [];
 
-let AB='', FS='all', SQ='', RTF='all', FLF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
+let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
 let eu=null, iu=null, vu=null, pu=null;
 const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
@@ -1217,7 +1217,7 @@ function oFl(fid) {
     </div>`;
   document.getElementById('flatM').classList.add('open');
 }
-const cM=()=>document.getElementById('flatM').classList.remove('open');
+function cM(){document.getElementById('flatM').classList.remove('open');}
 
 /* auto-save flat fields on blur / select change — no button needed */
 let _autoSaveTimer=null;
@@ -1274,7 +1274,7 @@ function fFS(){
 }
 function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
 function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
-const cA=()=>document.getElementById('addM').classList.remove('open');
+function cA(){document.getElementById('addM').classList.remove('open');}
 document.getElementById('fB').addEventListener('change',fFS);
 
 async function sE(){
@@ -1305,7 +1305,7 @@ function oAF(){
   document.getElementById('nI').value='';document.getElementById('nO').value='';document.getElementById('nD').value='';
   document.getElementById('flatAddM').classList.add('open');
 }
-const cAF=()=>document.getElementById('flatAddM').classList.remove('open');
+function cAF(){document.getElementById('flatAddM').classList.remove('open');}
 async function sNF(){
   const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
   const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||0;
@@ -1330,11 +1330,11 @@ function oRI(){
   document.getElementById('issBtnL').textContent='Submit Complaint';
   document.getElementById('rIM').classList.add('open');
 }
-const cRI=()=>{
+function cRI(){
   document.getElementById('rIM').classList.remove('open');
   document.getElementById('issBtn').disabled=false;
   document.getElementById('issBtnL').textContent='Submit Complaint';
-};
+}
 async function sI(){
   const title=document.getElementById('iT').value.trim();
   const cat=document.getElementById('iCa').value;
@@ -1411,7 +1411,7 @@ function oID(id){
   `;
   document.getElementById('idM').classList.add('open');
 }
-const cID=()=>document.getElementById('idM').classList.remove('open');
+function cID(){document.getElementById('idM').classList.remove('open');}
 
 async function uIS(id,ns){
   const iss=issues.find(i=>i.id===id);if(!iss)return;
@@ -1827,7 +1827,7 @@ function fIss(f) {
    Depends on: window.APP (shared state injected from app.html)
 ════════════════════════════════ */
 
-let MF = 'all';
+/* MF moved to state section */
 
 /* ── Helpers ── */
 function tenure(moveIn, moveOut) {
@@ -2040,7 +2040,7 @@ function oVehFor(fid){
   document.getElementById('vehSaveLbl').textContent='Save Vehicles';
   document.getElementById('vehM').classList.add('open');
 }
-const cVehM=()=>document.getElementById('vehM').classList.remove('open');
+function cVehM(){document.getElementById('vehM').classList.remove('open');}
 async function sVeh(){
   const fid=document.getElementById('vehFid').value;
   const tw=parseInt(document.getElementById('veh2w').value)||0;
@@ -2159,7 +2159,7 @@ function oPresM(){
   document.getElementById('presSaveLbl').textContent='Elect President';
   document.getElementById('presM').classList.add('open');
 }
-const cPresM=()=>document.getElementById('presM').classList.remove('open');
+function cPresM(){document.getElementById('presM').classList.remove('open');}
 async function sPres(){
   const flatId=document.getElementById('presFlat').value;
   const name=document.getElementById('presName').value.trim();
@@ -2186,7 +2186,7 @@ function oPresExp(){
   document.getElementById('peLbl').textContent='Save Expense';
   document.getElementById('presExpM').classList.add('open');
 }
-const cPresExp=()=>document.getElementById('presExpM').classList.remove('open');
+function cPresExp(){document.getElementById('presExpM').classList.remove('open');}
 async function sPresExp(){
   const title=document.getElementById('peTitle').value.trim();
   const cat=document.getElementById('peCat').value;
