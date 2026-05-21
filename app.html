@@ -506,6 +506,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
 }
+
+/* ── Residents tab ── */
+.rff{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
+  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
+.rff i{font-size:12px}
+.rff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.rff:hover:not(.active){border-color:var(--border3);color:var(--text)}
+.res-sum-chip{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:4px 10px;border-radius:99px;background:var(--surface3);color:var(--text2);border:1.5px solid var(--border2)}
+.res-sum-chip.owner{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
+.res-sum-chip.tenant{background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.3)}
+.res-sum-chip.vacant{background:var(--surface3);color:var(--muted)}
+.res-sum-chip.veh{background:var(--sky-bg);color:var(--sky);border-color:rgba(2,132,199,.2)}
+/* ── Category manager ── */
+.cat-row{display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -618,11 +633,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <i class="ti ti-alert-circle"></i> Issues
       <span class="vtab-badge" id="openCnt">0</span>
     </button>
-    <button class="vtab" data-v="members" onclick="switchView('members')">
-      <i class="ti ti-users"></i> Members
-    </button>
-    <button class="vtab" data-v="vehicles" onclick="switchView('vehicles')">
-      <i class="ti ti-motorbike"></i> Vehicles
+    <button class="vtab" data-v="residents" onclick="switchView('residents')">
+      <i class="ti ti-users"></i> Residents
     </button>
     <button class="vtab" data-v="president" onclick="switchView('president')">
       <i class="ti ti-crown"></i> President
@@ -673,57 +685,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="iss-list" id="iList"></div>
   </div><!-- /#iView -->
 
-  <!-- MEMBERS VIEW -->
-  <div id="mView" style="display:none">
-    <div class="mem-toolbar">
-      <div class="mem-filters" id="mFil">
-        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
-        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+  <!-- RESIDENTS VIEW — Members + Vehicles merged -->
+  <div id="resView" style="display:none">
+    <div class="mem-toolbar" style="flex-wrap:wrap;gap:10px">
+      <div class="mem-filters" id="rFil">
+        <button class="rff active" data-t="all"    onclick="fRes('all')"><i class="ti ti-users"></i> All</button>
+        <button class="rff" data-t="owner"  onclick="fRes('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="rff" data-t="tenant" onclick="fRes('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="rff" data-t="vacant" onclick="fRes('vacant')"><i class="ti ti-door"></i> Vacant</button>
       </div>
-      <div class="sw" style="min-width:200px">
-        <i class="ti ti-search"></i>
-        <input class="ctrl" type="text" id="memQ" placeholder="Search name or flat…" oninput="rMembers()"/>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <select class="ctrl" id="resVF" onchange="rResidents()" style="min-width:150px">
+          <option value="all">All Vehicles</option>
+          <option value="2w">🏍 Has 2-Wheeler</option>
+          <option value="4w">🚗 Has 4-Wheeler</option>
+          <option value="both">Has Both</option>
+          <option value="none">No Vehicles</option>
+        </select>
+        <div class="sw" style="min-width:200px">
+          <i class="ti ti-search"></i>
+          <input class="ctrl" type="text" id="resQ" placeholder="Search name, flat…" oninput="rResidents()"/>
+        </div>
       </div>
     </div>
-    <div id="memList"></div>
-  </div><!-- /#mView -->
-
-  <!-- VEHICLES VIEW -->
-  <div id="vehView" style="display:none">
-    <div class="veh-toolbar">
-      <div>
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:2px">Vehicle Registry</div>
-        <div style="font-size:12px;color:var(--text2)">Track 2-wheelers &amp; 4-wheelers per flat</div>
-      </div>
-      <button class="btn btn-indigo" onclick="window._oVehM()"><i class="ti ti-plus"></i> Add / Update Vehicles</button>
-    </div>
-    <div class="veh-sum" id="vehSum"></div>
-    <div class="veh-search-row">
-      <div class="sw" style="max-width:260px"><i class="ti ti-search"></i>
-        <input class="ctrl" type="text" id="vehQ" placeholder="Search flat or owner…" oninput="rVehicles()"/>
-      </div>
-      <select class="ctrl" id="vehBF" onchange="rVehicles()"><option value="all">All Blocks</option></select>
-      <select class="ctrl" id="vehTF" onchange="rVehicles()">
-        <option value="all">All Flats</option>
-        <option value="2w">🏍 Has 2-Wheeler</option>
-        <option value="4w">🚗 Has 4-Wheeler</option>
-        <option value="both">Both Types</option>
-        <option value="none">No Vehicles</option>
-      </select>
-    </div>
-    <div class="veh-table-wrap">
-      <table class="veh-table">
-        <thead><tr>
-          <th>Flat</th><th>Resident</th>
-          <th>🏍 2-Wheelers</th><th>🚗 4-Wheelers</th>
-          <th>Vehicle Numbers</th><th>Parking Slot</th><th>Actions</th>
-        </tr></thead>
-        <tbody id="vehBody"></tbody>
-      </table>
-    </div>
-  </div><!-- /#vehView -->
+    <div id="resSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div id="resList"></div>
+  </div><!-- /#resView -->
 
   <!-- PRESIDENT VIEW -->
   <div id="presView" style="display:none">
@@ -769,6 +756,35 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- ADD EXPENSE MODAL -->
+
+<!-- CATEGORY MANAGER MODAL -->
+<div class="mbg" id="catMgrModal">
+  <div class="modal" style="max-width:460px">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--indigo-bg);color:var(--indigo)"><i class="ti ti-tag"></i></div>
+        <div><div class="mtitle">Manage Categories</div><div class="msub">Add, edit or remove expense categories</div></div>
+      </div>
+      <button class="mclose" onclick="window._closeCatManager()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="catMgrList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:320px;overflow-y:auto"></div>
+    <button onclick="window._addCatRow()"
+      style="width:100%;padding:8px;border:2px dashed var(--border2);border-radius:var(--r-md);
+        background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;
+        font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+        transition:all .15s;margin-bottom:16px"
+      onmouseover="this.style.borderColor='var(--indigo)';this.style.color='var(--indigo)'"
+      onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+      <i class="ti ti-plus"></i> Add Category
+    </button>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._closeCatManager()">Cancel</button>
+      <button class="btn btn-indigo" id="catSaveBtn" onclick="window._saveCatManager()">
+        <i class="ti ti-device-floppy"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
 <div class="mbg" id="addM">
   <div class="modal">
     <div class="mhead">
@@ -785,9 +801,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="fg2">
       <div class="fg"><label>Category</label>
         <select id="fC">
-          <option>Maintenance</option><option>Water</option><option>Electricity</option>
-          <option>Parking</option><option>Lift</option><option>Security</option>
-          <option>Cleaning</option><option>Other</option>
+          <option>Maintenance</option>
         </select>
       </div>
       <div class="fg"><label>Amount (₹)</label><input type="number" id="fA" placeholder="0" min="1"/></div>
@@ -994,8 +1008,8 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 import { rBTabs, rBlock }                              from './js/payments.js';
 import { rIssues, fIss }                              from './js/issues.js';
-import { rMembers, fMem }                             from './js/members.js';
-import { rVehicles, oVehM, oVehFor, cVehM, sVeh, delVeh } from './js/vehicles.js';
+import { rResidents, fRes }                           from './js/residents.js';
+import { fillCatSelect, listenCategories, openCatManager, closeCatManager, saveCatManager, addCatRow, delCatRow } from './js/categories.js';
 import { rPresident, oPresM, cPresM, sPres, oPresExp, cPresExp, sPresExp, updSEStatus, delSE } from './js/president.js';
 /* payments, issues, members inlined below — see functions below */
 
@@ -1092,6 +1106,8 @@ function refreshAPP() {
     toast, sync,
     // Firestore refs (needed by president.js/vehicles.js)
     vehRef, sexpRef, sexpColl, aptDocRef,
+    get categories(){ return window._cats||[]; },
+    set categories(v){ window._cats=v; },
   };
 }
 
@@ -1353,8 +1369,8 @@ function fFS(){
   const b=document.getElementById('fB').value;
   document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
 }
-function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
-function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';document.getElementById('addM').classList.add('open')}
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';fillCatSelect('fC');document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';fillCatSelect('fC');document.getElementById('addM').classList.add('open')}
 function cA(){document.getElementById('addM').classList.remove('open');}
 document.getElementById('fB').addEventListener('change',fFS);
 
@@ -1578,10 +1594,18 @@ window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
 window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
-// vehicles.js
+// residents.js
+window.fRes = fRes; window.rResidents = rResidents;
+// vehicles modal (still used from flat modal)
 window._oVehM   = oVehM;   window._oVehFor = oVehFor;
 window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
-window.rVehicles = rVehicles;
+// categories.js
+window._openCatManager  = openCatManager;
+window._closeCatManager = closeCatManager;
+window._saveCatManager  = saveCatManager;
+window._addCatRow = addCatRow;
+window._delCat    = delCatRow;
+window._fillCatSelect = fillCatSelect;
 // president.js
 window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
 window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
@@ -1703,7 +1727,7 @@ window._wizLaunch = async function() {
     }
     document.getElementById('setupWiz').style.display = 'none';
     document.getElementById('lo').style.display = '';
-    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenCategories();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
     console.error(e);
@@ -1723,12 +1747,10 @@ function switchView(v) {
   refreshAPP();
   document.getElementById('pView').style.display    = v==='payments'  ? 'block' : 'none';
   document.getElementById('iView').style.display    = v==='issues'    ? 'block' : 'none';
-  document.getElementById('mView').style.display    = v==='members'   ? 'block' : 'none';
-  document.getElementById('vehView').style.display  = v==='vehicles'  ? 'block' : 'none';
+  document.getElementById('resView').style.display  = v==='residents' ? 'block' : 'none';
   document.getElementById('presView').style.display = v==='president' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
-  if(v==='members')   try{ rMembers();   } catch(e){ console.error(e); }
-  if(v==='vehicles')  try{ rVehicles();  } catch(e){ console.error(e); }
+  if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   if(v==='president') try{ rPresident(); } catch(e){ console.error(e); }
 }
 
@@ -1738,9 +1760,8 @@ function rAll(){
   try{ rBTabs(); } catch(e){ console.error('rBTabs',e); }
   try{ rBlock(); } catch(e){ console.error('rBlock',e); }
   try{ rIssues(); } catch(e){ console.error('rIssues',e); }
-  try{ rMembers(); } catch(e){ console.error('rMembers',e); }
-  const v=document.getElementById('vehView');
-  if(v && v.style.display!=='none') try{ rVehicles(); } catch(e){ console.error('rVehicles',e); }
+  const rv=document.getElementById('resView');
+  if(rv && rv.style.display!=='none') try{ rResidents(); } catch(e){ console.error('rResidents',e); }
   const p=document.getElementById('presView');
   if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
 }
