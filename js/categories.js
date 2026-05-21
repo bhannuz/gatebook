@@ -12,21 +12,29 @@ const DEFAULT_CATEGORIES = [
 
 /* ── Populate any <select> with current categories ── */
 export function fillCatSelect(selectId, selectedVal) {
-  const cats = window.APP.categories || DEFAULT_CATEGORIES;
+  const cats = window.APP?.categories?.length ? window.APP.categories
+    : ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
   const sel  = document.getElementById(selectId);
   if (!sel) return;
-  const cur  = selectedVal || sel.value || cats[0];
+  const cur  = selectedVal || (sel.value !== '__manage__' ? sel.value : null) || cats[0];
   sel.innerHTML = cats
     .map(c => `<option value="${c}"${c === cur ? ' selected' : ''}>${c}</option>`)
     .join('');
-  // Add manage link at bottom
   sel.innerHTML += `<option value="__manage__">⚙ Manage Categories…</option>`;
-  sel.addEventListener('change', function handler(e) {
-    if (e.target.value === '__manage__') {
-      e.target.value = cur; // revert
-      openCatManager();
-    }
-  }, { once: false });
+  // Use a named handler attached via dataset to avoid duplicates
+  if (!sel._catListenerAdded) {
+    sel._catListenerAdded = true;
+    sel.addEventListener('change', function(e) {
+      if (e.target.value === '__manage__') {
+        const prev = e.target.dataset.prev || cats[0];
+        e.target.value = prev;
+        if (window._openCatManager) window._openCatManager();
+      } else {
+        e.target.dataset.prev = e.target.value;
+      }
+    });
+  }
+  sel.dataset.prev = cur;
 }
 
 /* ── Listen for categories in Firestore ── */

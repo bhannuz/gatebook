@@ -139,8 +139,14 @@ export function oPresExp() {
   ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('peDate').value = new Date().toISOString().split('T')[0];
   // Fill category dropdown from shared categories
-  if (window._fillCatSelect) window._fillCatSelect('peCat');
-  else document.getElementById('peCat').value = 'Maintenance';
+  const cats = (window.APP?.categories) || ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
+  const sel = document.getElementById('peCat');
+  if (sel) {
+    const cur = sel.value || cats[0];
+    sel.innerHTML = cats.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('')
+      + `<option value="__manage__">⚙ Manage Categories…</option>`;
+    sel.onchange = (e) => { if(e.target.value==='__manage__'){ e.target.value=cur; if(window._openCatManager) window._openCatManager(); }};
+  }
   document.getElementById('peBtn').disabled = false;
   document.getElementById('peLbl').textContent = 'Save Expense';
   document.getElementById('presExpM').classList.add('open');
