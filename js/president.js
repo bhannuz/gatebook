@@ -138,7 +138,9 @@ export async function sPres() {
 export function oPresExp() {
   ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('peDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('peCat').value  = 'Maintenance';
+  // Fill category dropdown from shared categories
+  if (window._fillCatSelect) window._fillCatSelect('peCat');
+  else document.getElementById('peCat').value = 'Maintenance';
   document.getElementById('peBtn').disabled = false;
   document.getElementById('peLbl').textContent = 'Save Expense';
   document.getElementById('presExpM').classList.add('open');
