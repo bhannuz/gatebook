@@ -716,23 +716,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="presView" style="display:none">
     <div id="presBanner"></div>
     <div class="fund-row" id="fundRow"></div>
-    <div class="chart-wrap" id="presChartWrap">
-      <div class="chart-title"><i class="ti ti-chart-bar"></i>Monthly Society Expenses — Last 12 Months</div>
-      <svg class="chart-svg" id="presChartSvg" height="140" viewBox="0 0 500 140" preserveAspectRatio="none"></svg>
-      <div class="chart-legend">
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#6366F1"></div>Total Expenses</div>
-        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#A7F3D0"></div>Approved</div>
-      </div>
-    </div>
-    <div class="exp-list">
+    <div id="catSummary"></div>
+    <div class="exp-list" style="margin-top:16px">
       <div class="exp-list-head">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
-          <button class="chart-toggle" id="presChartToggle" onclick="window._togglePresChart()">
-            <i class="ti ti-chart-bar"></i> Chart
-          </button>
-        </div>
-        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+        <div class="exp-list-title"><i class="ti ti-history"></i> All Payments &amp; Expenses</div>
+        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()">
+          <i class="ti ti-plus"></i> Add Expense
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+        <select id="histTypeFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All types</option>
+          <option value="payment">🟢 Flat Payments</option>
+          <option value="expense">🔴 Society Expenses</option>
+        </select>
+        <select id="histMonthFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All months</option>
+        </select>
+        <select id="histCatFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All categories</option>
+        </select>
+        <div id="histTotal" style="margin-left:auto;font-size:12px;font-weight:800;color:var(--text2)"></div>
       </div>
       <div id="presExpList"></div>
     </div>
@@ -998,6 +1002,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
+
+<!-- Safe stubs: replaced by real functions once module loads -->
+<script>
+  const _stub = name => () => console.warn(name + ' not ready yet — module still loading');
+  window._oPresExp  = _stub('_oPresExp');
+  window._cPresExp  = _stub('_cPresExp');
+  window._sPresExp  = _stub('_sPresExp');
+  window._oPresM    = _stub('_oPresM');
+  window._cPresM    = _stub('_cPresM');
+  window._sPres     = _stub('_sPres');
+  window._oA        = _stub('_oA');
+  window._oRI       = _stub('_oRI');
+  window.switchView = _stub('switchView');
+  window.fRes       = _stub('fRes');
+  window.fIss       = _stub('fIss');
+  window.rResidents = _stub('rResidents');
+  window.rPresident = _stub('rPresident');
+</script>
 
 <script type="module">
 import { auth, db } from './js/firebase.js';
@@ -1772,7 +1794,10 @@ function listenVehicles(){
     vehicles.clear();
     snap.forEach(d=>vehicles.set(d.id,{...d.data()}));
     rStats();
-    if(document.getElementById('vehView').style.display!=='none')rVehicles();
+    const vv=document.getElementById('vehView');
+    if(vv && vv.style.display!=='none') rVehicles();
+    const rv=document.getElementById('resView');
+    if(rv && rv.style.display!=='none') try{rResidents();}catch(e){}
   },e=>console.error('veh listener',e));
 }
 function listenSocExp(){
