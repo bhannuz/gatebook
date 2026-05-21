@@ -673,10 +673,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="iView" style="display:none">
     <div class="iss-toolbar">
       <div class="iss-filters" id="iFil">
-        <button class="iff active" data-f="all"         onclick="fIss('all')">All Issues</button>
-        <button class="iff" data-f="open"               onclick="fIss('open')">🔴 Open</button>
-        <button class="iff" data-f="in-progress"        onclick="fIss('in-progress')">🟡 In Progress</button>
-        <button class="iff" data-f="resolved"           onclick="fIss('resolved')">🟢 Resolved</button>
+        <button class="iff active" data-f="all"         onclick="window.fIss('all')">All Issues</button>
+        <button class="iff" data-f="open"               onclick="window.fIss('open')">🔴 Open</button>
+        <button class="iff" data-f="in-progress"        onclick="window.fIss('in-progress')">🟡 In Progress</button>
+        <button class="iff" data-f="resolved"           onclick="window.fIss('resolved')">🟢 Resolved</button>
       </div>
       <button class="btn btn-indigo" onclick="window._oRI()">
         <i class="ti ti-urgent"></i> Raise Issue
@@ -689,13 +689,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="resView" style="display:none">
     <div class="mem-toolbar" style="flex-wrap:wrap;gap:10px">
       <div class="mem-filters" id="rFil">
-        <button class="rff active" data-t="all"    onclick="fRes('all')"><i class="ti ti-users"></i> All</button>
-        <button class="rff" data-t="owner"  onclick="fRes('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="rff" data-t="tenant" onclick="fRes('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="rff" data-t="vacant" onclick="fRes('vacant')"><i class="ti ti-door"></i> Vacant</button>
+        <button class="rff active" data-t="all"    onclick="window.fRes('all')"><i class="ti ti-users"></i> All</button>
+        <button class="rff" data-t="owner"  onclick="window.fRes('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="rff" data-t="tenant" onclick="window.fRes('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="rff" data-t="vacant" onclick="window.fRes('vacant')"><i class="ti ti-door"></i> Vacant</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <select class="ctrl" id="resVF" onchange="rResidents()" style="min-width:150px">
+        <select class="ctrl" id="resVF" onchange="window.rResidents()" style="min-width:150px">
           <option value="all">All Vehicles</option>
           <option value="2w">🏍 Has 2-Wheeler</option>
           <option value="4w">🚗 Has 4-Wheeler</option>
@@ -1205,9 +1205,6 @@ function rStats() {
 }
 
 window.switchView=switchView;
-window.fIss=fIss;
-window.fMem=fMem;
-window.rMembers=rMembers;
 
 /* ════════════════════════════════
    FLAT DETAIL MODAL
@@ -1611,8 +1608,8 @@ window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
 window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
 window._updSEStatus = updSEStatus; window._delSE = delSE;
 window.rPresident = rPresident;
-// issues.js / members.js
-window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
+// issues.js
+window.fIss = fIss;
 
 /* ════════════════════════════════
    IN-APP SETUP WIZARD
