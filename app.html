@@ -469,6 +469,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cat-icon-map-lift{background:var(--purple-bg);color:var(--purple)}
 .cat-icon-map-other{background:var(--surface3);color:var(--text2)}
 
+
+/* ════════════ INLINE SVG CHARTS ════════════ */
+.chart-wrap{
+  background:var(--surface2);border:1.5px solid var(--border2);
+  border-radius:var(--r-lg);padding:16px 14px 10px;margin:14px 0;
+  display:none;
+}
+.chart-wrap.visible{display:block}
+.chart-title{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chart-title i{font-size:13px;color:var(--indigo)}
+.chart-svg{width:100%;overflow:visible;display:block}
+.chart-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--text2)}
+.chart-legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* toggle button */
+.chart-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border2);background:#fff;
+  color:var(--text2);font-family:var(--font);transition:all .18s;
+  box-shadow:var(--shadow-sm);
+}
+.chart-toggle:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.chart-toggle.on{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.chart-toggle i{font-size:13px}
+
 /* ── Responsive ── */
 @media(max-width:700px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
@@ -701,9 +729,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="presView" style="display:none">
     <div id="presBanner"></div>
     <div class="fund-row" id="fundRow"></div>
+    <div class="chart-wrap" id="presChartWrap">
+      <div class="chart-title"><i class="ti ti-chart-bar"></i>Monthly Society Expenses — Last 12 Months</div>
+      <svg class="chart-svg" id="presChartSvg" height="140" viewBox="0 0 500 140" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#6366F1"></div>Total Expenses</div>
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#A7F3D0"></div>Approved</div>
+      </div>
+    </div>
     <div class="exp-list">
       <div class="exp-list-head">
-        <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
+          <button class="chart-toggle" id="presChartToggle" onclick="window._togglePresChart()">
+            <i class="ti ti-chart-bar"></i> Chart
+          </button>
+        </div>
         <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
       </div>
       <div id="presExpList"></div>
@@ -1234,7 +1275,20 @@ function oFl(fid) {
       <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
       <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:13px;color:${sc}">${sl(s)}</div></div>
     </div>
-    <div class="etitle"><i class="ti ti-list"></i>Payment History</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History</div>
+      <button class="chart-toggle" id="flatChartToggle" onclick="window._toggleFlatChart('${fid}')">
+        <i class="ti ti-chart-bar"></i> Show Chart
+      </button>
+    </div>
+    <div class="chart-wrap" id="flatChartWrap">
+      <div class="chart-title"><i class="ti ti-chart-bar"></i>Last 12 Months — Paid vs Due</div>
+      <svg class="chart-svg" id="flatChartSvg" height="140" viewBox="0 0 500 140" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#059669"></div>Paid</div>
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#E5E7EB"></div>Due</div>
+      </div>
+    </div>
     <div class="elist">${rows}</div>
     ${ex.length?`<div class="etotal"><span class="etotal-label">Total Expenses</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
     <div class="mactions">
@@ -1749,6 +1803,174 @@ async function boot(){
     document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
   }
 }
+
+/* ════════════════════════════════
+   INLINE SVG CHART ENGINE
+   No external libraries — pure SVG
+════════════════════════════════ */
+
+/* Build an array of last N months as "YYYY-MM" strings */
+function lastNMonths(n=12) {
+  const months = [];
+  for (let i=n-1; i>=0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth()-i);
+    months.push(d.toISOString().slice(0,7));
+  }
+  return months;
+}
+
+/* Short month label: "2024-05" → "May" */
+function shortMonth(ym) {
+  const d = new Date(ym+'-01');
+  return d.toLocaleDateString('en-IN',{month:'short'});
+}
+
+/* Core SVG grouped bar chart renderer
+   data = [{label, bars:[{val,color,title}]}]
+   maxVal = top of y-axis (auto-computed if 0)
+*/
+function renderBarChart(svgId, data, maxVal=0) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const W = 500, H = 140;
+  const padL=28, padR=8, padT=8, padB=28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const n = data.length;
+  const barsPerGroup = data[0]?.bars?.length || 1;
+  const groupW = chartW / Math.max(n,1);
+  const barW   = Math.max(4, Math.min(16, groupW / (barsPerGroup+1)));
+  const gap    = barW * 0.4;
+
+  const actualMax = maxVal || data.reduce((m,d)=>Math.max(m,...d.bars.map(b=>b.val||0)),1);
+  const yScale = v => chartH - (v/actualMax)*chartH;
+
+  let out = '';
+
+  // Y-axis guide lines (4 lines)
+  for (let i=0; i<=4; i++) {
+    const yv = (actualMax/4)*i;
+    const y  = padT + yScale(yv);
+    const label = yv >= 1000 ? '₹'+(yv/1000).toFixed(0)+'k' : yv > 0 ? '₹'+Math.round(yv) : '0';
+    out += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#E5E7EB" stroke-width="1"/>`;
+    out += `<text x="${padL-4}" y="${y+3}" text-anchor="end" font-size="7" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${label}</text>`;
+  }
+
+  // Bars + labels
+  data.forEach((group, gi) => {
+    const groupX = padL + gi*groupW + (groupW - barsPerGroup*barW - (barsPerGroup-1)*gap)/2;
+    group.bars.forEach((bar, bi) => {
+      const bh = Math.max(2, (bar.val/actualMax)*chartH);
+      const bx = groupX + bi*(barW+gap);
+      const by = padT + chartH - bh;
+      const rx = Math.min(3, barW/2);
+      out += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="${rx}" fill="${bar.color}" opacity="0.9">
+        <title>${group.label}: ${bar.title}</title>
+      </rect>`;
+    });
+    // x label
+    const lx = padL + gi*groupW + groupW/2;
+    out += `<text x="${lx.toFixed(1)}" y="${H-padB+10}" text-anchor="middle" font-size="7.5" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${group.label}</text>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+/* ── Flat chart: paid vs due per month ── */
+let _flatChartFid = null;
+let _flatChartVisible = false;
+
+function buildFlatChart(fid) {
+  _flatChartFid = fid;
+  const months = lastNMonths(12);
+
+  // For each month, look at ALL expenses for this flat (not just current month)
+  // We need all-time expense data, but we only have exps for current AM
+  // Use Firestore to load all-months data on demand, or approximate from flats map
+  // Better: scan the full exps map (which only has current AM) — so show from Firestore
+  // For now use what we have and supplement with flat paid/due for current month
+  const data = months.map(m => {
+    const flatSnap = flats.get(fid);
+    const flatDue  = (flatSnap && flatSnap.month===m) ? (flatSnap.due||0) : 0;
+    const flatPaid = (flatSnap && flatSnap.month===m) ? (flatSnap.paid||0) : 0;
+    // Expenses in memory for this month
+    const monthExps = (exps.get(fid)||[]).filter(e=>e.month===m);
+    const expPaid   = monthExps.reduce((s,e)=>s+e.amt,0);
+    const paid = flatSnap && flatSnap.month===m ? flatPaid : expPaid;
+    const due  = flatSnap && flatSnap.month===m ? flatDue  : 0;
+    return {
+      label: shortMonth(m),
+      bars: [
+        { val: due,  color: '#E5E7EB', title: `Due: ₹${due.toLocaleString('en-IN')}`  },
+        { val: paid, color: '#059669', title: `Paid: ₹${paid.toLocaleString('en-IN')}` },
+      ]
+    };
+  });
+
+  renderBarChart('flatChartSvg', data);
+}
+
+window._toggleFlatChart = function(fid) {
+  _flatChartVisible = !_flatChartVisible;
+  const wrap   = document.getElementById('flatChartWrap');
+  const toggle = document.getElementById('flatChartToggle');
+  if (!wrap || !toggle) return;
+  if (_flatChartVisible) {
+    wrap.classList.add('visible');
+    toggle.classList.add('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Hide Chart';
+    buildFlatChart(fid);
+  } else {
+    wrap.classList.remove('visible');
+    toggle.classList.remove('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Show Chart';
+  }
+};
+
+/* ── President chart: monthly society expenses ── */
+let _presChartVisible = false;
+
+function buildPresChart() {
+  const months = lastNMonths(12);
+  const data = months.map(m => {
+    const mExps     = socExps.filter(e => e.month === m);
+    const total     = mExps.reduce((s,e)=>s+(e.amt||0), 0);
+    const approved  = mExps.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.amt||0), 0);
+    return {
+      label: shortMonth(m),
+      bars: [
+        { val: total,    color: '#6366F1', title: `Total: ₹${total.toLocaleString('en-IN')}` },
+        { val: approved, color: '#A7F3D0', title: `Approved: ₹${approved.toLocaleString('en-IN')}` },
+      ]
+    };
+  });
+  renderBarChart('presChartSvg', data);
+}
+
+window._togglePresChart = function() {
+  _presChartVisible = !_presChartVisible;
+  const wrap   = document.getElementById('presChartWrap');
+  const toggle = document.getElementById('presChartToggle');
+  if (!wrap || !toggle) return;
+  if (_presChartVisible) {
+    wrap.classList.add('visible');
+    toggle.classList.add('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Hide';
+    buildPresChart();
+  } else {
+    wrap.classList.remove('visible');
+    toggle.classList.remove('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Chart';
+  }
+};
+
+/* Re-render charts when data changes if they are visible */
+const _origRAll = typeof rAll === 'function' ? rAll : null;
+
 </script>
 </body>
 </html>
