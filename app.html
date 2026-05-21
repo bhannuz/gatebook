@@ -951,6 +951,11 @@ import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { rBTabs, rBlock }                              from './js/payments.js';
+import { rIssues, fIss }                              from './js/issues.js';
+import { rMembers, fMem }                             from './js/members.js';
+import { rVehicles, oVehM, oVehFor, cVehM, sVeh, delVeh } from './js/vehicles.js';
+import { rPresident, oPresM, cPresM, sPres, oPresExp, cPresExp, sPresExp, updSEStatus, delSE } from './js/president.js';
 /* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
@@ -1023,7 +1028,31 @@ const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
 const fex = id => exps.get(id)||[];
 
 /* ── Shared APP context for tab modules ── */
-function refreshAPP() { /* no-op: all functions use closure vars directly */ }
+function refreshAPP() {
+  window.APP = {
+    // data
+    flats, exps, issues, vehicles, socExps,
+    get president(){ return president; },
+    set president(v){ president = v; },
+    get AM(){ return AM; },
+    get AB(){ return AB; },
+    get FS(){ return FS; },
+    get SQ(){ return SQ; },
+    get RTF(){ return RTF; },
+    get FLF(){ return FLF; },
+    get IF(){ return IF; },
+    set IF(v){ IF = v; },
+    get UID(){ return UID; },
+    db,
+    // setters
+    _setAB(v){ AB = v; },
+    // helpers / functions
+    bks, bfl, fex, st, sl, si, inr, fd, fdt,
+    toast, sync,
+    // Firestore refs (needed by president.js/vehicles.js)
+    vehRef, sexpRef, sexpColl, aptDocRef,
+  };
+}
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -1089,8 +1118,8 @@ function rStats() {
   const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   document.getElementById('phAct').innerHTML=`
     <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
+    <button class="btn btn-white"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
     <button class="btn btn-white"   onclick="window._oRI()"><i class="ti ti-urgent"></i> Raise Issue</button>
-    <button class="btn btn-white"   onclick="switchView('vehicles')"><i class="ti ti-motorbike"></i> Vehicles: ${totTw+totFw}</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
@@ -1427,14 +1456,19 @@ async function uIS(id,ns){
    (scoped under apartments/{uid}/...)
 ════════════════════════════════ */
 function listenFlats(){
-  onSnapshot(flatsColl(),snap=>{
-    snap.docChanges().forEach(ch=>{
-      const d={flatId:ch.doc.id,...ch.doc.data()};
-      ch.type==='removed'?flats.delete(ch.doc.id):flats.set(ch.doc.id,d);
+  let _firstLoad = true;
+  onSnapshot(flatsColl(), snap => {
+    snap.docChanges().forEach(ch => {
+      const d = {flatId:ch.doc.id,...ch.doc.data()};
+      ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
     });
-    rAll();sync('live');
-    document.getElementById('lo').style.display='none';
-    document.getElementById('app').style.display='';
+    if (_firstLoad) {
+      _firstLoad = false;
+      document.getElementById('lo').style.display  = 'none';
+      document.getElementById('app').style.display = '';
+    }
+    try { refreshAPP(); rAll(); } catch(e) { console.error('rAll error:', e); }
+    sync('live');
   },e=>{
     console.error('Flats listener error:',e);
     sync('error');
@@ -1490,10 +1524,17 @@ window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
 window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
-window._oVehM=oVehM; window._oVehFor=oVehFor; window._cVehM=cVehM; window._sVeh=sVeh; window._delVeh=delVeh;
-window._oPresM=oPresM; window._cPresM=cPresM; window._sPres=sPres;
-window._oPresExp=oPresExp; window._cPresExp=cPresExp; window._sPresExp=sPresExp;
-window._updSEStatus=updSEStatus; window._delSE=delSE;
+// vehicles.js
+window._oVehM   = oVehM;   window._oVehFor = oVehFor;
+window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
+window.rVehicles = rVehicles;
+// president.js
+window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
+window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
+window._updSEStatus = updSEStatus; window._delSE = delSE;
+window.rPresident = rPresident;
+// issues.js / members.js
+window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
 
 /* ════════════════════════════════
    IN-APP SETUP WIZARD
@@ -1946,278 +1987,30 @@ function rMembers() {
 
 /* ── switchView (was missing) ── */
 function switchView(v) {
+  AV = v;
+  refreshAPP();
   document.getElementById('pView').style.display    = v==='payments'  ? 'block' : 'none';
   document.getElementById('iView').style.display    = v==='issues'    ? 'block' : 'none';
   document.getElementById('mView').style.display    = v==='members'   ? 'block' : 'none';
   document.getElementById('vehView').style.display  = v==='vehicles'  ? 'block' : 'none';
   document.getElementById('presView').style.display = v==='president' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
-  if(v==='vehicles')  rVehicles();
-  if(v==='president') rPresident();
+  if(v==='members')   try{ rMembers();   } catch(e){ console.error(e); }
+  if(v==='vehicles')  try{ rVehicles();  } catch(e){ console.error(e); }
+  if(v==='president') try{ rPresident(); } catch(e){ console.error(e); }
 }
 
-function rAll(){rStats();rBTabs();rBlock();rIssues();rMembers();}
-
-
-/* ════════════════════════════════
-   VEHICLES
-════════════════════════════════ */
-function rVehicles(){
-  const q=(document.getElementById('vehQ')?.value||'').toLowerCase().trim();
-  const bf=document.getElementById('vehBF')?.value||'all';
-  const tf=document.getElementById('vehTF')?.value||'all';
-  const all=[...flats.values()].filter(f=>f.month===AM);
-
-  // rebuild block filter
-  const bs=bks();
-  const bfSel=document.getElementById('vehBF');
-  if(bfSel && bfSel.options.length<=1){
-    bs.forEach(b=>{const o=document.createElement('option');o.value=b;o.textContent='Block '+b;bfSel.appendChild(o);});
-  }
-
-  const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
-  const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
-  const withVeh=[...flats.values()].filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
-
-  document.getElementById('vehSum').innerHTML=`
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
-  `;
-
-  const rows=all.filter(f=>{
-    if(bf!=='all'&&f.block!==bf)return false;
-    if(q&&!f.flatId.toLowerCase().includes(q)&&!(f.owner||'').toLowerCase().includes(q))return false;
-    const v=vehicles.get(f.flatId)||{};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    if(tf==='2w'&&tw===0)return false;
-    if(tf==='4w'&&fw===0)return false;
-    if(tf==='both'&&(tw===0||fw===0))return false;
-    if(tf==='none'&&(tw+fw)>0)return false;
-    return true;
-  });
-
-  if(!rows.length){
-    document.getElementById('vehBody').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-motorbike" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No records match your filter.</td></tr>`;
-    return;
-  }
-  document.getElementById('vehBody').innerHTML=rows.map(f=>{
-    const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
-    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    return`<tr>
-      <td><strong style="color:var(--indigo)">${f.flatId}</strong></td>
-      <td><div style="font-weight:600">${f.owner||'(No owner)'}</div><div style="font-size:10px;color:var(--muted)">${f.resType==='tenant'?'🔑 Tenant':'🏠 Owner'}</div></td>
-      <td>${twB}</td>
-      <td>${fwB}</td>
-      <td style="font-size:12px;color:var(--text2)">${v.nums||'—'}</td>
-      <td style="font-size:12px;color:var(--text2)">${v.slot||'—'}</td>
-      <td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')"><i class="ti ti-pencil"></i> Edit</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function oVehM(){
-  const first=[...flats.values()].find(f=>f.month===AM);
-  if(first)oVehFor(first.flatId);
-  else toast('No flats found.','error');
-}
-function oVehFor(fid){
-  const f=flats.get(fid); const v=vehicles.get(fid)||{tw:0,fw:0,nums:'',slot:''};
-  document.getElementById('vehFid').value=fid;
-  document.getElementById('vehMSub').textContent=fid+(f&&f.owner?' — '+f.owner:'');
-  document.getElementById('veh2w').value=v.tw||0;
-  document.getElementById('veh4w').value=v.fw||0;
-  document.getElementById('vehNums').value=v.nums||'';
-  document.getElementById('vehSlot').value=v.slot||'';
-  const hasDat=vehicles.has(fid);
-  document.getElementById('vehDelBtn').style.display=hasDat?'':'none';
-  document.getElementById('vehSaveBtn').disabled=false;
-  document.getElementById('vehSaveLbl').textContent='Save Vehicles';
-  document.getElementById('vehM').classList.add('open');
-}
-function cVehM(){document.getElementById('vehM').classList.remove('open');}
-async function sVeh(){
-  const fid=document.getElementById('vehFid').value;
-  const tw=parseInt(document.getElementById('veh2w').value)||0;
-  const fw=parseInt(document.getElementById('veh4w').value)||0;
-  const nums=document.getElementById('vehNums').value.trim();
-  const slot=document.getElementById('vehSlot').value.trim();
-  const btn=document.getElementById('vehSaveBtn');btn.disabled=true;document.getElementById('vehSaveLbl').textContent='Saving…';
-  sync('saving');
-  try{
-    await setDoc(vehRef(fid),{flatId:fid,tw,fw,nums,slot,updatedAt:serverTimestamp()});
-    sync('live');cVehM();toast('Vehicles saved ✓');
-  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
-  finally{btn.disabled=false;document.getElementById('vehSaveLbl').textContent='Save Vehicles';}
-}
-async function delVeh(){
-  const fid=document.getElementById('vehFid').value;
-  if(!confirm('Clear vehicle data for this flat?'))return;
-  sync('saving');
-  try{
-    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await dd(vehRef(fid));
-    sync('live');cVehM();toast('Vehicle data cleared ✓');
-  }catch(e){console.error(e);sync('error');toast('Delete failed.','error');}
-}
-
-/* ════════════════════════════════
-   PRESIDENT & SOCIETY EXPENSES
-════════════════════════════════ */
-function rPresident(){
-  const pres=president;
-  const catIcons={Maintenance:'ti-tool',Water:'ti-droplet',Electricity:'ti-bolt',
-    Security:'ti-shield',Cleaning:'ti-vacuum-cleaner',Lift:'ti-elevator',
-    Gardening:'ti-plant',Painting:'ti-paint',Other:'ti-clipboard'};
-  const catBg={Maintenance:'var(--indigo-bg)',Water:'var(--sky-bg)',Electricity:'var(--amber-bg)',
-    Security:'var(--red-bg)',Cleaning:'var(--green-bg)',Lift:'var(--purple-bg)',
-    Gardening:'var(--green-bg)',Painting:'var(--amber-bg)',Other:'var(--surface3)'};
-  const catClr={Maintenance:'var(--indigo)',Water:'var(--sky)',Electricity:'var(--amber)',
-    Security:'var(--red)',Cleaning:'var(--green)',Lift:'var(--purple)',
-    Gardening:'var(--green)',Painting:'var(--amber)',Other:'var(--text2)'};
-
-  if(!pres||!pres.name){
-    document.getElementById('presBanner').innerHTML=`
-      <div class="pres-empty">
-        <i class="ti ti-crown"></i>
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">No President Elected Yet</div>
-        <div style="font-size:13px;margin-bottom:16px">Elect a flat member as society president to track expenses.</div>
-        <button class="btn btn-indigo" onclick="window._oPresM()"><i class="ti ti-crown"></i> Elect President</button>
-      </div>`;
-  } else {
-    const ini=(pres.name||'P').charAt(0).toUpperCase();
-    const tenure=pres.termStart?`Since ${new Date(pres.termStart).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}${pres.termEnd?' — '+new Date(pres.termEnd).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):''}` :'';
-    document.getElementById('presBanner').innerHTML=`
-      <div class="pres-banner">
-        <div class="pres-info">
-          <div class="pres-avatar">${ini}</div>
-          <div>
-            <div style="font-size:11px;opacity:.7;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px">🏆 Current President</div>
-            <div class="pres-name">${pres.name}</div>
-            <div class="pres-flat">Flat ${pres.flatId}${pres.phone?' · '+pres.phone:''}</div>
-            ${tenure?`<div style="font-size:11px;opacity:.7;margin-top:3px">${tenure}</div>`:''}
-          </div>
-        </div>
-        <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.3)" onclick="window._oPresM()"><i class="ti ti-edit"></i> Change</button>
-      </div>`;
-  }
-
-  const totalSocExp=socExps.reduce((s,e)=>s+e.amt,0);
-  const totalFlats=[...flats.values()].filter(f=>f.month===AM).length;
-  const perFlat=totalFlats>0?Math.round(totalSocExp/totalFlats):0;
-  document.getElementById('fundRow').innerHTML=`
-    <div class="fcard2"><div class="fcard2-label">Total Society Expenses</div><div class="fcard2-val">${inr(totalSocExp)}</div><div class="fcard2-sub">${socExps.length} transactions</div></div>
-    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(socExps.filter(e=>e.month===AM).reduce((s,e)=>s+e.amt,0))}</div><div class="fcard2-sub">${AM}</div></div>
-    <div class="fcard2"><div class="fcard2-label">Per Flat (avg)</div><div class="fcard2-val">${inr(perFlat)}</div><div class="fcard2-sub">across ${totalFlats} flats</div></div>
-    <div class="fcard2"><div class="fcard2-label">Approved</div><div class="fcard2-val">${inr(socExps.filter(e=>e.status==='approved').reduce((s,e)=>s+e.amt,0))}</div><div class="fcard2-sub">${socExps.filter(e=>e.status==='approved').length} approved</div></div>
-  `;
-
-  if(!socExps.length){
-    document.getElementById('presExpList').innerHTML=`<div class="exp-empty"><i class="ti ti-receipt-off"></i>No society expenses recorded yet.</div>`;
-    return;
-  }
-  document.getElementById('presExpList').innerHTML=socExps.map(e=>{
-    const icon=catIcons[e.cat]||'ti-clipboard';
-    const bg=catBg[e.cat]||'var(--surface3)';
-    const clr=catClr[e.cat]||'var(--text2)';
-    const statusOptions=['pending','approved','rejected'].map(s=>`<option value="${s}"${e.status===s?' selected':''}>${{pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[s]}</option>`).join('');
-    return`<div class="exp-row">
-      <div class="exp-row-icon" style="background:${bg};color:${clr}"><i class="ti ${icon}"></i></div>
-      <div>
-        <div class="exp-row-cat">${e.title||e.cat}</div>
-        <div class="exp-row-date">${e.date||''}${e.paidBy?' · Paid by: '+e.paidBy:''}${e.vendor?' · '+e.vendor:''}</div>
-        ${e.note?`<div class="exp-row-note">${e.note}</div>`:''}
-      </div>
-      <div style="text-align:right">
-        <div class="exp-row-amt">${inr(e.amt)}</div>
-        <div style="margin-top:4px">
-          <select style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;border:1.5px solid var(--border2);background:#fff;font-family:var(--font);outline:none;cursor:pointer"
-            onchange="window._updSEStatus('${e.id}',this.value)">${statusOptions}</select>
-        </div>
-      </div>
-      <button class="btn btn-white btn-sm" onclick="window._delSE('${e.id}')" style="padding:5px 8px;min-width:0"><i class="ti ti-trash" style="margin:0;color:var(--red)"></i></button>
-    </div>`;
-  }).join('');
-}
-
-function oPresM(){
-  const pres=president;
-  document.getElementById('presFlat').innerHTML=[...flats.values()]
-    .filter(f=>f.month===AM&&(f.owner||'').trim())
-    .map(f=>`<option value="${f.flatId}"${pres&&pres.flatId===f.flatId?' selected':''}>
-      ${f.flatId} — ${f.owner}</option>`).join('');
-  document.getElementById('presName').value=pres?.name||'';
-  document.getElementById('presStart').value=pres?.termStart||new Date().toISOString().split('T')[0];
-  document.getElementById('presEnd').value=pres?.termEnd||'';
-  document.getElementById('presPhone').value=pres?.phone||'';
-  document.getElementById('presSaveBtn').disabled=false;
-  document.getElementById('presSaveLbl').textContent='Elect President';
-  document.getElementById('presM').classList.add('open');
-}
-function cPresM(){document.getElementById('presM').classList.remove('open');}
-async function sPres(){
-  const flatId=document.getElementById('presFlat').value;
-  const name=document.getElementById('presName').value.trim();
-  const termStart=document.getElementById('presStart').value;
-  const termEnd=document.getElementById('presEnd').value;
-  const phone=document.getElementById('presPhone').value.trim();
-  if(!name){toast('Enter president name.','error');return;}
-  document.getElementById('presSaveBtn').disabled=true;
-  document.getElementById('presSaveLbl').textContent='Saving…';
-  sync('saving');
-  try{
-    await setDoc(doc(db,'apartments',UID),{president:{flatId,name,termStart,termEnd,phone,updatedAt:new Date().toISOString()}},{merge:true});
-    president={flatId,name,termStart,termEnd,phone};
-    sync('live');cPresM();toast('President elected ✓');rPresident();
-  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
-  finally{document.getElementById('presSaveBtn').disabled=false;document.getElementById('presSaveLbl').textContent='Elect President';}
-}
-
-function oPresExp(){
-  ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('peDate').value=new Date().toISOString().split('T')[0];
-  document.getElementById('peCat').value='Maintenance';
-  document.getElementById('peBtn').disabled=false;
-  document.getElementById('peLbl').textContent='Save Expense';
-  document.getElementById('presExpM').classList.add('open');
-}
-function cPresExp(){document.getElementById('presExpM').classList.remove('open');}
-async function sPresExp(){
-  const title=document.getElementById('peTitle').value.trim();
-  const cat=document.getElementById('peCat').value;
-  const amt=parseInt(document.getElementById('peAmt').value)||0;
-  const date=document.getElementById('peDate').value;
-  const paidBy=document.getElementById('pePaidBy').value.trim()||president?.name||'President';
-  const vendor=document.getElementById('peVendor').value.trim();
-  const note=document.getElementById('peNote').value.trim();
-  if(!title){toast('Enter expense title.','error');return;}
-  if(!amt){toast('Enter amount.','error');return;}
-  document.getElementById('peBtn').disabled=true;document.getElementById('peLbl').textContent='Saving…';
-  sync('saving');
-  try{
-    const d=new Date(date);
-    const mth=d.toISOString().slice(0,7);
-    await addDoc(sexpColl(),{title,cat,amt,date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),month:mth,paidBy,vendor,note,status:'pending',createdAt:serverTimestamp()});
-    sync('live');cPresExp();toast('Society expense recorded ✓');
-  }catch(e){console.error(e);sync('error');toast('Save failed.','error');}
-  finally{document.getElementById('peBtn').disabled=false;document.getElementById('peLbl').textContent='Save Expense';}
-}
-async function updSEStatus(id,status){
-  sync('saving');
-  try{await updateDoc(sexpRef(id),{status});sync('live');toast('Status updated ✓');}
-  catch(e){console.error(e);sync('error');toast('Update failed.','error');}
-}
-async function delSE(id){
-  if(!confirm('Delete this expense?'))return;
-  sync('saving');
-  try{
-    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await dd(sexpRef(id));
-    sync('live');toast('Expense deleted ✓');
-  }catch(e){console.error(e);sync('error');toast('Delete failed.','error');}
+function rAll(){
+  refreshAPP();
+  rStats();
+  try{ rBTabs(); } catch(e){ console.error('rBTabs',e); }
+  try{ rBlock(); } catch(e){ console.error('rBlock',e); }
+  try{ rIssues(); } catch(e){ console.error('rIssues',e); }
+  try{ rMembers(); } catch(e){ console.error('rMembers',e); }
+  const v=document.getElementById('vehView');
+  if(v && v.style.display!=='none') try{ rVehicles(); } catch(e){ console.error('rVehicles',e); }
+  const p=document.getElementById('presView');
+  if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
 }
 
 /* ════════════════════════════════
