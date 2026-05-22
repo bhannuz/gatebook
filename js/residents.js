@@ -37,7 +37,7 @@ export function fRes(t) {
 
 /* ── Main render ── */
 export function rResidents() {
-  const { flats, vehicles, fex, inr, AM } = window.APP;
+  const { flats, vehicles, fex, inr, st, AM } = window.APP;
   const q = (document.getElementById('resQ')?.value || '').trim().toLowerCase();
   const vf = document.getElementById('resVF')?.value || 'all'; // vehicle filter
 
@@ -49,22 +49,57 @@ export function rResidents() {
   const tenants = allF.filter(f => f.resType==='tenant').length;
   const vacant  = allF.filter(f => !(f.owner||'').trim()).length;
 
+  // Payment status counts
+  // st and inr already destructured above
+  const paidFlats    = allF.filter(f => st(f) === 'paid').length;
+  const partialFlats = allF.filter(f => st(f) === 'partial').length;
+  const pendingFlats = allF.filter(f => st(f) === 'pending').length;
+  const totalCol     = allF.reduce((s,f) => s+(f.paid||0), 0);
+  const totalDue     = allF.reduce((s,f) => s+(f.due||0), 0);
+
   const sumEl = document.getElementById('resSummary');
   if (sumEl) {
     sumEl.innerHTML = `
-      <div class="res-sum-chip"><i class="ti ti-users"></i><span>${allF.length} Flats</span></div>
-      <div class="res-sum-chip owner"><i class="ti ti-home"></i><span>${owners} Owners</span></div>
-      <div class="res-sum-chip tenant"><i class="ti ti-key"></i><span>${tenants} Tenants</span></div>
-      <div class="res-sum-chip vacant"><i class="ti ti-door"></i><span>${vacant} Vacant</span></div>
-      <div class="res-sum-chip veh"><i class="ti ti-motorbike"></i><span>${totTw} 2W</span></div>
-      <div class="res-sum-chip veh"><i class="ti ti-car"></i><span>${totFw} 4W</span></div>`;
+      <div class="res-sum-chip" onclick="window._resPayFilter('all')" title="Show all residents" style="cursor:pointer">
+        <i class="ti ti-users"></i><span>${allF.length} Flats</span>
+      </div>
+      <div class="res-sum-chip owner" onclick="window.fRes('owner')" title="Show owners" style="cursor:pointer">
+        <i class="ti ti-home"></i><span>${owners} Owners</span>
+      </div>
+      <div class="res-sum-chip tenant" onclick="window.fRes('tenant')" title="Show tenants" style="cursor:pointer">
+        <i class="ti ti-key"></i><span>${tenants} Tenants</span>
+      </div>
+      <div class="res-sum-chip vacant" onclick="window.fRes('vacant')" title="Show vacant" style="cursor:pointer">
+        <i class="ti ti-door"></i><span>${vacant} Vacant</span>
+      </div>
+      <div class="res-sum-chip paid" onclick="window._resPayFilter('paid')" title="Show paid flats" style="cursor:pointer">
+        <i class="ti ti-check"></i><span>${paidFlats} Paid</span>
+      </div>
+      <div class="res-sum-chip partial" onclick="window._resPayFilter('partial')" title="Show partial payments" style="cursor:pointer">
+        <i class="ti ti-clock"></i><span>${partialFlats} Partial</span>
+      </div>
+      <div class="res-sum-chip pending" onclick="window._resPayFilter('pending')" title="Show pending payments" style="cursor:pointer">
+        <i class="ti ti-alert-circle"></i><span>${pendingFlats} Pending</span>
+      </div>
+      <div class="res-sum-chip veh" style="margin-left:auto">
+        <i class="ti ti-motorbike"></i><span>${totTw} 2W</span>
+      </div>
+      <div class="res-sum-chip veh">
+        <i class="ti ti-car"></i><span>${totFw} 4W</span>
+      </div>
+      <div class="res-sum-chip" style="background:var(--green-bg);color:var(--green);border-color:rgba(5,150,105,.2);margin-left:4px">
+        <i class="ti ti-coin"></i><span>${inr(totalCol)} / ${inr(totalDue)}</span>
+      </div>`;
   }
+
+  const payF = window._resPayFilter_val || 'all'; // payment status filter
 
   let rows = allF.filter(f => {
     const isVacant = !(f.owner||'').trim();
     if (RF === 'owner'  && (isVacant || f.resType === 'tenant')) return false;
     if (RF === 'tenant' && f.resType !== 'tenant')               return false;
     if (RF === 'vacant' && !isVacant)                            return false;
+    if (payF !== 'all' && st(f) !== payF) return false;
     if (q && !f.flatId?.toLowerCase().includes(q)
           && !(f.owner||'').toLowerCase().includes(q)
           && !(f.ownerName||'').toLowerCase().includes(q)) return false;
