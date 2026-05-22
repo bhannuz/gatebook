@@ -1861,7 +1861,7 @@ function rBlock() {
 /* ══ issues.js ══ */
 /* ════════════════════════════════
    ISSUES TAB — js/issues.js
-   Depends on: /*APP*/ (shared state injected from app.html)
+   Depends on: window.APP (shared state injected from app.html)
 ════════════════════════════════ */
 
 function rIssues() {
@@ -1914,7 +1914,7 @@ function fIss(f) {
 /* ══ members.js ══ */
 /* ════════════════════════════════
    MEMBERS TAB — js/members.js
-   Depends on: /*APP*/ (shared state injected from app.html)
+   Depends on: window.APP (shared state injected from app.html)
 ════════════════════════════════ */
 
 let MF = 'all';
@@ -2038,7 +2038,7 @@ function rMembers() {
 /* ══ vehicles.js ══ */
 /* ════════════════════════════════
    VEHICLES TAB — js/vehicles.js
-   Reads from: /*APP*/ (shared closure vars)
+   Reads from: closure vars (shared state)
 ════════════════════════════════ */
 
 function rVehicles() {
@@ -2162,7 +2162,7 @@ async function delVeh() {
 /* ══ president.js ══ */
 /* ════════════════════════════════
    PRESIDENT TAB — js/president.js
-   Reads from: /*APP*/ (shared closure vars)
+   Reads from: closure vars (shared state)
 ════════════════════════════════ */
 
 const CAT_ICONS = {
