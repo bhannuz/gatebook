@@ -1064,6 +1064,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   window.fRes       = _stub('fRes');
   window.fIss       = _stub('fIss');
   window.rResidents = _stub('rResidents');
+  window.rVehicles  = _stub('rVehicles');
   window.rPresident = _stub('rPresident');
 </script>
 
@@ -1077,6 +1078,7 @@ import {
 import { rBTabs, rBlock }                              from './js/payments.js';
 import { rIssues, fIss }                              from './js/issues.js';
 import { rResidents, fRes }                           from './js/residents.js';
+import { rVehicles, oVehM, oVehFor, cVehM, sVeh, delVeh } from './js/vehicles.js';
 import { fillCatSelect, listenCategories, openCatManager, closeCatManager, saveCatManager, addCatRow, delCatRow } from './js/categories.js';
 import { rPresident, oPresM, cPresM, sPres, oPresExp, cPresExp, sPresExp, updSEStatus, delSE } from './js/president.js';
 /* payments, issues, members inlined below — see functions below */
@@ -1666,10 +1668,11 @@ window._resPayFilter = function(val) {
   if (window.switchView) window.switchView('residents');
   if (window.rResidents) window.rResidents();
 };
-// vehicles modal (still used from flat modal)
+// vehicles.js
 window._oVehM   = oVehM;   window._oVehFor = oVehFor;
-window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
-window._saveVeh = sVeh;
+window._cVehM   = cVehM;   window._sVeh    = sVeh;
+window._delVeh  = delVeh;  window._saveVeh = sVeh;
+window.rVehicles = rVehicles;
 // categories.js
 window._openCatManager  = openCatManager;
 window._closeCatManager = closeCatManager;
