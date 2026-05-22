@@ -273,7 +273,24 @@ export function oPresM(){
 export function cPresM(){ document.getElementById('presM').classList.remove('open'); }
 export async function sPres(){
   const { sync, toast, db, UID } = window.APP;
+  if(!db||!UID){ toast('Not authenticated.','error'); return; }
   const flatId=document.getElementById('presFlat').value;
+  const name=document.getElementById('presName').value.trim();
+  const termStart=document.getElementById('presStart').value;
+  const termEnd=document.getElementById('presEnd').value;
+  const phone=document.getElementById('presPhone').value.trim();
+  if(!name){ toast('Enter president name.','error'); return; }
+  document.getElementById('presSaveBtn').disabled=true;
+  document.getElementById('presSaveLbl').textContent='Saving…';
+  sync('saving');
+  try{
+    const {setDoc,doc}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await setDoc(doc(db,'apartments',UID),{president:{flatId,name,termStart,termEnd,phone,updatedAt:new Date().toISOString()}},{merge:true});
+    window.APP.president={flatId,name,termStart,termEnd,phone};
+    sync('live'); cPresM(); toast('President elected ✓'); rPresident();
+  }catch(e){ console.error(e); sync('error'); toast('Save failed: '+e.message,'error'); }
+  finally{ document.getElementById('presSaveBtn').disabled=false; document.getElementById('presSaveLbl').textContent='Elect President'; }
+}
   const name=document.getElementById('presName').value.trim();
   const termStart=document.getElementById('presStart').value;
   const termEnd=document.getElementById('presEnd').value;
@@ -327,8 +344,10 @@ export function oPresExp(){
 }
 export function cPresExp(){ document.getElementById('presExpM').classList.remove('open'); }
 export async function sPresExp(){
-  const { sexpColl, sync, toast, president } = window.APP;
-  if(typeof sexpColl!=='function'){ toast('Setup error: sexpColl missing','error'); console.error('sexpColl not in window.APP'); return; }
+  const APP = window.APP;
+  const { sync, toast, president, db, UID } = APP;
+  if(!db || !UID){ toast('Not authenticated yet.','error'); return; }
+
   const title=(document.getElementById('peTitle')?.value||'').trim();
   const catEl=document.getElementById('peCat');
   const cat=catEl?.value||'Other';
@@ -346,32 +365,44 @@ export async function sPresExp(){
   if(lbl) lbl.textContent='Saving…';
   sync('saving');
   try{
-    const {addDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    const {collection,addDoc,serverTimestamp}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    const coll=collection(db,'apartments',UID,'soc_expenses');
     const d=new Date(date), mth=d.toISOString().slice(0,7);
-    await addDoc(sexpColl(),{title,cat,amt,date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),month:mth,paidBy,vendor,note,status:'pending',createdAt:serverTimestamp()});
+    await addDoc(coll,{title,cat,amt,
+      date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}),
+      month:mth,paidBy,vendor,note,status:'pending',createdAt:serverTimestamp()});
     sync('live'); cPresExp(); toast('Expense saved ✓');
-  }catch(e){ console.error('sPresExp:',e); sync('error'); toast('Save failed: '+(e.code||e.message),'error'); }
-  finally{ if(btn) btn.disabled=false; if(lbl) lbl.textContent='Save Expense'; }
+  }catch(e){
+    console.error('sPresExp:',e); sync('error');
+    toast('Save failed: '+(e.code||e.message||String(e)),'error');
+  }finally{
+    if(btn) btn.disabled=false;
+    if(lbl) lbl.textContent='Save Expense';
+  }
 }
 
 /* ══════════════════════════════
    STATUS + DELETE
 ══════════════════════════════ */
 export async function updSEStatus(id,status){
-  const {sexpRef,sync,toast}=window.APP;
+  const {sync,toast,db,UID}=window.APP;
+  if(!db||!UID) return;
   sync('saving');
   try{
-    const {updateDoc}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await updateDoc(sexpRef(id),{status}); sync('live'); toast('Status updated ✓');
+    const {doc,updateDoc}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await updateDoc(doc(db,'apartments',UID,'soc_expenses',id),{status});
+    sync('live'); toast('Status updated ✓');
   }catch(e){ console.error(e); sync('error'); toast('Update failed.','error'); }
 }
 export async function delSE(id){
-  const {sexpRef,sync,toast}=window.APP;
+  const {sync,toast,db,UID}=window.APP;
+  if(!db||!UID) return;
   if(!confirm('Delete this expense?')) return;
   sync('saving');
   try{
-    const {deleteDoc}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await deleteDoc(sexpRef(id)); sync('live'); toast('Expense deleted ✓');
+    const {doc,deleteDoc}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await deleteDoc(doc(db,'apartments',UID,'soc_expenses',id));
+    sync('live'); toast('Expense deleted ✓');
   }catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
 }
 export { oPresExp as oAddSocExp };
