@@ -470,20 +470,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cat-icon-map-other{background:var(--surface3);color:var(--text2)}
 
 
-/* ── CUSTOM CATEGORIES ── */
-.cat-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;min-height:32px}
-.cat-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;
-  font-size:11px;font-weight:700;background:var(--indigo-bg);color:var(--indigo);
-  border:1px solid var(--indigo-glow)}
-.cat-chip .cat-del{background:none;border:none;cursor:pointer;color:var(--muted);
-  font-size:12px;padding:0;display:flex;align-items:center;transition:color .15s}
-.cat-chip .cat-del:hover{color:var(--red)}
-.cat-add-row{display:flex;gap:8px}
-.cat-add-row input{flex:1;height:36px;padding:0 12px;background:var(--surface2);
-  border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);
-  font-size:13px;font-weight:500;border-radius:var(--r-md);outline:none;transition:border-color .18s}
-.cat-add-row input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.10)}
-.cat-add-row input::placeholder{color:var(--muted);font-weight:400}
+/* ════════════ INLINE SVG CHARTS ════════════ */
+.chart-wrap{
+  background:var(--surface2);border:1.5px solid var(--border2);
+  border-radius:var(--r-lg);padding:16px 14px 10px;margin:14px 0;
+  display:none;
+}
+.chart-wrap.visible{display:block}
+.chart-title{font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;
+  letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+.chart-title i{font-size:13px;color:var(--indigo)}
+.chart-svg{width:100%;overflow:visible;display:block}
+.chart-legend{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap}
+.chart-legend-item{display:flex;align-items:center;gap:5px;font-size:10px;font-weight:700;color:var(--text2)}
+.chart-legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+
+/* toggle button */
+.chart-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:5px 14px;border-radius:99px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1.5px solid var(--border2);background:#fff;
+  color:var(--text2);font-family:var(--font);transition:all .18s;
+  box-shadow:var(--shadow-sm);
+}
+.chart-toggle:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.chart-toggle.on{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.chart-toggle i{font-size:13px}
 
 /* ── Responsive ── */
 @media(max-width:700px){
@@ -494,6 +506,67 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
 }
+
+/* ── Residents tab ── */
+.rff{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
+  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
+.rff i{font-size:12px}
+.rff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.rff:hover:not(.active){border-color:var(--border3);color:var(--text)}
+.res-sum-chip{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:700;
+  padding:5px 11px;border-radius:99px;background:var(--surface3);color:var(--text2);
+  border:1.5px solid var(--border2);transition:all .18s;white-space:nowrap}
+.res-sum-chip:hover{transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.res-sum-chip.owner  {background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
+.res-sum-chip.tenant {background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.3)}
+.res-sum-chip.vacant {background:var(--surface3);color:var(--muted)}
+.res-sum-chip.veh    {background:var(--sky-bg);color:var(--sky);border-color:rgba(2,132,199,.2)}
+.res-sum-chip.paid   {background:var(--green-bg);color:var(--green);border-color:rgba(5,150,105,.25)}
+.res-sum-chip.partial{background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.3)}
+.res-sum-chip.pending{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.25)}
+
+/* ── Payment list rows ── */
+.pay-list{display:flex;flex-direction:column;gap:0;border:1.5px solid var(--border);border-radius:var(--r-xl);overflow:hidden;background:#fff;box-shadow:var(--shadow-sm)}
+.pay-row{display:grid;grid-template-columns:160px 1fr 140px;gap:14px;align-items:center;
+  padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s;position:relative}
+.pay-row:last-child{border-bottom:none}
+.pay-row::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px}
+.pay-row.paid::before   {background:var(--green)}
+.pay-row.partial::before{background:var(--amber)}
+.pay-row.pending::before{background:var(--red)}
+.pay-row:hover{background:var(--surface2)}
+.pay-flat-id{font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+.pay-owner{font-size:12px;color:var(--text2);font-weight:600;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:140px}
+.prow-type{font-size:9px;font-weight:800;padding:2px 6px;border-radius:99px;margin-top:3px;display:inline-block}
+.prow-type.owner  {background:var(--indigo-bg);color:var(--indigo)}
+.prow-type.tenant {background:var(--amber-bg);color:var(--amber)}
+.prow-type.vacant {background:var(--surface3);color:var(--muted)}
+.pay-prog-wrap{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.pay-prog-bar{flex:1;height:6px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.pay-prog-fill{height:100%;border-radius:99px;transition:width .5s ease}
+.pay-prog-fill.paid   {background:linear-gradient(90deg,#059669,#10B981)}
+.pay-prog-fill.partial{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.pay-prog-fill.pending{background:linear-gradient(90deg,#DC2626,#EF4444)}
+.pay-pct{font-size:11px;font-weight:700;color:var(--text2);min-width:32px;text-align:right}
+.pay-exp-list{display:flex;flex-direction:column;gap:3px;padding-top:2px}
+.pay-exp-row{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);padding:2px 0}
+.pay-exp-dot{width:5px;height:5px;border-radius:50%;background:var(--border3);flex-shrink:0}
+.pay-exp-cat{font-weight:700;color:var(--text);min-width:70px}
+.pay-exp-date{color:var(--muted);min-width:60px}
+.pay-exp-note{flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay-exp-amt{font-weight:800;color:var(--indigo);margin-left:auto;white-space:nowrap}
+.pay-amount{font-size:16px;font-weight:800;color:var(--text);letter-spacing:-.4px;text-align:right}
+.pay-due{font-size:10px;color:var(--text2);text-align:right;margin-top:1px}
+.pay-status-chip{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;margin-top:4px}
+.pay-bal{font-size:10px;font-weight:700;color:var(--red);text-align:right;margin-top:3px}
+.pay-floor-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;
+  color:var(--indigo);padding:8px 16px;background:var(--surface2);
+  border-bottom:1px solid var(--border2);text-transform:uppercase;letter-spacing:.5px}
+.pay-floor-badge{font-size:10px;font-weight:700;color:var(--text2);margin-left:auto}
+.pay-empty{padding:40px;text-align:center;color:var(--muted);font-size:13px}
+.pay-empty i{font-size:32px;display:block;margin-bottom:8px;opacity:.4}
+/* ── Category manager ── */
+.cat-row{display:flex;align-items:center;gap:8px}
 </style>
 </head>
 <body>
@@ -599,15 +672,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- VIEW TABS -->
   <div class="view-tabs" id="viewTabs">
-    <button class="vtab active" data-v="payments" onclick="switchView('payments')">
+    <button class="vtab active" data-v="payments" onclick="window.switchView('payments')">
       <i class="ti ti-credit-card"></i> Payments
     </button>
-    <button class="vtab" data-v="issues" onclick="switchView('issues')">
+    <button class="vtab" data-v="issues" onclick="window.switchView('issues')">
       <i class="ti ti-alert-circle"></i> Issues
       <span class="vtab-badge" id="openCnt">0</span>
     </button>
-    <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
-    <button class="vtab" data-v="president" onclick="switchView('president')">
+    <button class="vtab" data-v="residents" onclick="window.switchView('residents')">
+      <i class="ti ti-users"></i> Residents
+    </button>
+    <button class="vtab" data-v="president" onclick="window.switchView('president')">
       <i class="ti ti-crown"></i> President
     </button>
   </div>
@@ -644,10 +719,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="iView" style="display:none">
     <div class="iss-toolbar">
       <div class="iss-filters" id="iFil">
-        <button class="iff active" data-f="all"         onclick="fIss('all')">All Issues</button>
-        <button class="iff" data-f="open"               onclick="fIss('open')">🔴 Open</button>
-        <button class="iff" data-f="in-progress"        onclick="fIss('in-progress')">🟡 In Progress</button>
-        <button class="iff" data-f="resolved"           onclick="fIss('resolved')">🟢 Resolved</button>
+        <button class="iff active" data-f="all"         onclick="window.fIss('all')">All Issues</button>
+        <button class="iff" data-f="open"               onclick="window.fIss('open')">🔴 Open</button>
+        <button class="iff" data-f="in-progress"        onclick="window.fIss('in-progress')">🟡 In Progress</button>
+        <button class="iff" data-f="resolved"           onclick="window.fIss('resolved')">🟢 Resolved</button>
       </div>
       <button class="btn btn-indigo" onclick="window._oRI()">
         <i class="ti ti-urgent"></i> Raise Issue
@@ -656,49 +731,58 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="iss-list" id="iList"></div>
   </div><!-- /#iView -->
 
-  <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
+  <!-- RESIDENTS VIEW — Members + Vehicles merged -->
   <div id="resView" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
-      <div class="mem-filters" id="mFil">
-        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
-        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+    <div class="mem-toolbar" style="flex-wrap:wrap;gap:10px">
+      <div class="mem-filters" id="rFil">
+        <button class="rff active" data-t="all"    onclick="window.fRes('all')"><i class="ti ti-users"></i> All</button>
+        <button class="rff" data-t="owner"  onclick="window.fRes('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="rff" data-t="tenant" onclick="window.fRes('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="rff" data-t="vacant" onclick="window.fRes('vacant')"><i class="ti ti-door"></i> Vacant</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div class="sw" style="min-width:180px"><i class="ti ti-search"></i>
-          <input class="ctrl" type="text" id="memQ" placeholder="Search name or flat…" oninput="rResidents()"/>
-        </div>
-        <select class="ctrl" id="resTF" onchange="rResidents()">
+        <select class="ctrl" id="resVF" onchange="window.rResidents()" style="min-width:150px">
           <option value="all">All Vehicles</option>
           <option value="2w">🏍 Has 2-Wheeler</option>
           <option value="4w">🚗 Has 4-Wheeler</option>
+          <option value="both">Has Both</option>
           <option value="none">No Vehicles</option>
         </select>
+        <div class="sw" style="min-width:200px">
+          <i class="ti ti-search"></i>
+          <input class="ctrl" type="text" id="resQ" placeholder="Search name, flat…" oninput="window.rResidents&&window.rResidents()"/>
+        </div>
       </div>
     </div>
-    <div class="veh-sum" id="vehSum" style="margin-bottom:1rem"></div>
-    <div class="veh-table-wrap">
-      <table class="veh-table">
-        <thead><tr>
-          <th>Flat</th><th>Type</th><th>Resident</th><th>Owner (if tenant)</th>
-          <th>Move-In</th><th>Tenure</th>
-          <th>🏍 2-W</th><th>🚗 4-W</th>
-          <th>Vehicle Nos.</th><th>Slot</th><th>Balance</th><th></th>
-        </tr></thead>
-        <tbody id="resBody"></tbody>
-      </table>
-    </div>
+    <div id="resSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px"></div>
+    <div id="resList"></div>
   </div><!-- /#resView -->
 
   <!-- PRESIDENT VIEW -->
   <div id="presView" style="display:none">
     <div id="presBanner"></div>
     <div class="fund-row" id="fundRow"></div>
-    <div class="exp-list">
+    <div id="catSummary"></div>
+    <div class="exp-list" style="margin-top:16px">
       <div class="exp-list-head">
-        <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
-        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+        <div class="exp-list-title"><i class="ti ti-history"></i> All Payments &amp; Expenses</div>
+        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()">
+          <i class="ti ti-plus"></i> Add Expense
+        </button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center">
+        <select id="histTypeFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All types</option>
+          <option value="payment">🟢 Flat Payments</option>
+          <option value="expense">🔴 Society Expenses</option>
+        </select>
+        <select id="histMonthFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All months</option>
+        </select>
+        <select id="histCatFilter" class="ctrl" style="font-size:12px;padding:5px 10px" onchange="window.rPresident()">
+          <option value="all">All categories</option>
+        </select>
+        <div id="histTotal" style="margin-left:auto;font-size:12px;font-weight:800;color:var(--text2)"></div>
       </div>
       <div id="presExpList"></div>
     </div>
@@ -722,6 +806,35 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 
 <!-- ADD EXPENSE MODAL -->
+
+<!-- CATEGORY MANAGER MODAL -->
+<div class="mbg" id="catMgrModal">
+  <div class="modal" style="max-width:460px">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--indigo-bg);color:var(--indigo)"><i class="ti ti-tag"></i></div>
+        <div><div class="mtitle">Manage Categories</div><div class="msub">Add, edit or remove expense categories</div></div>
+      </div>
+      <button class="mclose" onclick="window._closeCatManager()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="catMgrList" style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px;max-height:320px;overflow-y:auto"></div>
+    <button onclick="window._addCatRow()"
+      style="width:100%;padding:8px;border:2px dashed var(--border2);border-radius:var(--r-md);
+        background:transparent;color:var(--text2);font-family:var(--font);font-size:13px;
+        font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+        transition:all .15s;margin-bottom:16px"
+      onmouseover="this.style.borderColor='var(--indigo)';this.style.color='var(--indigo)'"
+      onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+      <i class="ti ti-plus"></i> Add Category
+    </button>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._closeCatManager()">Cancel</button>
+      <button class="btn btn-indigo" id="catSaveBtn" onclick="window._saveCatManager()">
+        <i class="ti ti-device-floppy"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
 <div class="mbg" id="addM">
   <div class="modal">
     <div class="mhead">
@@ -737,7 +850,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div class="fg2">
       <div class="fg"><label>Category</label>
-        <select id="fC" onfocus="renderCatOpts('fC','flat')"><option>Maintenance</option></select>
+        <select id="fC">
+          <option>Maintenance</option>
+        </select>
       </div>
       <div class="fg"><label>Amount (₹)</label><input type="number" id="fA" placeholder="0" min="1"/></div>
     </div>
@@ -909,7 +1024,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="fg"><label>Expense Title *</label><input type="text" id="peTitle" placeholder="e.g. Generator repair"/></div>
     <div class="fg2">
       <div class="fg"><label>Category *</label>
-        <select id="peCat" onfocus="renderCatOpts('peCat','soc')"><option>Maintenance</option></select>
+        <select id="peCat">
+          <option>Maintenance</option><option>Water</option><option>Electricity</option>
+          <option>Security</option><option>Cleaning</option><option>Lift</option>
+          <option>Gardening</option><option>Painting</option><option>Other</option>
+        </select>
       </div>
       <div class="fg"><label>Amount (₹) *</label><input type="number" id="peAmt" placeholder="0" min="1"/></div>
     </div>
@@ -928,51 +1047,38 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 </div>
 
-<!-- CUSTOM CATEGORIES MODAL -->
-<div class="mbg" id="catM">
-  <div class="modal">
-    <div class="mhead">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="micon pay"><i class="ti ti-tag"></i></div>
-        <div><div class="mtitle">Expense Categories</div>
-          <div class="msub">Add custom categories for payments &amp; society expenses</div></div>
-      </div>
-      <button class="mclose" onclick="window._cCatM()"><i class="ti ti-x"></i></button>
-    </div>
-    <div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <i class="ti ti-building" style="font-size:13px;color:var(--indigo)"></i>Flat Payment Categories
-    </div>
-    <div class="cat-list" id="flatCatList"></div>
-    <div class="cat-add-row">
-      <input type="text" id="flatCatInput" placeholder="New category…" maxlength="30"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();window._addCat('flat')}"/>
-      <button class="btn btn-indigo btn-sm" onclick="window._addCat('flat')"><i class="ti ti-plus"></i> Add</button>
-    </div>
-    <div style="height:1px;background:var(--border2);margin:18px 0"></div>
-    <div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
-      <i class="ti ti-crown" style="font-size:13px;color:var(--indigo)"></i>Society Expense Categories
-    </div>
-    <div class="cat-list" id="socCatList"></div>
-    <div class="cat-add-row">
-      <input type="text" id="socCatInput" placeholder="New category…" maxlength="30"
-        onkeydown="if(event.key==='Enter'){event.preventDefault();window._addCat('soc')}"/>
-      <button class="btn btn-indigo btn-sm" onclick="window._addCat('soc')"><i class="ti ti-plus"></i> Add</button>
-    </div>
-    <div class="mactions">
-      <button class="btn btn-white" onclick="window._cCatM()">Done</button>
-    </div>
-  </div>
-</div>
-
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
+
+<!-- Safe stubs: replaced by real functions once module loads -->
+<script>
+  const _stub = name => () => console.warn(name + ' not ready yet — module still loading');
+  window._oPresExp  = _stub('_oPresExp');
+  window._cPresExp  = _stub('_cPresExp');
+  window._sPresExp  = _stub('_sPresExp');
+  window._oPresM    = _stub('_oPresM');
+  window._cPresM    = _stub('_cPresM');
+  window._sPres     = _stub('_sPres');
+  window._oA        = _stub('_oA');
+  window._oRI       = _stub('_oRI');
+  window.switchView = _stub('switchView');
+  window.fRes       = _stub('fRes');
+  window.fIss       = _stub('fIss');
+  window.rResidents = _stub('rResidents');
+  window.rPresident = _stub('rPresident');
+</script>
 
 <script type="module">
 import { auth, db } from './js/firebase.js';
 import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import {
-  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
+  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { rBTabs, rBlock }                              from './js/payments.js';
+import { rIssues, fIss }                              from './js/issues.js';
+import { rResidents, fRes }                           from './js/residents.js';
+import { fillCatSelect, listenCategories, openCatManager, closeCatManager, saveCatManager, addCatRow, delCatRow } from './js/categories.js';
+import { rPresident, oPresM, cPresM, sPres, oPresExp, cPresExp, sPresExp, updSEStatus, delSE } from './js/president.js';
 /* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
@@ -1045,7 +1151,33 @@ const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
 const fex = id => exps.get(id)||[];
 
 /* ── Shared APP context for tab modules ── */
-function refreshAPP() { /* no-op — all functions use closure vars directly */ }
+function refreshAPP() {
+  window.APP = {
+    // data
+    flats, exps, issues, vehicles, socExps,
+    get president(){ return president; },
+    set president(v){ president = v; },
+    get AM(){ return AM; },
+    get AB(){ return AB; },
+    get FS(){ return FS; },
+    get SQ(){ return SQ; },
+    get RTF(){ return RTF; },
+    get FLF(){ return FLF; },
+    get IF(){ return IF; },
+    set IF(v){ IF = v; },
+    get UID(){ return UID; },
+    db,
+    // setters
+    _setAB(v){ AB = v; },
+    // helpers / functions
+    bks, bfl, fex, st, sl, si, inr, fd, fdt,
+    toast, sync,
+    // Firestore refs (needed by president.js/vehicles.js)
+    vehRef, sexpRef, sexpColl, aptDocRef,
+    get categories(){ return window._cats||[]; },
+    set categories(v){ window._cats=v; },
+  };
+}
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -1113,7 +1245,6 @@ function rStats() {
     <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
     <button class="btn btn-white"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
     <button class="btn btn-white"   onclick="window._oRI()"><i class="ti ti-urgent"></i> Raise Issue</button>
-    <button class="btn btn-white"   onclick="window._oCatM()"><i class="ti ti-tag"></i> Categories</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
@@ -1141,17 +1272,7 @@ function rStats() {
   `;
 }
 
-
-window.fMem = fMem;
-window.rResidents = rResidents;
-window._oCatM = oCatM;
-window._cCatM = cCatM;
-window._addCat = addCat;
-window._delCat = delCat;
 window.switchView=switchView;
-window.fIss=fIss;
-window.fMem=fMem;
-window.rMembers=rMembers;
 
 /* ════════════════════════════════
    FLAT DETAIL MODAL
@@ -1235,7 +1356,20 @@ function oFl(fid) {
       <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
       <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:13px;color:${sc}">${sl(s)}</div></div>
     </div>
-    <div class="etitle"><i class="ti ti-list"></i>Payment History</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History</div>
+      <button class="chart-toggle" id="flatChartToggle" onclick="window._toggleFlatChart('${fid}')">
+        <i class="ti ti-chart-bar"></i> Show Chart
+      </button>
+    </div>
+    <div class="chart-wrap" id="flatChartWrap">
+      <div class="chart-title"><i class="ti ti-chart-bar"></i>Last 12 Months — Paid vs Due</div>
+      <svg class="chart-svg" id="flatChartSvg" height="140" viewBox="0 0 500 140" preserveAspectRatio="none"></svg>
+      <div class="chart-legend">
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#059669"></div>Paid</div>
+        <div class="chart-legend-item"><div class="chart-legend-dot" style="background:#E5E7EB"></div>Due</div>
+      </div>
+    </div>
     <div class="elist">${rows}</div>
     ${ex.length?`<div class="etotal"><span class="etotal-label">Total Expenses</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
     <div class="mactions">
@@ -1300,8 +1434,8 @@ function fFS(){
   const b=document.getElementById('fB').value;
   document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
 }
-function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
-function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';fillCatSelect('fC');document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';fillCatSelect('fC');document.getElementById('addM').classList.add('open')}
 function cA(){document.getElementById('addM').classList.remove('open');}
 document.getElementById('fB').addEventListener('change',fFS);
 
@@ -1505,13 +1639,13 @@ document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;
 document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
 document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
 document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp();});
-['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM','catM'].forEach(id=>{
+['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM'].forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
   el.addEventListener('click',e=>{
     if(e.target.id===id){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}
   });
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}});
 
 /* ════════════════════════════════
    WINDOW EXPOSE
@@ -1525,17 +1659,31 @@ window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
 window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
-// vehicles.js
+// residents.js
+window.fRes = fRes; window.rResidents = rResidents;
+window._resPayFilter = function(val) {
+  window._resPayFilter_val = val;
+  if (window.switchView) window.switchView('residents');
+  if (window.rResidents) window.rResidents();
+};
+// vehicles modal (still used from flat modal)
 window._oVehM   = oVehM;   window._oVehFor = oVehFor;
 window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
-window.rVehicles = rVehicles;
+window._saveVeh = sVeh;
+// categories.js
+window._openCatManager  = openCatManager;
+window._closeCatManager = closeCatManager;
+window._saveCatManager  = saveCatManager;
+window._addCatRow = addCatRow;
+window._delCat    = delCatRow;
+window._fillCatSelect = fillCatSelect;
 // president.js
 window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
 window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
 window._updSEStatus = updSEStatus; window._delSE = delSE;
 window.rPresident = rPresident;
-// issues.js / members.js
-window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
+// issues.js
+window.fIss = fIss;
 
 /* ════════════════════════════════
    IN-APP SETUP WIZARD
@@ -1650,7 +1798,7 @@ window._wizLaunch = async function() {
     }
     document.getElementById('setupWiz').style.display = 'none';
     document.getElementById('lo').style.display = '';
-    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenCategories();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
     console.error(e);
@@ -1698,7 +1846,10 @@ function listenVehicles(){
     vehicles.clear();
     snap.forEach(d=>vehicles.set(d.id,{...d.data()}));
     rStats();
-    if(document.getElementById('vehView').style.display!=='none')rVehicles();
+    const vv=document.getElementById('vehView');
+    if(vv && vv.style.display!=='none') rVehicles();
+    const rv=document.getElementById('resView');
+    if(rv && rv.style.display!=='none') try{rResidents();}catch(e){}
   },e=>console.error('veh listener',e));
 }
 function listenSocExp(){
@@ -1714,788 +1865,6 @@ function listenSocExp(){
 }
 
 
-
-function setAB(v) { AB = v; }
-
-/* ══ payments.js ══ */
-/* ═══════════════════════════════
-   PAYMENTS TAB — js/payments.js
-   Handles: block tabs OR floor tabs (no-block buildings)
-   Custom filters: status, resident type, floor, search
-════════════════════════════════ */
-
-function hasBlocks() {
-  return [...flats.values()].some(f => (f.block || '').trim() !== '');
-}
-
-function getFloors(blockOrAll) {
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const scoped = blockOrAll ? all.filter(f => f.block === blockOrAll) : all;
-  return [...new Set(scoped.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
-}
-
-function updateFloorFilter(block) {
-  const sel = document.getElementById('flf');
-  if (!sel) return;
-  if (!hasBlocks()) { sel.style.display = 'none'; return; } // no-block uses floor tabs not dropdown
-  const floors = getFloors(block);
-  if (floors.length > 1) {
-    sel.innerHTML = `<option value="all">All floors</option>` +
-      floors.map(fl => `<option value="${fl}">Floor ${fl}</option>`).join('');
-    sel.style.display = '';
-  } else {
-    sel.style.display = 'none';
-  }
-}
-
-function rBTabs() {
-  const useBlocks = hasBlocks();
-
-  if (useBlocks) {
-    const bs = bks();
-    let AB = AB;
-    if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
-    document.getElementById('btabs').innerHTML = bs.map(b => {
-      const bf = [...flats.values()].filter(f => f.block === b && f.month === AM);
-      const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${b === AB ? ' active' : ''}" onclick="window._sB('${b}')">
-        <i class="ti ti-building"></i> Block ${b}
-        <span class="btab-badge">${pc}/${bf.length}</span>
-      </button>`;
-    }).join('');
-    updateFloorFilter(AB);
-  } else {
-    // No blocks — show floor tabs
-    const all = [...flats.values()].filter(f => f.month === AM);
-    const floors = [...new Set(all.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
-    let AB = AB;
-    const flNums = floors.map(String);
-    if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
-    document.getElementById('btabs').innerHTML = floors.map(fl => {
-      const bf = all.filter(f => f.floor === fl);
-      const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${String(fl) === String(AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
-        <i class="ti ti-stairs"></i> Floor ${fl}
-        <span class="btab-badge">${pc}/${bf.length}</span>
-      </button>`;
-    }).join('');
-    document.getElementById('flf').style.display = 'none'; // no dropdown when using floor tabs
-  }
-}
-
-function rBlock() {
-  const AB = AB;
-  const useBlocks = hasBlocks();
-
-  let bf = [...flats.values()].filter(f => f.month === AM);
-  if (useBlocks) {
-    bf = bf.filter(f => f.block === AB);
-  } else {
-    bf = bf.filter(f => String(f.floor) === String(AB));
-  }
-
-  const vis = bf.filter(f => {
-    if (FS !== 'all' && st(f) !== FS) return false;
-    if (RTF !== 'all') {
-      const vacant = !(f.owner || '').trim();
-      if (RTF === 'vacant' && !vacant) return false;
-      if (RTF === 'owner'  && (vacant || f.resType === 'tenant')) return false;
-      if (RTF === 'tenant' && f.resType !== 'tenant') return false;
-    }
-    if (FLF !== 'all' && useBlocks && String(f.floor) !== String(FLF)) return false;
-    if (SQ && !f.flatId.toLowerCase().includes(SQ) && !(f.owner || '').toLowerCase().includes(SQ)) return false;
-    return true;
-  });
-
-  const pc  = bf.filter(f => st(f) === 'paid').length;
-  const col = bf.reduce((s, f) => s + f.paid, 0);
-  const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
-
-  let h = `<div class="bhead">
-    <div class="bhead-left">
-      <div class="bstripe"></div>
-      <div class="btitle">${headLabel}</div>
-      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
-    </div>
-    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
-  </div><div class="fgrid">`;
-
-  if (!vis.length) {
-    h += `<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
-  } else {
-    // Group by floor when in block view with multiple floors
-    const byFloor = {};
-    vis.forEach(f => { const fl = f.floor ?? '—'; (byFloor[fl] = byFloor[fl] || []).push(f); });
-    const sortedFloors = Object.keys(byFloor).sort((a,b) => Number(a) - Number(b));
-    const multiFloor = useBlocks && sortedFloors.length > 1;
-
-    sortedFloors.forEach((fl, idx) => {
-      if (multiFloor) {
-        if (idx > 0) h += `</div>`;
-        h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
-      }
-      byFloor[fl].forEach(f => {
-        const s = st(f), pct = f.due ? Math.round(Math.min(f.paid/f.due*100,100)) : 0;
-        h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
-          onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
-          <div class="fc-top">
-            <div>
-              <div class="fc-num">${f.flatId}</div>
-              <div class="fc-owner">${f.owner || '(No owner)'}</div>
-              <span class="fc-type ${f.resType || 'owner'}">${f.resType === 'tenant' ? 'Tenant' : 'Owner'}</span>
-            </div>
-            <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
-          </div>
-          <div class="fc-amount">${inr(f.paid)}</div>
-          <div class="fc-due">of ${inr(f.due)} monthly due</div>
-          <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
-          <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
-        </div>`;
-      });
-    });
-  }
-  document.getElementById('bcon').innerHTML = h + '</div>';
-}
-
-
-/* ══ issues.js ══ */
-/* ════════════════════════════════
-   ISSUES TAB — js/issues.js
-   Depends on: window.APP (shared state injected from app.html)
-════════════════════════════════ */
-
-function rIssues() {
-  const fil = IF === 'all' ? [...issues] : issues.filter(i => i.status === IF);
-  const icons = {
-    Plumbing: 'ti-tool', Electrical: 'ti-bolt', Lift: 'ti-elevator',
-    Security: 'ti-shield', Cleaning: 'ti-vacuum-cleaner', Parking: 'ti-car',
-    Noise: 'ti-volume', Internet: 'ti-wifi', Other: 'ti-clipboard'
-  };
-
-  if (!fil.length) {
-    document.getElementById('iList').innerHTML = `<div class="iss-empty">
-      <i class="ti ti-mood-happy"></i>
-      <h3>${IF === 'all' ? 'No issues raised yet' : 'No ' + IF + ' issues found'}</h3>
-      <p>${IF === 'all' ? 'Everything is running smoothly!' : 'All clear in this category.'}</p>
-    </div>`;
-    return;
-  }
-
-  document.getElementById('iList').innerHTML = fil.map(iss => {
-    const sLabel  = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
-    const pLabel  = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
-    return `<div class="icard" onclick="window._oID('${iss.id}')">
-      <div class="ipbar ${iss.priority}"></div>
-      <div>
-        <div class="ic-title"><i class="ti ${icons[iss.cat] || 'ti-clipboard'}"></i>${iss.title}</div>
-        <div class="ic-desc">${iss.desc.length > 130 ? iss.desc.slice(0, 130) + '…' : iss.desc}</div>
-        <div class="ic-meta">
-          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat || iss.block}</span>
-          <span class="itag cat">${iss.cat}</span>
-          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
-          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
-        </div>
-      </div>
-      <div class="iright">
-        <span class="istatus ${iss.status}">${sLabel}</span>
-        <span class="ipriority ${iss.priority}">${pLabel}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function fIss(f) {
-  IF = f;
-  document.querySelectorAll('.iff').forEach(b => b.classList.toggle('active', b.dataset.f === f));
-  rIssues();
-}
-
-
-/* ══ members.js ══ */
-/* ════════════════════════════════
-   MEMBERS TAB — js/members.js
-   Depends on: window.APP (shared state injected from app.html)
-════════════════════════════════ */
-
-let MF = 'all';
-
-/* ── Helpers ── */
-function tenure(moveIn, moveOut) {
-  if (!moveIn) return '—';
-  const start = new Date(moveIn);
-  const end   = moveOut ? new Date(moveOut) : new Date();
-  const days  = Math.floor((end - start) / 86400000);
-  if (days < 0) return '—';
-  const yrs = Math.floor(days / 365);
-  const mos = Math.floor((days % 365) / 30);
-  const parts = [];
-  if (yrs) parts.push(`${yrs}y`);
-  if (mos) parts.push(`${mos}m`);
-  if (!parts.length) parts.push(`${days}d`);
-  return parts.join(' ');
-}
-
-function fmtDate(d) {
-  return d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-}
-
-/* ── Filter toggle ── */
-function fMem(t) {
-  MF = t;
-  document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
-  rMembers();
-}
-
-/* ── Main render ── */
-function rMembers() {
-  const q = (document.getElementById('memQ')?.value || '').trim().toLowerCase();
-
-  let rows = [...flats.values()].filter(f => {
-    if (MF === 'owner'  && (f.resType || 'owner') !== 'owner') return false;
-    if (MF === 'tenant' && f.resType !== 'tenant')             return false;
-    if (MF === 'vacant' && (f.owner || '').trim())             return false;
-    if (q && !f.flatId?.toLowerCase().includes(q)
-          && !(f.owner || '').toLowerCase().includes(q)
-          && !(f.ownerName || '').toLowerCase().includes(q)) return false;
-    return true;
-  }).sort((a, b) => (a.flatId || '').localeCompare(b.flatId || ''));
-
-  if (!rows.length) {
-    document.getElementById('memList').innerHTML =
-      `<div class="mem-empty"><i class="ti ti-users-off"></i>No members found.</div>`;
-    return;
-  }
-
-  const tRows = rows.map(f => {
-    const isVacant   = !(f.owner || '').trim();
-    const rType      = isVacant ? 'vacant' : (f.resType || 'owner');
-    const isTenant   = rType === 'tenant';
-    const typeLabel  = isVacant ? 'Vacant' : isTenant ? '🔑 Tenant' : '🏠 Owner';
-    const tenureStr  = isVacant ? '—' : tenure(f.moveIn, f.moveOut);
-    const movedIn    = fmtDate(f.moveIn);
-    const movedOut   = fmtDate(f.moveOut);
-    const allEx      = fex(f.flatId);
-    const totalPaid  = allEx.reduce((s, e) => s + e.amt, 0);
-    const balance    = (f.due || 0) - (f.paid || 0);
-    const payMonths  = [...new Set(allEx.map(e => e.month || e.date?.slice(0, 7)))].filter(Boolean);
-    const statusColor = balance > 0 ? 'var(--red)' : balance === 0 && f.due > 0 ? 'var(--green)' : 'var(--muted)';
-
-    // Owner info line — always show; for tenants show actual owner separately
-    const residentCell = isVacant
-      ? `<span style="color:var(--muted);font-style:italic">Vacant</span>`
-      : `<div class="mem-name">${f.owner}</div>`;
-
-    const ownerCell = isTenant
-      ? (f.ownerName
-          ? `<div style="font-size:12px;font-weight:700;color:var(--text)">${f.ownerName}</div>
-             ${f.ownerPhone ? `<div style="font-size:10px;color:var(--text2)">${f.ownerPhone}</div>` : ''}`
-          : `<span style="color:var(--muted);font-size:11px">Not set</span>`)
-      : `<span style="font-size:11px;color:var(--muted)">—</span>`;
-
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
-      <td><span class="mem-flat">${f.flatId}</span>${f.block ? `<br><span style="font-size:10px;color:var(--muted)">Block ${f.block}</span>` : ''}</td>
-      <td><span class="mem-type ${rType}">${typeLabel}</span></td>
-      <td>${residentCell}</td>
-      <td>${ownerCell}</td>
-      <td>
-        ${movedIn !== '—' ? `<div style="font-size:11px">In: <strong>${movedIn}</strong></div>` : ''}
-        ${movedOut !== '—' ? `<div style="font-size:11px">Out: <strong>${movedOut}</strong></div>` : ''}
-        ${movedIn === '—' ? '<span style="color:var(--muted);font-size:11px">—</span>' : ''}
-      </td>
-      <td>
-        <span class="mem-tenure"><strong>${tenureStr}</strong></span>
-        ${f.moveOut ? `<div style="font-size:10px;color:var(--muted)">vacated</div>` : ''}
-      </td>
-      <td><span class="mem-paid">${totalPaid ? inr(totalPaid) : '—'}</span></td>
-      <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${f.due ? inr(Math.abs(balance)) : '—'}</span></td>
-      <td>
-        <div style="display:flex;flex-wrap:wrap;gap:2px;max-width:140px">
-          ${payMonths.slice(-4).map(m => `<span class="hist-chip">${m}</span>`).join('')}
-          ${payMonths.length > 4 ? `<span class="hist-chip">+${payMonths.length - 4}</span>` : ''}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('memList').innerHTML = `
-    <table class="mem-table">
-      <thead><tr>
-        <th>Flat</th>
-        <th>Type</th>
-        <th>Resident</th>
-        <th>Owner (if tenant)</th>
-        <th>Move In / Out</th>
-        <th>Tenure</th>
-        <th>Total Paid</th>
-        <th>Balance</th>
-        <th>Payment Months</th>
-      </tr></thead>
-      <tbody>${tRows}</tbody>
-    </table>`;
-}
-
-
-/* ══ vehicles.js ══ */
-/* ════════════════════════════════
-   VEHICLES TAB — js/vehicles.js
-   Reads from: closure vars (shared state)
-════════════════════════════════ */
-
-function rVehicles() {
-  const q  = (document.getElementById('vehQ')?.value || '').toLowerCase().trim();
-  const bf = document.getElementById('vehBF')?.value || 'all';
-  const tf = document.getElementById('vehTF')?.value || 'all';
-  const all = [...flats.values()].filter(f => f.month === AM);
-
-  // Rebuild block filter dropdown
-  const bs = bks();
-  const bfSel = document.getElementById('vehBF');
-  if (bfSel && bfSel.options.length <= 1) {
-    bs.forEach(b => {
-      const o = document.createElement('option');
-      o.value = b; o.textContent = 'Block ' + b;
-      bfSel.appendChild(o);
-    });
-  }
-
-  const totTw   = [...vehicles.values()].reduce((s, v) => s + (parseInt(v.tw) || 0), 0);
-  const totFw   = [...vehicles.values()].reduce((s, v) => s + (parseInt(v.fw) || 0), 0);
-  const withVeh = [...flats.values()].filter(f => {
-    const v = vehicles.get(f.flatId) || {};
-    return (parseInt(v.tw) || 0) + (parseInt(v.fw) || 0) > 0;
-  }).length;
-
-  document.getElementById('vehSum').innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw + totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
-  `;
-
-  const rows = all.filter(f => {
-    if (bf !== 'all' && f.block !== bf) return false;
-    if (q && !f.flatId.toLowerCase().includes(q) && !(f.owner || '').toLowerCase().includes(q)) return false;
-    const v = vehicles.get(f.flatId) || {};
-    const tw = parseInt(v.tw) || 0, fw = parseInt(v.fw) || 0;
-    if (tf === '2w'   && tw === 0) return false;
-    if (tf === '4w'   && fw === 0) return false;
-    if (tf === 'both' && (tw === 0 || fw === 0)) return false;
-    if (tf === 'none' && (tw + fw) > 0) return false;
-    return true;
-  });
-
-  if (!rows.length) {
-    document.getElementById('vehBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-motorbike" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No records match your filter.</td></tr>`;
-    return;
-  }
-
-  document.getElementById('vehBody').innerHTML = rows.map(f => {
-    const v = vehicles.get(f.flatId) || { tw: 0, fw: 0, nums: '', slot: '' };
-    const tw = parseInt(v.tw) || 0, fw = parseInt(v.fw) || 0;
-    const twB = tw > 0 ? `<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>` : `<span class="vbadge none">–</span>`;
-    const fwB = fw > 0 ? `<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>` : `<span class="vbadge none">–</span>`;
-    return `<tr>
-      <td><strong style="color:var(--indigo)">${f.flatId}</strong></td>
-      <td><div style="font-weight:600">${f.owner || '(No owner)'}</div><div style="font-size:10px;color:var(--muted)">${f.resType === 'tenant' ? '🔑 Tenant' : '🏠 Owner'}</div></td>
-      <td>${twB}</td>
-      <td>${fwB}</td>
-      <td style="font-size:12px;color:var(--text2)">${v.nums || '—'}</td>
-      <td style="font-size:12px;color:var(--text2)">${v.slot || '—'}</td>
-      <td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')"><i class="ti ti-pencil"></i> Edit</button></td>
-    </tr>`;
-  }).join('');
-}
-
-function oVehM() {
-  const first = [...flats.values()].find(f => f.month === AM);
-  if (first) oVehFor(first.flatId);
-  else toast('No flats found.', 'error');
-}
-
-function oVehFor(fid) {
-  const f = flats.get(fid);
-  const v = vehicles.get(fid) || { tw: 0, fw: 0, nums: '', slot: '' };
-  document.getElementById('vehFid').value         = fid;
-  document.getElementById('vehMSub').textContent  = fid + (f && f.owner ? ' — ' + f.owner : '');
-  document.getElementById('veh2w').value           = v.tw || 0;
-  document.getElementById('veh4w').value           = v.fw || 0;
-  document.getElementById('vehNums').value         = v.nums || '';
-  document.getElementById('vehSlot').value         = v.slot || '';
-  document.getElementById('vehDelBtn').style.display = vehicles.has(fid) ? '' : 'none';
-  document.getElementById('vehSaveBtn').disabled   = false;
-  document.getElementById('vehSaveLbl').textContent = 'Save Vehicles';
-  document.getElementById('vehM').classList.add('open');
-}
-
-function cVehM() { document.getElementById('vehM').classList.remove('open'); }
-
-async function sVeh() {
-  const fid  = document.getElementById('vehFid').value;
-  const tw   = parseInt(document.getElementById('veh2w').value)   || 0;
-  const fw   = parseInt(document.getElementById('veh4w').value)   || 0;
-  const nums = document.getElementById('vehNums').value.trim();
-  const slot = document.getElementById('vehSlot').value.trim();
-  const btn  = document.getElementById('vehSaveBtn');
-  btn.disabled = true;
-  document.getElementById('vehSaveLbl').textContent = 'Saving…';
-  sync('saving');
-  try {
-    const { setDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await setDoc(vehRef(fid), { flatId: fid, tw, fw, nums, slot, updatedAt: serverTimestamp() });
-    sync('live'); cVehM(); toast('Vehicles saved ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
-  finally { btn.disabled = false; document.getElementById('vehSaveLbl').textContent = 'Save Vehicles'; }
-}
-
-async function delVeh() {
-  const fid = document.getElementById('vehFid').value;
-  if (!confirm('Clear vehicle data for this flat?')) return;
-  sync('saving');
-  try {
-    const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await deleteDoc(vehRef(fid));
-    sync('live'); cVehM(); toast('Vehicle data cleared ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
-}
-
-
-/* ══ president.js ══ */
-/* ════════════════════════════════
-   PRESIDENT TAB — js/president.js
-   Reads from: closure vars (shared state)
-════════════════════════════════ */
-
-const CAT_ICONS = {
-  Maintenance:'ti-tool', Water:'ti-droplet', Electricity:'ti-bolt',
-  Security:'ti-shield', Cleaning:'ti-vacuum-cleaner', Lift:'ti-elevator',
-  Gardening:'ti-plant', Painting:'ti-paint', Other:'ti-clipboard'
-};
-const CAT_BG = {
-  Maintenance:'var(--indigo-bg)', Water:'var(--sky-bg)', Electricity:'var(--amber-bg)',
-  Security:'var(--red-bg)', Cleaning:'var(--green-bg)', Lift:'var(--purple-bg)',
-  Gardening:'var(--green-bg)', Painting:'var(--amber-bg)', Other:'var(--surface3)'
-};
-const CAT_CLR = {
-  Maintenance:'var(--indigo)', Water:'var(--sky)', Electricity:'var(--amber)',
-  Security:'var(--red)', Cleaning:'var(--green)', Lift:'var(--purple)',
-  Gardening:'var(--green)', Painting:'var(--amber)', Other:'var(--text2)'
-};
-
-function rPresident() {
-  const pres = president;
-
-  if (!pres || !pres.name) {
-    document.getElementById('presBanner').innerHTML = `
-      <div class="pres-empty">
-        <i class="ti ti-crown"></i>
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">No President Elected Yet</div>
-        <div style="font-size:13px;margin-bottom:16px">Elect a flat member as society president to track expenses.</div>
-        <button class="btn btn-indigo" onclick="window._oPresM()"><i class="ti ti-crown"></i> Elect President</button>
-      </div>`;
-  } else {
-    const ini = (pres.name || 'P').charAt(0).toUpperCase();
-    const tenure = pres.termStart
-      ? `Since ${new Date(pres.termStart).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}${pres.termEnd ? ' — ' + new Date(pres.termEnd).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}) : ''}`
-      : '';
-    document.getElementById('presBanner').innerHTML = `
-      <div class="pres-banner">
-        <div class="pres-info">
-          <div class="pres-avatar">${ini}</div>
-          <div>
-            <div style="font-size:11px;opacity:.7;font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px">🏆 Current President</div>
-            <div class="pres-name">${pres.name}</div>
-            <div class="pres-flat">Flat ${pres.flatId}${pres.phone ? ' · ' + pres.phone : ''}</div>
-            ${tenure ? `<div style="font-size:11px;opacity:.7;margin-top:3px">${tenure}</div>` : ''}
-          </div>
-        </div>
-        <button class="btn" style="background:rgba(255,255,255,.2);color:#fff;border:1.5px solid rgba(255,255,255,.3)" onclick="window._oPresM()">
-          <i class="ti ti-edit"></i> Change
-        </button>
-      </div>`;
-  }
-
-  const totalSocExp = socExps.reduce((s, e) => s + e.amt, 0);
-  const totalFlats  = [...flats.values()].filter(f => f.month === AM).length;
-  const perFlat     = totalFlats > 0 ? Math.round(totalSocExp / totalFlats) : 0;
-
-  document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2"><div class="fcard2-label">Total Society Expenses</div><div class="fcard2-val">${inr(totalSocExp)}</div><div class="fcard2-sub">${socExps.length} transactions</div></div>
-    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(socExps.filter(e => e.month === AM).reduce((s,e) => s+e.amt, 0))}</div><div class="fcard2-sub">${AM}</div></div>
-    <div class="fcard2"><div class="fcard2-label">Per Flat (avg)</div><div class="fcard2-val">${inr(perFlat)}</div><div class="fcard2-sub">across ${totalFlats} flats</div></div>
-    <div class="fcard2"><div class="fcard2-label">Approved</div><div class="fcard2-val">${inr(socExps.filter(e=>e.status==='approved').reduce((s,e)=>s+e.amt,0))}</div><div class="fcard2-sub">${socExps.filter(e=>e.status==='approved').length} approved</div></div>
-  `;
-
-  if (!socExps.length) {
-    document.getElementById('presExpList').innerHTML = `<div class="exp-empty"><i class="ti ti-receipt-off"></i>No society expenses recorded yet.</div>`;
-    return;
-  }
-
-  document.getElementById('presExpList').innerHTML = socExps.map(e => {
-    const icon = CAT_ICONS[e.cat] || 'ti-clipboard';
-    const bg   = CAT_BG[e.cat]   || 'var(--surface3)';
-    const clr  = CAT_CLR[e.cat]  || 'var(--text2)';
-    const statusOptions = ['pending','approved','rejected'].map(s =>
-      `<option value="${s}"${e.status===s?' selected':''}>${{pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[s]}</option>`
-    ).join('');
-    return `<div class="exp-row">
-      <div class="exp-row-icon" style="background:${bg};color:${clr}"><i class="ti ${icon}"></i></div>
-      <div>
-        <div class="exp-row-cat">${e.title || e.cat}</div>
-        <div class="exp-row-date">${e.date || ''}${e.paidBy ? ' · Paid by: ' + e.paidBy : ''}${e.vendor ? ' · ' + e.vendor : ''}</div>
-        ${e.note ? `<div class="exp-row-note">${e.note}</div>` : ''}
-      </div>
-      <div style="text-align:right">
-        <div class="exp-row-amt">${inr(e.amt)}</div>
-        <div style="margin-top:4px">
-          <select style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;border:1.5px solid var(--border2);background:#fff;font-family:var(--font);outline:none;cursor:pointer"
-            onchange="window._updSEStatus('${e.id}',this.value)">${statusOptions}</select>
-        </div>
-      </div>
-      <button class="btn btn-white btn-sm" onclick="window._delSE('${e.id}')" style="padding:5px 8px;min-width:0">
-        <i class="ti ti-trash" style="margin:0;color:var(--red)"></i>
-      </button>
-    </div>`;
-  }).join('');
-}
-
-function oPresM() {
-  document.getElementById('presFlat').innerHTML = [...flats.values()]
-    .filter(f => f.month === AM && (f.owner || '').trim())
-    .map(f => `<option value="${f.flatId}"${pres && pres.flatId === f.flatId ? ' selected' : ''}>${f.flatId} — ${f.owner}</option>`)
-    .join('');
-  document.getElementById('presName').value  = pres?.name || '';
-  document.getElementById('presStart').value = pres?.termStart || new Date().toISOString().split('T')[0];
-  document.getElementById('presEnd').value   = pres?.termEnd || '';
-  document.getElementById('presPhone').value = pres?.phone || '';
-  document.getElementById('presSaveBtn').disabled = false;
-  document.getElementById('presSaveLbl').textContent = 'Elect President';
-  document.getElementById('presM').classList.add('open');
-}
-
-function cPresM() { document.getElementById('presM').classList.remove('open'); }
-
-async function sPres() {
-  const flatId    = document.getElementById('presFlat').value;
-  const name      = document.getElementById('presName').value.trim();
-  const termStart = document.getElementById('presStart').value;
-  const termEnd   = document.getElementById('presEnd').value;
-  const phone     = document.getElementById('presPhone').value.trim();
-  if (!name) { toast('Enter president name.', 'error'); return; }
-  document.getElementById('presSaveBtn').disabled = true;
-  document.getElementById('presSaveLbl').textContent = 'Saving…';
-  sync('saving');
-  try {
-    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await setDoc(doc(db,'apartments',UID), { president:{flatId,name,termStart,termEnd,phone,updatedAt:new Date().toISOString()} }, {merge:true});
-    president = {flatId,name,termStart,termEnd,phone};
-    sync('live'); cPresM(); toast('President elected ✓'); rPresident();
-  } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
-  finally { document.getElementById('presSaveBtn').disabled=false; document.getElementById('presSaveLbl').textContent='Elect President'; }
-}
-
-function oPresExp() {
-  ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('peDate').value = new Date().toISOString().split('T')[0];
-  document.getElementById('peCat').value  = 'Maintenance';
-  document.getElementById('peBtn').disabled = false;
-  document.getElementById('peLbl').textContent = 'Save Expense';
-  document.getElementById('presExpM').classList.add('open');
-}
-
-function cPresExp() { document.getElementById('presExpM').classList.remove('open'); }
-
-async function sPresExp() {
-  const title  = document.getElementById('peTitle').value.trim();
-  const cat    = document.getElementById('peCat').value;
-  const amt    = parseInt(document.getElementById('peAmt').value) || 0;
-  const date   = document.getElementById('peDate').value;
-  const paidBy = document.getElementById('pePaidBy').value.trim() || president?.name || 'President';
-  const vendor = document.getElementById('peVendor').value.trim();
-  const note   = document.getElementById('peNote').value.trim();
-  if (!title) { toast('Enter expense title.', 'error'); return; }
-  if (!amt)   { toast('Enter amount.', 'error'); return; }
-  document.getElementById('peBtn').disabled = true;
-  document.getElementById('peLbl').textContent = 'Saving…';
-  sync('saving');
-  try {
-    const { addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    const d   = new Date(date);
-    const mth = d.toISOString().slice(0,7);
-    await addDoc(sexpColl(), { title, cat, amt, date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), month:mth, paidBy, vendor, note, status:'pending', createdAt:serverTimestamp() });
-    sync('live'); cPresExp(); toast('Society expense recorded ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
-  finally { document.getElementById('peBtn').disabled=false; document.getElementById('peLbl').textContent='Save Expense'; }
-}
-
-async function updSEStatus(id, status) {
-  sync('saving');
-  try {
-    const { updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await updateDoc(sexpRef(id), {status});
-    sync('live'); toast('Status updated ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Update failed.', 'error'); }
-}
-
-async function delSE(id) {
-  if (!confirm('Delete this expense?')) return;
-  sync('saving');
-  try {
-    const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await deleteDoc(sexpRef(id));
-    sync('live'); toast('Expense deleted ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
-}
-
-// Convenience: open Add Expense modal (alias used in phAct button)
-
-
-/* ══ RESIDENTS TAB (merged Members + Vehicles) ══ */
-function rResidents() {
-  // re-use rMembers for now — members tab shows in resView
-  // Vehicle summary cards
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const totTw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
-  const totFw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
-  const withVeh = all.filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
-  const vs = document.getElementById('vehSum');
-  if(vs) vs.innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
-  `;
-
-  // Render member rows (reuse rMembers logic but target resBody)
-  const q = (document.getElementById('memQ')?.value||'').trim().toLowerCase();
-  const tf = document.getElementById('resTF')?.value||'all';
-  let rows = all.filter(f=>{
-    if(MF==='owner'  && (f.resType||'owner')!=='owner') return false;
-    if(MF==='tenant' && f.resType!=='tenant')            return false;
-    if(MF==='vacant' && (f.owner||'').trim())            return false;
-    if(q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    const v=vehicles.get(f.flatId)||{};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    if(tf==='2w'   && tw===0)     return false;
-    if(tf==='4w'   && fw===0)     return false;
-    if(tf==='none' && tw+fw>0)    return false;
-    return true;
-  }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
-
-  if(!rows.length){
-    document.getElementById('resBody').innerHTML=`<tr><td colspan="12" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-users-off" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No residents match filter.</td></tr>`;
-    return;
-  }
-
-  function tenure2(moveIn,moveOut){
-    if(!moveIn)return'—';
-    const days=Math.floor(((moveOut?new Date(moveOut):new Date())-new Date(moveIn))/86400000);
-    if(days<0)return'—';
-    const y=Math.floor(days/365),m=Math.floor((days%365)/30);
-    return [y?y+'y':'',m?m+'m':''].filter(Boolean).join(' ')||days+'d';
-  }
-  function fmtD(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
-
-  document.getElementById('resBody').innerHTML = rows.map(f=>{
-    const isVacant=(!(f.owner||'').trim());
-    const rType=isVacant?'vacant':(f.resType||'owner');
-    const isTenant=rType==='tenant';
-    const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
-    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    const bal=(f.due||0)-(f.paid||0);
-    const balClr=bal>0?'var(--red)':bal===0&&f.due>0?'var(--green)':'var(--muted)';
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
-      <td><strong style="color:var(--indigo);font-size:12px">${f.flatId}</strong></td>
-      <td><span class="mem-type ${rType}" style="font-size:10px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span></td>
-      <td><div style="font-size:12px;font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div></td>
-      <td style="font-size:11px">${isTenant?(f.ownerName?`<div style="font-weight:700">${f.ownerName}</div>${f.ownerPhone?`<div style="font-size:10px;color:var(--text2)">${f.ownerPhone}</div>`:''}`:`<span style="color:var(--muted)">Not set</span>`):`<span style="color:var(--muted)">—</span>`}</td>
-      <td style="font-size:11px;color:var(--text2)">${fmtD(f.moveIn)}</td>
-      <td style="font-size:11px;font-weight:700;color:var(--text2)">${tenure2(f.moveIn,f.moveOut)}</td>
-      <td>${twB}</td>
-      <td>${fwB}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:100px;word-break:break-all">${v.nums||'—'}</td>
-      <td style="font-size:11px;color:var(--text2)">${v.slot||'—'}</td>
-      <td style="font-size:12px;font-weight:700;color:${balClr}">${f.due?inr(Math.abs(bal)):'—'}</td>
-      <td onclick="event.stopPropagation()">
-        <button class="btn btn-white btn-xs" onclick="window._oVehFor('${f.flatId}')">
-          <i class="ti ti-motorbike" style="margin:0"></i>
-        </button>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-/* ══ CUSTOM CATEGORIES ══ */
-const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
-const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
-let customCats = { flat: [], soc: [] };
-
-function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
-
-function renderCatOpts(selId, type){
-  const sel=document.getElementById(selId); if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML=getCats(type).map(c=>`<option value="${c}">${c}</option>`).join('');
-  if(cur&&getCats(type).includes(cur))sel.value=cur;
-}
-
-function renderCatChips(listId, type){
-  const el=document.getElementById(listId); if(!el)return;
-  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
-  const custom=type==='flat'?customCats.flat:customCats.soc;
-  el.innerHTML=[...new Set([...def,...custom])].map(c=>`
-    <span class="cat-chip">${c}${!def.includes(c)?`<button class="cat-del" onclick="window._delCat('${type}','${c}')"><i class="ti ti-x"></i></button>`:''}</span>
-  `).join('');
-}
-
-function oCatM(){
-  renderCatChips('flatCatList','flat');
-  renderCatChips('socCatList','soc');
-  ['flatCatInput','socCatInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('catM').classList.add('open');
-}
-function cCatM(){ document.getElementById('catM').classList.remove('open'); }
-
-async function addCat(type){
-  const inp=document.getElementById(type==='flat'?'flatCatInput':'socCatInput');
-  const val=(inp?.value||'').trim(); if(!val){toast('Enter a category name.','error');return;}
-  const arr=type==='flat'?customCats.flat:customCats.soc;
-  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
-  if([...def,...arr].map(c=>c.toLowerCase()).includes(val.toLowerCase())){toast('Already exists.','error');return;}
-  arr.push(val); if(inp)inp.value='';
-  await saveCats();
-  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-  toast(`"${val}" added ✓`);
-}
-
-async function delCat(type,name){
-  const arr=type==='flat'?customCats.flat:customCats.soc;
-  const i=arr.indexOf(name); if(i===-1)return;
-  arr.splice(i,1);
-  await saveCats();
-  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-  toast(`"${name}" removed`);
-}
-
-async function saveCats(){
-  try{ await setDoc(doc(db,'apartments',UID,'config','categories'), customCats); sync('live'); }
-  catch(e){ console.error(e); toast('Failed to save categories.','error'); }
-}
-
-async function loadCats(){
-  try{
-    const snap=await getDoc(doc(db,'apartments',UID,'config','categories'));
-    if(snap.exists()){const d=snap.data();customCats.flat=d.flat||[];customCats.soc=d.soc||[];}
-  } catch(e){ console.error('loadCats:',e); }
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-}
-
-window._oCatM=oCatM; window._cCatM=cCatM;
-window._addCat=addCat; window._delCat=delCat;
-
 async function boot(){
   refreshAPP();
   buildMonthSelect();
@@ -2504,7 +1873,6 @@ async function boot(){
     const aptDoc = await getDoc(aptDocRef());
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
-    await loadCats();
 
     // Check if any flats exist
     const snap = await getDocs(flatsColl());
@@ -2530,6 +1898,174 @@ async function boot(){
     document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
   }
 }
+
+/* ════════════════════════════════
+   INLINE SVG CHART ENGINE
+   No external libraries — pure SVG
+════════════════════════════════ */
+
+/* Build an array of last N months as "YYYY-MM" strings */
+function lastNMonths(n=12) {
+  const months = [];
+  for (let i=n-1; i>=0; i--) {
+    const d = new Date();
+    d.setDate(1);
+    d.setMonth(d.getMonth()-i);
+    months.push(d.toISOString().slice(0,7));
+  }
+  return months;
+}
+
+/* Short month label: "2024-05" → "May" */
+function shortMonth(ym) {
+  const d = new Date(ym+'-01');
+  return d.toLocaleDateString('en-IN',{month:'short'});
+}
+
+/* Core SVG grouped bar chart renderer
+   data = [{label, bars:[{val,color,title}]}]
+   maxVal = top of y-axis (auto-computed if 0)
+*/
+function renderBarChart(svgId, data, maxVal=0) {
+  const svg = document.getElementById(svgId);
+  if (!svg) return;
+
+  const W = 500, H = 140;
+  const padL=28, padR=8, padT=8, padB=28;
+  const chartW = W - padL - padR;
+  const chartH = H - padT - padB;
+
+  const n = data.length;
+  const barsPerGroup = data[0]?.bars?.length || 1;
+  const groupW = chartW / Math.max(n,1);
+  const barW   = Math.max(4, Math.min(16, groupW / (barsPerGroup+1)));
+  const gap    = barW * 0.4;
+
+  const actualMax = maxVal || data.reduce((m,d)=>Math.max(m,...d.bars.map(b=>b.val||0)),1);
+  const yScale = v => chartH - (v/actualMax)*chartH;
+
+  let out = '';
+
+  // Y-axis guide lines (4 lines)
+  for (let i=0; i<=4; i++) {
+    const yv = (actualMax/4)*i;
+    const y  = padT + yScale(yv);
+    const label = yv >= 1000 ? '₹'+(yv/1000).toFixed(0)+'k' : yv > 0 ? '₹'+Math.round(yv) : '0';
+    out += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#E5E7EB" stroke-width="1"/>`;
+    out += `<text x="${padL-4}" y="${y+3}" text-anchor="end" font-size="7" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${label}</text>`;
+  }
+
+  // Bars + labels
+  data.forEach((group, gi) => {
+    const groupX = padL + gi*groupW + (groupW - barsPerGroup*barW - (barsPerGroup-1)*gap)/2;
+    group.bars.forEach((bar, bi) => {
+      const bh = Math.max(2, (bar.val/actualMax)*chartH);
+      const bx = groupX + bi*(barW+gap);
+      const by = padT + chartH - bh;
+      const rx = Math.min(3, barW/2);
+      out += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="${rx}" fill="${bar.color}" opacity="0.9">
+        <title>${group.label}: ${bar.title}</title>
+      </rect>`;
+    });
+    // x label
+    const lx = padL + gi*groupW + groupW/2;
+    out += `<text x="${lx.toFixed(1)}" y="${H-padB+10}" text-anchor="middle" font-size="7.5" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${group.label}</text>`;
+  });
+
+  svg.innerHTML = out;
+}
+
+/* ── Flat chart: paid vs due per month ── */
+let _flatChartFid = null;
+let _flatChartVisible = false;
+
+function buildFlatChart(fid) {
+  _flatChartFid = fid;
+  const months = lastNMonths(12);
+
+  // For each month, look at ALL expenses for this flat (not just current month)
+  // We need all-time expense data, but we only have exps for current AM
+  // Use Firestore to load all-months data on demand, or approximate from flats map
+  // Better: scan the full exps map (which only has current AM) — so show from Firestore
+  // For now use what we have and supplement with flat paid/due for current month
+  const data = months.map(m => {
+    const flatSnap = flats.get(fid);
+    const flatDue  = (flatSnap && flatSnap.month===m) ? (flatSnap.due||0) : 0;
+    const flatPaid = (flatSnap && flatSnap.month===m) ? (flatSnap.paid||0) : 0;
+    // Expenses in memory for this month
+    const monthExps = (exps.get(fid)||[]).filter(e=>e.month===m);
+    const expPaid   = monthExps.reduce((s,e)=>s+e.amt,0);
+    const paid = flatSnap && flatSnap.month===m ? flatPaid : expPaid;
+    const due  = flatSnap && flatSnap.month===m ? flatDue  : 0;
+    return {
+      label: shortMonth(m),
+      bars: [
+        { val: due,  color: '#E5E7EB', title: `Due: ₹${due.toLocaleString('en-IN')}`  },
+        { val: paid, color: '#059669', title: `Paid: ₹${paid.toLocaleString('en-IN')}` },
+      ]
+    };
+  });
+
+  renderBarChart('flatChartSvg', data);
+}
+
+window._toggleFlatChart = function(fid) {
+  _flatChartVisible = !_flatChartVisible;
+  const wrap   = document.getElementById('flatChartWrap');
+  const toggle = document.getElementById('flatChartToggle');
+  if (!wrap || !toggle) return;
+  if (_flatChartVisible) {
+    wrap.classList.add('visible');
+    toggle.classList.add('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Hide Chart';
+    buildFlatChart(fid);
+  } else {
+    wrap.classList.remove('visible');
+    toggle.classList.remove('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Show Chart';
+  }
+};
+
+/* ── President chart: monthly society expenses ── */
+let _presChartVisible = false;
+
+function buildPresChart() {
+  const months = lastNMonths(12);
+  const data = months.map(m => {
+    const mExps     = socExps.filter(e => e.month === m);
+    const total     = mExps.reduce((s,e)=>s+(e.amt||0), 0);
+    const approved  = mExps.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.amt||0), 0);
+    return {
+      label: shortMonth(m),
+      bars: [
+        { val: total,    color: '#6366F1', title: `Total: ₹${total.toLocaleString('en-IN')}` },
+        { val: approved, color: '#A7F3D0', title: `Approved: ₹${approved.toLocaleString('en-IN')}` },
+      ]
+    };
+  });
+  renderBarChart('presChartSvg', data);
+}
+
+window._togglePresChart = function() {
+  _presChartVisible = !_presChartVisible;
+  const wrap   = document.getElementById('presChartWrap');
+  const toggle = document.getElementById('presChartToggle');
+  if (!wrap || !toggle) return;
+  if (_presChartVisible) {
+    wrap.classList.add('visible');
+    toggle.classList.add('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Hide';
+    buildPresChart();
+  } else {
+    wrap.classList.remove('visible');
+    toggle.classList.remove('on');
+    toggle.innerHTML = '<i class="ti ti-chart-bar"></i> Chart';
+  }
+};
+
+/* Re-render charts when data changes if they are visible */
+const _origRAll = typeof rAll === 'function' ? rAll : null;
+
 </script>
 </body>
 </html>
