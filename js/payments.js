@@ -1,8 +1,10 @@
 /* ════════════════════════════════
    PAYMENTS TAB — js/payments.js
-   Line-by-line payment rows (not chips).
-   Block/floor tabs on left, all flat payments listed inline.
+   Click a flat row → expands inline payment history.
+   Edit button at edge of each record.
 ════════════════════════════════ */
+
+let _expandedFlat = null; // currently expanded flat ID
 
 function hasBlocks() {
   return [...window.APP.flats.values()].some(f => (f.block || '').trim() !== '');
@@ -28,6 +30,89 @@ function updateFloorFilter(block) {
     sel.style.display = 'none';
   }
 }
+
+/* ── Toggle inline expansion ── */
+window._togglePayRow = function(fid) {
+  _expandedFlat = _expandedFlat === fid ? null : fid;
+  rBlock();
+};
+
+/* ── Inline edit a payment record amount/cat ── */
+window._editExpInline = function(expId, fid) {
+  const row = document.getElementById(`exprow_${expId}`);
+  if (!row) return;
+  const { fex, inr } = window.APP;
+  const exps = fex ? fex(fid) : [];
+  const e    = exps.find(x => x.expId === expId);
+  if (!e) return;
+
+  // Replace the row with an inline edit form
+  const cats = window.APP.categories?.length
+    ? window.APP.categories
+    : ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
+
+  row.outerHTML = `
+    <div class="pay-exp-edit" id="exprow_${expId}">
+      <select id="eecat_${expId}" style="flex:0 0 110px;background:var(--surface2);border:1.5px solid var(--indigo);
+        border-radius:var(--r-sm);padding:4px 6px;font-size:11px;font-weight:700;font-family:var(--font);color:var(--text);outline:none">
+        ${cats.map(c=>`<option value="${c}"${c===e.cat?' selected':''}>${c}</option>`).join('')}
+      </select>
+      <input id="eenote_${expId}" type="text" value="${e.note||''}" placeholder="Note"
+        style="flex:1;background:var(--surface2);border:1.5px solid var(--border2);
+          border-radius:var(--r-sm);padding:4px 7px;font-size:11px;font-family:var(--font);
+          color:var(--text);outline:none;min-width:60px"/>
+      <input id="eeamt_${expId}" type="number" value="${e.amt}" min="0"
+        style="width:80px;text-align:right;background:var(--surface2);border:1.5px solid var(--indigo);
+          border-radius:var(--r-sm);padding:4px 6px;font-size:12px;font-weight:800;
+          font-family:var(--font);color:var(--text);outline:none"/>
+      <button onclick="window._saveExpEdit('${expId}','${fid}')"
+        style="padding:4px 10px;background:var(--indigo);color:#fff;border:none;border-radius:var(--r-sm);
+          font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap">
+        <i class="ti ti-check"></i> Save
+      </button>
+      <button onclick="window._cancelExpEdit('${expId}','${fid}')"
+        style="padding:4px 8px;background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);
+          border-radius:var(--r-sm);font-size:11px;cursor:pointer;font-family:var(--font)">
+        <i class="ti ti-x"></i>
+      </button>
+    </div>`;
+};
+
+window._saveExpEdit = async function(expId, fid) {
+  const cat  = document.getElementById(`eecat_${expId}`)?.value || 'Maintenance';
+  const note = document.getElementById(`eenote_${expId}`)?.value.trim() || '';
+  const amt  = parseInt(document.getElementById(`eeamt_${expId}`)?.value) || 0;
+  const { db, UID, sync, toast } = window.APP;
+  sync('saving');
+  try {
+    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await updateDoc(doc(db,'apartments',UID,'expenses',expId), { cat, note, amt });
+    // Recalculate flat paid
+    const { fex } = window.APP;
+    const all = fex ? fex(fid) : [];
+    const totalPaid = all.reduce((s,e) => e.expId===expId ? s+amt : s+e.amt, 0);
+    await updateDoc(doc(db,'apartments',UID,'flats',fid), { paid: totalPaid });
+    sync('live'); toast('Payment updated ✓');
+  } catch(e) { console.error(e); sync('error'); toast('Update failed.','error'); }
+};
+
+window._cancelExpEdit = function(expId, fid) {
+  rBlock(); // re-render to restore original row
+};
+
+window._delExpInline = async function(expId, fid) {
+  if (!confirm('Delete this payment record?')) return;
+  const { db, UID, sync, toast, fex } = window.APP;
+  sync('saving');
+  try {
+    const { doc, deleteDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await deleteDoc(doc(db,'apartments',UID,'expenses',expId));
+    const remaining = (fex ? fex(fid) : []).filter(e => e.expId !== expId);
+    const totalPaid = remaining.reduce((s,e) => s+e.amt, 0);
+    await updateDoc(doc(db,'apartments',UID,'flats',fid), { paid: totalPaid });
+    sync('live'); toast('Record deleted ✓');
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
+};
 
 /* ── Block / Floor tab strip ── */
 export function rBTabs() {
@@ -65,13 +150,12 @@ export function rBTabs() {
   }
 }
 
-/* ── Main payment list — line by line ── */
+/* ── Main payment list — line by line with inline history ── */
 export function rBlock() {
   const { flats, fex, AM, FS, SQ, RTF, FLF, st, inr } = window.APP;
   const AB = window.APP.AB;
   const useBlocks = hasBlocks();
 
-  // Get flats for this block/floor
   let bf = [...flats.values()].filter(f => f.month === AM);
   if (useBlocks) {
     bf = bf.filter(f => f.block === AB);
@@ -79,7 +163,6 @@ export function rBlock() {
     bf = bf.filter(f => String(f.floor) === String(AB));
   }
 
-  // Apply filters
   const vis = bf.filter(f => {
     if (FS !== 'all' && st(f) !== FS) return false;
     if (RTF !== 'all') {
@@ -93,12 +176,9 @@ export function rBlock() {
     return true;
   });
 
-  // Summary bar
   const totalDue  = bf.reduce((s, f) => s + (f.due  || 0), 0);
   const totalPaid = bf.reduce((s, f) => s + (f.paid || 0), 0);
   const paid      = bf.filter(f => st(f) === 'paid').length;
-  const partial   = bf.filter(f => st(f) === 'partial').length;
-  const pending   = bf.filter(f => st(f) === 'pending').length;
   const headLabel = useBlocks ? `Block ${AB || 'All'}` : `Floor ${AB}`;
 
   let h = `
@@ -115,11 +195,10 @@ export function rBlock() {
   if (!vis.length) {
     h += `<div class="pay-empty"><i class="ti ti-search-off"></i> No flats match your filter.</div>`;
   } else {
-    // Group by floor when block view
     const byFloor = {};
     vis.forEach(f => { const fl = f.floor ?? '—'; (byFloor[fl] = byFloor[fl] || []).push(f); });
     const sortedFloors = Object.keys(byFloor).sort((a, b) => Number(a) - Number(b));
-    const multiFloor = useBlocks && sortedFloors.length > 1;
+    const multiFloor   = useBlocks && sortedFloors.length > 1;
 
     sortedFloors.forEach(fl => {
       if (multiFloor) {
@@ -133,29 +212,18 @@ export function rBlock() {
       }
 
       byFloor[fl].forEach(f => {
-        const s    = st(f);
-        const pct  = f.due ? Math.round(Math.min(f.paid / f.due * 100, 100)) : 0;
-        const bal  = (f.due || 0) - (f.paid || 0);
+        const s        = st(f);
+        const pct      = f.due ? Math.round(Math.min(f.paid / f.due * 100, 100)) : 0;
+        const bal      = (f.due || 0) - (f.paid || 0);
         const isVacant = !(f.owner || '').trim();
-        const rType = isVacant ? 'vacant' : (f.resType || 'owner');
+        const rType    = isVacant ? 'vacant' : (f.resType || 'owner');
+        const expanded = _expandedFlat === f.flatId;
 
-        // Get payment history for this flat
-        const flatExps = fex ? fex(f.flatId) : [];
-        const expRows = flatExps.map(e => `
-          <div class="pay-exp-row">
-            <span class="pay-exp-dot"></span>
-            <span class="pay-exp-cat">${e.cat || 'Payment'}</span>
-            <span class="pay-exp-date">${e.date || e.month || ''}</span>
-            <span class="pay-exp-note">${e.note || ''}</span>
-            <span class="pay-exp-amt">${inr(e.amt)}</span>
-          </div>`).join('');
-
-        const statusColors = {
-          paid: { bg:'var(--green-bg)', clr:'var(--green)', lbl:'✅ Paid' },
-          partial: { bg:'var(--amber-bg)', clr:'var(--amber)', lbl:'⚠ Partial' },
-          pending: { bg:'var(--red-bg)', clr:'var(--red)', lbl:'❌ Pending' },
-        };
-        const sc = statusColors[s] || statusColors.pending;
+        const sc = {
+          paid:    { bg:'var(--green-bg)', clr:'var(--green)',  lbl:'✅ Paid' },
+          partial: { bg:'var(--amber-bg)', clr:'var(--amber)',  lbl:'⚠ Partial' },
+          pending: { bg:'var(--red-bg)',   clr:'var(--red)',    lbl:'❌ Pending' },
+        }[s] || { bg:'var(--red-bg)', clr:'var(--red)', lbl:'❌ Pending' };
 
         const resTypeBadge = isVacant
           ? `<span class="prow-type vacant">🚪 Vacant</span>`
@@ -163,8 +231,9 @@ export function rBlock() {
           ? `<span class="prow-type tenant">🔑 Tenant</span>`
           : `<span class="prow-type owner">🏠 Owner</span>`;
 
+        // ── Flat row (clickable to expand) ──
         h += `
-        <div class="pay-row ${s}" onclick="window._oFl('${f.flatId}')">
+        <div class="pay-row ${s}${expanded?' expanded':''}" onclick="window._togglePayRow('${f.flatId}')">
           <div class="pay-row-left">
             <div class="pay-flat-id">${f.flatId}</div>
             <div class="pay-owner">${f.owner || '(Vacant)'}</div>
@@ -177,7 +246,6 @@ export function rBlock() {
               </div>
               <span class="pay-pct">${pct}%</span>
             </div>
-            ${expRows ? `<div class="pay-exp-list">${expRows}</div>` : ''}
           </div>
           <div class="pay-row-right">
             <div class="pay-amount">${inr(f.paid)}</div>
@@ -185,7 +253,56 @@ export function rBlock() {
             <span class="pay-status-chip" style="background:${sc.bg};color:${sc.clr}">${sc.lbl}</span>
             ${bal > 0 ? `<div class="pay-bal">Bal: ${inr(bal)}</div>` : ''}
           </div>
+          <div class="pay-row-chevron">
+            <i class="ti ${expanded?'ti-chevron-up':'ti-chevron-down'}" style="font-size:14px;color:var(--muted)"></i>
+          </div>
         </div>`;
+
+        // ── Inline payment history (shown when expanded) ──
+        if (expanded) {
+          const flatExps = fex ? fex(f.flatId) : [];
+          const expTotal = flatExps.reduce((s,e) => s+e.amt, 0);
+
+          const expHistRows = flatExps.length
+            ? flatExps.map(e => `
+              <div class="pay-exp-row" id="exprow_${e.expId}">
+                <span class="pay-exp-dot" style="background:var(--indigo)"></span>
+                <span class="pay-exp-cat">${e.cat || 'Payment'}</span>
+                <span class="pay-exp-date">${e.date || e.month || ''}</span>
+                <span class="pay-exp-note">${e.note || ''}</span>
+                <span class="pay-exp-amt">${inr(e.amt)}</span>
+                <div class="pay-exp-actions">
+                  <button class="exp-act-btn edit" onclick="event.stopPropagation();window._editExpInline('${e.expId}','${f.flatId}')" title="Edit">
+                    <i class="ti ti-pencil"></i>
+                  </button>
+                  <button class="exp-act-btn del" onclick="event.stopPropagation();window._delExpInline('${e.expId}','${f.flatId}')" title="Delete">
+                    <i class="ti ti-trash"></i>
+                  </button>
+                </div>
+              </div>`).join('')
+            : `<div class="pay-exp-empty"><i class="ti ti-inbox"></i> No payments recorded yet.</div>`;
+
+          h += `
+          <div class="pay-history-panel" onclick="event.stopPropagation()">
+            <div class="pay-history-head">
+              <span><i class="ti ti-history"></i> Payment History</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                ${flatExps.length ? `<span style="font-size:11px;font-weight:700;color:var(--text2)">Total: <strong style="color:var(--indigo)">${inr(expTotal)}</strong></span>` : ''}
+                <button class="btn btn-indigo btn-sm" style="padding:4px 10px;font-size:11px"
+                  onclick="event.stopPropagation();window._cD&&window._cD();window._oAFor('${f.block||''}','${f.flatId}')">
+                  <i class="ti ti-plus"></i> Add Payment
+                </button>
+                <button class="btn btn-white btn-sm" style="padding:4px 10px;font-size:11px"
+                  onclick="event.stopPropagation();window._oFl('${f.flatId}')">
+                  <i class="ti ti-edit"></i> Edit Flat
+                </button>
+              </div>
+            </div>
+            <div class="pay-exp-rows">
+              ${expHistRows}
+            </div>
+          </div>`;
+        }
       });
     });
   }
