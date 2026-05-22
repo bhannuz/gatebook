@@ -1037,6 +1037,7 @@ let eu=null, iu=null, vu=null, pu=null;
 const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
 let president  = null;        // current president object
+let customCats = { flat: [], soc: [] }; // user-defined expense categories
 let APT_NAME = 'Gatebook';
 
 /* ════════════════════════════════
@@ -1765,7 +1766,6 @@ function rBTabs() {
 
   if (useBlocks) {
     const bs = bks();
-    let AB = AB;
     if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
     document.getElementById('btabs').innerHTML = bs.map(b => {
       const bf = [...flats.values()].filter(f => f.block === b && f.month === AM);
@@ -1780,7 +1780,6 @@ function rBTabs() {
     // No blocks — show floor tabs
     const all = [...flats.values()].filter(f => f.month === AM);
     const floors = [...new Set(all.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
-    let AB = AB;
     const flNums = floors.map(String);
     if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
     document.getElementById('btabs').innerHTML = floors.map(fl => {
@@ -1796,7 +1795,6 @@ function rBTabs() {
 }
 
 function rBlock() {
-  const AB = AB;
   const useBlocks = hasBlocks();
 
   let bf = [...flats.values()].filter(f => f.month === AM);
@@ -2585,7 +2583,7 @@ function rResidents() {
 /* ══ CUSTOM CATEGORIES ══ */
 const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
 const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
-let customCats = { flat: [], soc: [] };
+// customCats declared in state section above
 
 function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
 
