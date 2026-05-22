@@ -497,6 +497,71 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .cat-add-row input:focus{border-color:var(--indigo);box-shadow:0 0 0 3px rgba(99,102,241,.10)}
 .cat-add-row input::placeholder{color:var(--muted);font-weight:400}
 
+
+/* ════════ FLAT DETAIL — BOTTOM DRAWER (mobile-first) ════════ */
+#flatDrawer{
+  position:fixed;bottom:0;left:0;right:0;z-index:600;
+  background:#fff;border-radius:20px 20px 0 0;
+  box-shadow:0 -8px 40px rgba(99,102,241,0.18);
+  transform:translateY(100%);
+  transition:transform .32s cubic-bezier(.4,0,.2,1);
+  max-height:88vh;display:flex;flex-direction:column;
+  border-top:1.5px solid var(--border2);
+}
+#flatDrawer.open{ transform:translateY(0); }
+
+/* On wide screens — side panel */
+@media(min-width:768px){
+  #flatDrawer{
+    left:auto;right:0;top:64px;bottom:0;
+    width:min(420px,48vw);max-height:none;
+    border-radius:0;
+    border-left:1.5px solid var(--border2);
+    border-top:none;
+    box-shadow:-8px 0 40px rgba(99,102,241,0.12);
+    transform:translateX(110%);
+    transition:transform .32s cubic-bezier(.4,0,.2,1);
+  }
+  #flatDrawer.open{ transform:translateX(0); }
+  /* push content left to make room */
+  #app.drawer-open{ padding-right:min(420px,48vw); transition:padding .32s; }
+}
+
+.drawer-handle{
+  width:40px;height:4px;border-radius:99px;
+  background:var(--border3);margin:10px auto 0;flex-shrink:0;cursor:grab;
+}
+.drawer-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px 10px;border-bottom:1px solid var(--border2);flex-shrink:0;
+}
+.drawer-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.drawer-sub{font-size:11px;color:var(--text2);font-weight:500;margin-top:1px}
+.drawer-close{
+  width:30px;height:30px;border-radius:10px;
+  background:var(--surface3);border:1.5px solid var(--border2);
+  color:var(--text2);font-size:16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;
+}
+.drawer-close:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-border)}
+.drawer-body{
+  overflow-y:auto;flex:1;padding:14px 18px 28px;
+  -webkit-overflow-scrolling:touch;
+}
+/* backdrop only on mobile */
+#drawerBg{
+  display:none;position:fixed;inset:0;z-index:599;
+  background:rgba(30,27,75,0.4);backdrop-filter:blur(4px);
+}
+#drawerBg.open{ display:block; }
+@media(min-width:768px){ #drawerBg{ display:none!important; } }
+
+/* stat chips in drawer */
+.drawer-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+.dstat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r-md);padding:9px 10px;text-align:center}
+.dstat-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
+.dstat-val{font-size:14px;font-weight:800;color:var(--text)}
+
 /* ── Responsive ── */
 @media(max-width:700px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
@@ -717,7 +782,21 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 </div>
 </div><!-- /#app -->
 
-<!-- FLAT DETAIL MODAL -->
+<!-- FLAT DETAIL BOTTOM DRAWER -->
+<div id="drawerBg" onclick="window._cD()"></div>
+<div id="flatDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-title" id="dTitle">Flat</div>
+      <div class="drawer-sub" id="dSub"></div>
+    </div>
+    <button class="drawer-close" onclick="window._cD()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="drawer-body" id="dBody"></div>
+</div>
+
+<!-- FLAT DETAIL MODAL (legacy, hidden) -->
 <div class="mbg" id="flatM">
   <div class="modal">
     <div class="mhead">
@@ -725,7 +804,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="micon detail"><i class="ti ti-home"></i></div>
         <div><div class="mtitle" id="mdT"></div><div class="msub" id="mdS"></div></div>
       </div>
-      <button class="mclose" onclick="window._cM()"><i class="ti ti-x"></i></button>
+      <button class="mclose" onclick="window._cD()"><i class="ti ti-x"></i></button>
     </div>
     <div id="mdC"></div>
   </div>
@@ -1159,6 +1238,7 @@ window._oCatM = oCatM;
 window._cCatM = cCatM;
 window._addCat = addCat;
 window._delCat = delCat;
+window._cD=cD;
 window.switchView=switchView;
 window.fIss=fIss;
 window.fMem=fMem;
@@ -1168,94 +1248,115 @@ window.rMembers=rMembers;
    FLAT DETAIL MODAL
 ════════════════════════════════ */
 function oFl(fid) {
-  const f=flats.get(fid);if(!f)return;
-  const s=st(f),bal=f.due-f.paid,ex=fex(fid),tot=ex.reduce((a,e)=>a+e.amt,0);
-  const sc=s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
-  document.getElementById('mdT').textContent=`${f.flatId} — ${f.owner||'(No owner)'}`;
-  document.getElementById('mdS').textContent=`Block ${f.block} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
-  const rows=ex.length
-    ?ex.map(e=>`<div class="erow">
-      <div><div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
-      <div class="edate">${e.date}${e.note?' · '+e.note:''}</div></div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <input type="number" value="${e.amt}" min="0"
-          style="width:80px;text-align:right;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;font-size:13px;font-weight:800;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'"
-          onblur="window._saveExpAmt('${e.expId}',this.value,'${fid}')"/>
-      </div></div>`).join('')
-    :`<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
-  document.getElementById('mdC').innerHTML=`
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Name</label>
-        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Name"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px;transition:border-color .15s"
+  const f = flats.get(fid); if(!f) return;
+  const s = st(f), bal = f.due-f.paid, ex = fex(fid), tot = ex.reduce((a,e)=>a+e.amt,0);
+  const sc = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
+  const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
+  document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
+
+  const rows = ex.length
+    ? ex.map(e=>`<div class="erow">
+        <div>
+          <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
+          <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="number" value="${e.amt}" min="0"
+            style="width:76px;text-align:right;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;font-size:13px;font-weight:800;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'"
+            onblur="window._saveExpAmt('${e.expId}',this.value,'${fid}')"/>
+        </div>
+      </div>`).join('')
+    : `<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
+
+  document.getElementById('dBody').innerHTML = `
+    <!-- Stat chips -->
+    <div class="drawer-stats">
+      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
+      <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
+    </div>
+
+    <!-- Editable fields -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Name</div>
+        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Resident name"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;transition:border-color .15s"
           onfocus="this.style.borderColor='var(--indigo)'"
           onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
       </div>
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Resident Type</label>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Type</div>
         <select id="edType" onchange="window._autoSaveFlat('${fid}');window._toggleOwnerFields(this.value)"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px">
-          <option value="owner" ${(f.resType||'owner')==='owner'?'selected':''}>🏠 Owner</option>
-          <option value="tenant" ${f.resType==='tenant'?'selected':''}>🔑 Tenant</option>
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%">
+          <option value="owner"  ${(f.resType||'owner')==='owner' ?'selected':''}>🏠 Owner</option>
+          <option value="tenant" ${f.resType==='tenant'           ?'selected':''}>🔑 Tenant</option>
         </select>
       </div>
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Monthly Due (₹)</label>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Monthly Due (₹)</div>
         <input type="number" id="edDue" value="${f.due||''}" placeholder="0" min="0"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px;transition:border-color .15s"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;transition:border-color .15s"
           onfocus="this.style.borderColor='var(--indigo)'"
           onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
       </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">📅 Move-In Date</label>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Move-In</div>
         <input type="date" id="edMoveIn" value="${f.moveIn||''}"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
-          onchange="window._autoSaveFlat('${fid}')"/>
-      </div>
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">🚪 Move-Out Date <span style="font-weight:500;text-transform:none;font-size:9px">(if vacated)</span></label>
-        <input type="date" id="edMoveOut" value="${f.moveOut||''}"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
           onchange="window._autoSaveFlat('${fid}')"/>
       </div>
     </div>
-    <div id="ownerSection" style="display:${f.resType==='tenant'?'grid':'none'};grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;background:var(--amber-bg);border:1.5px solid var(--amber-border);border-radius:var(--r-md);padding:12px">
-      <div style="grid-column:1/-1;font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">🏠 Flat Owner Details</div>
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Name</label>
+
+    <!-- Tenant owner section -->
+    <div id="ownerSection" style="display:${f.resType==='tenant'?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;background:var(--amber-bg);border:1.5px solid var(--amber-border);border-radius:var(--r-md);padding:10px">
+      <div style="grid-column:1/-1;font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🏠 Flat Owner Details</div>
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Owner Name</div>
         <input type="text" id="edOwnerName" value="${f.ownerName||''}" placeholder="Owner's name"
-          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
           onfocus="this.style.borderColor='var(--amber)'"
           onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
       </div>
-      <div class="fg" style="margin-bottom:0">
-        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px">Owner Phone</label>
-        <input type="tel" id="edOwnerPhone" value="${f.ownerPhone||''}" placeholder="Owner's contact"
-          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;margin-top:4px"
+      <div>
+        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Owner Phone</div>
+        <input type="tel" id="edOwnerPhone" value="${f.ownerPhone||''}" placeholder="Contact"
+          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
           onfocus="this.style.borderColor='var(--amber)'"
           onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
       </div>
     </div>
-    <div style="height:1px;background:var(--border2);margin-bottom:14px"></div>
-    <div class="dm">
-      <div class="dm-card"><div class="dm-label">Paid</div><div class="dm-value" style="color:var(--green)">${inr(f.paid)}</div></div>
-      <div class="dm-card"><div class="dm-label">Balance</div><div class="dm-value" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(bal)}</div></div>
-      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:13px;color:${sc}">${sl(s)}</div></div>
-    </div>
-    <div class="etitle"><i class="ti ti-list"></i>Payment History</div>
-    <div class="elist">${rows}</div>
-    ${ex.length?`<div class="etotal"><span class="etotal-label">Total Expenses</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
-    <div class="mactions">
-      <button class="btn btn-indigo btn-sm" onclick="window._cM();window._oAFor('${f.block}','${fid}')">
-        <i class="ti ti-plus"></i> Add Payment
+
+    <div style="height:1px;background:var(--border2);margin:10px 0"></div>
+
+    <!-- Payment history -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History</div>
+      <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add
       </button>
-    </div>`;
-  document.getElementById('flatM').classList.add('open');
+    </div>
+    <div class="elist">${rows}</div>
+    ${ex.length?`<div class="etotal"><span class="etotal-label">Total</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
+  `;
+
+  // Open the drawer
+  document.getElementById('flatDrawer').classList.add('open');
+  document.getElementById('drawerBg').classList.add('open');
+  document.getElementById('app').classList.add('drawer-open');
 }
+
+function cD() {
+  document.getElementById('flatDrawer').classList.remove('open');
+  document.getElementById('drawerBg').classList.remove('open');
+  document.getElementById('app').classList.remove('drawer-open');
+}
+
 function cM(){document.getElementById('flatM').classList.remove('open');}
 
 /* auto-save flat fields on blur / select change — no button needed */
@@ -1522,13 +1623,13 @@ document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;li
     if(e.target.id===id){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}
   });
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
 
 /* ════════════════════════════════
    WINDOW EXPOSE
 ════════════════════════════════ */
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
-window._oFl  =oFl;  window._cM=cM;
+window._oFl  =oFl;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
 window._saveExpAmt=saveExpAmt;
