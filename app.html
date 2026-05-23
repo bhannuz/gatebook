@@ -562,6 +562,49 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .dstat-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px}
 .dstat-val{font-size:14px;font-weight:800;color:var(--text)}
 
+
+/* ── Drawer payment history pagination ── */
+.hist-toolbar{
+  display:flex;align-items:center;gap:7px;
+  margin-bottom:8px;flex-wrap:wrap;
+}
+.hist-search{
+  flex:1;min-width:100px;height:32px;padding:0 10px 0 30px;
+  background:var(--surface2);border:1.5px solid var(--border2);
+  color:var(--text);font-family:var(--font);font-size:12px;font-weight:500;
+  border-radius:var(--r-md);outline:none;transition:border-color .18s;
+}
+.hist-search:focus{border-color:var(--indigo)}
+.hist-search-wrap{position:relative;flex:1;min-width:100px}
+.hist-search-wrap i{
+  position:absolute;left:9px;top:50%;transform:translateY(-50%);
+  color:var(--muted);font-size:13px;pointer-events:none;
+}
+.hist-cat-sel{
+  height:32px;padding:0 8px;background:#fff;
+  border:1.5px solid var(--border2);color:var(--text);
+  font-family:var(--font);font-size:12px;font-weight:600;
+  border-radius:var(--r-md);outline:none;cursor:pointer;
+}
+.hist-cat-sel:focus{border-color:var(--indigo)}
+.pager{
+  display:flex;align-items:center;gap:4px;
+  padding:8px 0 2px;justify-content:center;
+}
+.pager-btn{
+  min-width:30px;height:30px;border-radius:var(--r-sm);
+  border:1.5px solid var(--border2);background:#fff;
+  color:var(--text2);font-size:12px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-family:var(--font);transition:all .15s;padding:0 6px;
+}
+.pager-btn:hover:not(:disabled){border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.pager-btn.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.pager-btn:disabled{opacity:.35;cursor:not-allowed}
+.pager-info{font-size:11px;color:var(--text2);font-weight:600;padding:0 4px;white-space:nowrap}
+.hist-empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
+.hist-empty i{font-size:28px;display:block;margin-bottom:6px;opacity:.4}
+
 /* ── Responsive ── */
 @media(max-width:700px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
@@ -1261,27 +1304,29 @@ window.rMembers=rMembers;
 /* ════════════════════════════════
    FLAT DETAIL MODAL
 ════════════════════════════════ */
+/* ── Flat drawer state ── */
+let _dFid = null, _dPage = 0, _dQ = '', _dCat = 'all';
+const PAGE_SIZE = 20;
+
 function oFl(fid) {
+  _dFid  = fid;
+  _dPage = 0;
+  _dQ    = '';
+  _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
   const s   = st(f);
   const bal = f.due - f.paid;
-  const ex  = fex(fid);
-  const tot = ex.reduce((a,e) => a+e.amt, 0);
-  const sc  = s==='paid' ? 'var(--green)' : s==='partial' ? 'var(--amber)' : 'var(--red)';
+  const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
-  document.getElementById('dTitle').textContent = f.flatId + (f.owner ? ' — '+f.owner : '');
-  document.getElementById('dSub').textContent   = (f.block ? 'Block '+f.block+' · ' : '') + month;
+  document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
+  document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
 
-  const rows = ex.length
-    ? ex.map(e => `<div class="erow">
-        <div>
-          <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
-          <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
-        </div>
-        <div class="eamt">${inr(e.amt)}</div>
-      </div>`).join('')
-    : `<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
+  /* Build cat filter options from this flat's history */
+  const ex   = fex(fid);
+  const cats = [...new Set(ex.map(e=>e.cat).filter(Boolean))].sort();
+  const catOpts = `<option value="all">All categories</option>`
+    + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
 
   document.getElementById('dBody').innerHTML = `
     <div class="drawer-stats">
@@ -1289,19 +1334,113 @@ function oFl(fid) {
       <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
       <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
-      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History</div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:12px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History <span id="dHistCount" style="font-size:11px;color:var(--muted);font-weight:600"></span></div>
       <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
         <i class="ti ti-plus"></i> Add
       </button>
     </div>
-    <div class="elist">${rows}</div>
-    ${ex.length ? `<div class="etotal"><span class="etotal-label">Total</span><span class="etotal-val">${inr(tot)}</span></div>` : ''}
+
+    ${ex.length > PAGE_SIZE ? `
+    <div class="hist-toolbar">
+      <div class="hist-search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="hist-search" type="text" placeholder="Search category or note…"
+          oninput="_dQ=this.value.toLowerCase().trim();_dPage=0;_renderHistPage()"/>
+      </div>
+      <select class="hist-cat-sel" onchange="_dCat=this.value;_dPage=0;_renderHistPage()">${catOpts}</select>
+    </div>` : ''}
+
+    <div id="dHistList"></div>
+    <div id="dPager"></div>
   `;
+
+  _renderHistPage();
 
   document.getElementById('flatDrawer').classList.add('open');
   document.getElementById('drawerBg').classList.add('open');
   document.getElementById('app').classList.add('drawer-open');
+}
+
+function _renderHistPage() {
+  const f   = flats.get(_dFid); if (!f) return;
+  const ex  = fex(_dFid);
+
+  /* Filter */
+  const vis = ex.filter(e => {
+    if (_dCat !== 'all' && e.cat !== _dCat) return false;
+    if (_dQ && !(e.cat||'').toLowerCase().includes(_dQ)
+            && !(e.note||'').toLowerCase().includes(_dQ)
+            && !(e.date||'').toLowerCase().includes(_dQ)) return false;
+    return true;
+  });
+
+  const tot   = vis.reduce((s,e)=>s+(e.amt||0), 0);
+  const pages = Math.max(1, Math.ceil(vis.length / PAGE_SIZE));
+  if (_dPage >= pages) _dPage = pages - 1;
+
+  const slice = vis.slice(_dPage * PAGE_SIZE, (_dPage+1) * PAGE_SIZE);
+
+  /* Count label */
+  const cntEl = document.getElementById('dHistCount');
+  if (cntEl) cntEl.textContent = vis.length
+    ? `(${vis.length}${vis.length !== ex.length ? ' filtered' : ''})`
+    : '';
+
+  /* Rows */
+  const listEl = document.getElementById('dHistList');
+  if (!listEl) return;
+
+  if (!vis.length) {
+    listEl.innerHTML = `<div class="hist-empty"><i class="ti ti-inbox"></i>${_dQ||_dCat!=='all'?'No records match this filter.':'No payments recorded yet.'}</div>`;
+    document.getElementById('dPager').innerHTML = '';
+    return;
+  }
+
+  listEl.innerHTML = `
+    <div class="elist">
+      ${slice.map(e=>`<div class="erow">
+        <div>
+          <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
+          <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
+        </div>
+        <div class="eamt">${inr(e.amt)}</div>
+      </div>`).join('')}
+    </div>
+    <div class="etotal" style="margin-top:0">
+      <span class="etotal-label">
+        ${pages>1?`Page ${_dPage+1}/${pages} · `:''}${vis.length} record${vis.length!==1?'s':''}
+      </span>
+      <span class="etotal-val">${inr(tot)}</span>
+    </div>`;
+
+  /* Pagination (only if more than one page) */
+  const pagerEl = document.getElementById('dPager');
+  if (pages <= 1) { pagerEl.innerHTML=''; return; }
+
+  const maxBtns = 5;
+  let start = Math.max(0, _dPage - Math.floor(maxBtns/2));
+  let end   = Math.min(pages, start + maxBtns);
+  if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+
+  let btns = `<button class="pager-btn" onclick="_dPage=Math.max(0,_dPage-1);_renderHistPage()"
+    ${_dPage===0?'disabled':''} title="Previous"><i class="ti ti-chevron-left"></i></button>`;
+
+  if (start > 0) btns += `<button class="pager-btn" onclick="_dPage=0;_renderHistPage()">1</button>
+    ${start>1?'<span class="pager-info">…</span>':''}`;
+
+  for (let i=start; i<end; i++) {
+    btns += `<button class="pager-btn${i===_dPage?' active':''}" onclick="_dPage=${i};_renderHistPage()">${i+1}</button>`;
+  }
+
+  if (end < pages) btns += `${end<pages-1?'<span class="pager-info">…</span>':''}
+    <button class="pager-btn" onclick="_dPage=${pages-1};_renderHistPage()">${pages}</button>`;
+
+  btns += `<button class="pager-btn" onclick="_dPage=Math.min(${pages-1},_dPage+1);_renderHistPage()"
+    ${_dPage===pages-1?'disabled':''} title="Next"><i class="ti ti-chevron-right"></i></button>`;
+
+  pagerEl.innerHTML = `<div class="pager">${btns}</div>`;
 }
 
 function cD() {
