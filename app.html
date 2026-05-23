@@ -1262,93 +1262,33 @@ window.rMembers=rMembers;
    FLAT DETAIL MODAL
 ════════════════════════════════ */
 function oFl(fid) {
-  const f = flats.get(fid); if(!f) return;
-  const s = st(f), bal = f.due-f.paid, ex = fex(fid), tot = ex.reduce((a,e)=>a+e.amt,0);
-  const sc = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
+  const f = flats.get(fid); if (!f) return;
+  const s   = st(f);
+  const bal = f.due - f.paid;
+  const ex  = fex(fid);
+  const tot = ex.reduce((a,e) => a+e.amt, 0);
+  const sc  = s==='paid' ? 'var(--green)' : s==='partial' ? 'var(--amber)' : 'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
-  document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
-  document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
+  document.getElementById('dTitle').textContent = f.flatId + (f.owner ? ' — '+f.owner : '');
+  document.getElementById('dSub').textContent   = (f.block ? 'Block '+f.block+' · ' : '') + month;
 
   const rows = ex.length
-    ? ex.map(e=>`<div class="erow">
+    ? ex.map(e => `<div class="erow">
         <div>
           <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
           <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
         </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <input type="number" value="${e.amt}" min="0"
-            style="width:76px;text-align:right;border:1.5px solid var(--border2);border-radius:var(--r-sm);padding:3px 6px;font-size:13px;font-weight:800;font-family:var(--font);background:var(--surface2);color:var(--text);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'"
-            onblur="window._saveExpAmt('${e.expId}',this.value,'${fid}')"/>
-        </div>
+        <div class="eamt">${inr(e.amt)}</div>
       </div>`).join('')
     : `<div class="eempty"><i class="ti ti-inbox"></i>No payments recorded yet.</div>`;
 
   document.getElementById('dBody').innerHTML = `
-    <!-- Stat chips -->
     <div class="drawer-stats">
       <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
       <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
       <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
     </div>
-
-    <!-- Editable fields -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Name</div>
-        <input type="text" id="edOwner" value="${f.owner||''}" placeholder="Resident name"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;transition:border-color .15s"
-          onfocus="this.style.borderColor='var(--indigo)'"
-          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Type</div>
-        <select id="edType" onchange="window._autoSaveFlat('${fid}');window._toggleOwnerFields(this.value)"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%">
-          <option value="owner"  ${(f.resType||'owner')==='owner' ?'selected':''}>🏠 Owner</option>
-          <option value="tenant" ${f.resType==='tenant'           ?'selected':''}>🔑 Tenant</option>
-        </select>
-      </div>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Monthly Due (₹)</div>
-        <input type="number" id="edDue" value="${f.due||''}" placeholder="0" min="0"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%;transition:border-color .15s"
-          onfocus="this.style.borderColor='var(--indigo)'"
-          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Move-In</div>
-        <input type="date" id="edMoveIn" value="${f.moveIn||''}"
-          style="background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
-          onchange="window._autoSaveFlat('${fid}')"/>
-      </div>
-    </div>
-
-    <!-- Tenant owner section -->
-    <div id="ownerSection" style="display:${f.resType==='tenant'?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;background:var(--amber-bg);border:1.5px solid var(--amber-border);border-radius:var(--r-md);padding:10px">
-      <div style="grid-column:1/-1;font-size:10px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">🏠 Flat Owner Details</div>
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Owner Name</div>
-        <input type="text" id="edOwnerName" value="${f.ownerName||''}" placeholder="Owner's name"
-          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
-          onfocus="this.style.borderColor='var(--amber)'"
-          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
-      </div>
-      <div>
-        <div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Owner Phone</div>
-        <input type="tel" id="edOwnerPhone" value="${f.ownerPhone||''}" placeholder="Contact"
-          style="background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);padding:8px 10px;outline:none;width:100%"
-          onfocus="this.style.borderColor='var(--amber)'"
-          onblur="this.style.borderColor='var(--border2)';window._autoSaveFlat('${fid}')"/>
-      </div>
-    </div>
-
-    <div style="height:1px;background:var(--border2);margin:10px 0"></div>
-
-    <!-- Payment history -->
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History</div>
       <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
@@ -1356,10 +1296,9 @@ function oFl(fid) {
       </button>
     </div>
     <div class="elist">${rows}</div>
-    ${ex.length?`<div class="etotal"><span class="etotal-label">Total</span><span class="etotal-val">${inr(tot)}</span></div>`:''}
+    ${ex.length ? `<div class="etotal"><span class="etotal-label">Total</span><span class="etotal-val">${inr(tot)}</span></div>` : ''}
   `;
 
-  // Open the drawer
   document.getElementById('flatDrawer').classList.add('open');
   document.getElementById('drawerBg').classList.add('open');
   document.getElementById('app').classList.add('drawer-open');
