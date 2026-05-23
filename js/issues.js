@@ -1,4 +1,4 @@
-/* ════ issues.js — issues list, raise, detail, update ════ */
+/* --- issues.js — issues list, raise, detail, update ==== */
 import { db } from './firebase.js';
 import { doc, addDoc, updateDoc, collection, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
@@ -50,15 +50,13 @@ function fIss(f) {
 }
 
 
-/* ══ members.js ══ */
-/* ════════════════════════════════
+/* --- members.js == */
+/* ---
    MEMBERS TAB — js/members.js
    Depends on: window.APP (shared state injected from app.html)
-════════════════════════════════ */
 
 /* MF declared in state line above */
 
-════════════════════════════════ */
 function oRI(){
   ['iT','iDe','iFl','iRe'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('iP').value='medium';
@@ -101,9 +99,9 @@ async function sI(){
   }
 }
 
-/* ════════════════════════════════
+/* ---
    ISSUE DETAIL MODAL
-════════════════════════════════ */
+
 function oID(id){
   const iss=issues.find(i=>i.id===id);if(!iss)return;
   const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
@@ -161,7 +159,7 @@ async function uIS(id,ns){
   }catch(e){console.error(e);sync('error');toast('Update failed.','error');}
 }
 
-/* ════════════════════════════════
+/* ---
    FIRESTORE LISTENERS
    (scoped under apartments/{uid}/...)
 

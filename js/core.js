@@ -1,7 +1,7 @@
-/* ════════════════════════════════
+/* ---
    core.js — State, helpers, boot,
    listeners, wizard, routing
-════════════════════════════════ */
+
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
@@ -27,9 +27,9 @@ import { loadCats, renderCatOpts, renderCatChips, getCats,
   from './categories.js';
 
 
-/* ════════════════════════════════
+/* ---
    AUTH GUARD
-════════════════════════════════ */
+
 let UID = null;
 
 onAuthStateChanged(auth, user => {
@@ -50,10 +50,10 @@ window._doSignOut = async function() {
   window.location.replace('index.html');
 };
 
-/* ════════════════════════════════
+/* ---
    HELPERS for scoped Firestore paths
    All data lives under apartments/{uid}/...
-════════════════════════════════ */
+
 const flatsColl   = () => collection(db, 'apartments', UID, 'flats');
 const expColl     = () => collection(db, 'apartments', UID, 'expenses');
 const issuesColl  = () => collection(db, 'apartments', UID, 'issues');
@@ -65,9 +65,9 @@ const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
 const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
 const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
 
-/* ════════════════════════════════
+/* ---
    STATE
-════════════════════════════════ */
+
 const flats  = new Map();
 const exps   = new Map();
 const issues = [];
@@ -82,9 +82,9 @@ const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift',
 const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
 let APT_NAME = 'Gatebook';
 
-/* ════════════════════════════════
+/* ---
    HELPERS
-════════════════════════════════ */
+
 const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
 const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
 const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
@@ -116,9 +116,9 @@ function buildMonthSelect() {
   sel.innerHTML = opts.join('');
 }
 
-/* ════════════════════════════════
+/* ---
    APT NAME
-════════════════════════════════ */
+
 function applyAptName(name) {
   APT_NAME = name||'Gatebook';
   document.getElementById('aptNameDisplay').innerHTML =
@@ -127,9 +127,9 @@ function applyAptName(name) {
 }
 
 
-/* ════════════════════════════════
+/* ---
    SYNC & TOAST
-════════════════════════════════ */
+
 function sync(s) {
   const d=document.getElementById('sdot'),l=document.getElementById('slbl');
   if(!d)return;
@@ -145,10 +145,9 @@ function toast(msg, t='success') {
   setTimeout(()=>el.className='',3200);
 }
 
-/* ════════════════════════════════
+/* ---
    RENDER
 
-════════════════════════════════ */
 function rStats() {
   const all=([...flats.values()]).filter(f=>f.month===AM);
   const due=all.reduce((s,f)=>s+f.due,0);
@@ -208,14 +207,13 @@ window.fIss=fIss;
 window.fMem=fMem;
 window.rMembers=rMembers;
 
-/* ════════════════════════════════
+/* ---
    FLAT DETAIL MODAL
-════════════════════════════════ */
+
 /* ── Flat drawer state ── */
 let _dFid = null, _dPage = 0, _dQ = '', _dCat = 'all';
 const PAGE_SIZE = 20;
 
-════════════════════════════════ */
 function listenFlats(){
   let _firstLoad = true;
   onSnapshot(flatsColl(), snap => {
@@ -257,9 +255,9 @@ function listenIssues(){
     ()=>{iu=onSnapshot(issuesColl(),snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();});});
 }
 
-/* ════════════════════════════════
+/* ---
    DOM EVENTS
-════════════════════════════════ */
+
 document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock();});
 document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;rBlock();});
 document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
@@ -273,9 +271,9 @@ document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.to
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
 
-/* ════════════════════════════════
+/* ---
    WINDOW EXPOSE
-════════════════════════════════ */
+
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
 window._oFl  =oFl;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
@@ -297,10 +295,10 @@ window.rPresident = rPresident;
 // issues.js / members.js
 window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
 
-/* ════════════════════════════════
+/* ---
    IN-APP SETUP WIZARD
    Shown when the account has no flats yet
-════════════════════════════════ */
+
 let WIZ_BLOCKS = [{ name:'A', floors:4, flatsPerFloor:4 }];
 
 function wizSetStep(n) {
@@ -420,9 +418,8 @@ window._wizLaunch = async function() {
   }
 };
 
-/* ════════════════════════════════
+/* ---
    INLINED: payments.js
-════════════════════════════════ */
 
 /* ── switchView (was missing) ── */
 function switchView(v) {
@@ -449,10 +446,9 @@ function rAll(){
   if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
 }
 
-/* ════════════════════════════════
+/* ---
    LISTENERS for Vehicles + SocExp
 
-════════════════════════════════ */
 function listenVehicles(){
   if(vu)vu();
   vu=onSnapshot(vehColl(),snap=>{

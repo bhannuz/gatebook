@@ -1,4 +1,4 @@
-/* ════ categories.js — custom expense categories + inline add ════ */
+/* --- categories.js — custom expense categories + inline add ==== */
 import { db } from './firebase.js';
 import { doc, setDoc, getDoc }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
@@ -71,7 +71,7 @@ window._addCat=addCat; window._delCat=delCat;
 
 
 /* ── Inline category add in dropdowns ── */
-window._catSelChange = function(selId, type) {
+function _catSelChange(selId, type) {
   const sel = document.getElementById(selId);
   if (!sel) return;
   if (sel.value === '__new__') {
@@ -81,7 +81,7 @@ window._catSelChange = function(selId, type) {
   }
 };
 
-window._showInlineCat = function(selId) {
+function _showInlineCat(selId) {
   const wrap = document.getElementById(selId + '_new');
   const inp  = document.getElementById(selId + '_input');
   if (!wrap) return;
@@ -89,12 +89,12 @@ window._showInlineCat = function(selId) {
   if (inp) { inp.value = ''; inp.focus(); }
 };
 
-window._hideInlineCat = function(selId) {
+function _hideInlineCat(selId) {
   const wrap = document.getElementById(selId + '_new');
   if (wrap) wrap.style.display = 'none';
 };
 
-window._addInlineCat = async function(selId, type) {
+async function _addInlineCat(selId, type) {
   const inp = document.getElementById(selId + '_input');
   const val = (inp?.value || '').trim();
   if (!val) { inp?.focus(); return; }
@@ -114,4 +114,4 @@ window._addInlineCat = async function(selId, type) {
   toast(`"${val}" added ✓`);
 };
 
-export { getCats, renderCatOpts, renderCatChips, oCatM, cCatM, addCat, delCat, saveCats, loadCats, _catSelChange, _addInlineCat, _hideInlineCat, _showInlineCat };
+export { getCats, renderCatOpts, renderCatChips, oCatM, cCatM, addCat, delCat, saveCats, loadCats, _catSelChange, _showInlineCat, _hideInlineCat, _addInlineCat };

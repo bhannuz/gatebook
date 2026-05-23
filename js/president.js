@@ -1,4 +1,4 @@
-/* ════ president.js — president chip, society expenses, category breakdown ════ */
+/* --- president.js — president chip, society expenses, category breakdown ==== */
 import { db } from './firebase.js';
 import { doc, addDoc, updateDoc, deleteDoc, collection, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';

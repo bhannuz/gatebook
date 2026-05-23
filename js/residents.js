@@ -1,4 +1,4 @@
-/* ════ residents.js — members, vehicles, merged residents tab ════ */
+/* --- residents.js — members, vehicles, merged residents tab ==== */
 import { db } from './firebase.js';
 import { doc, setDoc, deleteDoc, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
@@ -119,11 +119,10 @@ function rMembers() {
 }
 
 
-/* ══ vehicles.js ══ */
-/* ════════════════════════════════
+/* --- vehicles.js == */
+/* ---
    VEHICLES TAB — js/vehicles.js
    Reads from: closure vars (shared state)
-════════════════════════════════ */
 
 function rVehicles() {
   const q  = (document.getElementById('vehQ')?.value || '').toLowerCase().trim();
@@ -243,11 +242,10 @@ async function delVeh() {
 }
 
 
-/* ══ president.js ══ */
-/* ════════════════════════════════
+/* --- president.js == */
+/* ---
    PRESIDENT TAB — js/president.js
    Reads from: closure vars (shared state)
-════════════════════════════════ */
 
 const CAT_ICONS = {
   Maintenance:'ti-tool', Water:'ti-droplet', Electricity:'ti-bolt',
@@ -265,7 +263,7 @@ const CAT_CLR = {
   Gardening:'var(--green)', Painting:'var(--amber)', Other:'var(--text2)'
 };
 
-/* ══ RESIDENTS TAB (merged Members + Vehicles) ══ */
+/* --- RESIDENTS TAB (merged Members + Vehicles) == */
 function rResidents() {
   // re-use rMembers for now — members tab shows in resView
   // Vehicle summary cards
@@ -342,7 +340,7 @@ function rResidents() {
   }).join('');
 }
 
-/* ══ CUSTOM CATEGORIES ══ */
+/* --- CUSTOM CATEGORIES == */
 // DEFAULT_FLAT_CATS moved to top-level state section
 // DEFAULT_SOC_CATS moved to top-level state section
 // customCats declared in state section above

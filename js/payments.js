@@ -1,4 +1,4 @@
-/* ════ payments.js — flat grid, drawer, add payment/flat ════ */
+/* --- payments.js — flat grid, drawer, add payment/flat ==== */
 import { db } from './firebase.js';
 import { doc, addDoc, setDoc, updateDoc, collection, serverTimestamp }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
@@ -9,12 +9,11 @@ export const PAGE_SIZE = 20;
 
 function setAB(v) { AB = v; }
 
-/* ══ payments.js ══ */
-/* ═══════════════════════════════
+/* --- payments.js == */
+/* ---
    PAYMENTS TAB — js/payments.js
    Handles: block tabs OR floor tabs (no-block buildings)
    Custom filters: status, resident type, floor, search
-════════════════════════════════ */
 
 function hasBlocks() {
   return [...flats.values()].some(f => (f.block || '').trim() !== '');
@@ -147,11 +146,10 @@ function rBlock() {
 }
 
 
-/* ══ issues.js ══ */
-/* ════════════════════════════════
+/* --- issues.js == */
+/* ---
    ISSUES TAB — js/issues.js
    Depends on: window.APP (shared state injected from app.html)
-════════════════════════════════ */
 
 function oFl(fid) {
   _dFid  = fid;
@@ -338,9 +336,9 @@ async function saveExpAmt(expId, rawVal, fid) {
   } catch(e){ console.error(e);sync('error');toast('Update failed.','error'); }
 }
 
-/* ════════════════════════════════
+/* ---
    ADD EXPENSE MODAL
-════════════════════════════════ */
+
 function fBS(){
   document.getElementById('fB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
   document.getElementById('fB').value=AB;
@@ -374,9 +372,9 @@ async function sE(){
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
 
-/* ════════════════════════════════
+/* ---
    ADD FLAT MODAL
-════════════════════════════════ */
+
 function oAF(){
   document.getElementById('nB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
   document.getElementById('nI').value='';document.getElementById('nO').value='';document.getElementById('nD').value='';
@@ -396,7 +394,7 @@ async function sNF(){
   }catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
 
-/* ════════════════════════════════
+/* ---
    RAISE ISSUE MODAL
 
 export { setAB, hasBlocks, getFloors, updateFloorFilter, rBTabs, rBlock, oFl, _renderHistPage, cD, cM, autoSaveFlat, toggleOwnerFields, saveExpAmt, fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF };
