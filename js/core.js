@@ -3,29 +3,32 @@
    listeners, wizard, routing
 ════════════════════════════════ */
 import { auth, db } from './firebase.js';
-import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { onAuthStateChanged, signOut }
+  from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 import { rBTabs, rBlock, oFl, _renderHistPage, cD,
-         fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF } from './payments.js';
-import { rIssues, fIss, oRI, cRI, sI, oID, cID, uIS } from './issues.js';
+         fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF,
+         setAB, hasBlocks, getFloors, updateFloorFilter }
+  from './payments.js';
+import { rIssues, fIss, oRI, cRI, sI, oID, cID, uIS }
+  from './issues.js';
 import { rResidents, rMembers, rVehicles, fMem,
-         oVehM, oVehFor, cVehM, sVeh, delVeh } from './residents.js';
+         oVehM, oVehFor, cVehM, sVeh, delVeh }
+  from './residents.js';
 import { rPresident, oPresM, cPresM, sPres,
-         oPresExp, cPresExp, sPresExp, updSEStatus, delSE } from './president.js';
-import { loadCats, renderCatOpts, oCatM, cCatM,
-         addCat, delCat, _catSelChange, _addInlineCat, _hideInlineCat,
-         _showInlineCat } from './categories.js';
+         oPresExp, cPresExp, sPresExp, updSEStatus, delSE }
+  from './president.js';
+import { loadCats, renderCatOpts, renderCatChips, getCats,
+         oCatM, cCatM, addCat, delCat, saveCats,
+         _catSelChange, _addInlineCat, _hideInlineCat, _showInlineCat }
+  from './categories.js';
 
-import { auth, db } from './js/firebase.js';
-import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-import {
-  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
+collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
-/* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
    AUTH GUARD
@@ -509,21 +512,22 @@ async function boot(){
   }
 }
 
-/* ── Expose all to window ── */
-window._doSignOut = async () => { await signOut(auth); window.location.replace('index.html'); };
-window._sB        = v => { setAB(v); rBTabs(); rBlock(); };
-window._oFl       = oFl; window._cD = cD; window._cM = cD;
-window._oA        = oA;  window._oAFor = oAFor; window._cA = cA; window._sE = sE;
-window._oAF       = oAF; window._cAF = cAF; window._sNF = sNF;
-window._oRI       = oRI; window._cRI = cRI; window._sI  = sI;
-window._oID       = oID; window._cID = cID; window._uIS = uIS;
-window._oVehM     = oVehM; window._oVehFor = oVehFor; window._cVehM = cVehM;
-window._sVeh      = sVeh;  window._delVeh  = delVeh;
-window._oPresM    = oPresM; window._cPresM = cPresM; window._sPres = sPres;
-window._oPresExp  = oPresExp; window._cPresExp = cPresExp; window._sPresExp = sPresExp;
-window._updSEStatus = updSEStatus; window._delSE = delSE;
-window._oCatM     = oCatM; window._cCatM = cCatM;
-window._addCat    = addCat; window._delCat = delCat;
+/* ── Window exposes ── */
+window._doSignOut     = async () => { await signOut(auth); window.location.replace('index.html'); };
+window._sB            = v => { setAB(v); rBTabs(); rBlock(); };
+window._oFl           = oFl;   window._cD = cD;  window._cM = cD;
+window._renderHistPage = _renderHistPage;
+window._oA            = oA;    window._oAFor = oAFor; window._cA = cA;  window._sE = sE;
+window._oAF           = oAF;   window._cAF = cAF;    window._sNF = sNF;
+window._oRI           = oRI;   window._cRI = cRI;    window._sI  = sI;
+window._oID           = oID;   window._cID = cID;    window._uIS = uIS;
+window._oVehM         = oVehM; window._oVehFor = oVehFor; window._cVehM = cVehM;
+window._sVeh          = sVeh;  window._delVeh  = delVeh;
+window._oPresM        = oPresM;   window._cPresM   = cPresM;   window._sPres    = sPres;
+window._oPresExp      = oPresExp; window._cPresExp = cPresExp; window._sPresExp = sPresExp;
+window._updSEStatus   = updSEStatus; window._delSE = delSE;
+window._oCatM         = oCatM; window._cCatM = cCatM;
+window._addCat        = addCat; window._delCat = delCat;
 window._catSelChange  = _catSelChange;
 window._addInlineCat  = _addInlineCat;
 window._hideInlineCat = _hideInlineCat;
@@ -533,4 +537,4 @@ window.fIss           = fIss;
 window.fMem           = fMem;
 window.rPresident     = rPresident;
 window.rResidents     = rResidents;
-window._renderHistPage = _renderHistPage;
+window.renderCatOpts  = renderCatOpts;
