@@ -1129,6 +1129,8 @@ const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
 let president  = null;        // current president object
 let customCats = { flat: [], soc: [] }; // user-defined expense categories
+const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
+const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
 let APT_NAME = 'Gatebook';
 
 /* ════════════════════════════════
@@ -1628,7 +1630,7 @@ document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rB
 document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;rBlock();});
 document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
 document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
-document.getElementById('mf').addEventListener('change',e=>{AM=e.target.value;listenExp();});
+// #mf month dropdown removed from UI — AM stays as current month
 ['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM','catM'].forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
   el.addEventListener('click',e=>{
@@ -2631,8 +2633,8 @@ function rResidents() {
 }
 
 /* ══ CUSTOM CATEGORIES ══ */
-const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
-const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
+// DEFAULT_FLAT_CATS moved to top-level state section
+// DEFAULT_SOC_CATS moved to top-level state section
 // customCats declared in state section above
 
 function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
