@@ -203,9 +203,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .floor-divider i{display:none}
 
 /* ── FLAT CARDS ── */
-.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:7px;margin-bottom:1rem}
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem}
 .fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-md);
-  padding:5px 7px 4px;cursor:pointer;position:relative;overflow:hidden;transition:all .22s;box-shadow:var(--shadow-sm)}
+  padding:8px 10px 7px;cursor:pointer;position:relative;overflow:hidden;width:100%;box-sizing:border-box;transition:all .22s;box-shadow:var(--shadow-sm)}
 .fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
 .fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
@@ -216,8 +216,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
 .fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:4px}
-.fc-num{font-size:11px;font-weight:800;color:var(--text)}
-.fc-owner{font-size:9px;color:var(--text2);margin-top:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80px;font-weight:500}
+.fc-num{font-size:12px;font-weight:800;color:var(--text)}
+.fc-owner{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
 .fc-type{font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block;margin-top:1px}
 .fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
 .fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
@@ -225,17 +225,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
 .fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
-.fc-amount{font-size:13px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:1px}
+.fc-amount{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:2px}
 .fcard.paid    .fc-amount{color:var(--green)}
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
-.fc-due{font-size:8px;color:var(--muted);font-weight:600}
+.fc-due{font-size:9px;color:var(--muted);font-weight:600}
 .fprog{height:2px;background:var(--bg2);border-radius:99px;margin:3px 0 2px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
 .fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
 .fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
-.spill{display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:700;padding:1px 5px;
+.spill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;
   border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
 .spill i{font-size:8px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
@@ -605,6 +605,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hist-empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
 .hist-empty i{font-size:28px;display:block;margin-bottom:6px;opacity:.4}
 
+/* Tablet: 3 cols */
+@media(min-width:481px) and (max-width:900px){
+  .fgrid{grid-template-columns:repeat(3,1fr)}
+}
+/* Desktop: auto cols */
+@media(min-width:901px){
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}
 /* ── Responsive ── */
 @media(max-width:700px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
