@@ -26,9 +26,6 @@ import { loadCats, renderCatOpts, renderCatChips, getCats,
          _catSelChange, _addInlineCat, _hideInlineCat, _showInlineCat }
   from './categories.js';
 
-collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp,
-} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 /* ════════════════════════════════
    AUTH GUARD
