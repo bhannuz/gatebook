@@ -1,159 +1,79 @@
-/* ════════════════════════════════
+/* ════ payments.js — flat grid, drawer, add payment/flat ════ */
+import { db } from './firebase.js';
+import { doc, addDoc, setDoc, updateDoc, collection, serverTimestamp }
+  from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+
+// State injected by core
+export let _dFid=null, _dPage=0, _dQ='', _dCat='all';
+export const PAGE_SIZE = 20;
+
+function setAB(v) { AB = v; }
+
+/* ══ payments.js ══ */
+/* ═══════════════════════════════
    PAYMENTS TAB — js/payments.js
-   Click a flat row → expands inline payment history.
-   Edit button at edge of each record.
+   Handles: block tabs OR floor tabs (no-block buildings)
+   Custom filters: status, resident type, floor, search
 ════════════════════════════════ */
 
-let _expandedFlat = null; // currently expanded flat ID
-
 function hasBlocks() {
-  return [...window.APP.flats.values()].some(f => (f.block || '').trim() !== '');
+  return [...flats.values()].some(f => (f.block || '').trim() !== '');
 }
 
-function getFloors(block) {
-  const { flats, AM } = window.APP;
+function getFloors(blockOrAll) {
   const all = [...flats.values()].filter(f => f.month === AM);
-  const scoped = block ? all.filter(f => f.block === block) : all;
-  return [...new Set(scoped.map(f => f.floor).filter(x => x != null))].sort((a, b) => a - b);
+  const scoped = blockOrAll ? all.filter(f => f.block === blockOrAll) : all;
+  return [...new Set(scoped.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
 }
 
 function updateFloorFilter(block) {
   const sel = document.getElementById('flf');
   if (!sel) return;
-  if (!hasBlocks()) { sel.style.display = 'none'; return; }
+  if (!hasBlocks()) { sel.style.display = 'none'; return; } // no-block uses floor tabs not dropdown
   const floors = getFloors(block);
   if (floors.length > 1) {
-    sel.innerHTML = `<option value="all">All floors</option>`
-      + floors.map(fl => `<option value="${fl}">Floor ${fl}</option>`).join('');
+    sel.innerHTML = `<option value="all">All floors</option>` +
+      floors.map(fl => `<option value="${fl}">Floor ${fl}</option>`).join('');
     sel.style.display = '';
   } else {
     sel.style.display = 'none';
   }
 }
 
-/* ── Toggle inline expansion ── */
-window._togglePayRow = function(fid) {
-  _expandedFlat = _expandedFlat === fid ? null : fid;
-  rBlock();
-};
-
-/* ── Inline edit a payment record amount/cat ── */
-window._editExpInline = function(expId, fid) {
-  const row = document.getElementById(`exprow_${expId}`);
-  if (!row) return;
-  const { fex, inr } = window.APP;
-  const exps = fex ? fex(fid) : [];
-  const e    = exps.find(x => x.expId === expId);
-  if (!e) return;
-
-  // Replace the row with an inline edit form
-  const cats = window.APP.categories?.length
-    ? window.APP.categories
-    : ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
-
-  row.outerHTML = `
-    <div class="pay-exp-edit" id="exprow_${expId}">
-      <select id="eecat_${expId}" style="flex:0 0 110px;background:var(--surface2);border:1.5px solid var(--indigo);
-        border-radius:var(--r-sm);padding:4px 6px;font-size:11px;font-weight:700;font-family:var(--font);color:var(--text);outline:none">
-        ${cats.map(c=>`<option value="${c}"${c===e.cat?' selected':''}>${c}</option>`).join('')}
-      </select>
-      <input id="eenote_${expId}" type="text" value="${e.note||''}" placeholder="Note"
-        style="flex:1;background:var(--surface2);border:1.5px solid var(--border2);
-          border-radius:var(--r-sm);padding:4px 7px;font-size:11px;font-family:var(--font);
-          color:var(--text);outline:none;min-width:60px"/>
-      <input id="eeamt_${expId}" type="number" value="${e.amt}" min="0"
-        style="width:80px;text-align:right;background:var(--surface2);border:1.5px solid var(--indigo);
-          border-radius:var(--r-sm);padding:4px 6px;font-size:12px;font-weight:800;
-          font-family:var(--font);color:var(--text);outline:none"/>
-      <button onclick="window._saveExpEdit('${expId}','${fid}')"
-        style="padding:4px 10px;background:var(--indigo);color:#fff;border:none;border-radius:var(--r-sm);
-          font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap">
-        <i class="ti ti-check"></i> Save
-      </button>
-      <button onclick="window._cancelExpEdit('${expId}','${fid}')"
-        style="padding:4px 8px;background:var(--surface2);color:var(--text2);border:1.5px solid var(--border2);
-          border-radius:var(--r-sm);font-size:11px;cursor:pointer;font-family:var(--font)">
-        <i class="ti ti-x"></i>
-      </button>
-    </div>`;
-};
-
-window._saveExpEdit = async function(expId, fid) {
-  const cat  = document.getElementById(`eecat_${expId}`)?.value || 'Maintenance';
-  const note = document.getElementById(`eenote_${expId}`)?.value.trim() || '';
-  const amt  = parseInt(document.getElementById(`eeamt_${expId}`)?.value) || 0;
-  const { db, UID, sync, toast } = window.APP;
-  sync('saving');
-  try {
-    const { doc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await updateDoc(doc(db,'apartments',UID,'expenses',expId), { cat, note, amt });
-    // Recalculate flat paid
-    const { fex } = window.APP;
-    const all = fex ? fex(fid) : [];
-    const totalPaid = all.reduce((s,e) => e.expId===expId ? s+amt : s+e.amt, 0);
-    await updateDoc(doc(db,'apartments',UID,'flats',fid), { paid: totalPaid });
-    sync('live'); toast('Payment updated ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Update failed.','error'); }
-};
-
-window._cancelExpEdit = function(expId, fid) {
-  rBlock(); // re-render to restore original row
-};
-
-window._delExpInline = async function(expId, fid) {
-  if (!confirm('Delete this payment record?')) return;
-  const { db, UID, sync, toast, fex } = window.APP;
-  sync('saving');
-  try {
-    const { doc, deleteDoc, updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await deleteDoc(doc(db,'apartments',UID,'expenses',expId));
-    const remaining = (fex ? fex(fid) : []).filter(e => e.expId !== expId);
-    const totalPaid = remaining.reduce((s,e) => s+e.amt, 0);
-    await updateDoc(doc(db,'apartments',UID,'flats',fid), { paid: totalPaid });
-    sync('live'); toast('Record deleted ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
-
-/* ── Block / Floor tab strip ── */
-export function rBTabs() {
-  const { bks, flats, AM, st } = window.APP;
+function rBTabs() {
   const useBlocks = hasBlocks();
 
   if (useBlocks) {
     const bs = bks();
-    let AB = window.APP.AB;
-    if (!bs.includes(AB)) { AB = bs[0] || ''; window.APP._setAB(AB); }
+    if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
     document.getElementById('btabs').innerHTML = bs.map(b => {
       const bf = [...flats.values()].filter(f => f.block === b && f.month === AM);
       const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${b === window.APP.AB ? ' active' : ''}" onclick="window._sB('${b}')">
-        <i class="ti ti-building"></i> Block ${b || 'All'}
+      return `<button class="btab${b === AB ? ' active' : ''}" onclick="window._sB('${b}')">
+        <i class="ti ti-building"></i> Block ${b}
         <span class="btab-badge">${pc}/${bf.length}</span>
       </button>`;
     }).join('');
-    updateFloorFilter(window.APP.AB);
+    updateFloorFilter(AB);
   } else {
+    // No blocks — show floor tabs
     const all = [...flats.values()].filter(f => f.month === AM);
-    const floors = [...new Set(all.map(f => f.floor).filter(x => x != null))].sort((a, b) => a - b);
-    let AB = window.APP.AB;
-    if (!floors.map(String).includes(String(AB))) { AB = String(floors[0] || 1); window.APP._setAB(AB); }
+    const floors = [...new Set(all.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
+    const flNums = floors.map(String);
+    if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
     document.getElementById('btabs').innerHTML = floors.map(fl => {
       const bf = all.filter(f => f.floor === fl);
       const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${String(fl) === String(window.APP.AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
+      return `<button class="btab${String(fl) === String(AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
         <i class="ti ti-stairs"></i> Floor ${fl}
         <span class="btab-badge">${pc}/${bf.length}</span>
       </button>`;
     }).join('');
-    const flf = document.getElementById('flf');
-    if (flf) flf.style.display = 'none';
+    document.getElementById('flf').style.display = 'none'; // no dropdown when using floor tabs
   }
 }
 
-/* ── Main payment list — line by line with inline history ── */
-export function rBlock() {
-  const { flats, fex, AM, FS, SQ, RTF, FLF, st, inr } = window.APP;
-  const AB = window.APP.AB;
+function rBlock() {
   const useBlocks = hasBlocks();
 
   let bf = [...flats.values()].filter(f => f.month === AM);
@@ -176,137 +96,307 @@ export function rBlock() {
     return true;
   });
 
-  const totalDue  = bf.reduce((s, f) => s + (f.due  || 0), 0);
-  const totalPaid = bf.reduce((s, f) => s + (f.paid || 0), 0);
-  const paid      = bf.filter(f => st(f) === 'paid').length;
-  const headLabel = useBlocks ? `Block ${AB || 'All'}` : `Floor ${AB}`;
+  const pc  = bf.filter(f => st(f) === 'paid').length;
+  const col = bf.reduce((s, f) => s + f.paid, 0);
+  const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
 
-  let h = `
-  <div class="bhead">
+  let h = `<div class="bhead">
     <div class="bhead-left">
       <div class="bstripe"></div>
       <div class="btitle">${headLabel}</div>
-      <span class="bbadge">✅ ${paid}/${bf.length}</span>
+      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
     </div>
-    <div class="bcollected">Collected: <strong>${inr(totalPaid)}</strong> of ${inr(totalDue)}</div>
-  </div>
-  <div class="pay-list">`;
+    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
+  </div><div class="fgrid">`;
 
   if (!vis.length) {
-    h += `<div class="pay-empty"><i class="ti ti-search-off"></i> No flats match your filter.</div>`;
+    h += `<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
   } else {
+    // Group by floor when in block view with multiple floors
     const byFloor = {};
     vis.forEach(f => { const fl = f.floor ?? '—'; (byFloor[fl] = byFloor[fl] || []).push(f); });
-    const sortedFloors = Object.keys(byFloor).sort((a, b) => Number(a) - Number(b));
-    const multiFloor   = useBlocks && sortedFloors.length > 1;
+    const sortedFloors = Object.keys(byFloor).sort((a,b) => Number(a) - Number(b));
+    const multiFloor = useBlocks && sortedFloors.length > 1;
 
-    sortedFloors.forEach(fl => {
+    sortedFloors.forEach((fl, idx) => {
       if (multiFloor) {
-        const flFlats = byFloor[fl];
-        const flPaid  = flFlats.filter(f => st(f) === 'paid').length;
-        const flCol   = flFlats.reduce((s, f) => s + f.paid, 0);
-        h += `<div class="pay-floor-head">
-          <i class="ti ti-stairs"></i> Floor ${fl}
-          <span class="pay-floor-badge">${flPaid}/${flFlats.length} paid · ${inr(flCol)}</span>
-        </div>`;
+        if (idx > 0) h += `</div>`;
+        h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
       }
-
       byFloor[fl].forEach(f => {
-        const s        = st(f);
-        const pct      = f.due ? Math.round(Math.min(f.paid / f.due * 100, 100)) : 0;
-        const bal      = (f.due || 0) - (f.paid || 0);
-        const isVacant = !(f.owner || '').trim();
-        const rType    = isVacant ? 'vacant' : (f.resType || 'owner');
-        const expanded = _expandedFlat === f.flatId;
-
-        const sc = {
-          paid:    { bg:'var(--green-bg)', clr:'var(--green)',  lbl:'✅ Paid' },
-          partial: { bg:'var(--amber-bg)', clr:'var(--amber)',  lbl:'⚠ Partial' },
-          pending: { bg:'var(--red-bg)',   clr:'var(--red)',    lbl:'❌ Pending' },
-        }[s] || { bg:'var(--red-bg)', clr:'var(--red)', lbl:'❌ Pending' };
-
-        const resTypeBadge = isVacant
-          ? `<span class="prow-type vacant">🚪 Vacant</span>`
-          : rType === 'tenant'
-          ? `<span class="prow-type tenant">🔑 Tenant</span>`
-          : `<span class="prow-type owner">🏠 Owner</span>`;
-
-        // ── Flat row (clickable to expand) ──
-        h += `
-        <div class="pay-row ${s}${expanded?' expanded':''}" onclick="window._togglePayRow('${f.flatId}')">
-          <div class="pay-row-left">
-            <div class="pay-flat-id">${f.flatId}</div>
-            <div class="pay-owner">${f.owner || '(Vacant)'}</div>
-            ${resTypeBadge}
-          </div>
-          <div class="pay-row-mid">
-            <div class="pay-prog-wrap">
-              <div class="pay-prog-bar">
-                <div class="pay-prog-fill ${s}" style="width:${pct}%"></div>
-              </div>
-              <span class="pay-pct">${pct}%</span>
+        const s = st(f), pct = f.due ? Math.round(Math.min(f.paid/f.due*100,100)) : 0;
+        h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
+          onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
+          <div class="fc-top">
+            <div>
+              <div class="fc-num">${f.flatId}</div>
+              <div class="fc-owner">${f.owner || '(No owner)'}</div>
+              <span class="fc-type ${f.resType || 'owner'}">${f.resType === 'tenant' ? 'Tenant' : 'Owner'}</span>
             </div>
+            <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
           </div>
-          <div class="pay-row-right">
-            <div class="pay-amount">${inr(f.paid)}</div>
-            <div class="pay-due">of ${inr(f.due)}</div>
-            <span class="pay-status-chip" style="background:${sc.bg};color:${sc.clr}">${sc.lbl}</span>
-            ${bal > 0 ? `<div class="pay-bal">Bal: ${inr(bal)}</div>` : ''}
-          </div>
-          <div class="pay-row-chevron">
-            <i class="ti ${expanded?'ti-chevron-up':'ti-chevron-down'}" style="font-size:14px;color:var(--muted)"></i>
-          </div>
+          <div class="fc-amount">${inr(f.paid)}</div>
+          <div class="fc-due">of ${inr(f.due)} monthly due</div>
+          <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
+          <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
         </div>`;
-
-        // ── Inline payment history (shown when expanded) ──
-        if (expanded) {
-          const flatExps = fex ? fex(f.flatId) : [];
-          const expTotal = flatExps.reduce((s,e) => s+e.amt, 0);
-
-          const expHistRows = flatExps.length
-            ? flatExps.map(e => `
-              <div class="pay-exp-row" id="exprow_${e.expId}">
-                <span class="pay-exp-dot" style="background:var(--indigo)"></span>
-                <span class="pay-exp-cat">${e.cat || 'Payment'}</span>
-                <span class="pay-exp-date">${e.date || e.month || ''}</span>
-                <span class="pay-exp-note">${e.note || ''}</span>
-                <span class="pay-exp-amt">${inr(e.amt)}</span>
-                <div class="pay-exp-actions">
-                  <button class="exp-act-btn edit" onclick="event.stopPropagation();window._editExpInline('${e.expId}','${f.flatId}')" title="Edit">
-                    <i class="ti ti-pencil"></i>
-                  </button>
-                  <button class="exp-act-btn del" onclick="event.stopPropagation();window._delExpInline('${e.expId}','${f.flatId}')" title="Delete">
-                    <i class="ti ti-trash"></i>
-                  </button>
-                </div>
-              </div>`).join('')
-            : `<div class="pay-exp-empty"><i class="ti ti-inbox"></i> No payments recorded yet.</div>`;
-
-          h += `
-          <div class="pay-history-panel" onclick="event.stopPropagation()">
-            <div class="pay-history-head">
-              <span><i class="ti ti-history"></i> Payment History</span>
-              <div style="display:flex;align-items:center;gap:8px">
-                ${flatExps.length ? `<span style="font-size:11px;font-weight:700;color:var(--text2)">Total: <strong style="color:var(--indigo)">${inr(expTotal)}</strong></span>` : ''}
-                <button class="btn btn-indigo btn-sm" style="padding:4px 10px;font-size:11px"
-                  onclick="event.stopPropagation();window._cD&&window._cD();window._oAFor('${f.block||''}','${f.flatId}')">
-                  <i class="ti ti-plus"></i> Add Payment
-                </button>
-                <button class="btn btn-white btn-sm" style="padding:4px 10px;font-size:11px"
-                  onclick="event.stopPropagation();window._oFl('${f.flatId}')">
-                  <i class="ti ti-edit"></i> Edit Flat
-                </button>
-              </div>
-            </div>
-            <div class="pay-exp-rows">
-              ${expHistRows}
-            </div>
-          </div>`;
-        }
       });
     });
   }
-
-  h += `</div>`;
-  document.getElementById('bcon').innerHTML = h;
+  document.getElementById('bcon').innerHTML = h + '</div>';
 }
+
+
+/* ══ issues.js ══ */
+/* ════════════════════════════════
+   ISSUES TAB — js/issues.js
+   Depends on: window.APP (shared state injected from app.html)
+════════════════════════════════ */
+
+function oFl(fid) {
+  _dFid  = fid;
+  _dPage = 0;
+  _dQ    = '';
+  _dCat  = 'all';
+  const f = flats.get(fid); if (!f) return;
+  const s   = st(f);
+  const bal = f.due - f.paid;
+  const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
+  const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
+  document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
+
+  /* Build cat filter options from this flat's history */
+  const ex   = fex(fid);
+  const cats = [...new Set(ex.map(e=>e.cat).filter(Boolean))].sort();
+  const catOpts = `<option value="all">All categories</option>`
+    + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+  document.getElementById('dBody').innerHTML = `
+    <div class="drawer-stats">
+      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
+      <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:12px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History <span id="dHistCount" style="font-size:11px;color:var(--muted);font-weight:600"></span></div>
+      <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add
+      </button>
+    </div>
+
+    ${ex.length > PAGE_SIZE ? `
+    <div class="hist-toolbar">
+      <div class="hist-search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="hist-search" type="text" placeholder="Search category or note…"
+          oninput="_dQ=this.value.toLowerCase().trim();_dPage=0;_renderHistPage()"/>
+      </div>
+      <select class="hist-cat-sel" onchange="_dCat=this.value;_dPage=0;_renderHistPage()">${catOpts}</select>
+    </div>` : ''}
+
+    <div id="dHistList"></div>
+    <div id="dPager"></div>
+  `;
+
+  _renderHistPage();
+
+  document.getElementById('flatDrawer').classList.add('open');
+  document.getElementById('drawerBg').classList.add('open');
+  document.getElementById('app').classList.add('drawer-open');
+}
+
+function _renderHistPage() {
+  const f   = flats.get(_dFid); if (!f) return;
+  const ex  = fex(_dFid);
+
+  /* Filter */
+  const vis = ex.filter(e => {
+    if (_dCat !== 'all' && e.cat !== _dCat) return false;
+    if (_dQ && !(e.cat||'').toLowerCase().includes(_dQ)
+            && !(e.note||'').toLowerCase().includes(_dQ)
+            && !(e.date||'').toLowerCase().includes(_dQ)) return false;
+    return true;
+  });
+
+  const tot   = vis.reduce((s,e)=>s+(e.amt||0), 0);
+  const pages = Math.max(1, Math.ceil(vis.length / PAGE_SIZE));
+  if (_dPage >= pages) _dPage = pages - 1;
+
+  const slice = vis.slice(_dPage * PAGE_SIZE, (_dPage+1) * PAGE_SIZE);
+
+  /* Count label */
+  const cntEl = document.getElementById('dHistCount');
+  if (cntEl) cntEl.textContent = vis.length
+    ? `(${vis.length}${vis.length !== ex.length ? ' filtered' : ''})`
+    : '';
+
+  /* Rows */
+  const listEl = document.getElementById('dHistList');
+  if (!listEl) return;
+
+  if (!vis.length) {
+    listEl.innerHTML = `<div class="hist-empty"><i class="ti ti-inbox"></i>${_dQ||_dCat!=='all'?'No records match this filter.':'No payments recorded yet.'}</div>`;
+    document.getElementById('dPager').innerHTML = '';
+    return;
+  }
+
+  listEl.innerHTML = `
+    <div class="elist">
+      ${slice.map(e=>`<div class="erow">
+        <div>
+          <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
+          <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
+        </div>
+        <div class="eamt">${inr(e.amt)}</div>
+      </div>`).join('')}
+    </div>
+    <div class="etotal" style="margin-top:0">
+      <span class="etotal-label">
+        ${pages>1?`Page ${_dPage+1}/${pages} · `:''}${vis.length} record${vis.length!==1?'s':''}
+      </span>
+      <span class="etotal-val">${inr(tot)}</span>
+    </div>`;
+
+  /* Pagination (only if more than one page) */
+  const pagerEl = document.getElementById('dPager');
+  if (pages <= 1) { pagerEl.innerHTML=''; return; }
+
+  const maxBtns = 5;
+  let start = Math.max(0, _dPage - Math.floor(maxBtns/2));
+  let end   = Math.min(pages, start + maxBtns);
+  if (end - start < maxBtns) start = Math.max(0, end - maxBtns);
+
+  let btns = `<button class="pager-btn" onclick="_dPage=Math.max(0,_dPage-1);_renderHistPage()"
+    ${_dPage===0?'disabled':''} title="Previous"><i class="ti ti-chevron-left"></i></button>`;
+
+  if (start > 0) btns += `<button class="pager-btn" onclick="_dPage=0;_renderHistPage()">1</button>
+    ${start>1?'<span class="pager-info">…</span>':''}`;
+
+  for (let i=start; i<end; i++) {
+    btns += `<button class="pager-btn${i===_dPage?' active':''}" onclick="_dPage=${i};_renderHistPage()">${i+1}</button>`;
+  }
+
+  if (end < pages) btns += `${end<pages-1?'<span class="pager-info">…</span>':''}
+    <button class="pager-btn" onclick="_dPage=${pages-1};_renderHistPage()">${pages}</button>`;
+
+  btns += `<button class="pager-btn" onclick="_dPage=Math.min(${pages-1},_dPage+1);_renderHistPage()"
+    ${_dPage===pages-1?'disabled':''} title="Next"><i class="ti ti-chevron-right"></i></button>`;
+
+  pagerEl.innerHTML = `<div class="pager">${btns}</div>`;
+}
+
+function cD() {
+  document.getElementById('flatDrawer').classList.remove('open');
+  document.getElementById('drawerBg').classList.remove('open');
+  document.getElementById('app').classList.remove('drawer-open');
+}
+
+function cM(){document.getElementById('flatM').classList.remove('open');}
+
+/* auto-save flat fields on blur / select change — no button needed */
+let _autoSaveTimer=null;
+async function autoSaveFlat(fid) {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(async()=>{
+    const owner      = (document.getElementById('edOwner')?.value||'').trim();
+    const resType    = document.getElementById('edType')?.value||'owner';
+    const due        = parseInt(document.getElementById('edDue')?.value)||0;
+    const moveIn     = document.getElementById('edMoveIn')?.value||'';
+    const moveOut    = document.getElementById('edMoveOut')?.value||'';
+    const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
+    const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
+    sync('saving');
+    try {
+      await updateDoc(flatRef(fid),{owner,resType,due,moveIn,moveOut,ownerName,ownerPhone});
+      sync('live');
+      document.getElementById('mdT').textContent=`${fid} — ${owner||'(No resident)'}`;
+      toast('Saved ✓');
+    } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
+  }, 400);
+}
+
+function toggleOwnerFields(resType) {
+  const sec = document.getElementById('ownerSection');
+  if (sec) sec.style.display = resType === 'tenant' ? 'grid' : 'none';
+}
+
+/* inline edit of a payment amount in history */
+async function saveExpAmt(expId, rawVal, fid) {
+  const amt = parseInt(rawVal)||0;
+  const expDocRef = doc(db,'apartments',UID,'expenses',expId);
+  sync('saving');
+  try {
+    await updateDoc(expDocRef,{amt});
+    // recalculate flat paid from all its expenses
+    const allEx = exps.get(fid)||[];
+    const totalPaid = allEx.reduce((s,e)=> e.expId===expId ? s+amt : s+e.amt, 0);
+    await updateDoc(flatRef(fid),{paid:totalPaid});
+    sync('live'); toast('Payment updated ✓');
+  } catch(e){ console.error(e);sync('error');toast('Update failed.','error'); }
+}
+
+/* ════════════════════════════════
+   ADD EXPENSE MODAL
+════════════════════════════════ */
+function fBS(){
+  document.getElementById('fB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('fB').value=AB;
+}
+function fFS(){
+  const b=document.getElementById('fB').value;
+  document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
+}
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function cA(){document.getElementById('addM').classList.remove('open');}
+document.getElementById('fB').addEventListener('change',fFS);
+
+async function sE(){
+  const block=document.getElementById('fB').value,fid=document.getElementById('fF').value;
+  const cat=document.getElementById('fC').value,amt=parseInt(document.getElementById('fA').value)||0;
+  const dv=document.getElementById('fD').value,s=document.getElementById('fS').value;
+  const note=document.getElementById('fN').value.trim();
+  if(!amt||amt<=0){toast('Please enter a valid amount.','error');return;}
+  const f=flats.get(fid);if(!f){toast('Flat not found.','error');return;}
+  sync('saving');
+  const btn=document.getElementById('svBtn');btn.disabled=true;
+  document.getElementById('svLbl').textContent='Saving…';
+  try{
+    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),note,status:s,month:AM,createdAt:serverTimestamp()});
+    let np=f.paid;
+    if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
+    await updateDoc(flatRef(fid),{paid:np});
+    sync('live');cA();toast('Payment saved ✓');
+  }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
+  finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
+}
+
+/* ════════════════════════════════
+   ADD FLAT MODAL
+════════════════════════════════ */
+function oAF(){
+  document.getElementById('nB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
+  document.getElementById('nI').value='';document.getElementById('nO').value='';document.getElementById('nD').value='';
+  document.getElementById('flatAddM').classList.add('open');
+}
+function cAF(){document.getElementById('flatAddM').classList.remove('open');}
+async function sNF(){
+  const block=document.getElementById('nB').value,id=document.getElementById('nI').value.trim().toUpperCase();
+  const owner=document.getElementById('nO').value.trim(),due=parseInt(document.getElementById('nD').value)||0;
+  if(!id){toast('Enter a flat number.','error');return;}
+  if(!owner){toast('Enter owner name.','error');return;}
+  if(flats.has(id)){toast(`Flat ${id} already exists.`,'error');return;}
+  sync('saving');
+  try{
+    await setDoc(flatRef(id),{block,owner,resType:'owner',due:0,paid:0,month:AM});
+    sync('live');cAF();toast(`Flat ${id} registered ✓`);AB=block;rBTabs();rBlock();
+  }catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
+}
+
+/* ════════════════════════════════
+   RAISE ISSUE MODAL
+
+export { setAB, hasBlocks, getFloors, updateFloorFilter, rBTabs, rBlock, oFl, _renderHistPage, cD, cM, autoSaveFlat, toggleOwnerFields, saveExpAmt, fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF };

@@ -1,165 +1,117 @@
-/* ════════════════════════════════
-   CATEGORIES — js/categories.js
-   Custom expense categories stored in Firestore.
-   Used by: Add Payment modal, Society Expense modal.
-   Reads/writes: apartments/{uid}/categories/{id}
-════════════════════════════════ */
+/* ════ categories.js — custom expense categories + inline add ════ */
+import { db } from './firebase.js';
+import { doc, setDoc, getDoc }
+  from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
-const DEFAULT_CATEGORIES = [
-  'Maintenance','Water','Electricity','Parking','Lift',
-  'Security','Cleaning','Internet','Other'
-];
+function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
 
-/* ── Populate any <select> with current categories ── */
-export function fillCatSelect(selectId, selectedVal) {
-  const cats = window.APP?.categories?.length ? window.APP.categories
-    : ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
-  const sel  = document.getElementById(selectId);
+function renderCatOpts(selId, type){
+  const sel=document.getElementById(selId); if(!sel)return;
+  const cur=sel.value;
+  sel.innerHTML=getCats(type).map(c=>`<option value="${c}">${c}</option>`).join('')
+    + `<option value="__new__" style="color:var(--indigo);font-weight:700">＋ New Category…</option>`;
+  if(cur && getCats(type).includes(cur)) sel.value=cur;
+}
+
+function renderCatChips(listId, type){
+  const el=document.getElementById(listId); if(!el)return;
+  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
+  const custom=type==='flat'?customCats.flat:customCats.soc;
+  el.innerHTML=[...new Set([...def,...custom])].map(c=>`
+    <span class="cat-chip">${c}${!def.includes(c)?`<button class="cat-del" onclick="window._delCat('${type}','${c}')"><i class="ti ti-x"></i></button>`:''}</span>
+  `).join('');
+}
+
+function oCatM(){
+  renderCatChips('flatCatList','flat');
+  renderCatChips('socCatList','soc');
+  ['flatCatInput','socCatInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('catM').classList.add('open');
+}
+function cCatM(){ document.getElementById('catM').classList.remove('open'); }
+
+async function addCat(type){
+  const inp=document.getElementById(type==='flat'?'flatCatInput':'socCatInput');
+  const val=(inp?.value||'').trim(); if(!val){toast('Enter a category name.','error');return;}
+  const arr=type==='flat'?customCats.flat:customCats.soc;
+  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
+  if([...def,...arr].map(c=>c.toLowerCase()).includes(val.toLowerCase())){toast('Already exists.','error');return;}
+  arr.push(val); if(inp)inp.value='';
+  await saveCats();
+  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
+  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
+  toast(`"${val}" added ✓`);
+}
+
+async function delCat(type,name){
+  const arr=type==='flat'?customCats.flat:customCats.soc;
+  const i=arr.indexOf(name); if(i===-1)return;
+  arr.splice(i,1);
+  await saveCats();
+  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
+  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
+  toast(`"${name}" removed`);
+}
+
+async function saveCats(){
+  try{ await setDoc(doc(db,'apartments',UID,'config','categories'), customCats); sync('live'); }
+  catch(e){ console.error(e); toast('Failed to save categories.','error'); }
+}
+
+async function loadCats(){
+  try{
+    const snap=await getDoc(doc(db,'apartments',UID,'config','categories'));
+    if(snap.exists()){const d=snap.data();customCats.flat=d.flat||[];customCats.soc=d.soc||[];}
+  } catch(e){ console.error('loadCats:',e); }
+  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
+}
+
+window._oCatM=oCatM; window._cCatM=cCatM;
+window._addCat=addCat; window._delCat=delCat;
+
+
+/* ── Inline category add in dropdowns ── */
+window._catSelChange = function(selId, type) {
+  const sel = document.getElementById(selId);
   if (!sel) return;
-  const cur  = selectedVal || (sel.value !== '__manage__' ? sel.value : null) || cats[0];
-  sel.innerHTML = cats
-    .map(c => `<option value="${c}"${c === cur ? ' selected' : ''}>${c}</option>`)
-    .join('');
-  sel.innerHTML += `<option value="__manage__">⚙ Manage Categories…</option>`;
-  // Use a named handler attached via dataset to avoid duplicates
-  if (!sel._catListenerAdded) {
-    sel._catListenerAdded = true;
-    sel.addEventListener('change', function(e) {
-      if (e.target.value === '__manage__') {
-        const prev = e.target.dataset.prev || cats[0];
-        e.target.value = prev;
-        if (window._openCatManager) window._openCatManager();
-      } else {
-        e.target.dataset.prev = e.target.value;
-      }
-    });
+  if (sel.value === '__new__') {
+    // Revert to first valid option while input shows
+    sel.value = getCats(type)[0] || 'Maintenance';
+    window._showInlineCat(selId);
   }
-  sel.dataset.prev = cur;
-}
+};
 
-/* ── Listen for categories in Firestore ── */
-let _catUnsub = null;
-export async function listenCategories() {
-  const { db, UID } = window.APP;
-  const { collection, onSnapshot, query, orderBy } =
-    await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-  const catColl = collection(db, 'apartments', UID, 'categories');
-  _catUnsub = onSnapshot(query(catColl, orderBy('order', 'asc')), snap => {
-    if (snap.empty) {
-      window.APP.categories = [...DEFAULT_CATEGORIES];
-    } else {
-      window.APP.categories = snap.docs.map(d => d.data().name).filter(Boolean);
-    }
-    // Refresh all open category dropdowns
-    ['fC','peCat'].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) fillCatSelect(id, el.value === '__manage__' ? null : el.value);
-    });
-  }, () => {
-    window.APP.categories = [...DEFAULT_CATEGORIES];
-  });
-}
+window._showInlineCat = function(selId) {
+  const wrap = document.getElementById(selId + '_new');
+  const inp  = document.getElementById(selId + '_input');
+  if (!wrap) return;
+  wrap.style.display = 'block';
+  if (inp) { inp.value = ''; inp.focus(); }
+};
 
-/* ── Category Manager Modal ── */
-export function openCatManager() {
-  renderCatManager();
-  document.getElementById('catMgrModal').classList.add('open');
-}
+window._hideInlineCat = function(selId) {
+  const wrap = document.getElementById(selId + '_new');
+  if (wrap) wrap.style.display = 'none';
+};
 
-export function closeCatManager() {
-  document.getElementById('catMgrModal').classList.remove('open');
-}
-
-function renderCatManager() {
-  const cats = window.APP.categories || DEFAULT_CATEGORIES;
-  document.getElementById('catMgrList').innerHTML = cats.map((c, i) => `
-    <div class="cat-row" id="catRow${i}">
-      <input class="cat-inp" id="catInp${i}" value="${c}" placeholder="Category name"
-        style="flex:1;background:var(--surface2);border:1.5px solid var(--border2);color:var(--text);
-          font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);
-          padding:7px 10px;outline:none;transition:border-color .15s"
-        onfocus="this.style.borderColor='var(--indigo)'"
-        onblur="this.style.borderColor='var(--border2)'"/>
-      <button onclick="window._delCat(${i})"
-        style="width:32px;height:32px;border-radius:var(--r-sm);border:1.5px solid var(--border2);
-          background:var(--surface2);color:var(--muted);cursor:pointer;font-size:14px;
-          display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s"
-        onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-        onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">
-        <i class="ti ti-trash"></i>
-      </button>
-    </div>`).join('');
-}
-
-export async function saveCatManager() {
-  const { db, UID, sync, toast } = window.APP;
-  const { collection, doc, writeBatch } =
-    await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-
-  // Collect all current input values
-  const cats = [];
-  document.querySelectorAll('.cat-inp').forEach(inp => {
-    const v = inp.value.trim();
-    if (v) cats.push(v);
-  });
-
-  if (!cats.length) { toast('Add at least one category.', 'error'); return; }
-
-  const btn = document.getElementById('catSaveBtn');
-  btn.disabled = true; btn.textContent = 'Saving…';
-  sync('saving');
-  try {
-    const catColl = collection(db, 'apartments', UID, 'categories');
-    const batch   = writeBatch(db);
-
-    // Delete all existing
-    const { getDocs } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    const snap = await getDocs(catColl);
-    snap.docs.forEach(d => batch.delete(d.ref));
-
-    // Add new ones
-    cats.forEach((name, i) => {
-      const ref = doc(catColl);
-      batch.set(ref, { name, order: i });
-    });
-
-    await batch.commit();
-    sync('live');
-    toast('Categories saved ✓');
-    closeCatManager();
-  } catch(e) {
-    console.error(e); sync('error'); toast('Save failed.', 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Save';
+window._addInlineCat = async function(selId, type) {
+  const inp = document.getElementById(selId + '_input');
+  const val = (inp?.value || '').trim();
+  if (!val) { inp?.focus(); return; }
+  const arr = type==='flat' ? customCats.flat : customCats.soc;
+  const def = type==='flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
+  if ([...def,...arr].map(c=>c.toLowerCase()).includes(val.toLowerCase())) {
+    toast('Category already exists.','error');
+    inp?.focus(); return;
   }
-}
+  arr.push(val);
+  await saveCats();
+  renderCatOpts(selId, type);
+  // Select the newly added category
+  const sel = document.getElementById(selId);
+  if (sel) sel.value = val;
+  window._hideInlineCat(selId);
+  toast(`"${val}" added ✓`);
+};
 
-export function addCatRow() {
-  const cats = window.APP.categories || DEFAULT_CATEGORIES;
-  const i    = document.querySelectorAll('.cat-inp').length;
-  const div  = document.createElement('div');
-  div.className = 'cat-row';
-  div.id = `catRow${i}`;
-  div.innerHTML = `
-    <input class="cat-inp" id="catInp${i}" value="" placeholder="New category"
-      style="flex:1;background:var(--surface2);border:1.5px solid var(--indigo);color:var(--text);
-        font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);
-        padding:7px 10px;outline:none;transition:border-color .15s"
-      onfocus="this.style.borderColor='var(--indigo)'"
-      onblur="this.style.borderColor='var(--border2)'"/>
-    <button onclick="this.parentElement.remove()"
-      style="width:32px;height:32px;border-radius:var(--r-sm);border:1.5px solid var(--border2);
-        background:var(--surface2);color:var(--muted);cursor:pointer;font-size:14px;
-        display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s"
-      onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'"
-      onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">
-      <i class="ti ti-trash"></i>
-    </button>`;
-  document.getElementById('catMgrList').appendChild(div);
-  div.querySelector('input').focus();
-}
-
-export function delCatRow(i) {
-  const row = document.getElementById(`catRow${i}`);
-  if (row) row.remove();
-}
+export { getCats, renderCatOpts, renderCatChips, oCatM, cCatM, addCat, delCat, saveCats, loadCats, _catSelChange, _addInlineCat, _hideInlineCat, _showInlineCat };
