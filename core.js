@@ -6,10 +6,7 @@ import { auth, db } from './firebase.js';
 import { onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import {
-  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp,
-} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
-import { rBTabs, rBlock, oFl, _renderHistPage, cD,
+  import { rBTabs, rBlock, oFl, _renderHistPage, cD,
          fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF,
          setAB, hasBlocks, getFloors, updateFloorFilter }
   from './payments.js';
@@ -26,9 +23,6 @@ import { loadCats, renderCatOpts, renderCatChips, getCats,
          _catSelChange, _addInlineCat, _hideInlineCat, _showInlineCat }
   from './categories.js';
 
-collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp,
-} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 /* ════════════════════════════════
    AUTH GUARD
@@ -218,7 +212,7 @@ window.rMembers=rMembers;
 let _dFid = null, _dPage = 0, _dQ = '', _dCat = 'all';
 const PAGE_SIZE = 20;
 
-════════════════════════════════ */
+
 function listenFlats(){
   let _firstLoad = true;
   onSnapshot(flatsColl(), snap => {
