@@ -10,7 +10,7 @@ export const PAGE_SIZE = 20;
 function setAB(v) { AB = v; }
 
 /* --- payments.js == */
-/* --- */
+/* ---
    PAYMENTS TAB — js/payments.js
    Handles: block tabs OR floor tabs (no-block buildings)
    Custom filters: status, resident type, floor, search
@@ -147,7 +147,7 @@ function rBlock() {
 
 
 /* --- issues.js == */
-/* --- */
+/* ---
    ISSUES TAB — js/issues.js
    Depends on: window.APP (shared state injected from app.html)
 
@@ -336,8 +336,7 @@ async function saveExpAmt(expId, rawVal, fid) {
   } catch(e){ console.error(e);sync('error');toast('Update failed.','error'); }
 }
 
-/* --- */
-   ADD EXPENSE MODAL
+/* --- ADD EXPENSE MODAL --- */
 
 function fBS(){
   document.getElementById('fB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
@@ -372,8 +371,7 @@ async function sE(){
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
 
-/* --- */
-   ADD FLAT MODAL
+/* --- ADD FLAT MODAL --- */
 
 function oAF(){
   document.getElementById('nB').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('');
@@ -394,7 +392,6 @@ async function sNF(){
   }catch(e){console.error(e);sync('error');toast('Failed to register flat.','error');}
 }
 
-/* --- */
-   RAISE ISSUE MODAL
+/* --- RAISE ISSUE MODAL --- */
 
 export { setAB, hasBlocks, getFloors, updateFloorFilter, rBTabs, rBlock, oFl, _renderHistPage, cD, cM, autoSaveFlat, toggleOwnerFields, saveExpAmt, fBS, fFS, oA, oAFor, cA, sE, oAF, cAF, sNF };

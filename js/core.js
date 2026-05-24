@@ -1,7 +1,5 @@
-/* --- */
-   core.js — State, helpers, boot,
-   listeners, wizard, routing
-/*--- */
+/* --- core.js — State, helpers, boot, listeners, wizard, routing --- */
+
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
@@ -27,7 +25,7 @@ import { loadCats, renderCatOpts, renderCatChips, getCats,
   from './categories.js';
 
 
-/* --- */
+/* ---
    AUTH GUARD
 
 let UID = null;
@@ -50,7 +48,7 @@ window._doSignOut = async function() {
   window.location.replace('index.html');
 };
 
-/* --- */
+/* ---
    HELPERS for scoped Firestore paths
    All data lives under apartments/{uid}/...
 
@@ -65,7 +63,7 @@ const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
 const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
 const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
 
-/* --- */
+/* ---
    STATE
 
 const flats  = new Map();
@@ -82,7 +80,7 @@ const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift',
 const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
 let APT_NAME = 'Gatebook';
 
-/* --- */
+/* ---
    HELPERS
 
 const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
@@ -116,7 +114,7 @@ function buildMonthSelect() {
   sel.innerHTML = opts.join('');
 }
 
-/* --- */
+/* ---
    APT NAME
 
 function applyAptName(name) {
@@ -127,7 +125,7 @@ function applyAptName(name) {
 }
 
 
-/* --- */
+/* ---
    SYNC & TOAST
 
 function sync(s) {
@@ -145,7 +143,7 @@ function toast(msg, t='success') {
   setTimeout(()=>el.className='',3200);
 }
 
-/* --- */
+/* ---
    RENDER
 
 function rStats() {
@@ -207,7 +205,7 @@ window.fIss=fIss;
 window.fMem=fMem;
 window.rMembers=rMembers;
 
-/* --- */
+/* ---
    FLAT DETAIL MODAL
 
 /* ── Flat drawer state ── */
@@ -255,7 +253,7 @@ function listenIssues(){
     ()=>{iu=onSnapshot(issuesColl(),snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();});});
 }
 
-/* --- */
+/* ---
    DOM EVENTS
 
 document.getElementById('sf').addEventListener('change',e=>{FS=e.target.value;rBlock();});
@@ -271,7 +269,7 @@ document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.to
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
 
-/* --- */
+/* ---
    WINDOW EXPOSE
 
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
@@ -295,7 +293,7 @@ window.rPresident = rPresident;
 // issues.js / members.js
 window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
 
-/* --- */
+/* ---
    IN-APP SETUP WIZARD
    Shown when the account has no flats yet
 
@@ -418,7 +416,7 @@ window._wizLaunch = async function() {
   }
 };
 
-/* --- */
+/* ---
    INLINED: payments.js
 
 /* ── switchView (was missing) ── */
@@ -446,7 +444,7 @@ function rAll(){
   if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
 }
 
-/* --- */
+/* ---
    LISTENERS for Vehicles + SocExp
 
 function listenVehicles(){

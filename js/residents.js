@@ -120,7 +120,7 @@ function rMembers() {
 
 
 /* --- vehicles.js == */
-/* --- */
+/* ---
    VEHICLES TAB — js/vehicles.js
    Reads from: closure vars (shared state)
 
@@ -243,7 +243,7 @@ async function delVeh() {
 
 
 /* --- president.js == */
-/* --- */
+/* ---
    PRESIDENT TAB — js/president.js
    Reads from: closure vars (shared state)
 
