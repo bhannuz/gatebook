@@ -119,10 +119,10 @@ function rMembers() {
 }
 
 
-/* --- vehicles.js == */
-/* ---
+/* --- vehicles.js == 
    VEHICLES TAB — js/vehicles.js
-   Reads from: closure vars (shared state)
+   Reads from: closure vars (shared state) 
+--- */ // <--- FIXED: Safely closing this section header now
 
 function rVehicles() {
   const q  = (document.getElementById('vehQ')?.value || '').toLowerCase().trim();
@@ -242,10 +242,10 @@ async function delVeh() {
 }
 
 
-/* --- president.js == */
-/* ---
+/* --- president.js == 
    PRESIDENT TAB — js/president.js
-   Reads from: closure vars (shared state)
+   Reads from: closure vars (shared state) 
+--- */ // <--- FIXED: Safely closing this section header now
 
 const CAT_ICONS = {
   Maintenance:'ti-tool', Water:'ti-droplet', Electricity:'ti-bolt',
@@ -339,10 +339,5 @@ function rResidents() {
     </tr>`;
   }).join('');
 }
-
-/* --- CUSTOM CATEGORIES == */
-// DEFAULT_FLAT_CATS moved to top-level state section
-// DEFAULT_SOC_CATS moved to top-level state section
-// customCats declared in state section above
 
 export { tenure, fmtDate, fMem, rMembers, rVehicles, rResidents, oVehM, oVehFor, cVehM, sVeh, delVeh };
