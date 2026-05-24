@@ -14,6 +14,7 @@ function setAB(v) { AB = v; }
    PAYMENTS TAB — js/payments.js
    Handles: block tabs OR floor tabs (no-block buildings)
    Custom filters: status, resident type, floor, search
+--- */
 
 function hasBlocks() {
   return [...flats.values()].some(f => (f.block || '').trim() !== '');
@@ -150,6 +151,7 @@ function rBlock() {
 /* ---
    ISSUES TAB — js/issues.js
    Depends on: window.APP (shared state injected from app.html)
+--- */
 
 function oFl(fid) {
   _dFid  = fid;
@@ -165,7 +167,7 @@ function oFl(fid) {
   document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
   document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
 
-  /* Build cat filter options from this flat's history */
+  // Fixed Comment Syntax below
   const ex   = fex(fid);
   const cats = [...new Set(ex.map(e=>e.cat).filter(Boolean))].sort();
   const catOpts = `<option value="all">All categories</option>`
