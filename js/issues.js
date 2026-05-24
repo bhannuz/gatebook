@@ -51,7 +51,7 @@ function fIss(f) {
 
 
 /* --- members.js == */
-/* ---
+/* --- */
    MEMBERS TAB — js/members.js
    Depends on: window.APP (shared state injected from app.html)
 
@@ -99,7 +99,7 @@ async function sI(){
   }
 }
 
-/* ---
+/* --- */
    ISSUE DETAIL MODAL
 
 function oID(id){
@@ -159,7 +159,7 @@ async function uIS(id,ns){
   }catch(e){console.error(e);sync('error');toast('Update failed.','error');}
 }
 
-/* ---
+/* --- */
    FIRESTORE LISTENERS
    (scoped under apartments/{uid}/...)
 
