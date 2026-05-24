@@ -460,7 +460,10 @@ async function boot(){
   }
 }
 
-/* --- --- --- ── Window exposes ── --- window._doSignOut     = async () => { await signOut(auth); window.location.replace('index.html'); }; --- window._sB            = v => { setAB(v); rBTabs(); rBlock(); }; --- */window._oFl           = oFl;   window._cD = cD;  window._cM = cD;
+/* --- Window exposes --- */
+window._doSignOut     = async () => { await signOut(auth); window.location.replace('index.html'); };
+window._sB            = v => { setAB(v); rBTabs(); rBlock(); };
+window._oFl           = oFl;   window._cD = cD;  window._cM = cD;
 window._renderHistPage = _renderHistPage;
 window._oA            = oA;    window._oAFor = oAFor; window._cA = cA;  window._sE = sE;
 window._oAF           = oAF;   window._cAF = cAF;    window._sNF = sNF;
@@ -483,3 +486,7 @@ window.fMem           = fMem;
 window.rPresident     = rPresident;
 window.rResidents     = rResidents;
 window.renderCatOpts  = renderCatOpts;
+
+window.rMembers       = rMembers;
+window.saveCats       = saveCats;
+window.loadCats       = loadCats;
