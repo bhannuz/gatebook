@@ -1,4 +1,4 @@
-/* ---
+/* -----
    core.js — State, helpers, boot,
    listeners, wizard, routing
 
