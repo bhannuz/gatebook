@@ -206,7 +206,6 @@ function oFl(fid) {
   document.getElementById('flatDrawer').classList.add('open');
   document.getElementById('drawerBg').classList.add('open');
   document.getElementById('app').classList.add('drawer-open');
-}
 
 function _renderHistPage() {
   const f   = flats.get(_dFid); if (!f) return;
