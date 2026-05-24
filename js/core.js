@@ -1,5 +1,3 @@
-/* --- core.js — State, helpers, boot, listeners, wizard, routing --- */
-
 import { auth, db } from './firebase.js';
 import { onAuthStateChanged, signOut }
   from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
