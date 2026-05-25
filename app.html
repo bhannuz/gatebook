@@ -733,6 +733,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </button>
     <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
     <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
+    <button class="vtab" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
   </div>
 
   <!-- PAYMENTS VIEW -->
@@ -822,6 +823,33 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <div id="presExpList"></div>
     </div>
   </div><!-- /#presView -->
+
+  <!-- ANALYTICS VIEW -->
+  <div id="analyticsView" style="display:none;padding:14px">
+    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px"><i class="ti ti-chart-pie" style="color:var(--indigo)"></i> Analytics</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:16px" id="analyticsMonth"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+
+      <!-- Payments pie -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
+        <canvas id="payPie" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+        <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+
+      <!-- Expenses pie -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category</div>
+        <canvas id="expPie" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+        <div id="expLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+
+    </div>
+
+    <!-- Summary totals -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px" id="analyticsTotals"></div>
+  </div><!-- /#analyticsView -->
 
 </div>
 </div><!-- /#app -->
@@ -2025,13 +2053,15 @@ window._wizLaunch = async function() {
 function switchView(v) {
   AV = v;
   refreshAPP();
-  document.getElementById('pView').style.display    = v==='payments'  ? 'block' : 'none';
-  document.getElementById('iView').style.display    = v==='issues'    ? 'block' : 'none';
-  document.getElementById('resView').style.display  = v==='residents' ? 'block' : 'none';
-  document.getElementById('presView').style.display = v==='president' ? 'block' : 'none';
+  document.getElementById('pView').style.display         = v==='payments'  ? 'block' : 'none';
+  document.getElementById('iView').style.display         = v==='issues'    ? 'block' : 'none';
+  document.getElementById('resView').style.display       = v==='residents' ? 'block' : 'none';
+  document.getElementById('presView').style.display      = v==='president' ? 'block' : 'none';
+  document.getElementById('analyticsView').style.display = v==='analytics' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   if(v==='president') try{ rPresident(); } catch(e){ console.error(e); }
+  if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
 }
 
 function rAll(){
@@ -3075,6 +3105,135 @@ async function boot(){
     document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
   }
 }
+
+/* ══ ANALYTICS TAB ══ */
+function drawPie(canvasId, segments) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 10;
+  ctx.clearRect(0, 0, W, H);
+  const total = segments.reduce((s,sg)=>s+sg.value,0);
+  if (!total) {
+    ctx.fillStyle = '#e5e7eb';
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif'; ctx.textAlign='center';
+    ctx.fillText('No data', cx, cy+4);
+    return;
+  }
+  let angle = -Math.PI/2;
+  segments.forEach(sg => {
+    const slice = (sg.value/total) * Math.PI*2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle+slice);
+    ctx.closePath();
+    ctx.fillStyle = sg.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    angle += slice;
+  });
+  // donut hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r*0.48, 0, Math.PI*2);
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim() || '#f8f9fa';
+  ctx.fill();
+  // center text
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';
+  ctx.font = 'bold 13px sans-serif'; ctx.textAlign='center';
+  ctx.fillText(total, cx, cy+2);
+  ctx.font = '9px sans-serif';
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#888';
+  ctx.fillText('total', cx, cy+13);
+}
+
+function buildLegend(legendId, segments, total) {
+  const el = document.getElementById(legendId);
+  if (!el) return;
+  el.innerHTML = segments.map(sg => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0">
+        <span style="width:10px;height:10px;border-radius:50%;background:${sg.color};flex-shrink:0;display:inline-block"></span>
+        <span style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        <span style="font-size:11px;font-weight:800;color:var(--text)">${sg.value}</span>
+        <span style="font-size:10px;color:var(--muted)">${total?Math.round(sg.value/total*100):0}%</span>
+        ${sg.amt!==undefined?`<span style="font-size:10px;font-weight:700;color:var(--indigo)">${inr(sg.amt)}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
+function rAnalytics() {
+  const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const el = document.getElementById('analyticsMonth');
+  if (el) el.textContent = 'Data for ' + month;
+
+  /* ── Payment status pie ── */
+  const all     = [...flats.values()].filter(f=>f.month===AM);
+  const paid    = all.filter(f=>st(f)==='paid');
+  const partial = all.filter(f=>st(f)==='partial');
+  const pending = all.filter(f=>st(f)==='pending');
+  const vacant  = all.filter(f=>st(f)==='vacant');
+
+  const paySegs = [
+    { label:'Paid',    value:paid.length,    color:'#22c55e', amt: paid.reduce((s,f)=>s+f.paid,0) },
+    { label:'Partial', value:partial.length, color:'#f59e0b', amt: partial.reduce((s,f)=>s+f.paid,0) },
+    { label:'Pending', value:pending.length, color:'#ef4444', amt: 0 },
+    { label:'Vacant',  value:vacant.length,  color:'#d1d5db', amt: 0 },
+  ].filter(s=>s.value>0);
+
+  drawPie('payPie', paySegs);
+  buildLegend('payLegend', paySegs, all.length);
+
+  /* ── Society expenses by category pie ── */
+  const catMap = new Map();
+  socExps.forEach(e => {
+    const c = e.cat||'Other';
+    catMap.set(c, (catMap.get(c)||0) + (e.amt||0));
+  });
+  const palette = ['#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#10b981','#3b82f6'];
+  const expSegs = [...catMap.entries()]
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cat,amt],i) => ({ label:cat, value:amt, color:palette[i%palette.length], amt }));
+
+  // For pie, use count-per-category for slice size but show amount in legend
+  const expPieSegs = [...catMap.entries()]
+    .sort((a,b)=>b[1]-a[1])
+    .map(([cat,amt],i) => ({ label:cat, value:amt, color:palette[i%palette.length] }));
+
+  drawPie('expPie', expPieSegs);
+  const expTotal = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  const expLegSegs = expSegs.map(s=>({...s, value: s.amt}));
+  buildLegend('expLegend', expLegSegs, expTotal);
+
+  /* ── Summary totals ── */
+  const totalCollected = all.reduce((s,f)=>s+f.paid,0);
+  const totalDue       = all.reduce((s,f)=>s+f.due,0);
+  const totalOutstanding = totalDue - totalCollected;
+  const totalExpenses  = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  const doc1 = document.getElementById('analyticsTotals');
+  if (doc1) doc1.innerHTML = `
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Collected</div>
+      <div style="font-size:17px;font-weight:800;color:#22c55e">${inr(totalCollected)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div>
+    </div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Outstanding</div>
+      <div style="font-size:17px;font-weight:800;color:#ef4444">${inr(totalOutstanding)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div>
+    </div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Expenses</div>
+      <div style="font-size:17px;font-weight:800;color:#6366f1">${inr(totalExpenses)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${socExps.length} records</div>
+    </div>`;
+}
+window.rAnalytics = rAnalytics;
 </script>
 </body>
 </html>
