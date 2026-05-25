@@ -806,7 +806,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
           <th>Flat</th><th>Type</th><th>Resident</th><th>Owner (if tenant)</th>
           <th>Move-In</th><th>Tenure</th>
           <th>🏍 2-W</th><th>🚗 4-W</th>
-          <th>Vehicle Nos.</th><th>Slot</th><th>Balance</th><th></th>
+          <th>Vehicle Nos.</th><th>Slot</th><th></th>
         </tr></thead>
         <tbody id="resBody"></tbody>
       </table>
@@ -1322,49 +1322,77 @@ function oFl(fid) {
   _dQ    = '';
   _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
-  const s   = st(f);
-  const bal = f.due - f.paid;
-  const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  const isTenant = (f.resType||'owner') === 'tenant';
 
   document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
   document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
 
-  /* Build cat filter options from this flat's history */
-  const ex   = fex(fid);
-  const cats = [...new Set(ex.map(e=>e.cat).filter(Boolean))].sort();
-  const catOpts = `<option value="all">All categories</option>`
-    + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
-
   document.getElementById('dBody').innerHTML = `
-    <div class="drawer-stats">
-      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
-      <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
-      <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
-    </div>
-
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:12px">
-      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History <span id="dHistCount" style="font-size:11px;color:var(--muted);font-weight:600"></span></div>
-      <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
-        <i class="ti ti-plus"></i> Add
-      </button>
-    </div>
-
-    ${ex.length > PAGE_SIZE ? `
-    <div class="hist-toolbar">
-      <div class="hist-search-wrap">
-        <i class="ti ti-search"></i>
-        <input class="hist-search" type="text" placeholder="Search category or note…"
-          oninput="_dQ=this.value.toLowerCase().trim();_dPage=0;_renderHistPage()"/>
+    <!-- ── Resident Info Edit Panel ── -->
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:14px;margin-top:4px">
+      <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.1px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-pencil" style="color:var(--indigo);font-size:13px"></i> Resident Info
+        <span style="font-size:10px;font-weight:500;color:var(--muted);margin-left:auto">Auto-saves on change</span>
       </div>
-      <select class="hist-cat-sel" onchange="_dCat=this.value;_dPage=0;_renderHistPage()">${catOpts}</select>
-    </div>` : ''}
-
-    <div id="dHistList"></div>
-    <div id="dPager"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Resident Name</label>
+          <input id="edOwner" type="text" value="${f.owner||''}" placeholder="Full name"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Type</label>
+          <select id="edType"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onchange="toggleOwnerFields(this.value);autoSaveFlat('${fid}')">
+            <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
+            <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
+          </select>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Monthly Due (₹)</label>
+          <input id="edDue" type="number" value="${f.due||''}" placeholder="5000" min="0"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Move-In Date</label>
+          <input id="edMoveIn" type="date" value="${f.moveIn||''}"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Move-Out Date</label>
+          <input id="edMoveOut" type="date" value="${f.moveOut||''}"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+      </div>
+      <div id="ownerSection" style="display:${isTenant?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Owner Name</label>
+          <input id="edOwnerName" type="text" value="${f.ownerName||''}" placeholder="Actual flat owner"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Owner Phone</label>
+          <input id="edOwnerPhone" type="tel" value="${f.ownerPhone||''}" placeholder="Owner contact"
+            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
+            onchange="autoSaveFlat('${fid}')"/>
+        </div>
+      </div>
+    </div>
+    <!-- ── end Resident Info ── -->
   `;
-
-  _renderHistPage();
 
   document.getElementById('flatDrawer').classList.add('open');
   document.getElementById('drawerBg').classList.add('open');
@@ -2695,8 +2723,6 @@ function rResidents() {
     const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
     const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
     const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    const bal=(f.due||0)-(f.paid||0);
-    const balClr=bal>0?'var(--red)':bal===0&&f.due>0?'var(--green)':'var(--muted)';
     return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
       <td><strong style="color:var(--indigo);font-size:12px">${f.flatId}</strong></td>
       <td><span class="mem-type ${rType}" style="font-size:10px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span></td>
@@ -2708,7 +2734,6 @@ function rResidents() {
       <td>${fwB}</td>
       <td style="font-size:11px;color:var(--text2);max-width:100px;word-break:break-all">${v.nums||'—'}</td>
       <td style="font-size:11px;color:var(--text2)">${v.slot||'—'}</td>
-      <td style="font-size:12px;font-weight:700;color:${balClr}">${f.due?inr(Math.abs(bal)):'—'}</td>
       <td onclick="event.stopPropagation()">
         <button class="btn btn-white btn-xs" onclick="window._oVehFor('${f.flatId}')">
           <i class="ti ti-motorbike" style="margin:0"></i>
