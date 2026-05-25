@@ -1322,8 +1322,57 @@ function oFl(fid) {
   _dQ    = '';
   _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
+  const s   = st(f);
+  const bal = f.due - f.paid;
+  const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+
+  document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
+  document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
+
+  const ex   = fex(fid);
+  const cats = [...new Set(ex.map(e=>e.cat).filter(Boolean))].sort();
+  const catOpts = `<option value="all">All categories</option>`
+    + cats.map(c=>`<option value="${c}">${c}</option>`).join('');
+
+  document.getElementById('dBody').innerHTML = `
+    <div class="drawer-stats">
+      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
+      <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;margin-top:12px">
+      <div class="etitle" style="margin-bottom:0"><i class="ti ti-list"></i>Payment History <span id="dHistCount" style="font-size:11px;color:var(--muted);font-weight:600"></span></div>
+      <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
+        <i class="ti ti-plus"></i> Add
+      </button>
+    </div>
+    ${ex.length > PAGE_SIZE ? `
+    <div class="hist-toolbar">
+      <div class="hist-search-wrap">
+        <i class="ti ti-search"></i>
+        <input class="hist-search" type="text" placeholder="Search category or note…"
+          oninput="_dQ=this.value.toLowerCase().trim();_dPage=0;_renderHistPage()"/>
+      </div>
+      <select class="hist-cat-sel" onchange="_dCat=this.value;_dPage=0;_renderHistPage()">${catOpts}</select>
+    </div>` : ''}
+    <div id="dHistList"></div>
+    <div id="dPager"></div>
+  `;
+
+  _renderHistPage();
+
+  document.getElementById('flatDrawer').classList.add('open');
+  document.getElementById('drawerBg').classList.add('open');
+  document.getElementById('app').classList.add('drawer-open');
+}
+
+/* ── Residents tab: edit-only drawer (no payment history) ── */
+function oFlEdit(fid) {
+  _dFid  = fid;
+  const f = flats.get(fid); if (!f) return;
   const isTenant = (f.resType||'owner') === 'tenant';
+  const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
   document.getElementById('dTitle').textContent = f.flatId + (f.owner?' — '+f.owner:'');
   document.getElementById('dSub').textContent   = (f.block?'Block '+f.block+' · ':'')+month;
@@ -1757,7 +1806,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI
    WINDOW EXPOSE
 ════════════════════════════════ */
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
-window._oFl  =oFl;  window._cM=cD;
+window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
 window._saveExpAmt=saveExpAmt;
@@ -2723,7 +2772,7 @@ function rResidents() {
     const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
     const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
     const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
+    return `<tr onclick="window._oFlEdit('${f.flatId}')" style="cursor:pointer">
       <td><strong style="color:var(--indigo);font-size:12px">${f.flatId}</strong></td>
       <td><span class="mem-type ${rType}" style="font-size:10px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span></td>
       <td><div style="font-size:12px;font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div></td>
