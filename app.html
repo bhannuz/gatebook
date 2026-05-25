@@ -466,10 +466,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .exp-row-date{font-size:11px;color:var(--muted);margin-top:2px}
 .exp-row-note{font-size:11px;color:var(--text2);margin-top:1px;font-style:italic}
 .exp-row-amt{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap}
-.exp-row-status{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
-.exp-row-status.approved{background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
-.exp-row-status.pending{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
-.exp-row-status.rejected{background:var(--red-bg);color:var(--red-txt);border:1px solid var(--red-border)}
+
 .exp-empty{text-align:center;padding:36px;color:var(--muted)}
 .exp-empty i{font-size:36px;display:block;margin-bottom:8px}
 .micon.pres{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));color:var(--indigo)}
@@ -1821,7 +1818,7 @@ window.rVehicles = rVehicles;
 // president.js
 window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
 window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
-window._updSEStatus = updSEStatus; window._delSE = delSE;
+window._delSE = delSE;
 window.rPresident = rPresident;
 // issues.js / members.js
 window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
@@ -2499,14 +2496,10 @@ function rPresident() {
 
   /* ── Society expenses only ── */
   const totalExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
-  const approved      = socExps.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.amt||0),0);
-  const pending       = socExps.filter(e=>e.status==='pending').reduce((s,e)=>s+(e.amt||0),0);
   const thisMonthExp  = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
 
   document.getElementById('fundRow').innerHTML = `
     <div class="fcard2"><div class="fcard2-label">Total Expenses</div><div class="fcard2-val" style="color:var(--red)">${inr(totalExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
-    <div class="fcard2"><div class="fcard2-label">Approved</div><div class="fcard2-val" style="color:var(--green)">${inr(approved)}</div><div class="fcard2-sub">${socExps.filter(e=>e.status==='approved').length} records</div></div>
-    <div class="fcard2"><div class="fcard2-label">Pending</div><div class="fcard2-val" style="color:var(--amber)">${inr(pending)}</div><div class="fcard2-sub">${socExps.filter(e=>e.status==='pending').length} records</div></div>
     <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(thisMonthExp)}</div><div class="fcard2-sub">${AM}</div></div>`;
 
   /* ── Category breakdown (expenses only) ── */
@@ -2615,10 +2608,6 @@ function rPresident() {
       </div>
       <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
         <div class="exp-row-amt">${inr(e.amt)}</div>
-        <select style="font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;border:1.5px solid var(--border2);background:#fff;font-family:var(--font);outline:none;cursor:pointer"
-          onchange="window._updSEStatus('${e.id}',this.value)">
-          ${['pending','approved','rejected'].map(s=>`<option value="${s}"${e.status===s?' selected':''}>${{pending:'⏳ Pending',approved:'✅ Approved',rejected:'❌ Rejected'}[s]}</option>`).join('')}
-        </select>
       </div>
       <button class="btn btn-white btn-sm" onclick="window._delSE('${e.id}')" style="padding:5px 8px;min-width:0">
         <i class="ti ti-trash" style="margin:0;color:var(--red)"></i>
@@ -2696,14 +2685,6 @@ async function sPresExp() {
   finally { document.getElementById('peBtn').disabled=false; document.getElementById('peLbl').textContent='Save Expense'; }
 }
 
-async function updSEStatus(id, status) {
-  sync('saving');
-  try {
-    const { updateDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await updateDoc(sexpRef(id), {status});
-    sync('live'); toast('Status updated ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Update failed.', 'error'); }
-}
 
 async function delSE(id) {
   if (!confirm('Delete this expense?')) return;
