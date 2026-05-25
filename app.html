@@ -1482,12 +1482,43 @@ function _renderHistPage() {
 
   listEl.innerHTML = `
     <div class="elist">
-      ${slice.map(e=>`<div class="erow">
-        <div>
-          <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
-          <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
+      ${slice.map(e=>`<div class="erow" style="display:block;padding:10px 14px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Category</div>
+            <input type="text" value="${e.cat||''}" placeholder="Category"
+              style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:700;border-radius:var(--r-md);outline:none"
+              onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveExpField('${e.expId||e.id}','cat',this.value,'${_dFid}')"
+              onchange="window._saveExpField('${e.expId||e.id}','cat',this.value,'${_dFid}')"/>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Amount (₹)</div>
+            <input type="number" value="${e.amt||''}" placeholder="0" min="0"
+              style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--indigo);font-family:var(--font);font-size:12px;font-weight:800;border-radius:var(--r-md);outline:none"
+              onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveExpAmt('${e.expId||e.id}',this.value,'${_dFid}')"
+              onchange="window._saveExpAmt('${e.expId||e.id}',this.value,'${_dFid}')"/>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Date</div>
+            <input type="date" value="${e.rawDate||''}" placeholder="Date"
+              style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;border-radius:var(--r-md);outline:none"
+              onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveExpField('${e.expId||e.id}','date',this.value,'${_dFid}')"
+              onchange="window._saveExpField('${e.expId||e.id}','date',this.value,'${_dFid}')"/>
+          </div>
+          <div>
+            <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Note</div>
+            <input type="text" value="${e.note||''}" placeholder="Optional note"
+              style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:500;border-radius:var(--r-md);outline:none"
+              onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveExpField('${e.expId||e.id}','note',this.value,'${_dFid}')"
+              onchange="window._saveExpField('${e.expId||e.id}','note',this.value,'${_dFid}')"/>
+          </div>
         </div>
-        <div class="eamt">${inr(e.amt)}</div>
+        <div style="display:flex;justify-content:flex-end">
+          <button onclick="window._delExp('${e.expId||e.id}','${_dFid}')"
+            style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 8px;cursor:pointer;color:var(--red);font-size:11px;display:flex;align-items:center;gap:4px">
+            <i class="ti ti-trash" style="font-size:12px"></i> Delete
+          </button>
+        </div>
       </div>`).join('')}
     </div>
     <div class="etotal" style="margin-top:0">
@@ -1575,6 +1606,40 @@ async function saveExpAmt(expId, rawVal, fid) {
   } catch(e){ console.error(e);sync('error');toast('Update failed.','error'); }
 }
 
+/* inline edit of any flat payment field */
+async function saveExpField(expId, field, value, fid) {
+  const expDocRef = doc(db,'apartments',UID,'expenses',expId);
+  sync('saving');
+  try {
+    const update = {};
+    if (field === 'date') {
+      // store both raw ISO date and formatted display date
+      const d = new Date(value);
+      update.rawDate = value;
+      update.date    = isNaN(d) ? value : fd(value);
+    } else {
+      update[field] = value;
+    }
+    await updateDoc(expDocRef, update);
+    sync('live'); toast('Saved ✓');
+  } catch(e){ console.error(e); sync('error'); toast('Update failed.','error'); }
+}
+
+/* delete a flat payment record */
+async function delExp(expId, fid) {
+  if (!confirm('Delete this payment record?')) return;
+  const expDocRef = doc(db,'apartments',UID,'expenses',expId);
+  sync('saving');
+  try {
+    await deleteDoc(expDocRef);
+    // recalculate paid
+    const allEx = (exps.get(fid)||[]).filter(e=>(e.expId||e.id)!==expId);
+    const totalPaid = allEx.reduce((s,e)=>s+(e.amt||0),0);
+    await updateDoc(flatRef(fid),{paid:totalPaid});
+    sync('live'); toast('Deleted ✓');
+  } catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
+}
+
 /* ════════════════════════════════
    ADD EXPENSE MODAL
 ════════════════════════════════ */
@@ -1602,7 +1667,7 @@ async function sE(){
   const btn=document.getElementById('svBtn');btn.disabled=true;
   document.getElementById('svLbl').textContent='Saving…';
   try{
-    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),note,status:s,month:AM,createdAt:serverTimestamp()});
+    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),rawDate:dv||new Date().toISOString().split('T')[0],note,status:s,month:AM,createdAt:serverTimestamp()});
     let np=f.paid;
     if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(flatRef(fid),{paid:np});
@@ -1806,7 +1871,7 @@ window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); i
 window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
-window._saveExpAmt=saveExpAmt;
+window._saveExpAmt=saveExpAmt; window._saveExpField=saveExpField; window._delExp=delExp;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
@@ -1818,7 +1883,7 @@ window.rVehicles = rVehicles;
 // president.js
 window._oPresM   = oPresM;  window._cPresM  = cPresM;  window._sPres   = sPres;
 window._oPresExp = oPresExp; window._cPresExp= cPresExp; window._sPresExp= sPresExp;
-window._delSE = delSE;
+window._delSE = delSE; window._saveSEField = saveSEField;
 window.rPresident = rPresident;
 // issues.js / members.js
 window.fIss = fIss; window.fMem = fMem; window.rMembers = rMembers;
@@ -2591,27 +2656,64 @@ function rPresident() {
   }
 
   document.getElementById('presExpList').innerHTML = vis.map(e=>{
-    const ci  = allCatNames.indexOf(e.cat);
-    const clr = catClr(ci>=0?ci:0);
-    const icon= catIcon(e.cat);
-    return `<div class="exp-row">
-      <div class="exp-row-icon" style="background:${clr}18;color:${clr}"><i class="ti ${icon}"></i></div>
-      <div style="flex:1;min-width:0">
-        <div class="exp-row-cat">${e.title||e.cat}</div>
-        <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:3px">
-          <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;background:${clr}18;color:${clr}">${e.cat}</span>
-          ${e.date?`<span style="font-size:10px;color:var(--muted)">${e.date}</span>`:''}
-          ${e.paidBy?`<span style="font-size:10px;color:var(--text2)">By: ${e.paidBy}</span>`:''}
-          ${e.vendor?`<span style="font-size:10px;color:var(--muted)">${e.vendor}</span>`:''}
+    return `<div class="exp-row" style="display:block;padding:12px 14px;border-bottom:1px solid var(--border2)">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+        <div style="grid-column:1/-1">
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Title</div>
+          <input type="text" value="${(e.title||'').replace(/"/g,'&quot;')}" placeholder="Expense title"
+            style="width:100%;box-sizing:border-box;height:30px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:700;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','title',this.value)"
+            onchange="window._saveSEField('${e.id}','title',this.value)"/>
         </div>
-        ${e.note?`<div class="exp-row-note">${e.note}</div>`:''}
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Category</div>
+          <input type="text" value="${e.cat||''}" placeholder="Category"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:700;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','cat',this.value)"
+            onchange="window._saveSEField('${e.id}','cat',this.value)"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Amount (₹)</div>
+          <input type="number" value="${e.amt||''}" placeholder="0" min="0"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--indigo);font-family:var(--font);font-size:12px;font-weight:800;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','amt',this.value)"
+            onchange="window._saveSEField('${e.id}','amt',this.value)"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Date</div>
+          <input type="date" value="${e.rawDate||''}"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','date',this.value)"
+            onchange="window._saveSEField('${e.id}','date',this.value)"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Paid By</div>
+          <input type="text" value="${(e.paidBy||'').replace(/"/g,'&quot;')}" placeholder="President / Committee"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','paidBy',this.value)"
+            onchange="window._saveSEField('${e.id}','paidBy',this.value)"/>
+        </div>
+        <div>
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Vendor / Payee</div>
+          <input type="text" value="${(e.vendor||'').replace(/"/g,'&quot;')}" placeholder="Vendor name"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','vendor',this.value)"
+            onchange="window._saveSEField('${e.id}','vendor',this.value)"/>
+        </div>
+        <div style="grid-column:1/-1">
+          <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Notes</div>
+          <input type="text" value="${(e.note||'').replace(/"/g,'&quot;')}" placeholder="Additional details"
+            style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:500;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';window._saveSEField('${e.id}','note',this.value)"
+            onchange="window._saveSEField('${e.id}','note',this.value)"/>
+        </div>
       </div>
-      <div style="text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:5px">
-        <div class="exp-row-amt">${inr(e.amt)}</div>
+      <div style="display:flex;justify-content:flex-end">
+        <button onclick="window._delSE('${e.id}')"
+          style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 8px;cursor:pointer;color:var(--red);font-size:11px;display:flex;align-items:center;gap:4px">
+          <i class="ti ti-trash" style="font-size:12px"></i> Delete
+        </button>
       </div>
-      <button class="btn btn-white btn-sm" onclick="window._delSE('${e.id}')" style="padding:5px 8px;min-width:0">
-        <i class="ti ti-trash" style="margin:0;color:var(--red)"></i>
-      </button>
     </div>`;
   }).join('');
 }
@@ -2679,7 +2781,7 @@ async function sPresExp() {
     const { addDoc, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
     const d   = new Date(date);
     const mth = d.toISOString().slice(0,7);
-    await addDoc(sexpColl(), { title, cat, amt, date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), month:mth, paidBy, vendor, note, status:'pending', createdAt:serverTimestamp() });
+    await addDoc(sexpColl(), { title, cat, amt, date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), rawDate:date, month:mth, paidBy, vendor, note, status:'pending', createdAt:serverTimestamp() });
     sync('live'); cPresExp(); toast('Society expense recorded ✓');
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
   finally { document.getElementById('peBtn').disabled=false; document.getElementById('peLbl').textContent='Save Expense'; }
@@ -2694,6 +2796,25 @@ async function delSE(id) {
     await deleteDoc(sexpRef(id));
     sync('live'); toast('Expense deleted ✓');
   } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
+}
+
+async function saveSEField(id, field, value) {
+  sync('saving');
+  try {
+    const update = {};
+    if (field === 'date') {
+      const d = new Date(value);
+      update.rawDate = value;
+      update.date    = isNaN(d) ? value : d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
+      update.month   = isNaN(d) ? '' : d.toISOString().slice(0,7);
+    } else if (field === 'amt') {
+      update.amt = parseInt(value)||0;
+    } else {
+      update[field] = value;
+    }
+    await updateDoc(sexpRef(id), update);
+    sync('live'); toast('Saved ✓');
+  } catch(e) { console.error(e); sync('error'); toast('Update failed.', 'error'); }
 }
 
 // Convenience: open Add Expense modal (alias used in phAct button)
