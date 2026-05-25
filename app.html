@@ -826,22 +826,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:14px">
-    <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:4px"><i class="ti ti-chart-pie" style="color:var(--indigo)"></i> Analytics</div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:16px" id="analyticsMonth"></div>
 
+    <!-- Header + Filters -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div style="font-size:15px;font-weight:800;color:var(--text)"><i class="ti ti-chart-pie" style="color:var(--indigo)"></i> Analytics</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <select id="anFilterType" class="ctrl" style="font-size:11px;height:30px;padding:0 8px"
+          onchange="rAnalytics()">
+          <option value="month">Month</option>
+          <option value="year">Year</option>
+        </select>
+        <select id="anFilterMonth" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:110px"
+          onchange="rAnalytics()"></select>
+        <select id="anFilterYear" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;display:none"
+          onchange="rAnalytics()"></select>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:14px" id="analyticsMonth"></div>
+
+    <!-- Pie charts side by side -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
 
       <!-- Payments pie -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-        <canvas id="payPie" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+        <div style="position:relative;display:inline-block;width:100%">
+          <canvas id="payPie" style="display:block;margin:0 auto;max-width:200px;width:100%;cursor:pointer"></canvas>
+          <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+        </div>
         <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
       </div>
 
       <!-- Expenses pie -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category</div>
-        <canvas id="expPie" width="220" height="220" style="display:block;margin:0 auto"></canvas>
+        <div style="position:relative;display:inline-block;width:100%">
+          <canvas id="expPie" style="display:block;margin:0 auto;max-width:200px;width:100%;cursor:pointer"></canvas>
+          <div id="expTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+        </div>
         <div id="expLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
       </div>
 
@@ -3107,12 +3129,27 @@ async function boot(){
 }
 
 /* ══ ANALYTICS TAB ══ */
-function drawPie(canvasId, segments) {
+
+// Store segments per canvas for tooltip hit-testing
+const _pieSegs = {};
+
+function _getCanvasSize(canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return { W: rect.width, H: rect.height };
+}
+
+function drawPie(canvasId, segments, tooltipId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  // Responsive: set canvas pixel size to display size
+  const rect = canvas.getBoundingClientRect();
+  const dpr  = window.devicePixelRatio||1;
+  const W = rect.width||200, H = rect.height||200;
+  canvas.width  = W * dpr;
+  canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
-  const W = canvas.width, H = canvas.height;
-  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 10;
+  ctx.scale(dpr, dpr);
+  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 8;
   ctx.clearRect(0, 0, W, H);
   const total = segments.reduce((s,sg)=>s+sg.value,0);
   if (!total) {
@@ -3120,11 +3157,13 @@ function drawPie(canvasId, segments) {
     ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
     ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif'; ctx.textAlign='center';
     ctx.fillText('No data', cx, cy+4);
+    _pieSegs[canvasId] = [];
     return;
   }
   let angle = -Math.PI/2;
+  const drawn = [];
   segments.forEach(sg => {
-    const slice = (sg.value/total) * Math.PI*2;
+    const slice = (sg.value/total)*Math.PI*2;
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.arc(cx, cy, r, angle, angle+slice);
@@ -3134,20 +3173,59 @@ function drawPie(canvasId, segments) {
     ctx.strokeStyle = '#fff';
     ctx.lineWidth = 2;
     ctx.stroke();
+    drawn.push({ ...sg, startAngle: angle, endAngle: angle+slice, cx, cy, r, total });
     angle += slice;
   });
+  _pieSegs[canvasId] = drawn;
   // donut hole
   ctx.beginPath();
-  ctx.arc(cx, cy, r*0.48, 0, Math.PI*2);
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim() || '#f8f9fa';
-  ctx.fill();
-  // center text
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--text').trim() || '#111';
-  ctx.font = 'bold 13px sans-serif'; ctx.textAlign='center';
-  ctx.fillText(total, cx, cy+2);
-  ctx.font = '9px sans-serif';
-  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim() || '#888';
-  ctx.fillText('total', cx, cy+13);
+  ctx.arc(cx, cy, r*0.45, 0, Math.PI*2);
+  const bg = getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim()||'#f8f9fa';
+  ctx.fillStyle = bg; ctx.fill();
+  // center label
+  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#111';
+  const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#888';
+  ctx.textAlign='center';
+  ctx.font = `bold ${Math.max(11,Math.round(W*0.07))}px sans-serif`;
+  ctx.fillStyle = textColor;
+  ctx.fillText(segments[0]?.centerLabel||total, cx, cy+4);
+  ctx.font = `${Math.max(8,Math.round(W*0.05))}px sans-serif`;
+  ctx.fillStyle = mutedColor;
+  ctx.fillText('total', cx, cy+15);
+
+  // Attach tooltip mouse handler
+  if (tooltipId) {
+    canvas.onmousemove = (ev) => {
+      const tip  = document.getElementById(tooltipId);
+      if (!tip) return;
+      const cr   = canvas.getBoundingClientRect();
+      const mx   = ev.clientX - cr.left;
+      const my   = ev.clientY - cr.top;
+      const dx   = mx - cx, dy = my - cy;
+      const dist = Math.sqrt(dx*dx+dy*dy);
+      if (dist < r*0.45 || dist > r) { tip.style.display='none'; return; }
+      let a = Math.atan2(dy, dx);
+      if (a < -Math.PI/2) a += Math.PI*2;
+      const hit = drawn.find(sg => {
+        let s = sg.startAngle, e = sg.endAngle;
+        if (s < -Math.PI/2) { s += Math.PI*2; e += Math.PI*2; }
+        return a >= s && a < e;
+      });
+      if (hit) {
+        const pct = Math.round(hit.value/hit.total*100);
+        tip.textContent = `${hit.label}: ${hit.displayValue||hit.value} (${pct}%)`;
+        tip.style.display  = 'block';
+        tip.style.left     = (ev.clientX+12)+'px';
+        tip.style.top      = (ev.clientY-28)+'px';
+      } else {
+        tip.style.display = 'none';
+      }
+    };
+    canvas.onmouseleave = () => {
+      const tip = document.getElementById(tooltipId);
+      if (tip) tip.style.display='none';
+    };
+  }
 }
 
 function buildLegend(legendId, segments, total) {
@@ -3160,61 +3238,113 @@ function buildLegend(legendId, segments, total) {
         <span style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:var(--text)">${sg.value}</span>
-        <span style="font-size:10px;color:var(--muted)">${total?Math.round(sg.value/total*100):0}%</span>
+        <span style="font-size:11px;font-weight:800;color:var(--text)">${sg.count!==undefined?sg.count:sg.value}</span>
+        <span style="font-size:10px;color:var(--muted)">${total?Math.round((sg.count!==undefined?sg.count:sg.value)/total*100):0}%</span>
         ${sg.amt!==undefined?`<span style="font-size:10px;font-weight:700;color:var(--indigo)">${inr(sg.amt)}</span>`:''}
       </div>
     </div>`).join('');
 }
 
+function _buildAnalyticsFilters() {
+  // Gather all months from flats + socExps
+  const months = new Set();
+  [...flats.values()].forEach(f=>{ if(f.month) months.add(f.month); });
+  socExps.forEach(e=>{ if(e.month) months.add(e.month); });
+  const sorted = [...months].sort().reverse();
+
+  const mSel = document.getElementById('anFilterMonth');
+  const ySel = document.getElementById('anFilterYear');
+  if (!mSel || !ySel) return;
+
+  // Only populate if empty or stale
+  const existing = [...mSel.options].map(o=>o.value);
+  const fresh    = sorted;
+  if (JSON.stringify(existing) !== JSON.stringify(fresh)) {
+    mSel.innerHTML = fresh.map(m => {
+      const lbl = new Date(m+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+      return `<option value="${m}"${m===AM?' selected':''}>${lbl}</option>`;
+    }).join('');
+  }
+
+  const years = [...new Set(sorted.map(m=>m.slice(0,4)))].sort().reverse();
+  const curYear = new Date().getFullYear().toString();
+  if ([...ySel.options].length !== years.length) {
+    ySel.innerHTML = years.map(y=>`<option value="${y}"${y===curYear?' selected':''}>${y}</option>`).join('');
+  }
+}
+
 function rAnalytics() {
-  const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
+  _buildAnalyticsFilters();
+
+  const filterType = document.getElementById('anFilterType')?.value||'month';
+  const mSel = document.getElementById('anFilterMonth');
+  const ySel = document.getElementById('anFilterYear');
+
+  // Toggle visible filter
+  if (mSel) mSel.style.display = filterType==='month' ? '' : 'none';
+  if (ySel) ySel.style.display = filterType==='year'  ? '' : 'none';
+
+  const selMonth = mSel?.value || AM;
+  const selYear  = ySel?.value || new Date().getFullYear().toString();
+
+  // Helper: does a record match the filter?
+  const matchM = m => filterType==='month' ? m===selMonth : (m||'').startsWith(selYear);
+
+  // Label
+  const labelText = filterType==='month'
+    ? new Date(selMonth+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})
+    : selYear;
   const el = document.getElementById('analyticsMonth');
-  if (el) el.textContent = 'Data for ' + month;
+  if (el) el.textContent = 'Showing data for: ' + labelText;
 
   /* ── Payment status pie ── */
-  const all     = [...flats.values()].filter(f=>f.month===AM);
+  const all     = [...flats.values()].filter(f=>matchM(f.month));
   const paid    = all.filter(f=>st(f)==='paid');
   const partial = all.filter(f=>st(f)==='partial');
   const pending = all.filter(f=>st(f)==='pending');
   const vacant  = all.filter(f=>st(f)==='vacant');
 
   const paySegs = [
-    { label:'Paid',    value:paid.length,    color:'#22c55e', amt: paid.reduce((s,f)=>s+f.paid,0) },
-    { label:'Partial', value:partial.length, color:'#f59e0b', amt: partial.reduce((s,f)=>s+f.paid,0) },
-    { label:'Pending', value:pending.length, color:'#ef4444', amt: 0 },
-    { label:'Vacant',  value:vacant.length,  color:'#d1d5db', amt: 0 },
+    { label:'Paid',    value:paid.length,    color:'#22c55e', amt:paid.reduce((s,f)=>s+(f.paid||0),0),    displayValue:paid.length    +' flats' },
+    { label:'Partial', value:partial.length, color:'#f59e0b', amt:partial.reduce((s,f)=>s+(f.paid||0),0), displayValue:partial.length +' flats' },
+    { label:'Pending', value:pending.length, color:'#ef4444', amt:0,                                       displayValue:pending.length +' flats' },
+    { label:'Vacant',  value:vacant.length,  color:'#d1d5db', amt:0,                                       displayValue:vacant.length  +' flats' },
   ].filter(s=>s.value>0);
 
-  drawPie('payPie', paySegs);
-  buildLegend('payLegend', paySegs, all.length);
+  drawPie('payPie', paySegs, 'payTooltip');
+  buildLegend('payLegend',
+    paySegs.map(s=>({...s, count:s.value})),
+    all.length);
 
-  /* ── Society expenses by category pie ── */
+  /* ── Expenses by category pie ── */
+  const filteredExp = socExps.filter(e=>matchM(e.month));
   const catMap = new Map();
-  socExps.forEach(e => {
+  filteredExp.forEach(e => {
     const c = e.cat||'Other';
-    catMap.set(c, (catMap.get(c)||0) + (e.amt||0));
+    catMap.set(c, (catMap.get(c)||0)+(e.amt||0));
   });
   const palette = ['#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#10b981','#3b82f6'];
+  const expTotal = filteredExp.reduce((s,e)=>s+(e.amt||0),0);
   const expSegs = [...catMap.entries()]
     .sort((a,b)=>b[1]-a[1])
-    .map(([cat,amt],i) => ({ label:cat, value:amt, color:palette[i%palette.length], amt }));
+    .map(([cat,amt],i)=>({
+      label: cat,
+      value: amt,
+      color: palette[i%palette.length],
+      amt,
+      displayValue: inr(amt),
+      centerLabel: inr(expTotal),
+    }));
 
-  // For pie, use count-per-category for slice size but show amount in legend
-  const expPieSegs = [...catMap.entries()]
-    .sort((a,b)=>b[1]-a[1])
-    .map(([cat,amt],i) => ({ label:cat, value:amt, color:palette[i%palette.length] }));
-
-  drawPie('expPie', expPieSegs);
-  const expTotal = socExps.reduce((s,e)=>s+(e.amt||0),0);
-  const expLegSegs = expSegs.map(s=>({...s, value: s.amt}));
-  buildLegend('expLegend', expLegSegs, expTotal);
+  drawPie('expPie', expSegs, 'expTooltip');
+  buildLegend('expLegend',
+    expSegs.map(s=>({...s, count:s.amt})),
+    expTotal);
 
   /* ── Summary totals ── */
-  const totalCollected = all.reduce((s,f)=>s+f.paid,0);
-  const totalDue       = all.reduce((s,f)=>s+f.due,0);
-  const totalOutstanding = totalDue - totalCollected;
-  const totalExpenses  = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  const totalCollected   = all.reduce((s,f)=>s+(f.paid||0),0);
+  const totalDue         = all.reduce((s,f)=>s+(f.due||0),0);
+  const totalOutstanding = Math.max(0, totalDue - totalCollected);
   const doc1 = document.getElementById('analyticsTotals');
   if (doc1) doc1.innerHTML = `
     <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
@@ -3228,9 +3358,9 @@ function rAnalytics() {
       <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div>
     </div>
     <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Total Expenses</div>
-      <div style="font-size:17px;font-weight:800;color:#6366f1">${inr(totalExpenses)}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">${socExps.length} records</div>
+      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Society Expenses</div>
+      <div style="font-size:17px;font-weight:800;color:#6366f1">${inr(expTotal)}</div>
+      <div style="font-size:10px;color:var(--muted);margin-top:2px">${filteredExp.length} records</div>
     </div>`;
 }
 window.rAnalytics = rAnalytics;
