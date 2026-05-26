@@ -830,78 +830,114 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="analyticsView" style="display:none;padding:14px">
 
     <!-- Header + Filters -->
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
-      <div style="font-size:15px;font-weight:800;color:var(--text)"><i class="ti ti-chart-pie" style="color:var(--indigo)"></i> Analytics</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;box-shadow:0 4px 12px rgba(99,102,241,0.30);flex-shrink:0">
+          <i class="ti ti-chart-pie"></i>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text);line-height:1">Analytics</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="analyticsMonth"></div>
+        </div>
+      </div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <select id="anFilterType" class="ctrl" style="font-size:11px;height:30px;padding:0 8px"
           onchange="rAnalytics()">
-          <option value="month">Month</option>
-          <option value="year">Year</option>
+          <option value="month">By Month</option>
+          <option value="year">By Year</option>
         </select>
-        <select id="anFilterMonth" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:110px"
+        <select id="anFilterMonth" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:130px"
           onchange="rAnalytics()"></select>
         <select id="anFilterYear" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;display:none"
           onchange="rAnalytics()"></select>
       </div>
     </div>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:14px" id="analyticsMonth"></div>
 
-    <!-- Pie charts side by side -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+    <!-- Main two-column grid: table LEFT, charts RIGHT -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:14px">
 
-      <!-- Payments pie -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
-        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-        <div style="position:relative;display:inline-block;width:100%">
-          <canvas id="payPie" style="display:block;margin:0 auto;max-width:200px;width:100%;cursor:pointer"></canvas>
-          <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+      <!-- ── LEFT: Payment Records Table ── -->
+      <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)">
+        <!-- Table toolbar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:8px;background:var(--surface2)">
+          <div style="font-size:12px;font-weight:800;color:var(--text)">
+            <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records
+            <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;margin-left:4px"></span>
+          </div>
+          <div style="display:flex;gap:5px;flex-wrap:wrap">
+            <button class="an-sf-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
+            <button class="an-sf-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
+            <button class="an-sf-btn"        data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
+            <button class="an-sf-btn"        data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
+          </div>
         </div>
-        <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
-      </div>
-
-      <!-- Expenses pie -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
-        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category</div>
-        <div style="position:relative;display:inline-block;width:100%">
-          <canvas id="expPie" style="display:block;margin:0 auto;max-width:200px;width:100%;cursor:pointer"></canvas>
-          <div id="expTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
-        </div>
-        <div id="expLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
-      </div>
-
-    </div>
-
-    <!-- Summary totals -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px" id="analyticsTotals"></div>
-
-    <!-- Payment Records Table -->
-    <div style="margin-top:16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:8px">
-        <div style="font-size:12px;font-weight:800;color:var(--text)"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600"></span></div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="an-sf-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
-          <button class="an-sf-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
-          <button class="an-sf-btn"        data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
-          <button class="an-sf-btn"        data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
+        <!-- Scrollable table -->
+        <div style="overflow-x:auto;max-height:480px;overflow-y:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead style="position:sticky;top:0;z-index:2">
+              <tr style="background:var(--surface3)">
+                <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
+                <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
+                <th style="padding:7px 12px;text-align:center;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
+                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Paid</th>
+                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Due</th>
+                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Balance</th>
+              </tr>
+            </thead>
+            <tbody id="anPayTable"></tbody>
+          </table>
+          <div id="anPayEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:12px">
+            <i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No records found
+          </div>
         </div>
       </div>
-      <div style="overflow-x:auto">
-        <table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead>
-            <tr style="background:var(--surface3)">
-              <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Flat</th>
-              <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Owner</th>
-              <th style="padding:8px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Status</th>
-              <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Paid</th>
-              <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Due</th>
-              <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Balance</th>
-            </tr>
-          </thead>
-          <tbody id="anPayTable"></tbody>
-        </table>
-        <div id="anPayEmpty" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:12px"><i class="ti ti-inbox" style="font-size:20px;display:block;margin-bottom:6px"></i>No records found</div>
-      </div>
-    </div>
+
+      <!-- ── RIGHT: Pie charts + summary ── -->
+      <div style="display:flex;flex-direction:column;gap:12px">
+
+        <!-- Payment Status Pie -->
+        <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
+          <div style="font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+            <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px">
+            <div style="flex:0 0 auto;width:45%">
+              <div style="position:relative;display:inline-block;width:100%">
+                <canvas id="payPie" style="display:block;width:100%;cursor:crosshair"></canvas>
+                <div id="payTooltip" style="display:none;position:fixed;background:rgba(15,15,35,0.88);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.3)"></div>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div id="payLegend" style="display:flex;flex-direction:column;gap:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Expenses by Category Pie -->
+        <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
+          <div style="font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px">
+            <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:14px">
+            <div style="flex:0 0 auto;width:45%">
+              <div style="position:relative;display:inline-block;width:100%">
+                <canvas id="expPie" style="display:block;width:100%;cursor:crosshair"></canvas>
+                <div id="expTooltip" style="display:none;position:fixed;background:rgba(15,15,35,0.88);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.3)"></div>
+              </div>
+            </div>
+            <div style="flex:1;min-width:0">
+              <div id="expLegend" style="display:flex;flex-direction:column;gap:6px"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Summary totals -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="analyticsTotals"></div>
+
+      </div><!-- /right col -->
+
+    </div><!-- /main grid -->
+
   </div><!-- /#analyticsView -->
 
 </div>
