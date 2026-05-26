@@ -614,12 +614,44 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 /* ── Responsive ── */
 @media(max-width:700px){
-  .navbar{padding:0 1rem}.app{padding:0 1rem 3rem}
+  .navbar{padding:0 1rem}.app{padding:0 1rem 5rem}
   .fg2{grid-template-columns:1fr}
   .dm{grid-template-columns:1fr 1fr}
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
+  .view-tabs{display:none}
+  .bottom-nav-bar{display:flex}
+}
+/* ── Bottom Nav Bar ── */
+.bottom-nav-bar{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;
+  height:60px;z-index:200;
+  background:var(--surface);
+  border-top:1.5px solid var(--border2);
+  justify-content:space-around;align-items:stretch;
+  box-shadow:0 -2px 12px rgba(0,0,0,0.07);
+}
+.bnav-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;
+  border:none;background:transparent;cursor:pointer;
+  font-family:var(--font);font-size:9px;font-weight:700;
+  color:var(--muted);letter-spacing:.2px;padding:0;
+  transition:color .15s;position:relative;
+}
+.bnav-item i{font-size:20px;line-height:1}
+.bnav-item.active{color:var(--indigo)}
+.bnav-item.active::before{
+  content:'';position:absolute;top:0;left:20%;right:20%;
+  height:2.5px;background:var(--indigo);border-radius:0 0 3px 3px;
+}
+.bnav-badge{
+  position:absolute;top:6px;right:calc(50% - 18px);
+  font-size:9px;font-weight:800;padding:1px 5px;
+  border-radius:99px;background:var(--red);color:#fff;
+  line-height:1.4;min-width:14px;text-align:center;
 }
 </style>
 </head>
@@ -1363,6 +1395,8 @@ function rStats() {
   const ip=issues.filter(i=>i.status==='in-progress').length;
 
   document.getElementById('openCnt').textContent=oi;
+  const bnavBadge = document.getElementById('bnavIssueCnt');
+  if (bnavBadge) { bnavBadge.textContent=oi; bnavBadge.style.display=oi>0?'':'none'; }
   // Update flat count badge in navbar
   const badge=document.getElementById('flatCountBadge');
   if(badge){badge.textContent=`${all.length} flats`;badge.style.display='';}
@@ -2136,6 +2170,7 @@ function switchView(v) {
   document.getElementById('presView').style.display      = v==='president' ? 'block' : 'none';
   document.getElementById('analyticsView').style.display = v==='analytics' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
+  document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   if(v==='president') try{ rPresident(); } catch(e){ console.error(e); }
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
@@ -3446,5 +3481,25 @@ function renderAnPayTable() {
   </tr>`;
 }
 </script>
+<!-- BOTTOM NAV BAR (mobile only) -->
+<nav class="bottom-nav-bar" id="bottomNav" aria-label="Main navigation">
+  <button class="bnav-item active" data-v="payments" onclick="switchView('payments')">
+    <i class="ti ti-credit-card"></i>Payments
+  </button>
+  <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
+    <i class="ti ti-alert-circle"></i>Issues
+    <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
+  </button>
+  <button class="bnav-item" data-v="residents" onclick="switchView('residents')">
+    <i class="ti ti-users"></i>Residents
+  </button>
+  <button class="bnav-item" data-v="president" onclick="switchView('president')">
+    <i class="ti ti-receipt"></i>Expenses
+  </button>
+  <button class="bnav-item" data-v="analytics" onclick="switchView('analytics')">
+    <i class="ti ti-chart-pie"></i>Analytics
+  </button>
+</nav>
+
 </body>
 </html>
