@@ -846,10 +846,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="veh-table-wrap">
       <table class="veh-table">
         <thead><tr>
-          <th>Flat</th><th>Type</th><th>Resident</th><th>Owner (if tenant)</th>
-          <th>Move-In</th><th>Tenure</th>
-          <th>🏍 2-W</th><th>🚗 4-W</th>
-          <th>Vehicle Nos.</th><th>Slot</th><th></th>
+          <th>Flat</th><th>Resident</th><th>🏍 2W</th><th>🚗 4W</th>
         </tr></thead>
         <tbody id="resBody"></tbody>
       </table>
@@ -944,7 +941,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
               <tr style="background:var(--surface3)">
                 <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Flat</th>
                 <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Owner</th>
-                <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Stays</th>
+                <th style="padding:7px 10px;text-align:center;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Status</th>
                 <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Balance</th>
               </tr>
             </thead>
@@ -2451,7 +2448,7 @@ function fmtDate(d) {
 function fMem(t) {
   MF = t;
   document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
-  rMembers();
+  rResidents();
 }
 
 /* ── Main render ── */
@@ -2969,7 +2966,7 @@ function rResidents() {
   }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
 
   if(!rows.length){
-    document.getElementById('resBody').innerHTML=`<tr><td colspan="12" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-users-off" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No residents match filter.</td></tr>`;
+    document.getElementById('resBody').innerHTML=`<tr><td colspan="4" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-users-off" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No residents match filter.</td></tr>`;
     return;
   }
 
@@ -2992,20 +2989,12 @@ function rResidents() {
     const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
     return `<tr onclick="window._oFlEdit('${f.flatId}')" style="cursor:pointer">
       <td><strong style="color:var(--indigo);font-size:12px">${f.flatId}</strong></td>
-      <td><span class="mem-type ${rType}" style="font-size:10px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span></td>
-      <td><div style="font-size:12px;font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div></td>
-      <td style="font-size:11px">${isTenant?(f.ownerName?`<div style="font-weight:700">${f.ownerName}</div>${f.ownerPhone?`<div style="font-size:10px;color:var(--text2)">${f.ownerPhone}</div>`:''}`:`<span style="color:var(--muted)">Not set</span>`):`<span style="color:var(--muted)">—</span>`}</td>
-      <td style="font-size:11px;color:var(--text2)">${fmtD(f.moveIn)}</td>
-      <td style="font-size:11px;font-weight:700;color:var(--text2)">${tenure2(f.moveIn,f.moveOut)}</td>
+      <td>
+        <div style="font-size:12px;font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
+        <span class="mem-type ${rType}" style="font-size:10px;margin-top:3px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span>
+      </td>
       <td>${twB}</td>
       <td>${fwB}</td>
-      <td style="font-size:11px;color:var(--text2);max-width:100px;word-break:break-all">${v.nums||'—'}</td>
-      <td style="font-size:11px;color:var(--text2)">${v.slot||'—'}</td>
-      <td onclick="event.stopPropagation()">
-        <button class="btn btn-white btn-xs" onclick="window._oVehFor('${f.flatId}')">
-          <i class="ti ti-motorbike" style="margin:0"></i>
-        </button>
-      </td>
     </tr>`;
   }).join('');
 }
@@ -3475,15 +3464,16 @@ function renderAnPayTable() {
     const bal      = (f.due||0) - (f.paid||0);
     const balColor = bal > 0 ? '#ef4444' : '#22c55e';
     const bg       = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
-    const isVacant = !(f.owner||'').trim();
-    const rType    = isVacant ? 'vacant' : (f.resType||'owner');
-    const tenureStr= isVacant ? '—' : tenure(f.moveIn, f.moveOut);
+    const sMap     = { paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#9ca3af' };
+    const sLbl     = { paid:'Paid', partial:'Partial', pending:'Pending', vacant:'Vacant' };
+    const sc       = sMap[s]||'#9ca3af';
+    const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sLbl[s]||s}</span>`;
     return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
       <td style="padding:9px 10px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
       <td style="padding:9px 10px;font-size:12px;font-weight:600;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         ${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}
       </td>
-      <td style="padding:9px 10px;font-size:11px;color:var(--text2)">${tenureStr}</td>
+      <td style="padding:9px 10px;text-align:center">${statusBadge}</td>
       <td style="padding:9px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px">${f.due ? inr(Math.abs(bal)) : '—'}</td>
     </tr>`;
   }).join('');
