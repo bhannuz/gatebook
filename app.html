@@ -613,7 +613,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
 /* ── Responsive ── */
-@media(max-width:700px){
+@media(max-width:900px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 5rem}
   .fg2{grid-template-columns:1fr}
   .dm{grid-template-columns:1fr 1fr}
@@ -624,6 +624,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .bottom-nav-bar{display:flex}
 }
 /* ── Bottom Nav Bar ── */
+@media(pointer:coarse){
+  .view-tabs{display:none}
+  .bottom-nav-bar{display:flex}
+  .app{padding-bottom:5rem}
+}
 .bottom-nav-bar{
   display:none;
   position:fixed;bottom:0;left:0;right:0;
