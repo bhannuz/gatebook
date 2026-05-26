@@ -770,16 +770,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   <!-- VIEW TABS -->
   <div class="view-tabs" id="viewTabs">
-    <button class="vtab active" data-v="payments" onclick="switchView('payments')">
-      <i class="ti ti-credit-card"></i> Payments
-    </button>
+    <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
+    <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
+    <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
+    <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
     <button class="vtab" data-v="issues" onclick="switchView('issues')">
       <i class="ti ti-alert-circle"></i> Issues
       <span class="vtab-badge" id="openCnt">0</span>
     </button>
-    <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
-    <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
-    <button class="vtab" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
   </div>
 
   <!-- PAYMENTS VIEW -->
@@ -1311,7 +1309,7 @@ const flats  = new Map();
 const exps   = new Map();
 const issues = [];
 
-let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
+let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all';
 let eu=null, iu=null, vu=null, pu=null;
 const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
@@ -1407,7 +1405,7 @@ function rStats() {
   const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   document.getElementById('phAct').innerHTML=`
     <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
-    <button class="btn btn-white"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+    <button class="btn btn-indigo"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
@@ -3547,21 +3545,21 @@ function renderAnPayTable() {
 
 <!-- BOTTOM NAV BAR (mobile only) -->
 <nav class="bottom-nav-bar" id="bottomNav" aria-label="Main navigation">
-  <button class="bnav-item active" data-v="payments" onclick="switchView('payments')">
-    <i class="ti ti-credit-card"></i>Payments
-  </button>
-  <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
-    <i class="ti ti-alert-circle"></i>Issues
-    <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
-  </button>
-  <button class="bnav-item" data-v="residents" onclick="switchView('residents')">
-    <i class="ti ti-users"></i>Residents
+  <button class="bnav-item active" data-v="analytics" onclick="switchView('analytics')">
+    <i class="ti ti-chart-pie"></i>Analytics
   </button>
   <button class="bnav-item" data-v="president" onclick="switchView('president')">
     <i class="ti ti-receipt"></i>Expenses
   </button>
-  <button class="bnav-item" data-v="analytics" onclick="switchView('analytics')">
-    <i class="ti ti-chart-pie"></i>Analytics
+  <button class="bnav-item" data-v="payments" onclick="switchView('payments')">
+    <i class="ti ti-credit-card"></i>Payments
+  </button>
+  <button class="bnav-item" data-v="residents" onclick="switchView('residents')">
+    <i class="ti ti-users"></i>Residents
+  </button>
+  <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
+    <i class="ti ti-alert-circle"></i>Issues
+    <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
   </button>
 </nav>
 
