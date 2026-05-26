@@ -869,7 +869,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <select id="histMonthFilter" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
       <select id="histCatFilter"   class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
       <div style="margin-left:auto;font-size:11px;color:var(--muted)" id="histTotal"></div>
-      <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+      <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
     </div>
 
     <!-- ROW: Records (left 58%) + Pie chart (right 42%) -->
@@ -959,16 +959,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
       </div>
 
-    </div>
-
-    <!-- ROW 2: Expenses by Category (full width) -->
-    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
-      <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category</div>
-      <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center">
-        <canvas id="expPie" style="display:block;width:160px;height:160px;cursor:pointer;flex-shrink:0"></canvas>
-        <div id="expTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
-        <div id="expLegend" style="display:flex;flex-direction:column;gap:6px"></div>
-      </div>
     </div>
 
   </div><!-- /#analyticsView -->
@@ -3374,31 +3364,6 @@ function rAnalytics() {
   buildLegend('payLegend',
     paySegs.map(s=>({...s, count:s.value})),
     all.length);
-
-  /* ── Expenses by category pie ── */
-  const filteredExp = socExps.filter(e=>matchM(e.month));
-  const catMap = new Map();
-  filteredExp.forEach(e => {
-    const c = e.cat||'Other';
-    catMap.set(c, (catMap.get(c)||0)+(e.amt||0));
-  });
-  const palette = ['#6366f1','#f59e0b','#22c55e','#ef4444','#8b5cf6','#06b6d4','#f97316','#ec4899','#10b981','#3b82f6'];
-  const expTotal = filteredExp.reduce((s,e)=>s+(e.amt||0),0);
-  const expSegs = [...catMap.entries()]
-    .sort((a,b)=>b[1]-a[1])
-    .map(([cat,amt],i)=>({
-      label: cat,
-      value: amt,
-      color: palette[i%palette.length],
-      amt,
-      displayValue: inr(amt),
-      centerLabel: inr(expTotal),
-    }));
-
-  drawPie('expPie', expSegs, 'expTooltip');
-  buildLegend('expLegend',
-    expSegs.map(s=>({...s, count:s.amt})),
-    expTotal);
 
   /* ── Summary totals ── */
   const totalCollected   = all.reduce((s,f)=>s+(f.paid||0),0);
