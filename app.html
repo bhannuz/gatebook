@@ -936,7 +936,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="analyticsMonth"></div>
 
     <!-- Summary totals -->
-    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px" id="analyticsTotals"></div>
+    <div class="veh-sum" id="analyticsTotals" style="margin-bottom:14px"></div>
 
     <!-- ROW 1: Payment Records (left, 55%) + Payment Status pie (right, 45%) -->
     <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start" class="an-layout-grid">
@@ -2571,8 +2571,6 @@ function rVehicles() {
   document.getElementById('vehSum').innerHTML = `
     <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
     <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw + totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
   `;
 
   const rows = all.filter(f => {
@@ -3361,16 +3359,8 @@ function rAnalytics() {
   const totalOutstanding = Math.max(0, totalDue - totalCollected);
   const doc1 = document.getElementById('analyticsTotals');
   if (doc1) doc1.innerHTML = `
-    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Collected</div>
-      <div style="font-size:17px;font-weight:800;color:#22c55e">${inr(totalCollected)}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div>
-    </div>
-    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;text-align:center">
-      <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Outstanding</div>
-      <div style="font-size:17px;font-weight:800;color:#ef4444">${inr(totalOutstanding)}</div>
-      <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div>
-    </div>`;
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div><div><div class="vscard-label">Collected</div><div class="vscard-val" style="color:#22c55e">${inr(totalCollected)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div></div></div>
+    <div class="vscard"><div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div><div><div class="vscard-label">Outstanding</div><div class="vscard-val" style="color:#ef4444">${inr(totalOutstanding)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div></div></div>`;
 
   renderAnPayTable();
 }
