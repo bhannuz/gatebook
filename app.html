@@ -620,6 +620,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
   .view-tabs{display:none}
+  .exp-layout-grid{grid-template-columns:1fr!important}
+  .an-layout-grid{grid-template-columns:1fr!important}
+  .exp-pie-panel{order:-1}
+  .exp-records-panel{max-height:none!important}
 }
 @media(min-width:901px){
   .bottom-nav-bar{display:none!important}
@@ -869,10 +873,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
 
     <!-- ROW: Records (left 58%) + Pie chart (right 42%) -->
-    <div style="display:grid;grid-template-columns:58fr 42fr;gap:14px;align-items:start">
+    <div style="display:grid;grid-template-columns:58fr 42fr;gap:14px;align-items:start" class="exp-layout-grid">
 
       <!-- Expense Records -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+      <div class="exp-records-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+
         <div style="padding:10px 14px;border-bottom:1.5px solid var(--border2);font-size:11px;font-weight:800;color:var(--text)">
           <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expense Records
         </div>
@@ -882,7 +887,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
 
       <!-- Pie Chart -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:sticky;top:14px">
+      <div class="exp-pie-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:sticky;top:14px">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
           <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
         </div>
@@ -915,10 +920,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px" id="analyticsTotals"></div>
 
     <!-- ROW 1: Payment Records (left, 55%) + Payment Status pie (right, 45%) -->
-    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start">
+    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start" class="an-layout-grid">
 
       <!-- Payment Records Table -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+      <div class="exp-records-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:6px">
           <div style="font-size:11px;font-weight:800;color:var(--text)"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600"></span></div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
@@ -947,7 +952,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
 
       <!-- Payment Status Pie -->
-      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+      <div class="exp-pie-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
         <canvas id="payPie" style="display:block;margin:0 auto;width:100%;max-width:180px;cursor:pointer"></canvas>
         <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
