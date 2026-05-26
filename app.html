@@ -80,6 +80,19 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 .nav-pills{display:none} /* tabs moved below stats */
 
+/* ── Tab bar separator ── */
+.tab-bar-wrap{
+  position:sticky;top:64px;z-index:90;
+  background:var(--surface2);
+  border-top:2px solid var(--border2);
+  border-bottom:2px solid var(--border2);
+  padding:10px 0;
+  margin:0 -1.5rem 1.4rem;
+  padding-left:1.5rem;
+  padding-right:1.5rem;
+  box-shadow:0 4px 12px rgba(0,0,0,0.04);
+}
+
 /* ── View tabs (Payments / Issues) below stats ── */
 .view-tabs{display:flex;gap:0;background:var(--surface3);border:1px solid var(--border2);
   border-radius:var(--r-md);padding:4px;margin-bottom:1.4rem;width:fit-content}
@@ -620,6 +633,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
   .view-tabs{display:none}
+  .tab-bar-wrap{display:none}
   .exp-layout-grid{grid-template-columns:1fr!important}
   .an-layout-grid{grid-template-columns:1fr!important}
   .exp-pie-panel{order:-1}
@@ -627,6 +641,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 @media(min-width:901px){
   .bottom-nav-bar{display:none!important}
+  .tab-bar-wrap{display:block}
   .view-tabs{display:flex}
   .app{padding-bottom:1rem}
 }
@@ -769,15 +784,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div class="stats-row" id="statsRow"></div>
 
   <!-- VIEW TABS -->
-  <div class="view-tabs" id="viewTabs">
-    <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
-    <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
-    <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
-    <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
-    <button class="vtab" data-v="issues" onclick="switchView('issues')">
-      <i class="ti ti-alert-circle"></i> Issues
-      <span class="vtab-badge" id="openCnt">0</span>
-    </button>
+  <div class="tab-bar-wrap">
+    <div class="view-tabs" id="viewTabs">
+      <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
+      <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
+      <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
+      <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
+      <button class="vtab" data-v="issues" onclick="switchView('issues')">
+        <i class="ti ti-alert-circle"></i> Issues
+        <span class="vtab-badge" id="openCnt">0</span>
+      </button>
+    </div>
   </div>
 
   <!-- PAYMENTS VIEW -->
