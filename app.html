@@ -1426,7 +1426,7 @@ function rStats() {
       <div class="sc-sub">${pc} of ${all.length} flats fully paid</div>
       <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
     </div>
-    <div class="scard amber">
+    <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
       <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
       <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
@@ -3422,6 +3422,67 @@ function rAnalytics() {
 }
 window.rAnalytics = rAnalytics;
 
+/* ── Pending Flats Modal ── */
+function showPending() {
+  const all     = [...flats.values()].filter(f=>f.month===AM);
+  const pending = all.filter(f=>st(f)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const partial = all.filter(f=>st(f)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const rows    = [...pending, ...partial];
+
+  const totalBal = rows.reduce((s,f)=>s+(f.due-f.paid),0);
+  const modal    = document.getElementById('pendingModal');
+  const subtitle = document.getElementById('pendingSubtitle');
+  const summary  = document.getElementById('pendingSummary');
+  const tbody    = document.getElementById('pendingTableBody');
+
+  subtitle.textContent = `${rows.length} flat${rows.length!==1?'s':''} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
+
+  summary.innerHTML = `
+    <div style="flex:1;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r-md);padding:8px 12px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Not Paid</div>
+      <div style="font-size:16px;font-weight:800;color:var(--red)">${pending.length}</div>
+    </div>
+    <div style="flex:1;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-md);padding:8px 12px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Partial</div>
+      <div style="font-size:16px;font-weight:800;color:var(--amber)">${partial.length}</div>
+    </div>
+    <div style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);padding:8px 12px;text-align:center">
+      <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Total Due</div>
+      <div style="font-size:16px;font-weight:800;color:var(--red)">${inr(totalBal)}</div>
+    </div>`;
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-circle-check" style="font-size:24px;color:var(--green);display:block;margin-bottom:8px"></i>All flats are paid!</td></tr>`;
+  } else {
+    tbody.innerHTML = rows.map((f,i) => {
+      const s   = st(f);
+      const bal = f.due - f.paid;
+      const sc  = s==='partial' ? '#f59e0b' : '#ef4444';
+      const sl  = s==='partial' ? '⚠️ Partial' : '❌ Not Paid';
+      const bg  = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
+      return `<tr style="background:${bg};border-bottom:1px solid var(--border)" onclick="window._closePending();window._oFl('${f.flatId}')" style="cursor:pointer">
+        <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
+        <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted);font-weight:400">No owner</em>'}</td>
+        <td style="padding:10px 14px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span></td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(f.paid)}</td>
+        <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(bal)}</td>
+      </tr>`;
+    }).join('') +
+    `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+      <td colspan="3" style="padding:10px 18px;font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+f.paid,0))}</td>
+      <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(totalBal)}</td>
+    </tr>`;
+  }
+
+  modal.style.display = 'flex';
+}
+function closePending() {
+  document.getElementById('pendingModal').style.display = 'none';
+}
+window._showPending  = showPending;
+window._closePending = closePending;
+
 let _anStatus = 'all';
 function anSetStatus(s) {
   _anStatus = s;
@@ -3489,6 +3550,37 @@ function renderAnPayTable() {
   </tr>`;
 }
 </script>
+<!-- PENDING FLATS MODAL -->
+<div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1.5px solid var(--border2)">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text)"><i class="ti ti-clock" style="color:var(--amber)"></i> Pending Payments</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="pendingSubtitle"></div>
+      </div>
+      <button onclick="window._closePending()" style="background:var(--surface2);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
+    </div>
+    <!-- Summary -->
+    <div id="pendingSummary" style="display:flex;gap:10px;padding:12px 18px;border-bottom:1.5px solid var(--border2)"></div>
+    <!-- List -->
+    <div style="overflow-y:auto;flex:1;padding:8px 0">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead style="position:sticky;top:0;background:var(--surface3);z-index:1">
+          <tr>
+            <th style="padding:8px 18px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Owner</th>
+            <th style="padding:8px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Paid</th>
+            <th style="padding:8px 18px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Balance</th>
+          </tr>
+        </thead>
+        <tbody id="pendingTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV BAR (mobile only) -->
 <nav class="bottom-nav-bar" id="bottomNav" aria-label="Main navigation">
   <button class="bnav-item active" data-v="payments" onclick="switchView('payments')">
