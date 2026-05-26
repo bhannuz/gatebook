@@ -228,11 +228,18 @@ import {
   updateProfile,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 
+/* ── Admin email — change this to your admin email ── */
+const ADMIN_EMAIL = 'admin@gatebook.app';
+
 /* ── Auth guard: redirect logged-in users straight to app ── */
 onAuthStateChanged(auth, user => {
   document.getElementById('pageLoad').style.display = 'none';
   if (user) {
-    window.location.replace('app.html');
+    if (user.email === ADMIN_EMAIL) {
+      window.location.replace('admin.html');
+    } else {
+      window.location.replace('app.html');
+    }
   } else {
     document.getElementById('mainCard').style.display = '';
   }

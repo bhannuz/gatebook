@@ -1269,9 +1269,15 @@ import {
 ════════════════════════════════ */
 let UID = null;
 
+const ADMIN_EMAIL = 'admin@gatebook.app';
 onAuthStateChanged(auth, user => {
   if (!user) {
     window.location.replace('index.html');
+    return;
+  }
+  // Redirect admin away from regular app
+  if (user.email === ADMIN_EMAIL) {
+    window.location.replace('admin.html');
     return;
   }
   UID = user.uid;

@@ -427,13 +427,22 @@ window.doLaunch = async function() {
 
     // 2. Write apartment config to Firestore (keyed by uid)
     const uid = cred.user.uid;
+    const now = new Date();
+    const expiry = new Date(now); expiry.setDate(expiry.getDate() + 30);
+    // Calculate total flats
+    const totalFlats = blocks.reduce((s,b)=>s+(b.floors*b.flatsPerFloor),0);
     await setDoc(doc(db,'apartments',uid), {
       name: aptName,
       blocks,
       adminUid: uid,
       adminName,
       adminEmail,
-      createdAt: new Date().toISOString(),
+      createdAt: now.toISOString(),
+      activatedAt: now.toISOString(),
+      expiryDate: expiry.toISOString(),
+      plan: 'trial',
+      status: 'active',
+      totalFlats,
     });
 
     // 3. Create all flats under apartments/{uid}/flats/{flatId}
