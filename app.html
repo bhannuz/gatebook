@@ -612,7 +612,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 @media(min-width:901px){
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
-/* ── Responsive ── */
 @media(max-width:900px){
   .navbar{padding:0 1rem}.app{padding:0 1rem 5rem}
   .fg2{grid-template-columns:1fr}
@@ -621,7 +620,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
   .view-tabs{display:none}
-  .bottom-nav-bar{display:flex}
+}
+@media(min-width:901px){
+  .bottom-nav-bar{display:none!important}
+  .view-tabs{display:flex}
+  .app{padding-bottom:1rem}
 }
 /* ── Bottom Nav Bar ── */
 @media(pointer:coarse){
@@ -630,7 +633,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .app{padding-bottom:5rem}
 }
 .bottom-nav-bar{
-  display:none;
+  display:flex;
   position:fixed;bottom:0;left:0;right:0;
   height:60px;z-index:200;
   background:var(--surface);
