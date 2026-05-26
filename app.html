@@ -814,15 +814,43 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div><!-- /#resView -->
 
   <!-- PRESIDENT VIEW -->
-  <div id="presView" style="display:none">
+  <div id="presView" style="display:none;padding:14px">
     <div id="presBanner"></div>
-    <div class="fund-row" id="fundRow"></div>
-    <div class="exp-list">
-      <div class="exp-list-head">
-        <div class="exp-list-title"><i class="ti ti-receipt"></i>Society Expenses — managed by President</div>
-        <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+
+    <!-- Summary cards -->
+    <div class="fund-row" id="fundRow" style="margin-bottom:14px"></div>
+
+    <!-- Filters row -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      <select id="histMonthFilter" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
+      <select id="histCatFilter"   class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
+      <div style="margin-left:auto;font-size:11px;color:var(--muted)" id="histTotal"></div>
+      <button class="btn btn-indigo btn-sm" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+    </div>
+
+    <!-- ROW: Records (left 58%) + Pie chart (right 42%) -->
+    <div style="display:grid;grid-template-columns:58fr 42fr;gap:14px;align-items:start">
+
+      <!-- Expense Records -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1.5px solid var(--border2);font-size:11px;font-weight:800;color:var(--text)">
+          <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expense Records
+        </div>
+        <div style="max-height:420px;overflow-y:auto">
+          <div id="presExpList"></div>
+        </div>
       </div>
-      <div id="presExpList"></div>
+
+      <!-- Pie Chart -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:sticky;top:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
+          <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
+        </div>
+        <canvas id="expTabPie" style="display:block;margin:0 auto;width:100%;max-width:180px;cursor:pointer"></canvas>
+        <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+        <div id="expTabLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
+
     </div>
   </div><!-- /#presView -->
 
@@ -831,39 +859,28 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
     <!-- Header + Filters -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:17px;color:#fff;box-shadow:0 4px 12px rgba(99,102,241,0.30);flex-shrink:0">
-          <i class="ti ti-chart-pie"></i>
-        </div>
-        <div>
-          <div style="font-size:15px;font-weight:800;color:var(--text);line-height:1">Analytics</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="analyticsMonth"></div>
-        </div>
-      </div>
+      <div style="font-size:15px;font-weight:800;color:var(--text)"><i class="ti ti-chart-pie" style="color:var(--indigo)"></i> Analytics</div>
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <select id="anFilterType" class="ctrl" style="font-size:11px;height:30px;padding:0 8px"
-          onchange="rAnalytics()">
-          <option value="month">By Month</option>
-          <option value="year">By Year</option>
+        <select id="anFilterType" class="ctrl" style="font-size:11px;height:30px;padding:0 8px" onchange="rAnalytics()">
+          <option value="month">Month</option>
+          <option value="year">Year</option>
         </select>
-        <select id="anFilterMonth" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:130px"
-          onchange="rAnalytics()"></select>
-        <select id="anFilterYear" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;display:none"
-          onchange="rAnalytics()"></select>
+        <select id="anFilterMonth" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:110px" onchange="rAnalytics()"></select>
+        <select id="anFilterYear"  class="ctrl" style="font-size:11px;height:30px;padding:0 8px;display:none"    onchange="rAnalytics()"></select>
       </div>
     </div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="analyticsMonth"></div>
 
-    <!-- Main two-column grid: table LEFT, charts RIGHT -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;align-items:start;margin-top:14px">
+    <!-- Summary totals -->
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px" id="analyticsTotals"></div>
 
-      <!-- ── LEFT: Payment Records Table ── -->
-      <div style="background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm)">
-        <!-- Table toolbar -->
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:8px;background:var(--surface2)">
-          <div style="font-size:12px;font-weight:800;color:var(--text)">
-            <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records
-            <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;margin-left:4px"></span>
-          </div>
+    <!-- ROW 1: Payment Records (left, 55%) + Payment Status pie (right, 45%) -->
+    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start">
+
+      <!-- Payment Records Table -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:6px">
+          <div style="font-size:11px;font-weight:800;color:var(--text)"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600"></span></div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
             <button class="an-sf-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
             <button class="an-sf-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
@@ -871,72 +888,43 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
             <button class="an-sf-btn"        data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
           </div>
         </div>
-        <!-- Scrollable table -->
-        <div style="overflow-x:auto;max-height:480px;overflow-y:auto">
+        <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
           <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead style="position:sticky;top:0;z-index:2">
+            <thead style="position:sticky;top:0;z-index:1">
               <tr style="background:var(--surface3)">
-                <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
-                <th style="padding:7px 12px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
-                <th style="padding:7px 12px;text-align:center;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
-                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Paid</th>
-                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Due</th>
-                <th style="padding:7px 12px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Balance</th>
+                <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Flat</th>
+                <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Owner</th>
+                <th style="padding:7px 10px;text-align:center;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Status</th>
+                <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Paid</th>
+                <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Due</th>
+                <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Balance</th>
               </tr>
             </thead>
             <tbody id="anPayTable"></tbody>
           </table>
-          <div id="anPayEmpty" style="display:none;padding:28px;text-align:center;color:var(--muted);font-size:12px">
-            <i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No records found
-          </div>
+          <div id="anPayEmpty" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:12px"><i class="ti ti-inbox" style="font-size:20px;display:block;margin-bottom:6px"></i>No records found</div>
         </div>
       </div>
 
-      <!-- ── RIGHT: Pie charts + summary ── -->
-      <div style="display:flex;flex-direction:column;gap:12px">
+      <!-- Payment Status Pie -->
+      <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+        <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
+        <canvas id="payPie" style="display:block;margin:0 auto;width:100%;max-width:180px;cursor:pointer"></canvas>
+        <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+        <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+      </div>
 
-        <!-- Payment Status Pie -->
-        <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
-          <div style="font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:14px">
-            <div style="flex:0 0 auto;width:45%">
-              <div style="position:relative;display:inline-block;width:100%">
-                <canvas id="payPie" style="display:block;width:100%;cursor:crosshair"></canvas>
-                <div id="payTooltip" style="display:none;position:fixed;background:rgba(15,15,35,0.88);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.3)"></div>
-              </div>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div id="payLegend" style="display:flex;flex-direction:column;gap:6px"></div>
-            </div>
-          </div>
-        </div>
+    </div>
 
-        <!-- Expenses by Category Pie -->
-        <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:relative">
-          <div style="font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category
-          </div>
-          <div style="display:flex;align-items:flex-start;gap:14px">
-            <div style="flex:0 0 auto;width:45%">
-              <div style="position:relative;display:inline-block;width:100%">
-                <canvas id="expPie" style="display:block;width:100%;cursor:crosshair"></canvas>
-                <div id="expTooltip" style="display:none;position:fixed;background:rgba(15,15,35,0.88);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.3)"></div>
-              </div>
-            </div>
-            <div style="flex:1;min-width:0">
-              <div id="expLegend" style="display:flex;flex-direction:column;gap:6px"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Summary totals -->
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px" id="analyticsTotals"></div>
-
-      </div><!-- /right col -->
-
-    </div><!-- /main grid -->
+    <!-- ROW 2: Expenses by Category (full width) -->
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+      <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-receipt" style="color:var(--indigo)"></i> Expenses by Category</div>
+      <div style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center">
+        <canvas id="expPie" style="display:block;width:160px;height:160px;cursor:pointer;flex-shrink:0"></canvas>
+        <div id="expTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
+        <div id="expLegend" style="display:flex;flex-direction:column;gap:6px"></div>
+      </div>
+    </div>
 
   </div><!-- /#analyticsView -->
 
@@ -2684,85 +2672,21 @@ function rPresident() {
       </div>`;
   }
 
-  /* ── Society expenses only ── */
-  const totalExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
-  const thisMonthExp  = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
-
-  document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2"><div class="fcard2-label">Total Expenses</div><div class="fcard2-val" style="color:var(--red)">${inr(totalExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
-    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(thisMonthExp)}</div><div class="fcard2-sub">${AM}</div></div>`;
-
-  /* ── Category breakdown (expenses only) ── */
-  const CAT_ICONS  = {Maintenance:'ti-tool',Water:'ti-droplet',Electricity:'ti-bolt',Security:'ti-shield',Cleaning:'ti-vacuum-cleaner',Lift:'ti-elevator',Gardening:'ti-plant',Painting:'ti-paint',Internet:'ti-wifi',Parking:'ti-parking',Other:'ti-clipboard'};
-  const CAT_COLORS = ['#6366F1','#10B981','#F59E0B','#EF4444','#0EA5E9','#8B5CF6','#EC4899','#14B8A6','#F97316','#84CC16'];
-  const catIcon = c => CAT_ICONS[c]||'ti-clipboard';
+  /* ── Category colour helpers ── */
+  const CAT_ICONS2 = {Maintenance:'ti-tool',Water:'ti-droplet',Electricity:'ti-bolt',Security:'ti-shield',Cleaning:'ti-vacuum-cleaner',Lift:'ti-elevator',Gardening:'ti-plant',Painting:'ti-paint',Internet:'ti-wifi',Parking:'ti-parking',Other:'ti-clipboard'};
+  const CAT_COLORS = ['#6366f1','#10b981','#f59e0b','#ef4444','#0ea5e9','#8b5cf6','#ec4899','#14b8a6','#f97316','#84cc16'];
   const catClr  = i => CAT_COLORS[i%CAT_COLORS.length];
-
-  const catMap = {};
-  socExps.forEach(e => {
-    if (!catMap[e.cat]) catMap[e.cat] = { total:0, count:0 };
-    catMap[e.cat].total += (e.amt||0);
-    catMap[e.cat].count++;
-  });
-  const cats       = Object.entries(catMap).sort((a,b)=>b[1].total-a[1].total);
-  const grandTotal = cats.reduce((s,[,v])=>s+v.total,0)||1;
-  const maxAmt     = cats[0]?.[1].total||1;
-
-  const catEl = document.getElementById('catSummary');
-  if (catEl && cats.length) {
-    /* Vertical bar chart */
-    const n=cats.length, W=520, H=150, padL=32, padR=12, padT=8, padB=38;
-    const chartW=W-padL-padR, chartH=H-padT-padB;
-    const barW=Math.max(16,Math.min(44,chartW/n-6));
-    const gap=(chartW-n*barW)/(n+1);
-    let svg='';
-    for(let i=0;i<=4;i++){
-      const yv=(maxAmt/4)*i, y=padT+chartH-(yv/maxAmt)*chartH;
-      const lbl=yv>=1000?'₹'+(yv/1000).toFixed(0)+'k':yv>0?'₹'+Math.round(yv):'0';
-      svg+=`<line x1="${padL}" y1="${y.toFixed(1)}" x2="${W-padR}" y2="${y.toFixed(1)}" stroke="#E5E7EB" stroke-width="1"/>`;
-      svg+=`<text x="${padL-4}" y="${(y+3.5).toFixed(1)}" text-anchor="end" font-size="8" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${lbl}</text>`;
-    }
-    cats.forEach(([cat,v],i)=>{
-      const clr=catClr(i), bh=Math.max(3,(v.total/maxAmt)*chartH);
-      const bx=padL+gap+i*(barW+gap), by=padT+chartH-bh, lx=bx+barW/2;
-      const pct=Math.round(v.total/grandTotal*100);
-      svg+=`<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW}" height="${bh.toFixed(1)}" rx="${Math.min(4,barW/2)}" fill="${clr}" opacity=".88"><title>${cat}: ${inr(v.total)} (${pct}%)</title></rect>`;
-      if(barW>=22) svg+=`<text x="${lx.toFixed(1)}" y="${(by-3).toFixed(1)}" text-anchor="middle" font-size="8" font-weight="700" fill="${clr}" font-family="Plus Jakarta Sans,sans-serif">₹${v.total>=1000?(v.total/1000).toFixed(0)+'k':v.total}</text>`;
-      const shortCat=cat.length>8?cat.slice(0,7)+'.':cat;
-      svg+=`<text x="${lx.toFixed(1)}" y="${(H-padB+14).toFixed(1)}" text-anchor="middle" font-size="8.5" fill="#6B7280" font-family="Plus Jakarta Sans,sans-serif">${shortCat}</text>`;
-      svg+=`<text x="${lx.toFixed(1)}" y="${(H-padB+25).toFixed(1)}" text-anchor="middle" font-size="7.5" fill="#A5A8D0" font-family="Plus Jakarta Sans,sans-serif">${pct}%</text>`;
-    });
-    const chips=cats.map(([cat,v],i)=>{
-      const clr=catClr(i),icon=catIcon(cat),pct=Math.round(v.total/grandTotal*100);
-      return `<div style="background:#fff;border:1.5px solid ${clr}30;border-radius:var(--r-md);padding:8px 10px;display:flex;align-items:center;gap:8px">
-        <div style="width:24px;height:24px;border-radius:7px;background:${clr}18;color:${clr};display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0"><i class="ti ${icon}"></i></div>
-        <div style="min-width:0;flex:1"><div style="font-size:11px;font-weight:800;color:var(--text)">${cat}</div><div style="font-size:9px;color:var(--text2)">${v.count} record${v.count!==1?'s':''} · ${pct}%</div></div>
-        <div style="font-size:12px;font-weight:800;color:${clr};white-space:nowrap">${inr(v.total)}</div>
-      </div>`;
-    }).join('');
-    catEl.innerHTML=`
-      <div style="margin-bottom:14px">
-        <div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-          <i class="ti ti-chart-bar" style="color:var(--indigo)"></i> By Category
-        </div>
-        <div class="cat-summary-grid" style="margin-bottom:10px">${chips}</div>
-        <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:10px 6px;overflow:hidden">
-          <svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;display:block">${svg}</svg>
-        </div>
-      </div>`;
-  } else if (catEl) {
-    catEl.innerHTML = '';
-  }
+  const catIcon = c => CAT_ICONS2[c]||'ti-clipboard';
+  const allCatNames = [...new Set(socExps.map(e=>e.cat).filter(Boolean))].sort();
 
   /* ── Filter dropdowns ── */
-  const allMonths   = [...new Set(socExps.map(e=>e.month).filter(Boolean))].sort().reverse();
-  const allCatNames = [...new Set(socExps.map(e=>e.cat).filter(Boolean))].sort();
+  const allMonths = [...new Set(socExps.map(e=>e.month).filter(Boolean))].sort().reverse();
   const mSel = document.getElementById('histMonthFilter');
   const cSel = document.getElementById('histCatFilter');
   if (mSel) { const cur=mSel.value; mSel.innerHTML=`<option value="all">All months</option>`+allMonths.map(m=>`<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join(''); }
   if (cSel) { const cur=cSel.value; cSel.innerHTML=`<option value="all">All categories</option>`+allCatNames.map(c=>`<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join(''); }
 
-  /* ── Filter + render expense rows ── */
+  /* ── Filter expense rows ── */
   const mf = mSel?.value||'all';
   const cf = cSel?.value||'all';
   const vis = socExps.filter(e=>{
@@ -2771,9 +2695,30 @@ function rPresident() {
     return true;
   });
 
+  /* ── Summary cards (based on filtered) ── */
+  const totalExp     = vis.reduce((s,e)=>s+(e.amt||0),0);
+  const thisMonthExp = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
+  document.getElementById('fundRow').innerHTML = `
+    <div class="fcard2"><div class="fcard2-label">Filtered Total</div><div class="fcard2-val" style="color:var(--red)">${inr(totalExp)}</div><div class="fcard2-sub">${vis.length} records</div></div>
+    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(thisMonthExp)}</div><div class="fcard2-sub">${AM}</div></div>
+    <div class="fcard2"><div class="fcard2-label">All Time</div><div class="fcard2-val">${inr(socExps.reduce((s,e)=>s+(e.amt||0),0))}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
+
+  /* ── Build pie segments from filtered data ── */
+  const catMap2 = new Map();
+  vis.forEach(e => { const c=e.cat||'Other'; catMap2.set(c,(catMap2.get(c)||0)+(e.amt||0)); });
+  const expPieSegs2 = [...catMap2.entries()].sort((a,b)=>b[1]-a[1])
+    .map(([cat,amt],i)=>({ label:cat, value:amt, color:catClr(i), displayValue:inr(amt) }));
+
   const visTotal = vis.reduce((s,e)=>s+(e.amt||0),0);
   const totEl = document.getElementById('histTotal');
   if(totEl) totEl.innerHTML=`<span style="color:var(--text)">${vis.length} expense${vis.length!==1?'s':''}</span> &nbsp;·&nbsp; Total: <strong style="color:var(--indigo)">${inr(visTotal)}</strong>`;
+
+  /* ── Pie chart (always draw, even if empty) ── */
+  if (typeof drawPie === 'function') {
+    drawPie('expTabPie', expPieSegs2, 'expTabTooltip');
+    if (typeof buildLegend === 'function')
+      buildLegend('expTabLegend', expPieSegs2.map(s=>({...s,count:s.value})), visTotal);
+  }
 
   if(!vis.length){
     document.getElementById('presExpList').innerHTML=`<div class="exp-empty"><i class="ti ti-receipt-off"></i>No expenses recorded yet.</div>`;
