@@ -97,8 +97,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .view-tabs{display:flex;gap:0;background:var(--surface3);border:1px solid var(--border2);
   border-radius:var(--r-md);padding:4px;margin-bottom:1.4rem;width:fit-content}
 .vtab{padding:6px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:700;
-.an-sf-btn{font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;border:1.5px solid var(--border2);background:var(--surface);color:var(--text2);cursor:pointer;font-family:var(--font);white-space:nowrap}
-.an-sf-btn.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
   color:var(--text2);cursor:pointer;border:none;background:transparent;
   font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
 .vtab i{font-size:14px}
@@ -461,10 +459,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* cat breakdown */
 .cat-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px}
 .fund-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.4rem}
-.fcard2{background:#fff;border-radius:var(--r-lg);padding:14px 16px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm)}
-.fcard2-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
-.fcard2-val{font-size:20px;font-weight:800;color:var(--text)}
-.fcard2-sub{font-size:11px;color:var(--text2);margin-top:2px}
+
 .exp-list{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
 .exp-list-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1.5px solid var(--border2);background:var(--surface3)}
 .exp-list-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
@@ -676,6 +671,32 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-radius:99px;background:var(--red);color:#fff;
   line-height:1.4;min-width:14px;text-align:center;
 }
+
+/* ══ UNIFIED TABLE, CHIPS & STATS across Analytics, Expenses, Residents ══ */
+.uni-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
+.uni-table th{background:var(--surface3);padding:9px 14px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border2)}
+.uni-table td{padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle}
+.uni-table tr:last-child td{border-bottom:none}
+.uni-table tr:hover td{background:var(--surface2)}
+.uni-table tbody tr{cursor:pointer}
+.uni-table .tot-row td{background:var(--surface3);font-weight:800;border-top:2px solid var(--border2)}
+.uni-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;border:1.5px solid transparent}
+.uni-chip.paid   {background:var(--green-bg);color:var(--green);border-color:rgba(5,150,105,.25)}
+.uni-chip.partial{background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.25)}
+.uni-chip.pending{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.25)}
+.uni-chip.vacant {background:var(--surface3);color:var(--muted);border-color:var(--border2)}
+.uni-chip.owner  {background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
+.uni-chip.tenant {background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.25)}
+.uni-chip.cat    {background:var(--sky-bg);color:var(--sky);border-color:rgba(2,132,199,.2)}
+.uni-stat{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:11px 14px;box-shadow:var(--shadow-sm)}
+.uni-stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
+.uni-stat-val{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.4px}
+.uni-stat-sub{font-size:10px;color:var(--text2);margin-top:2px}
+.uni-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.uni-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+.uni-filter-btn{padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid var(--border2);background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s}
+.uni-filter-btn.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.uni-filter-btn:hover:not(.active){border-color:var(--border3);color:var(--text)}
 </style>
 </head>
 <body>
@@ -838,10 +859,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <div id="resView" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
       <div class="mem-filters" id="mFil">
-        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
-        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+        <button class="uni-filter-btn active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
+        <button class="uni-filter-btn" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="uni-filter-btn" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="uni-filter-btn" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="sw" style="min-width:180px"><i class="ti ti-search"></i>
@@ -856,14 +877,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="veh-sum" id="vehSum" style="margin-bottom:1rem"></div>
-    <div class="veh-table-wrap">
-      <table class="veh-table">
-        <thead><tr>
-          <th>Flat</th><th>Resident</th><th>🏍 2W</th><th>🚗 4W</th>
-        </tr></thead>
+    <div style="overflow-x:auto"><table class="uni-table">
+        <thead><tr><th>Flat</th><th>Resident</th><th>Type</th><th>2W</th><th>4W</th><th>Vehicles</th><th>Tenure</th></tr></thead>
         <tbody id="resBody"></tbody>
-      </table>
-    </div>
+      </table></div>
   </div><!-- /#resView -->
 
   <!-- PRESIDENT VIEW -->
@@ -932,7 +949,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="analyticsMonth"></div>
 
     <!-- Summary totals -->
-    <div class="veh-sum" id="analyticsTotals" style="margin-bottom:14px"></div>
+    <div class="uni-stats-row" id="analyticsTotals"></div>
 
     <!-- ROW 1: Payment Records (left, 55%) + Payment Status pie (right, 45%) -->
     <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start" class="an-layout-grid">
@@ -942,21 +959,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:6px">
           <div style="font-size:11px;font-weight:800;color:var(--text)"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600"></span></div>
           <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <button class="an-sf-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
-            <button class="an-sf-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
-            <button class="an-sf-btn"        data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
-            <button class="an-sf-btn"        data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
+            <button class="uni-filter-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
+            <button class="uni-filter-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
+            <button class="uni-filter-btn" data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
+            <button class="uni-filter-btn" data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
           </div>
         </div>
         <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
-          <table style="width:100%;border-collapse:collapse;font-size:12px">
-            <thead style="position:sticky;top:0;z-index:1">
-              <tr style="background:var(--surface3)">
-                <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Flat</th>
-                <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Owner</th>
-                <th style="padding:7px 10px;text-align:center;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Status</th>
-                <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1.5px solid var(--border2)">Balance</th>
-              </tr>
+          <table class="uni-table">
+            <thead>
+              <tr><th>Flat</th><th>Owner</th><th>Status</th><th style="text-align:right">Balance</th></tr>
             </thead>
             <tbody id="anPayTable"></tbody>
           </table>
@@ -2460,7 +2472,7 @@ function fmtDate(d) {
 /* ── Filter toggle ── */
 function fMem(t) {
   MF = t;
-  document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+  document.querySelectorAll('.uni-filter-btn[data-t]').forEach(b => b.classList.toggle('active', b.dataset.t === t));
   rResidents();
 }
 
@@ -2735,8 +2747,8 @@ function rPresident() {
   const totalExp     = vis.reduce((s,e)=>s+(e.amt||0),0);
   const thisMonthExp = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(socExps.reduce((s,e)=>s+(e.amt||0),0))}</div><div class="fcard2-sub">${socExps.length} records</div></div>
-    <div class="fcard2"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(thisMonthExp)}</div><div class="fcard2-sub">${AM}</div></div>`;
+    <div class="uni-stat"><div class="uni-stat-label">All Time</div><div class="uni-stat-val" style="color:var(--red)">${inr(socExps.reduce((s,e)=>s+(e.amt||0),0))}</div><div class="uni-stat-sub">${socExps.length} records</div></div>
+    <div class="uni-stat"><div class="uni-stat-label">This Month</div><div class="uni-stat-val">${inr(thisMonthExp)}</div><div class="uni-stat-sub">${AM}</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -2993,16 +3005,22 @@ function rResidents() {
     const isTenant=rType==='tenant';
     const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
     const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
-    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    return `<tr onclick="window._oFlEdit('${f.flatId}')" style="cursor:pointer">
-      <td><strong style="color:var(--indigo);font-size:12px">${f.flatId}</strong></td>
-      <td>
-        <div style="font-size:12px;font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-        <span class="mem-type ${rType}" style="font-size:10px;margin-top:3px">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span>
-      </td>
+    const twB=tw?`<span class="uni-chip"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span style="color:var(--muted);font-size:11px">—</span>`;
+    const fwB=fw?`<span class="uni-chip"><i class="ti ti-car"></i>${fw}</span>`:`<span style="color:var(--muted);font-size:11px">—</span>`;
+    const typeLabel=isVacant?'🚪 Vacant':isTenant?'🔑 Tenant':'🏠 Owner';
+    const typeClass=isVacant?'vacant':isTenant?'tenant':'owner';
+    const nums=v.nums?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${v.nums}</div>`:'\';
+    const slot=v.slot?`<span style="font-size:10px;color:var(--muted)">Slot: ${v.slot}</span>`:'\';
+    const ten=tenure2(f.moveIn,f.moveOut);
+    const tenOut=f.moveOut?`<div style="font-size:9px;color:var(--muted)">vacated</div>`:'';
+    return `<tr onclick="window._oFlEdit('${f.flatId}')">
+      <td><strong style="color:var(--indigo)">${f.flatId}</strong></td>
+      <td><div style="font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>${f.phone?`<div style="font-size:10px;color:var(--muted)">📞 ${f.phone}</div>`:''}}</td>
+      <td><span class="uni-chip ${typeClass}">${typeLabel}</span></td>
       <td>${twB}</td>
       <td>${fwB}</td>
+      <td>${nums}${slot}</td>
+      <td><strong>${ten}</strong>${tenOut}</td>
     </tr>`;
   }).join('');
 }
@@ -3352,8 +3370,9 @@ function rAnalytics() {
   const totalOutstanding = Math.max(0, totalDue - totalCollected);
   const doc1 = document.getElementById('analyticsTotals');
   if (doc1) doc1.innerHTML = `
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div><div><div class="vscard-label">Collected</div><div class="vscard-val" style="color:#22c55e">${inr(totalCollected)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div></div></div>
-    <div class="vscard"><div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div><div><div class="vscard-label">Outstanding</div><div class="vscard-val" style="color:#ef4444">${inr(totalOutstanding)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div></div></div>`;
+    <div class="uni-stat"><div class="uni-stat-label">Collected</div><div class="uni-stat-val" style="color:var(--green)">${inr(totalCollected)}</div><div class="uni-stat-sub">${paid.length+partial.length} flats paid</div></div>
+    <div class="uni-stat"><div class="uni-stat-label">Outstanding</div><div class="uni-stat-val" style="color:var(--red)">${inr(totalOutstanding)}</div><div class="uni-stat-sub">${pending.length} flats pending</div></div>
+    <div class="uni-stat"><div class="uni-stat-label">Collection Rate</div><div class="uni-stat-val">${totalDue?Math.round(totalCollected/totalDue*100):0}%</div><div class="uni-stat-sub">of ${inr(totalDue)} due</div></div>`;
 
   renderAnPayTable();
 }
@@ -3423,7 +3442,7 @@ window._closePending = closePending;
 let _anStatus = 'all';
 function anSetStatus(s) {
   _anStatus = s;
-  document.querySelectorAll('.an-sf-btn').forEach(b => b.classList.toggle('active', b.dataset.s===s));
+  document.querySelectorAll('.uni-filter-btn[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s===s));
   renderAnPayTable();
 }
 window.anSetStatus = anSetStatus;
@@ -3459,30 +3478,25 @@ function renderAnPayTable() {
     return `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${c}18;color:${c};border:1px solid ${c}40">${lbl[s]||s}</span>`;
   };
 
-  tbody.innerHTML = rows.map((f,i) => {
-    const s        = st(f);
-    const bal      = (f.due||0) - (f.paid||0);
-    const balColor = bal > 0 ? '#ef4444' : '#22c55e';
-    const bg       = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
-    const sMap     = { paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#9ca3af' };
-    const sLbl     = { paid:'Paid', partial:'Partial', pending:'Pending', vacant:'Vacant' };
-    const sc       = sMap[s]||'#9ca3af';
-    const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sLbl[s]||s}</span>`;
-    return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
-      <td style="padding:9px 10px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
-      <td style="padding:9px 10px;font-size:12px;font-weight:600;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
-        ${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}
-      </td>
-      <td style="padding:9px 10px;text-align:center">${statusBadge}</td>
-      <td style="padding:9px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px">${f.due ? inr(Math.abs(bal)) : '—'}</td>
+  tbody.innerHTML = rows.map(f => {
+    const s   = st(f);
+    const bal = (f.due||0) - (f.paid||0);
+    const sLbl= {paid:'✅ Paid',partial:'⚠ Partial',pending:'❌ Pending',vacant:'Vacant'};
+    const chip= `<span class="uni-chip ${s}">${sLbl[s]||s}</span>`;
+    const balColor = bal > 0 ? 'var(--red)' : 'var(--green)';
+    return `<tr onclick="window._oFl && window._oFl('${f.flatId}')">
+      <td style="font-weight:800;color:var(--indigo)">${f.flatId}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted)">Vacant</em>'}</td>
+      <td>${chip}</td>
+      <td style="text-align:right;font-weight:800;color:${balColor}">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
   // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
-  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:9px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total (${rows.length} flats)</td>
-    <td style="padding:9px 10px;text-align:right;font-weight:800;color:${totBal>0?'#ef4444':'#22c55e'};font-size:12px">${inr(Math.abs(totBal))}</td>
+  tbody.innerHTML += `<tr class="tot-row">
+    <td colspan="3" style="font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
+    <td style="text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 </script>
