@@ -422,14 +422,10 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── VEHICLES TAB ── */
 .veh-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
 .veh-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
-.vscard{background:#fff;border-radius:var(--r-lg);padding:14px 16px;border:1.5px solid var(--border);box-shadow:var(--shadow-sm);display:flex;align-items:center;gap:12px}
-.vscard-icon{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.vscard-icon.tw{background:rgba(99,102,241,.10);color:var(--indigo)}
-.vscard-icon.fw{background:var(--green-bg);color:var(--green)}
-.vscard-icon.tot{background:var(--sky-bg);color:var(--sky)}
-.vscard-icon.fl{background:var(--amber-bg);color:var(--amber)}
-.vscard-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.vscard-val{font-size:20px;font-weight:800;color:var(--text)}
+.veh-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;
+  font-size:12px;font-weight:700;background:var(--sky-bg);color:var(--sky);
+  border:1.5px solid rgba(2,132,199,.2)}
+.veh-chip i{font-size:13px}
 .veh-table-wrap{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
 .veh-table{width:100%;border-collapse:collapse}
 .veh-table th{background:var(--surface3);padding:9px 14px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border2)}
@@ -2569,8 +2565,8 @@ function rVehicles() {
   }).length;
 
   document.getElementById('vehSum').innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
+    <span class="veh-chip"><i class="ti ti-motorbike"></i> ${totTw} 2-Wheelers</span>
+    <span class="veh-chip"><i class="ti ti-car"></i> ${totFw} 4-Wheelers</span>
   `;
 
   const rows = all.filter(f => {
@@ -2955,13 +2951,10 @@ function rResidents() {
   const all = [...flats.values()].filter(f => f.month === AM);
   const totTw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
   const totFw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
-  const withVeh = all.filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
   const vs = document.getElementById('vehSum');
   if(vs) vs.innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
+    <span class="veh-chip"><i class="ti ti-motorbike"></i> ${totTw} 2-Wheelers</span>
+    <span class="veh-chip"><i class="ti ti-car"></i> ${totFw} 4-Wheelers</span>
   `;
 
   // Render member rows (reuse rMembers logic but target resBody)
