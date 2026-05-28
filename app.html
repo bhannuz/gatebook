@@ -62,68 +62,96 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .itl-by{font-size:11px;color:var(--muted);font-weight:500}
 .itl-dot.open{background:var(--red)}.itl-dot.in-progress{background:var(--amber)}.itl-dot.resolved{background:var(--green)}.itl-dot.created{background:var(--indigo)}
 
-/* ── NAVBAR ── */
-.navbar{position:sticky;top:0;z-index:100;background:rgba(255,255,255,0.85);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border2);padding:0 2rem;height:64px;
+/* ── NAVBAR — minimal 2025 ── */
+.navbar{
+  position:sticky;top:0;z-index:100;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;height:56px;
   display:flex;align-items:center;justify-content:space-between;gap:16px;
-  box-shadow:0 2px 12px rgba(99,102,241,0.06)}
-.nav-brand{display:flex;align-items:center;gap:10px}
-.nav-logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
-  display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff;flex-shrink:0;
-  box-shadow:0 4px 12px rgba(99,102,241,0.30)}
-.nav-name-wrap{display:flex;align-items:center;gap:6px}
-.nav-name{font-size:17px;font-weight:800;color:var(--text);letter-spacing:-.3px}
+}
+.nav-brand{display:flex;align-items:center;gap:9px}
+.nav-logo{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--indigo);
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:#fff;flex-shrink:0;
+}
+.nav-name-wrap{display:flex;align-items:center;gap:8px}
+.nav-name{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.2px}
 .nav-name em{font-style:normal;color:var(--indigo)}
-.flat-count-badge{font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
-  background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow);white-space:nowrap}
-
-.nav-pills{display:none} /* tabs moved below stats */
-
-/* ── Tab bar separator ── */
-.tab-bar-wrap{
-  position:sticky;top:64px;z-index:90;
-  background:var(--surface2);
-  border-top:2px solid var(--border2);
-  border-bottom:2px solid var(--border2);
-  padding:10px 0;
-  margin:0 -1.5rem 1.4rem;
-  padding-left:1.5rem;
-  padding-right:1.5rem;
-  box-shadow:0 4px 12px rgba(0,0,0,0.04);
+.flat-count-badge{
+  font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;
+  background:var(--indigo-bg);color:var(--indigo);white-space:nowrap;
 }
 
-/* ── View tabs (Payments / Issues) below stats ── */
-.view-tabs{display:flex;gap:0;background:var(--surface3);border:1px solid var(--border2);
-  border-radius:var(--r-md);padding:4px;margin-bottom:1.4rem;width:fit-content}
-.vtab{padding:6px 16px;border-radius:var(--r-sm);font-size:12px;font-weight:700;
-  color:var(--text2);cursor:pointer;border:none;background:transparent;
-  font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
-.vtab i{font-size:14px}
-.vtab.active{background:#fff;color:var(--indigo);box-shadow:var(--shadow-sm)}
-.vtab:hover:not(.active){color:var(--text);background:rgba(255,255,255,0.6)}
-.vtab-badge{font-size:10px;padding:1px 6px;border-radius:99px;font-weight:700;
-  background:var(--red-bg);color:var(--red);border:1px solid var(--red-border)}
-.vtab.active .vtab-badge{background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
+.nav-pills{display:none}
 
-.nav-right{display:flex;align-items:center;gap:10px}
-.sync-chip{display:flex;align-items:center;gap:6px;padding:5px 12px;
-  border-radius:99px;background:var(--surface);border:1px solid var(--border2);
-  font-size:12px;font-weight:600;color:var(--text2);box-shadow:var(--shadow-sm)}
-.sdot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0}
-.sdot.live{background:var(--green-light);box-shadow:0 0 0 3px rgba(16,185,129,.2)}
+/* ── Tab bar ── */
+.tab-bar-wrap{
+  position:sticky;top:56px;z-index:90;
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  margin-bottom:1.4rem;
+}
+.view-tabs{
+  display:flex;gap:2px;
+  width:100%;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -ms-overflow-style:none;
+}
+.view-tabs::-webkit-scrollbar{display:none}
+.vtab{
+  flex-shrink:0;
+  padding:0 16px;height:46px;
+  font-size:13px;font-weight:600;
+  color:var(--text2);cursor:pointer;border:none;background:transparent;
+  font-family:var(--font);transition:color .15s,background .15s;
+  display:flex;align-items:center;gap:7px;
+  border-bottom:2px solid transparent;
+  white-space:nowrap;
+  position:relative;top:1px;
+}
+.vtab i{font-size:15px}
+.vtab.active{
+  color:var(--indigo);
+  border-bottom-color:var(--indigo);
+  background:var(--indigo-bg);
+  border-radius:8px 8px 0 0;
+}
+.vtab:hover:not(.active){color:var(--text);background:var(--surface2);border-radius:8px 8px 0 0}
+.vtab-badge{
+  font-size:10px;padding:1px 6px;border-radius:99px;font-weight:700;
+  background:var(--red-bg);color:var(--red);
+}
+.vtab.active .vtab-badge{background:var(--indigo-bg);color:var(--indigo)}
+
+.nav-right{display:flex;align-items:center;gap:12px}
+
+/* Sync status — just a dot + text, no pill border */
+.sync-chip{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:500;color:var(--muted)}
+.sdot{width:6px;height:6px;border-radius:50%;background:var(--muted);flex-shrink:0}
+.sdot.live{background:var(--green-light)}
 .sdot.saving{background:var(--amber-light);animation:sPulse 1s infinite}
 .sdot.error{background:var(--red-light)}
 @keyframes sPulse{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* User chip */
-.user-chip{display:flex;align-items:center;gap:8px;padding:5px 10px;
-  border-radius:99px;background:var(--surface);border:1px solid var(--border2);
-  font-size:12px;font-weight:600;color:var(--text2);box-shadow:var(--shadow-sm);cursor:pointer;
-  transition:all .15s}
-.user-chip:hover{border-color:var(--border3);background:var(--surface2)}
-.user-avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,#6366F1,#8B5CF6);
-  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#fff;flex-shrink:0}
+/* User — avatar only + name, no pill border */
+.user-chip{
+  display:flex;align-items:center;gap:7px;
+  font-size:13px;font-weight:600;color:var(--text2);
+  cursor:pointer;padding:4px 6px;border-radius:var(--r-sm);
+  transition:background .15s;
+}
+.user-chip:hover{background:var(--surface2)}
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:800;color:#fff;flex-shrink:0;
+}
 
 /* ── BUTTONS ── */
 .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:var(--r-md);
@@ -215,79 +243,250 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .floor-divider{display:none}
 .floor-divider i{display:none}
 
-/* ── FLAT CARDS ── */
-.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:1rem}
-.fcard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-md);
-  padding:8px 10px 7px;cursor:pointer;position:relative;overflow:hidden;width:100%;box-sizing:border-box;transition:all .22s;box-shadow:var(--shadow-sm)}
-.fcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
-.fcard.paid::before   {background:linear-gradient(90deg,#059669,#10B981)}
-.fcard.partial::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
-.fcard.pending::before{background:linear-gradient(90deg,#DC2626,#EF4444)}
-.fcard.paid   {border-color:rgba(5,150,105,.15)}
-.fcard.partial{border-color:rgba(217,119,6,.15)}
-.fcard.pending{border-color:rgba(220,38,38,.15)}
-.fcard:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+/* ── FLAT CARDS — minimal 2025 ── */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1rem}
+.fcard{
+  background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:14px 14px 12px;cursor:pointer;position:relative;overflow:hidden;
+  width:100%;box-sizing:border-box;transition:box-shadow .2s,border-color .2s;
+}
+.fcard:hover{box-shadow:var(--shadow);border-color:var(--border2)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
-.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:5px;gap:4px}
-.fc-num{font-size:12px;font-weight:800;color:var(--text)}
-.fc-owner{font-size:10px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
-.fc-type{font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block;margin-top:1px}
+.fcard::before{content:'';position:absolute;top:12px;bottom:12px;left:0;width:3px;border-radius:0 3px 3px 0}
+.fcard.paid::before   {background:var(--green)}
+.fcard.partial::before{background:var(--amber)}
+.fcard.pending::before{background:var(--red)}
+
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:4px}
+.fc-left{min-width:0}
+.fc-num{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.1px}
+.fc-owner{font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
+.fc-type{font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;display:inline-block;margin-top:3px}
 .fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
 .fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
-.fc-indicator{width:20px;height:20px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+.fc-indicator{width:22px;height:22px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
 .fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
-.fc-amount{font-size:14px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:2px}
-.fcard.paid    .fc-amount{color:var(--green)}
+
+.fc-amount{font-size:16px;font-weight:800;letter-spacing:-.4px;line-height:1;margin-bottom:2px}
+.fcard.paid    .fc-amount{color:var(--text)}
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
-.fc-due{font-size:9px;color:var(--muted);font-weight:600}
-.fprog{height:2px;background:var(--bg2);border-radius:99px;margin:3px 0 2px;overflow:hidden}
+.fc-due{font-size:10px;color:var(--muted);font-weight:500}
+
+.fprog{height:3px;background:var(--bg2);border-radius:99px;margin:8px 0 6px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
-.fcard.paid    .fpbar{background:linear-gradient(90deg,#059669,#10B981)}
-.fcard.partial .fpbar{background:linear-gradient(90deg,#D97706,#F59E0B)}
-.fcard.pending .fpbar{background:linear-gradient(90deg,#DC2626,#EF4444)}
-.spill{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-weight:700;padding:2px 7px;
-  border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
-.spill i{font-size:8px}
-.spill.paid   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
-.spill.partial{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
-.spill.pending{background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
+.fcard.paid    .fpbar{background:var(--green)}
+.fcard.partial .fpbar{background:var(--amber)}
+.fcard.pending .fpbar{background:var(--red)}
+
+.spill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
+.spill i{font-size:9px}
+.spill.paid   {background:var(--green-bg);color:var(--green-txt)}
+.spill.partial{background:var(--amber-bg);color:var(--amber-txt)}
+.spill.pending{background:var(--red-bg);  color:var(--red-txt)}
+
 .empty-grid{grid-column:1/-1;text-align:center;padding:4rem 0;color:var(--text2)}
 .empty-grid i{font-size:44px;display:block;margin-bottom:12px;color:var(--muted)}
 
-/* ── ISSUES ── */
+/* ════════════════════════════════════════════════════════════
+   UNIFIED TAB DESIGN SYSTEM
+   Shared across Analytics, Expenses, Residents, Issues tabs
+   ════════════════════════════════════════════════════════════ */
+
+/* ── Filter chip bar (used in all tabs) ── */
+.tab-filters{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+/* .iff  = Issues filter chip  │  .mff = Members  │ all share same base */
+.iff,.mff{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 14px;border-radius:6px;
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border2);
+  background:#fff;color:var(--text2);
+  cursor:pointer;font-family:var(--font);
+  transition:background .15s,color .15s,border-color .15s;
+  white-space:nowrap;
+}
+.iff i,.mff i{font-size:12px}
+.iff.active,.mff.active{
+  background:var(--indigo);color:#fff;border-color:var(--indigo);
+}
+.iff:hover:not(.active),.mff:hover:not(.active){
+  border-color:var(--border3);color:var(--text);background:var(--surface2);
+}
+/* Analytics status filter buttons — same shape */
+.an-sf-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 14px;border-radius:6px;
+  font-size:12px;font-weight:600;
+  border:1px solid var(--border2);
+  background:#fff;color:var(--text2);
+  cursor:pointer;font-family:var(--font);
+  transition:background .15s,color .15s,border-color .15s;
+  white-space:nowrap;
+}
+.an-sf-btn.active{background:var(--indigo);color:#fff;border-color:var(--indigo)}
+.an-sf-btn:hover:not(.active){border-color:var(--border3);color:var(--text);background:var(--surface2)}
+
+/* ── Unified table wrapper + table ── */
+.tab-table-wrap{
+  background:#fff;
+  border:1px solid var(--border2);
+  border-radius:var(--r-lg);
+  overflow:hidden;
+  position:relative;
+}
+/* coloured top stripe — matches fcard pattern */
+.tab-table-wrap::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#6366F1,#8B5CF6);
+  z-index:1;
+}
+/* per-tab colour overrides */
+.tab-table-wrap.green::before {background:linear-gradient(90deg,#059669,#10B981)}
+.tab-table-wrap.amber::before {background:linear-gradient(90deg,#D97706,#F59E0B)}
+.tab-table-wrap.red::before   {background:linear-gradient(90deg,#DC2626,#EF4444)}
+.tab-table-wrap.sky::before   {background:linear-gradient(90deg,#0284C7,#0EA5E9)}
+.tab-table-wrap.purple::before{background:linear-gradient(90deg,#7C3AED,#8B5CF6)}
+/* applies to mem-table, veh-table, analytics inline tables */
+.mem-table,.veh-table{width:100%;border-collapse:collapse}
+.mem-table th,.veh-table th{
+  background:var(--surface3);
+  padding:9px 14px;
+  font-size:10px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;
+  text-align:left;border-bottom:1px solid var(--border2);
+}
+.mem-table td,.veh-table td{
+  padding:11px 14px;
+  font-size:13px;font-weight:500;color:var(--text);
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.mem-table tr:last-child td,.veh-table tr:last-child td{border-bottom:none}
+.mem-table tr:hover td,.veh-table tr:hover td{background:var(--surface2)}
+
+/* Analytics records panel table (inline in app.html) also gets matching th/td via these rules */
+.exp-records-panel table th{
+  background:var(--surface3);
+  font-size:10px;font-weight:700;color:var(--muted);
+  text-transform:uppercase;letter-spacing:.6px;
+  padding:9px 14px;text-align:left;
+  border-bottom:1px solid var(--border2);
+}
+.exp-records-panel table td{
+  padding:11px 14px;
+  font-size:13px;font-weight:500;color:var(--text);
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+.exp-records-panel table tr:last-child td{border-bottom:none}
+.exp-records-panel table tr:hover td{background:var(--surface2)}
+
+/* ── Unified status / type chip ── */
+/* used as .tab-chip  with color modifiers */
+.tab-chip{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:5px;
+  font-size:10px;font-weight:700;
+  white-space:nowrap;
+}
+/* color variants */
+.tab-chip.indigo{background:var(--indigo-bg);color:var(--indigo)}
+.tab-chip.green {background:var(--green-bg); color:var(--green-txt)}
+.tab-chip.amber {background:var(--amber-bg); color:var(--amber-txt)}
+.tab-chip.red   {background:var(--red-bg);   color:var(--red-txt)}
+.tab-chip.sky   {background:var(--sky-bg);   color:var(--sky-txt)}
+.tab-chip.purple{background:var(--purple-bg);color:var(--purple-txt)}
+.tab-chip.muted {background:var(--surface3); color:var(--muted)}
+
+/* Legacy aliases — existing JS still outputs these class names */
+.mem-type{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;white-space:nowrap}
+.mem-type.owner {background:var(--indigo-bg);color:var(--indigo)}
+.mem-type.tenant{background:var(--amber-bg); color:var(--amber-txt)}
+.mem-type.vacant{background:var(--surface3); color:var(--muted)}
+
+.vbadge{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700}
+.vbadge.tw  {background:var(--indigo-bg);color:var(--indigo)}
+.vbadge.fw  {background:var(--green-bg); color:var(--green-txt)}
+.vbadge.none{background:var(--surface3); color:var(--muted)}
+
+.istatus{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700;white-space:nowrap;text-transform:capitalize}
+.istatus.open       {background:var(--red-bg);  color:var(--red-txt)}
+.istatus.in-progress{background:var(--amber-bg);color:var(--amber-txt)}
+.istatus.resolved   {background:var(--green-bg);color:var(--green-txt)}
+
+.ipriority{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:10px;font-weight:700}
+.ipriority.high  {background:var(--red-bg);  color:var(--red-txt)}
+.ipriority.medium{background:var(--amber-bg);color:var(--amber-txt)}
+.ipriority.low   {background:var(--green-bg);color:var(--green-txt)}
+
+.itag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px}
+.itag i{font-size:10px}
+.itag.flat  {background:var(--sky-bg);   color:var(--sky-txt)}
+.itag.cat   {background:var(--purple-bg);color:var(--purple-txt)}
+.itag.date  {background:var(--surface3); color:var(--text2)}
+
+.hist-chip{display:inline-flex;align-items:center;font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:var(--surface3);color:var(--text2);margin:1px}
+
+/* ── Unified summary stat cards (replaces vscard, fcard2) ── */
+.tab-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
+/* both .vscard and .fcard2 map to the same visual */
+.vscard,.fcard2{
+  background:#fff;border-radius:var(--r-lg);
+  padding:14px 16px;border:1px solid var(--border);
+  display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden;
+}
+.vscard::before,.fcard2::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,#6366F1,#8B5CF6);
+}
+.vscard.green::before,.fcard2.green::before{background:linear-gradient(90deg,#059669,#10B981)}
+.vscard.amber::before,.fcard2.amber::before{background:linear-gradient(90deg,#D97706,#F59E0B)}
+.vscard.red::before,  .fcard2.red::before  {background:linear-gradient(90deg,#DC2626,#EF4444)}
+.vscard.sky::before,  .fcard2.sky::before  {background:linear-gradient(90deg,#0284C7,#0EA5E9)}
+.vscard.indigo::before,.fcard2.indigo::before{background:linear-gradient(90deg,#6366F1,#8B5CF6)}
+.vscard-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.vscard-icon.tw {background:var(--indigo-bg);color:var(--indigo)}
+.vscard-icon.fw {background:var(--green-bg); color:var(--green)}
+.vscard-icon.tot{background:var(--sky-bg);   color:var(--sky)}
+.vscard-icon.fl {background:var(--amber-bg); color:var(--amber)}
+.vscard-label,.fcard2-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.vscard-val,.fcard2-val{font-size:20px;font-weight:800;color:var(--text)}
+.fcard2-sub{font-size:11px;color:var(--text2);margin-top:2px}
+/* fcard2 doesn't have an icon, left-align the text block */
+.fcard2{flex-direction:column;align-items:flex-start;gap:0}
+
+/* ── Expense records list (Expenses tab) ── */
+.exp-list{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden}
+.exp-list-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border2);background:var(--surface3)}
+.exp-list-title{font-size:12px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px;text-transform:uppercase;letter-spacing:.4px}
+.exp-list-title i{font-size:15px;color:var(--indigo)}
+.exp-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);transition:background .15s}
+.exp-row:last-child{border-bottom:none}
+.exp-row:hover{background:var(--surface2)}
+.exp-row-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.exp-row-cat{font-size:13px;font-weight:600;color:var(--text)}
+.exp-row-date{font-size:11px;color:var(--muted);margin-top:2px}
+.exp-row-note{font-size:11px;color:var(--text2);margin-top:1px;font-style:italic}
+.exp-row-amt{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap}
+.exp-empty{text-align:center;padding:36px;color:var(--muted)}
+.exp-empty i{font-size:36px;display:block;margin-bottom:8px}
+
+/* ── Issues list ── */
 .iss-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
 .iss-filters{display:flex;gap:6px;flex-wrap:wrap}
-.iff{padding:6px 16px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
-  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .15s;box-shadow:var(--shadow-sm)}
-.iff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
-.iff:hover:not(.active){border-color:var(--border3);color:var(--text)}
-.iss-list{display:flex;flex-direction:column;gap:12px}
+.iss-empty{text-align:center;padding:4rem 0;color:var(--text2)}
+.iss-empty i{font-size:48px;color:var(--muted);display:block;margin-bottom:14px;opacity:.5}
+.iss-empty h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
+.iss-empty p{font-size:13px;color:var(--text2)}
 
-/* ── MEMBERS TAB ── */
+/* ── Members table helpers ── */
 .mem-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
 .mem-filters{display:flex;gap:6px;flex-wrap:wrap}
-.mff{padding:6px 14px;border-radius:99px;font-size:12px;font-weight:700;border:1.5px solid var(--border2);
-  background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s;display:flex;align-items:center;gap:5px}
-.mff i{font-size:12px}
-.mff.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
-.mff:hover:not(.active){border-color:var(--border3);color:var(--text)}
-.mem-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r-xl);overflow:hidden;
-  box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
-.mem-table th{background:var(--surface3);font-size:10px;font-weight:800;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.6px;padding:10px 14px;text-align:left;
-  border-bottom:1.5px solid var(--border2)}
-.mem-table td{padding:11px 14px;font-size:13px;border-bottom:1px solid var(--border);
-  color:var(--text);vertical-align:middle}
-.mem-table tr:last-child td{border-bottom:none}
-.mem-table tr:hover td{background:var(--surface2)}
-.mem-type{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;
-  padding:2px 8px;border-radius:99px}
-.mem-type.owner {background:var(--indigo-bg);color:var(--indigo)}
-.mem-type.tenant{background:var(--amber-bg); color:var(--amber)}
-.mem-type.vacant{background:var(--surface3); color:var(--muted)}
 .mem-name{font-weight:700;color:var(--text)}
 .mem-flat{font-size:11px;font-weight:800;color:var(--indigo)}
 .mem-tenure{font-size:11px;color:var(--text2);white-space:nowrap}
@@ -296,39 +495,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .mem-due {font-size:12px;font-weight:700;color:var(--red)}
 .mem-empty{text-align:center;padding:48px 24px;color:var(--muted)}
 .mem-empty i{font-size:40px;display:block;margin-bottom:10px;opacity:.4}
-.hist-chip{display:inline-block;font-size:10px;font-weight:700;padding:1px 7px;
-  border-radius:99px;background:var(--surface3);color:var(--text2);margin:1px}
-.icard{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-xl);
-  padding:20px 22px;display:grid;grid-template-columns:5px 1fr auto;gap:18px;
-  align-items:start;transition:all .2s;cursor:pointer;box-shadow:var(--shadow-sm)}
-.icard:hover{border-color:var(--border3);transform:translateX(5px);box-shadow:var(--shadow)}
-.ipbar{border-radius:99px;align-self:stretch;min-height:50px;width:5px}
-.ipbar.high  {background:linear-gradient(180deg,#DC2626,#7C3AED)}
-.ipbar.medium{background:linear-gradient(180deg,#D97706,#F59E0B)}
-.ipbar.low   {background:linear-gradient(180deg,#059669,#0EA5E9)}
-.ic-title{font-size:14px;font-weight:800;color:var(--text);margin-bottom:5px;display:flex;align-items:center;gap:8px}
-.ic-title i{font-size:16px;color:var(--indigo)}
-.ic-desc{font-size:12px;color:var(--text2);line-height:1.65;margin-bottom:10px;font-weight:500}
-.ic-meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.itag{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:3px 9px;
-  border-radius:99px;text-transform:uppercase;letter-spacing:.4px}
-.itag i{font-size:10px}
-.itag.flat  {background:var(--sky-bg);   color:var(--sky-txt);  border:1px solid var(--sky-border)}
-.itag.cat   {background:var(--purple-bg);color:var(--purple-txt);border:1px solid var(--purple-border)}
-.itag.date  {background:var(--surface3); color:var(--text2);    border:1px solid var(--border2)}
-.iright{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.istatus{padding:4px 13px;border-radius:99px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-.istatus.open       {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
-.istatus.in-progress{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
-.istatus.resolved   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
-.ipriority{padding:3px 10px;border-radius:99px;font-size:10px;font-weight:700}
-.ipriority.high  {background:var(--red-bg);  color:var(--red-txt);  border:1px solid var(--red-border)}
-.ipriority.medium{background:var(--amber-bg);color:var(--amber-txt);border:1px solid var(--amber-border)}
-.ipriority.low   {background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
-.iss-empty{text-align:center;padding:4rem 0;color:var(--text2)}
-.iss-empty i{font-size:52px;color:var(--muted);display:block;margin-bottom:14px}
-.iss-empty h3{font-size:16px;font-weight:800;color:var(--text);margin-bottom:6px}
-.iss-empty p{font-size:13px;color:var(--text2)}
+.veh-search-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
+.veh-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
+.veh-table-wrap{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden}
+.micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
+
+/* ── Analytics/Expenses shared panels ── */
+.exp-records-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;position:relative}
+.exp-records-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6366F1,#8B5CF6);z-index:1}
+.exp-pie-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
+.exp-pie-panel::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#7C3AED,#8B5CF6)}
 
 /* ── MODALS ── */
 .mbg{display:none;position:fixed;inset:0;z-index:500;
@@ -417,28 +593,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .wiz-rm:hover{background:var(--red);color:#fff}
 
 
-/* ── VEHICLES TAB ── */
-.veh-toolbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;flex-wrap:wrap;gap:10px}
-.veh-sum{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
-.veh-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;
-  font-size:12px;font-weight:700;background:var(--sky-bg);color:var(--sky);
-  border:1.5px solid rgba(2,132,199,.2)}
-.veh-chip i{font-size:13px}
-.veh-table-wrap{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
-.veh-table{width:100%;border-collapse:collapse}
-.veh-table th{background:var(--surface3);padding:9px 14px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border2)}
-.veh-table td{padding:10px 14px;font-size:13px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle}
-.veh-table tr:last-child td{border-bottom:none}
-.veh-table tr:hover td{background:var(--surface2)}
-.vbadge{display:inline-flex;align-items:center;gap:4px;padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700}
-.vbadge.tw{background:var(--indigo-bg);color:var(--indigo);border:1px solid var(--indigo-glow)}
-.vbadge.fw{background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)}
-.vbadge.none{background:var(--surface3);color:var(--muted);border:1px solid var(--border2)}
-.veh-search-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap}
-.micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
-
 /* ── PRESIDENT / FUND TAB ── */
-/* President chip */
 .pres-chip{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 8px;
   background:linear-gradient(135deg,#6366F1,#8B5CF6);border-radius:99px;
   width:fit-content;margin-bottom:1rem;box-shadow:0 3px 12px rgba(99,102,241,.3)}
@@ -456,25 +611,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   padding:20px;text-align:center;color:var(--text2);margin-bottom:1rem;display:flex;
   align-items:center;gap:12px}
 .pres-empty i{font-size:24px;color:var(--muted);flex-shrink:0}
-/* cat breakdown */
 .cat-summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px}
 .fund-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:1.4rem}
-
-.exp-list{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm)}
-.exp-list-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1.5px solid var(--border2);background:var(--surface3)}
-.exp-list-title{font-size:13px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px}
-.exp-list-title i{font-size:16px;color:var(--indigo)}
-.exp-row{display:grid;grid-template-columns:auto 1fr auto auto;gap:12px;align-items:center;padding:12px 18px;border-bottom:1px solid var(--border);transition:background .15s}
-.exp-row:last-child{border-bottom:none}
-.exp-row:hover{background:var(--surface2)}
-.exp-row-icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
-.exp-row-cat{font-size:13px;font-weight:700;color:var(--text)}
-.exp-row-date{font-size:11px;color:var(--muted);margin-top:2px}
-.exp-row-note{font-size:11px;color:var(--text2);margin-top:1px;font-style:italic}
-.exp-row-amt{font-size:14px;font-weight:800;color:var(--text);white-space:nowrap}
-
-.exp-empty{text-align:center;padding:36px;color:var(--muted)}
-.exp-empty i{font-size:36px;display:block;margin-bottom:8px}
 .micon.pres{background:linear-gradient(135deg,rgba(99,102,241,.12),rgba(139,92,246,.08));color:var(--indigo)}
 .cat-icon-map-maintenance{background:var(--indigo-bg);color:var(--indigo)}
 .cat-icon-map-water{background:var(--sky-bg);color:var(--sky)}
@@ -617,31 +755,31 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
 @media(max-width:900px){
-  .navbar{padding:0 1rem}.app{padding:0 1rem 5rem}
+  .navbar{padding:0 1rem}
+  .tab-bar-wrap{padding:0 1rem}
+  .app{padding:0 1rem 1.5rem}
   .fg2{grid-template-columns:1fr}
   .dm{grid-template-columns:1fr 1fr}
   .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
-  .icard{grid-template-columns:5px 1fr}.iright{display:none}
   .user-chip span{display:none}
-  .view-tabs{display:none}
-  .tab-bar-wrap{display:none}
+  .vtab{padding:0 12px;font-size:12px}
   .exp-layout-grid{grid-template-columns:1fr!important}
   .an-layout-grid{grid-template-columns:1fr!important}
+  .an-layout-grid #analyticsTotals{grid-template-columns:1fr 1fr}
+  .exp-layout-grid #fundRow{grid-template-columns:1fr 1fr}
   .exp-pie-panel{order:-1}
   .exp-records-panel{max-height:none!important}
 }
-@media(min-width:901px){
+@media(min-width:601px){
   .bottom-nav-bar{display:none!important}
-  .tab-bar-wrap{display:block}
-  .view-tabs{display:flex}
   .app{padding-bottom:1rem}
 }
-/* ── Bottom Nav Bar ── */
-@media(pointer:coarse){
-  .view-tabs{display:none}
+@media(max-width:600px){
   .bottom-nav-bar{display:flex}
-  .app{padding-bottom:5rem}
+  .tab-bar-wrap{display:none}
+  .app{padding:0 1rem 5rem}
 }
+/* ── Bottom Nav Bar (mobile ≤600px only) ── */
 .bottom-nav-bar{
   display:flex;
   position:fixed;bottom:0;left:0;right:0;
@@ -672,31 +810,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   line-height:1.4;min-width:14px;text-align:center;
 }
 
-/* ══ UNIFIED TABLE, CHIPS & STATS across Analytics, Expenses, Residents ══ */
-.uni-table{width:100%;border-collapse:collapse;background:#fff;border-radius:var(--r-xl);overflow:hidden;box-shadow:var(--shadow-sm);border:1.5px solid var(--border)}
-.uni-table th{background:var(--surface3);padding:9px 14px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:left;border-bottom:1.5px solid var(--border2)}
-.uni-table td{padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border);vertical-align:middle}
-.uni-table tr:last-child td{border-bottom:none}
-.uni-table tr:hover td{background:var(--surface2)}
-.uni-table tbody tr{cursor:pointer}
-.uni-table .tot-row td{background:var(--surface3);font-weight:800;border-top:2px solid var(--border2)}
-.uni-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:10px;font-weight:700;white-space:nowrap;border:1.5px solid transparent}
-.uni-chip.paid   {background:var(--green-bg);color:var(--green);border-color:rgba(5,150,105,.25)}
-.uni-chip.partial{background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.25)}
-.uni-chip.pending{background:var(--red-bg);color:var(--red);border-color:rgba(220,38,38,.25)}
-.uni-chip.vacant {background:var(--surface3);color:var(--muted);border-color:var(--border2)}
-.uni-chip.owner  {background:var(--indigo-bg);color:var(--indigo);border-color:var(--indigo-glow)}
-.uni-chip.tenant {background:var(--amber-bg);color:var(--amber);border-color:rgba(217,119,6,.25)}
-.uni-chip.cat    {background:var(--sky-bg);color:var(--sky);border-color:rgba(2,132,199,.2)}
-.uni-stat{background:#fff;border:1.5px solid var(--border);border-radius:var(--r-lg);padding:11px 14px;box-shadow:var(--shadow-sm)}
-.uni-stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px}
-.uni-stat-val{font-size:18px;font-weight:800;color:var(--text);letter-spacing:-.4px}
-.uni-stat-sub{font-size:10px;color:var(--text2);margin-top:2px}
-.uni-stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
-.uni-filters{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
-.uni-filter-btn{padding:5px 12px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid var(--border2);background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);transition:all .2s}
-.uni-filter-btn.active{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
-.uni-filter-btn:hover:not(.active){border-color:var(--border3);color:var(--text)}
+/* ── Icon-only action buttons ── */
+.icon-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);
+  background:transparent;cursor:pointer;display:inline-flex;align-items:center;
+  justify-content:center;font-size:13px;color:var(--muted);transition:all .15s;padding:0;
+  font-family:var(--font);flex-shrink:0}
+.icon-btn:hover{transform:scale(1.08)}
+.icon-btn.edit:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.icon-btn.del:hover {border-color:var(--red);   color:var(--red);   background:var(--red-bg)}
+.icon-btn.view:hover{border-color:var(--sky);   color:var(--sky);   background:var(--sky-bg)}
 </style>
 </head>
 <body>
@@ -852,17 +974,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
       <button class="btn btn-indigo btn-sm" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
     </div>
-    <div class="iss-list" id="iList"></div>
+    <div class="tab-table-wrap red" id="iList"></div>
   </div><!-- /#iView -->
 
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
   <div id="resView" style="display:none">
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
       <div class="mem-filters" id="mFil">
-        <button class="uni-filter-btn active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
-        <button class="uni-filter-btn" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="uni-filter-btn" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="uni-filter-btn" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
+        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         <div class="sw" style="min-width:180px"><i class="ti ti-search"></i>
@@ -877,58 +999,74 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       </div>
     </div>
     <div class="veh-sum" id="vehSum" style="margin-bottom:1rem"></div>
-    <div style="overflow-x:auto"><table class="uni-table">
-        <thead><tr><th>Flat</th><th>Resident</th><th>Type</th><th>2W</th><th>4W</th><th>Vehicles</th><th>Tenure</th></tr></thead>
+    <div class="veh-table-wrap tab-table-wrap sky">
+      <table class="veh-table">
+        <thead><tr>
+          <th>Flat</th><th>Resident</th><th>🏍 2W</th><th>🚗 4W</th><th style="text-align:right">Action</th>
+        </tr></thead>
         <tbody id="resBody"></tbody>
-      </table></div>
+      </table>
+    </div>
   </div><!-- /#resView -->
 
   <!-- PRESIDENT VIEW -->
   <div id="presView" style="display:none;padding:14px">
     <div id="presBanner"></div>
 
-    <!-- Summary cards -->
-    <div class="fund-row" id="fundRow" style="margin-bottom:14px"></div>
-
-    <!-- Filters row -->
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-      <select id="histMonthFilter" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
-      <select id="histCatFilter"   class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
-      <div style="margin-left:auto;font-size:11px;color:var(--muted)" id="histTotal"></div>
-      <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
-    </div>
-
-    <!-- ROW: Records (left 58%) + Pie chart (right 42%) -->
+    <!-- Single 2-col grid: left 58% = summary cards + table, right 42% = chart -->
     <div style="display:grid;grid-template-columns:58fr 42fr;gap:14px;align-items:start" class="exp-layout-grid">
 
-      <!-- Expense Records -->
-      <div class="exp-records-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
+      <!-- LEFT: summary cards + expense records stacked -->
+      <div style="display:flex;flex-direction:column;gap:14px">
 
-        <div style="padding:10px 14px;border-bottom:1.5px solid var(--border2);font-size:11px;font-weight:800;color:var(--text)">
-          <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expense Records
-        </div>
-        <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;padding:6px 14px;background:var(--surface3);border-bottom:1px solid var(--border2)">
-          <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Title</div>
-          <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Category</div>
-          <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Date</div>
-          <div style="font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:right">Amount</div>
-        </div>
-        <div style="max-height:420px;overflow-y:auto">
-          <div id="presExpList"></div>
-        </div>
-      </div>
+        <!-- Summary cards — full width of left col, 2 equal cols -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="fundRow"></div>
 
-      <!-- Pie Chart -->
-      <div class="exp-pie-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;position:sticky;top:14px">
+        <!-- Filters row -->
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select id="histMonthFilter" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
+          <select id="histCatFilter"   class="ctrl" style="font-size:11px;height:30px;padding:0 8px;min-width:120px" onchange="rPresident()"></select>
+          <div style="margin-left:auto;font-size:11px;color:var(--muted)" id="histTotal"></div>
+          <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-plus"></i> Add Expense</button>
+        </div>
+
+        <!-- Expense Records -->
+        <div class="exp-records-panel tab-table-wrap">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+            <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expense Records
+          </div>
+          <div style="display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;padding:9px 14px;background:var(--surface3);border-bottom:1px solid var(--border2)">
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Title</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Category</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Date</div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;text-align:right">Amount</div>
+          </div>
+          <div style="max-height:420px;overflow-y:auto">
+            <div id="presExpList"></div>
+          </div>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT: chart — sticky, doubled size -->
+      <div class="exp-pie-panel" style="position:sticky;top:70px">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">
           <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
         </div>
-        <canvas id="expTabPie" style="display:block;margin:0 auto;width:100%;max-width:180px;cursor:pointer"></canvas>
+        <div style="width:100%;height:360px;position:relative">
+          <canvas id="expTabPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer"></canvas>
+        </div>
         <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
-        <div id="expTabLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+        <div id="expTabLegend" style="margin-top:16px;display:flex;flex-direction:column;gap:6px"></div>
       </div>
 
+    </div><!-- /main grid -->
+
+    <!-- President History -->
+    <div id="presHistSection" style="display:none;margin-top:14px">
+      <div id="presHistInner"></div>
     </div>
+
   </div><!-- /#presView -->
 
   <!-- ANALYTICS VIEW -->
@@ -948,43 +1086,56 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div>
     <div style="font-size:11px;color:var(--muted);margin-bottom:12px" id="analyticsMonth"></div>
 
-    <!-- Summary totals -->
-    <div class="uni-stats-row" id="analyticsTotals"></div>
+    <!-- Single 2-col grid: left 55% = chips + table stacked, right 45% = chart -->
+    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
 
-    <!-- ROW 1: Payment Records (left, 55%) + Payment Status pie (right, 45%) -->
-    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;margin-bottom:14px;align-items:start" class="an-layout-grid">
+      <!-- LEFT: stat chips + table -->
+      <div style="display:flex;flex-direction:column;gap:14px">
 
-      <!-- Payment Records Table -->
-      <div class="exp-records-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);overflow:hidden">
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1.5px solid var(--border2);flex-wrap:wrap;gap:6px">
-          <div style="font-size:11px;font-weight:800;color:var(--text)"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600"></span></div>
-          <div style="display:flex;gap:5px;flex-wrap:wrap">
-            <button class="uni-filter-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
-            <button class="uni-filter-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
-            <button class="uni-filter-btn" data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
-            <button class="uni-filter-btn" data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
+        <!-- Stat chips span full left column width -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px" id="analyticsTotals"></div>
+
+        <!-- Payment Records Table -->
+        <div class="exp-records-panel tab-table-wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap;gap:6px">
+            <div style="font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
+            <div style="display:flex;gap:5px;flex-wrap:wrap">
+              <button class="an-sf-btn active" data-s="all"     onclick="anSetStatus('all')"    >All</button>
+              <button class="an-sf-btn"        data-s="paid"    onclick="anSetStatus('paid')"   >✅ Paid</button>
+              <button class="an-sf-btn"        data-s="partial" onclick="anSetStatus('partial')">⚠️ Partial</button>
+              <button class="an-sf-btn"        data-s="pending" onclick="anSetStatus('pending')">❌ Pending</button>
+            </div>
+          </div>
+          <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
+            <table style="width:100%;border-collapse:collapse">
+              <thead style="position:sticky;top:0;z-index:1">
+                <tr style="background:var(--surface3)">
+                  <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+                  <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Owner</th>
+                  <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+                  <th style="padding:9px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Balance</th>
+                  <th style="width:40px;border-bottom:1px solid var(--border2)"></th>
+                </tr>
+              </thead>
+              <tbody id="anPayTable"></tbody>
+            </table>
+            <div id="anPayEmpty" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:12px"><i class="ti ti-inbox" style="font-size:20px;display:block;margin-bottom:6px"></i>No records found</div>
           </div>
         </div>
-        <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
-          <table class="uni-table">
-            <thead>
-              <tr><th>Flat</th><th>Owner</th><th>Status</th><th style="text-align:right">Balance</th></tr>
-            </thead>
-            <tbody id="anPayTable"></tbody>
-          </table>
-          <div id="anPayEmpty" style="display:none;padding:24px;text-align:center;color:var(--muted);font-size:12px"><i class="ti ti-inbox" style="font-size:20px;display:block;margin-bottom:6px"></i>No records found</div>
-        </div>
-      </div>
 
-      <!-- Payment Status Pie -->
-      <div class="exp-pie-panel" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px">
+      </div><!-- /left col -->
+
+      <!-- RIGHT: chart — sticky so it stays top-aligned as table scrolls -->
+      <div class="exp-pie-panel" style="position:sticky;top:70px">
         <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-        <canvas id="payPie" style="display:block;margin:0 auto;width:100%;max-width:180px;cursor:pointer"></canvas>
+        <div style="width:100%;height:360px;position:relative">
+          <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer"></canvas>
+        </div>
         <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap"></div>
-        <div id="payLegend" style="margin-top:12px;display:flex;flex-direction:column;gap:5px"></div>
+        <div id="payLegend" style="margin-top:16px;display:flex;flex-direction:column;gap:6px"></div>
       </div>
 
-    </div>
+    </div><!-- /main grid -->
 
   </div><!-- /#analyticsView -->
 
@@ -1469,6 +1620,37 @@ function rStats() {
 
 window.fMem = fMem;
 window.rResidents = rResidents;
+
+function toggleResEdit(fid) {
+  const editRow = document.getElementById('redit_'+fid);
+  if (!editRow) return;
+  const isOpen = editRow.style.display !== 'none';
+  // close all others first
+  document.querySelectorAll('[id^="redit_"]').forEach(r => r.style.display = 'none');
+  if (!isOpen) editRow.style.display = 'table-row';
+}
+
+async function saveResEdit(fid) {
+  const name    = (document.getElementById('re_name_'+fid)?.value||'').trim();
+  const resType = document.getElementById('re_type_'+fid)?.value||'owner';
+  const due     = parseInt(document.getElementById('re_due_'+fid)?.value)||0;
+  const moveIn  = document.getElementById('re_movein_'+fid)?.value||'';
+  const moveOut = document.getElementById('re_moveout_'+fid)?.value||'';
+  const tw      = parseInt(document.getElementById('re_tw_'+fid)?.value)||0;
+  const fw      = parseInt(document.getElementById('re_fw_'+fid)?.value)||0;
+  sync('saving');
+  try {
+    await updateDoc(flatRef(fid), { owner:name, resType, due, moveIn, moveOut });
+    await setDoc(vehRef(fid), { flatId:fid, tw, fw, updatedAt:serverTimestamp() }, {merge:true});
+    sync('live');
+    toast('Saved ✓');
+    document.getElementById('redit_'+fid).style.display = 'none';
+  } catch(e) { console.error(e); sync('error'); toast('Save failed.','error'); }
+}
+
+window._toggleResEdit = toggleResEdit;
+window._saveResEdit   = saveResEdit;
+
 window._oCatM = oCatM;
 window._cCatM = cCatM;
 window._addCat = addCat;
@@ -1516,6 +1698,7 @@ function oFl(fid) {
       <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
         <i class="ti ti-plus"></i> Add
       </button>
+      <button class="icon-btn del" onclick="window._delFlat('${fid}')" title="Delete flat" style="margin-left:auto"><i class="ti ti-trash"></i></button>
     </div>
     ${ex.length > PAGE_SIZE ? `
     <div class="hist-toolbar">
@@ -1947,7 +2130,8 @@ function oID(id){
     ${iss.status!=='resolved'
       ?`<div style="display:flex;gap:10px;flex-wrap:wrap">
           ${iss.status==='open'?`<button class="btn btn-white btn-sm" onclick="window._uIS('${id}','in-progress')"><i class="ti ti-progress"></i> Mark In Progress</button>`:''}
-          <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Mark as Resolved</button>
+          <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Resolved</button>
+          <button class="icon-btn del" style="margin-left:auto" onclick="window._delIss('${id}')" title="Delete issue"><i class="ti ti-trash"></i></button>
         </div>`
       :`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
   `;
@@ -2048,13 +2232,23 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI
 ════════════════════════════════ */
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
 window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
+window._delIss = delIss;
+window._delFlat = async function(fid){
+  if(!confirm(`Delete flat ${fid}? This cannot be undone.`)) return;
+  sync('saving');
+  try{
+    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    await dd(flatRef(fid));
+    cD(); sync('live'); toast(`Flat ${fid} deleted ✓`);
+  }catch(e){console.error(e);sync('error');toast('Delete failed','error');}
+};
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
 window._openExpEdit=openExpEdit; window._closeExpEdit=closeExpEdit; window._saveExpEdit=saveExpEdit; window._delExp=delExp;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
-window._oID  =oID;  window._cID=cID;    window._uIS=uIS;
+window._oID  =oID;  window._cID=cID;    window._uIS=uIS; window._delIss=delIss;
 // vehicles.js
 window._oVehM   = oVehM;   window._oVehFor = oVehFor;
 window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
@@ -2206,8 +2400,11 @@ function switchView(v) {
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
-  if(v==='president') try{ rPresident(); } catch(e){ console.error(e); }
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
+  if(v==='president') {
+    try{ rPresident(); } catch(e){ console.error(e); }
+    rPresHistory().catch(e => console.error('rPresHistory', e));
+  }
 }
 
 function rAll(){
@@ -2401,9 +2598,10 @@ function rIssues() {
     Security: 'ti-shield', Cleaning: 'ti-vacuum-cleaner', Parking: 'ti-car',
     Noise: 'ti-volume', Internet: 'ti-wifi', Other: 'ti-clipboard'
   };
+  const el = document.getElementById('iList');
 
   if (!fil.length) {
-    document.getElementById('iList').innerHTML = `<div class="iss-empty">
+    el.innerHTML = `<div class="iss-empty">
       <i class="ti ti-mood-happy"></i>
       <h3>${IF === 'all' ? 'No issues raised yet' : 'No ' + IF + ' issues found'}</h3>
       <p>${IF === 'all' ? 'Everything is running smoothly!' : 'All clear in this category.'}</p>
@@ -2411,27 +2609,60 @@ function rIssues() {
     return;
   }
 
-  document.getElementById('iList').innerHTML = fil.map(iss => {
-    const sLabel  = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
-    const pLabel  = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
-    return `<div class="icard" onclick="window._oID('${iss.id}')">
-      <div class="ipbar ${iss.priority}"></div>
-      <div>
-        <div class="ic-title"><i class="ti ${icons[iss.cat] || 'ti-clipboard'}"></i>${iss.title}</div>
-        <div class="ic-desc">${iss.desc.length > 130 ? iss.desc.slice(0, 130) + '…' : iss.desc}</div>
-        <div class="ic-meta">
-          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat || iss.block}</span>
-          <span class="itag cat">${iss.cat}</span>
-          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
-          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
-        </div>
-      </div>
-      <div class="iright">
-        <span class="istatus ${iss.status}">${sLabel}</span>
-        <span class="ipriority ${iss.priority}">${pLabel}</span>
-      </div>
-    </div>`;
-  }).join('');
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="background:var(--surface3)">
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Issue</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Priority</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+          <th style="padding:9px 14px;width:36px;border-bottom:1px solid var(--border2)"></th>
+        </tr>
+      </thead>
+      <tbody>
+        ${fil.map(iss => {
+          const sLabel = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
+          const pLabel = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
+          const pColor = iss.priority === 'high' ? 'red' : iss.priority === 'medium' ? 'amber' : 'green';
+          const sColor = iss.status === 'open' ? 'red' : iss.status === 'in-progress' ? 'amber' : 'green';
+          return `<tr style="cursor:pointer" onclick="window._oID('${iss.id}')"
+              onmouseover="this.style.background='var(--surface2)'"
+              onmouseout="this.style.background=''">
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+              <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px">
+                <i class="ti ${icons[iss.cat] || 'ti-clipboard'}" style="font-size:14px;color:var(--indigo);flex-shrink:0"></i>
+                ${iss.title}
+              </div>
+              ${iss.desc ? `<div style="font-size:11px;color:var(--text2);margin-top:2px">${iss.desc.length > 80 ? iss.desc.slice(0,80)+'…' : iss.desc}</div>` : ''}
+            </td>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+              <span class="tab-chip indigo">${iss.flat || iss.block}</span>
+            </td>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+              <span class="tab-chip purple">${iss.cat}</span>
+            </td>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--text2);white-space:nowrap">
+              <div>${fdt(iss.createdAt)}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">By ${iss.reporter}</div>
+            </td>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+              <span class="tab-chip ${pColor}">${pLabel}</span>
+            </td>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+              <span class="tab-chip ${sColor}">${sLabel}</span>
+            </td>
+            <td style="padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
+              <button class="icon-btn edit" onclick="event.stopPropagation();window._oID('${iss.id}')" title="Edit issue">
+                <i class="ti ti-pencil"></i>
+              </button>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>`;
 }
 
 function fIss(f) {
@@ -2472,7 +2703,7 @@ function fmtDate(d) {
 /* ── Filter toggle ── */
 function fMem(t) {
   MF = t;
-  document.querySelectorAll('.uni-filter-btn[data-t]').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+  document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
   rResidents();
 }
 
@@ -2577,8 +2808,8 @@ function rVehicles() {
   }).length;
 
   document.getElementById('vehSum').innerHTML = `
-    <span class="veh-chip"><i class="ti ti-motorbike"></i> ${totTw} 2-Wheelers</span>
-    <span class="veh-chip"><i class="ti ti-car"></i> ${totFw} 4-Wheelers</span>
+    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
   `;
 
   const rows = all.filter(f => {
@@ -2610,7 +2841,7 @@ function rVehicles() {
       <td>${fwB}</td>
       <td style="font-size:12px;color:var(--text2)">${v.nums || '—'}</td>
       <td style="font-size:12px;color:var(--text2)">${v.slot || '—'}</td>
-      <td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')"><i class="ti ti-pencil"></i> Edit</button></td>
+      <td><button class="icon-btn edit" onclick="event.stopPropagation();window._oFlEdit('${f.flatId}')" title="Edit resident"><i class="ti ti-pencil"></i></button></td>
     </tr>`;
   }).join('');
 }
@@ -2637,6 +2868,15 @@ function oVehFor(fid) {
 }
 
 function cVehM() { document.getElementById('vehM').classList.remove('open'); }
+
+async function delIss(id){
+  if(!confirm('Delete this issue permanently?')) return;
+  sync('saving');
+  try{
+    await deleteDoc(issueRef(id));
+    sync('live'); cID(); toast('Issue deleted ✓');
+  }catch(e){console.error(e);sync('error');toast('Delete failed','error');}
+}
 
 async function sVeh() {
   const fid  = document.getElementById('vehFid').value;
@@ -2747,8 +2987,8 @@ function rPresident() {
   const totalExp     = vis.reduce((s,e)=>s+(e.amt||0),0);
   const thisMonthExp = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
   document.getElementById('fundRow').innerHTML = `
-    <div class="uni-stat"><div class="uni-stat-label">All Time</div><div class="uni-stat-val" style="color:var(--red)">${inr(socExps.reduce((s,e)=>s+(e.amt||0),0))}</div><div class="uni-stat-sub">${socExps.length} records</div></div>
-    <div class="uni-stat"><div class="uni-stat-label">This Month</div><div class="uni-stat-val">${inr(thisMonthExp)}</div><div class="uni-stat-sub">${AM}</div></div>`;
+    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(socExps.reduce((s,e)=>s+(e.amt||0),0))}</div><div class="fcard2-sub">${socExps.length} records</div></div>
+    <div class="fcard2 indigo"><div class="fcard2-label">This Month</div><div class="fcard2-val">${inr(thisMonthExp)}</div><div class="fcard2-sub">${AM}</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -2762,9 +3002,11 @@ function rPresident() {
 
   /* ── Pie chart (always draw, even if empty) ── */
   if (typeof drawPie === 'function') {
-    drawPie('expTabPie', expPieSegs2, 'expTabTooltip');
-    if (typeof buildLegend === 'function')
-      buildLegend('expTabLegend', expPieSegs2.map(s=>({...s,count:s.value})), visTotal);
+    requestAnimationFrame(() => {
+      drawPie('expTabPie', expPieSegs2, 'expTabTooltip');
+      if (typeof buildLegend === 'function')
+        buildLegend('expTabLegend', expPieSegs2.map(s=>({...s,count:s.value})), visTotal);
+    });
   }
 
   if(!vis.length){
@@ -2778,24 +3020,28 @@ function rPresident() {
     const icon= catIcon(e.cat);
     return `<div class="exp-row" id="serow_${e.id}" style="display:flex;align-items:center;gap:12px;padding:11px 14px">
       <div style="flex:1;min-width:0;display:grid;grid-template-columns:2fr 1fr 1fr auto;align-items:center;gap:10px">
-        <div style="font-size:12px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title||'—'}</div>
-        <div><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;background:${clr}18;color:${clr};border:1px solid ${clr}30">${e.cat||'—'}</span></div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${e.title||'—'}</div>
+        <div><span style="font-size:10px;font-weight:700;padding:3px 9px;border-radius:5px;background:${clr}18;color:${clr}">${e.cat||'—'}</span></div>
         <div style="font-size:11px;color:var(--muted)">${e.date||'—'}</div>
         <div style="font-size:13px;font-weight:800;color:var(--text);white-space:nowrap">${inr(e.amt)}</div>
       </div>
       <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
         <button onclick="window._openSEEdit('${e.id}')"
-          style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 7px;cursor:pointer;color:var(--indigo);font-size:11px;display:flex;align-items:center">
-          <i class="ti ti-pencil" style="font-size:11px"></i>
+          style="background:var(--indigo-bg);border:1px solid var(--indigo);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--indigo);font-size:11px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
+          <i class="ti ti-pencil" style="font-size:11px"></i> Edit
         </button>
         <button onclick="window._delSE('${e.id}')"
-          style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 7px;cursor:pointer;color:var(--red);font-size:11px;display:flex;align-items:center">
+          style="background:var(--red-bg);border:1px solid var(--red);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--red);font-size:11px;display:inline-flex;align-items:center">
           <i class="ti ti-trash" style="font-size:11px"></i>
         </button>
       </div>
     </div>
-    <div id="seedit_${e.id}" style="display:none;background:var(--surface2);border-bottom:1.5px solid var(--border2);padding:12px 14px">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+    <div id="seedit_${e.id}" style="display:none;background:var(--surface2);border-bottom:2px solid var(--indigo);padding:12px 14px">
+      <div style="font-size:10px;font-weight:700;color:var(--indigo);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+        <i class="ti ti-pencil"></i> Edit Expense
+        <button onclick="window._closeSEEdit('${e.id}')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:0"><i class="ti ti-x"></i></button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px">
         <div style="grid-column:1/-1">
           <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Title</div>
           <input id="se_title_${e.id}" type="text" value="${(e.title||'').replace(/"/g,'&quot;')}" placeholder="Expense title"
@@ -2839,17 +3085,78 @@ function rPresident() {
             onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'"/>
         </div>
       </div>
-      <div style="display:flex;gap:6px;justify-content:flex-end">
+      <div style="display:flex;gap:8px;justify-content:flex-end">
         <button onclick="window._closeSEEdit('${e.id}')"
-          style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:4px 10px;cursor:pointer;color:var(--text2);font-size:11px;font-family:var(--font);font-weight:600">Cancel</button>
+          style="background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 14px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font)">Cancel</button>
         <button onclick="window._saveSEEdit('${e.id}')"
-          style="background:var(--indigo);border:none;border-radius:var(--r-md);padding:4px 12px;cursor:pointer;color:#fff;font-size:11px;font-family:var(--font);font-weight:700">Save</button>
+          style="background:var(--indigo);border:none;border-radius:6px;padding:5px 16px;cursor:pointer;color:#fff;font-size:12px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:5px">
+          <i class="ti ti-check" style="font-size:12px"></i> Save
+        </button>
       </div>
     </div>`;
   }).join('');
 }
 
+async function rPresHistory() {
+  const sec = document.getElementById('presHistSection');
+  const inn = document.getElementById('presHistInner');
+  if (!sec || !inn) return;
+  try {
+    const snap = await getDocs(query(collection(db,'apartments',UID,'presidentHistory'), orderBy('archivedAt','desc')));
+    if (snap.empty) { sec.style.display = 'none'; return; }
+    const rows = [];
+    snap.forEach(d => rows.push(d.data()));
+    sec.style.display = 'block';
+    const fmtD = s => { if (!s) return '—'; try { return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}); } catch { return s; } };
+    const calcTenure = (s,e) => {
+      if (!s) return '—';
+      const start = new Date(s), end = e ? new Date(e) : new Date();
+      const months = Math.max(0,(end.getFullYear()-start.getFullYear())*12+(end.getMonth()-start.getMonth()));
+      return months < 1 ? '< 1 month' : months === 1 ? '1 month' : months < 12 ? `${months} months` : `${Math.floor(months/12)}y ${months%12}m`;
+    };
+    inn.innerHTML = `
+      <div class="tab-table-wrap purple">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;display:flex;align-items:center;gap:8px">
+          <i class="ti ti-history" style="color:var(--purple);font-size:14px"></i> Past Presidents
+          <span style="font-size:10px;font-weight:600;color:var(--muted);text-transform:none;letter-spacing:0">${rows.length} record${rows.length!==1?'s':''}</span>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead>
+            <tr style="background:var(--surface3)">
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">#</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Name</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Term Start</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Term End</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Tenure</th>
+              <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Phone</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows.map((p,i) => `
+              <tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--muted);font-weight:600">${rows.length-i}</td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+                  <div style="display:flex;align-items:center;gap:8px">
+                    <div style="width:28px;height:28px;border-radius:50%;background:var(--purple-bg);color:var(--purple);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${(p.name||'?').charAt(0).toUpperCase()}</div>
+                    <span style="font-size:13px;font-weight:600;color:var(--text)">${p.name||'—'}</span>
+                  </div>
+                </td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle"><span class="tab-chip indigo">Flat ${p.flatId||'—'}</span></td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">${fmtD(p.termStart)}</td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">${fmtD(p.termEnd||p.archivedAt)}</td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border)"><span class="tab-chip purple">${calcTenure(p.termStart,p.termEnd||p.archivedAt)}</span></td>
+                <td style="padding:11px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2)">${p.phone||'—'}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`;
+  } catch(e) { console.error('presHistory',e); sec.style.display='none'; }
+}
+window.rPresHistory = rPresHistory;
+
 function oPresM() {
+  const pres = president;
   document.getElementById('presFlat').innerHTML = [...flats.values()]
     .filter(f => f.month === AM && (f.owner || '').trim())
     .map(f => `<option value="${f.flatId}"${pres && pres.flatId === f.flatId ? ' selected' : ''}>${f.flatId} — ${f.owner}</option>`)
@@ -2876,10 +3183,16 @@ async function sPres() {
   document.getElementById('presSaveLbl').textContent = 'Saving…';
   sync('saving');
   try {
-    const { setDoc, doc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
+    // Archive outgoing president if different
+    if (president && president.name && president.name !== name) {
+      await addDoc(collection(db,'apartments',UID,'presidentHistory'), {
+        ...president,
+        archivedAt: new Date().toISOString()
+      });
+    }
     await setDoc(doc(db,'apartments',UID), { president:{flatId,name,termStart,termEnd,phone,updatedAt:new Date().toISOString()} }, {merge:true});
     president = {flatId,name,termStart,termEnd,phone};
-    sync('live'); cPresM(); toast('President elected ✓'); rPresident();
+    sync('live'); cPresM(); toast('President elected ✓'); rPresident(); rPresHistory();
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
   finally { document.getElementById('presSaveBtn').disabled=false; document.getElementById('presSaveLbl').textContent='Elect President'; }
 }
@@ -2930,6 +3243,7 @@ async function delSE(id) {
 }
 
 function openSEEdit(id) {
+  document.querySelectorAll('[id^="seedit_"]').forEach(el => el.style.display = 'none');
   document.getElementById('seedit_'+id).style.display = 'block';
 }
 function closeSEEdit(id) {
@@ -2963,10 +3277,13 @@ function rResidents() {
   const all = [...flats.values()].filter(f => f.month === AM);
   const totTw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
   const totFw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
+  const withVeh = all.filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
   const vs = document.getElementById('vehSum');
   if(vs) vs.innerHTML = `
-    <span class="veh-chip"><i class="ti ti-motorbike"></i> ${totTw} 2-Wheelers</span>
-    <span class="veh-chip"><i class="ti ti-car"></i> ${totFw} 4-Wheelers</span>
+    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
   `;
 
   // Render member rows (reuse rMembers logic but target resBody)
@@ -3005,22 +3322,90 @@ function rResidents() {
     const isTenant=rType==='tenant';
     const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
     const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    const twB=tw?`<span class="uni-chip"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span style="color:var(--muted);font-size:11px">—</span>`;
-    const fwB=fw?`<span class="uni-chip"><i class="ti ti-car"></i>${fw}</span>`:`<span style="color:var(--muted);font-size:11px">—</span>`;
-    const typeLabel=isVacant?'🚪 Vacant':isTenant?'🔑 Tenant':'🏠 Owner';
-    const typeClass=isVacant?'vacant':isTenant?'tenant':'owner';
-    const nums=v.nums?`<div style="font-size:10px;color:var(--muted);margin-top:2px">${v.nums}</div>`:'\';
-    const slot=v.slot?`<span style="font-size:10px;color:var(--muted)">Slot: ${v.slot}</span>`:'\';
-    const ten=tenure2(f.moveIn,f.moveOut);
-    const tenOut=f.moveOut?`<div style="font-size:9px;color:var(--muted)">vacated</div>`:'';
-    return `<tr onclick="window._oFlEdit('${f.flatId}')">
-      <td><strong style="color:var(--indigo)">${f.flatId}</strong></td>
-      <td><div style="font-weight:700">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>${f.phone?`<div style="font-size:10px;color:var(--muted)">📞 ${f.phone}</div>`:''}}</td>
-      <td><span class="uni-chip ${typeClass}">${typeLabel}</span></td>
-      <td>${twB}</td>
-      <td>${fwB}</td>
-      <td>${nums}${slot}</td>
-      <td><strong>${ten}</strong>${tenOut}</td>
+    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
+    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
+    const fid=f.flatId;
+    return `
+    <tr id="rrow_${fid}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+        <strong style="color:var(--indigo);font-size:12px;font-weight:800">${fid}</strong>
+      </td>
+      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
+        <div style="font-size:13px;font-weight:700;color:var(--text)">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
+        <span class="mem-type ${rType}" style="margin-top:3px;display:inline-block">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span>
+      </td>
+      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${twB}</td>
+      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${fwB}</td>
+      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:right">
+        <button onclick="window._toggleResEdit('${fid}')"
+          style="background:var(--indigo-bg);border:1px solid var(--indigo);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--indigo);font-size:11px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
+          <i class="ti ti-pencil" style="font-size:11px"></i> Edit
+        </button>
+      </td>
+    </tr>
+    <tr id="redit_${fid}" style="display:none">
+      <td colspan="5" style="padding:0;border-bottom:2px solid var(--indigo)">
+        <div style="background:var(--surface2);padding:14px 16px">
+          <div style="font-size:10px;font-weight:700;color:var(--indigo);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+            <i class="ti ti-pencil"></i> Edit Resident — ${fid}
+            <button onclick="window._toggleResEdit('${fid}')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:0"><i class="ti ti-x"></i></button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Name</div>
+              <input id="re_name_${fid}" type="text" value="${(f.owner||'').replace(/"/g,'&quot;')}" placeholder="Full name"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Type</div>
+              <select id="re_type_${fid}"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none">
+                <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
+                <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Monthly Due (₹)</div>
+              <input id="re_due_${fid}" type="number" value="${f.due||''}" placeholder="5000" min="0"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Move-In</div>
+              <input id="re_movein_${fid}" type="date" value="${f.moveIn||''}"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Move-Out</div>
+              <input id="re_moveout_${fid}" type="date" value="${f.moveOut||''}"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">2-Wheelers</div>
+              <input id="re_tw_${fid}" type="number" value="${tw}" min="0" max="10"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">4-Wheelers</div>
+              <input id="re_fw_${fid}" type="number" value="${fw}" min="0" max="10"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;justify-content:flex-end">
+            <button onclick="window._toggleResEdit('${fid}')"
+              style="background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 14px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font)">Cancel</button>
+            <button onclick="window._saveResEdit('${fid}')"
+              style="background:var(--indigo);border:none;border-radius:6px;padding:5px 16px;cursor:pointer;color:#fff;font-size:12px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:5px">
+              <i class="ti ti-check" style="font-size:12px"></i> Save
+            </button>
+          </div>
+        </div>
+      </td>
     </tr>`;
   }).join('');
 }
@@ -3359,10 +3744,12 @@ function rAnalytics() {
     { label:'Vacant',  value:vacant.length,  color:'#d1d5db', amt:0,                                       displayValue:vacant.length  +' flats' },
   ].filter(s=>s.value>0);
 
-  drawPie('payPie', paySegs, 'payTooltip');
-  buildLegend('payLegend',
-    paySegs.map(s=>({...s, count:s.value})),
-    all.length);
+  requestAnimationFrame(() => {
+    drawPie('payPie', paySegs, 'payTooltip');
+    buildLegend('payLegend',
+      paySegs.map(s=>({...s, count:s.value})),
+      all.length);
+  });
 
   /* ── Summary totals ── */
   const totalCollected   = all.reduce((s,f)=>s+(f.paid||0),0);
@@ -3370,9 +3757,8 @@ function rAnalytics() {
   const totalOutstanding = Math.max(0, totalDue - totalCollected);
   const doc1 = document.getElementById('analyticsTotals');
   if (doc1) doc1.innerHTML = `
-    <div class="uni-stat"><div class="uni-stat-label">Collected</div><div class="uni-stat-val" style="color:var(--green)">${inr(totalCollected)}</div><div class="uni-stat-sub">${paid.length+partial.length} flats paid</div></div>
-    <div class="uni-stat"><div class="uni-stat-label">Outstanding</div><div class="uni-stat-val" style="color:var(--red)">${inr(totalOutstanding)}</div><div class="uni-stat-sub">${pending.length} flats pending</div></div>
-    <div class="uni-stat"><div class="uni-stat-label">Collection Rate</div><div class="uni-stat-val">${totalDue?Math.round(totalCollected/totalDue*100):0}%</div><div class="uni-stat-sub">of ${inr(totalDue)} due</div></div>`;
+    <div class="vscard green"><div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div><div><div class="vscard-label">Collected</div><div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div></div></div>
+    <div class="vscard red"><div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div><div><div class="vscard-label">Outstanding</div><div class="vscard-val" style="color:var(--red)">${inr(totalOutstanding)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div></div></div>`;
 
   renderAnPayTable();
 }
@@ -3442,7 +3828,7 @@ window._closePending = closePending;
 let _anStatus = 'all';
 function anSetStatus(s) {
   _anStatus = s;
-  document.querySelectorAll('.uni-filter-btn[data-s]').forEach(b => b.classList.toggle('active', b.dataset.s===s));
+  document.querySelectorAll('.an-sf-btn').forEach(b => b.classList.toggle('active', b.dataset.s===s));
   renderAnPayTable();
 }
 window.anSetStatus = anSetStatus;
@@ -3478,25 +3864,35 @@ function renderAnPayTable() {
     return `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${c}18;color:${c};border:1px solid ${c}40">${lbl[s]||s}</span>`;
   };
 
-  tbody.innerHTML = rows.map(f => {
-    const s   = st(f);
-    const bal = (f.due||0) - (f.paid||0);
-    const sLbl= {paid:'✅ Paid',partial:'⚠ Partial',pending:'❌ Pending',vacant:'Vacant'};
-    const chip= `<span class="uni-chip ${s}">${sLbl[s]||s}</span>`;
-    const balColor = bal > 0 ? 'var(--red)' : 'var(--green)';
-    return `<tr onclick="window._oFl && window._oFl('${f.flatId}')">
-      <td style="font-weight:800;color:var(--indigo)">${f.flatId}</td>
-      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted)">Vacant</em>'}</td>
-      <td>${chip}</td>
-      <td style="text-align:right;font-weight:800;color:${balColor}">${f.due?inr(Math.abs(bal)):'—'}</td>
+  tbody.innerHTML = rows.map((f,i) => {
+    const s        = st(f);
+    const bal      = (f.due||0) - (f.paid||0);
+    const balColor = bal > 0 ? '#ef4444' : '#22c55e';
+    const bg       = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
+    const sMap     = { paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#9ca3af' };
+    const sLbl     = { paid:'Paid', partial:'Partial', pending:'Pending', vacant:'Vacant' };
+    const sc       = sMap[s]||'#9ca3af';
+    const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sLbl[s]||s}</span>`;
+    return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
+      <td style="padding:9px 10px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
+      <td style="padding:9px 10px;font-size:12px;font-weight:600;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+        ${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}
+      </td>
+      <td style="padding:9px 10px;text-align:center">${statusBadge}</td>
+      <td style="padding:9px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px">${f.due ? inr(Math.abs(bal)) : '—'}</td>
+      <td style="padding:9px 10px;text-align:center">
+        <button class="icon-btn edit" onclick="event.stopPropagation();window._oFl('${f.flatId}')" title="Edit flat">
+          <i class="ti ti-pencil"></i>
+        </button>
+      </td>
     </tr>`;
   }).join('');
 
   // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
-  tbody.innerHTML += `<tr class="tot-row">
-    <td colspan="3" style="font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
-    <td style="text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(totBal))}</td>
+  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+    <td style="padding:9px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total (${rows.length} flats)</td>
+    <td style="padding:9px 10px;text-align:right;font-weight:800;color:${totBal>0?'#ef4444':'#22c55e'};font-size:12px">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 </script>
