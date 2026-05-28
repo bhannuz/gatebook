@@ -809,16 +809,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-radius:99px;background:var(--red);color:#fff;
   line-height:1.4;min-width:14px;text-align:center;
 }
-
-/* ── Icon-only action buttons ── */
-.icon-btn{width:28px;height:28px;border-radius:7px;border:1.5px solid var(--border2);
-  background:transparent;cursor:pointer;display:inline-flex;align-items:center;
-  justify-content:center;font-size:13px;color:var(--muted);transition:all .15s;padding:0;
-  font-family:var(--font);flex-shrink:0}
-.icon-btn:hover{transform:scale(1.08)}
-.icon-btn.edit:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
-.icon-btn.del:hover {border-color:var(--red);   color:var(--red);   background:var(--red-bg)}
-.icon-btn.view:hover{border-color:var(--sky);   color:var(--sky);   background:var(--sky-bg)}
 </style>
 </head>
 <body>
@@ -928,7 +918,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
-      <button class="vtab" data-v="residents" onclick="switchView('residents')"><i class="ti ti-users"></i> Residents</button>
+
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
         <i class="ti ti-alert-circle"></i> Issues
         <span class="vtab-badge" id="openCnt">0</span>
@@ -977,37 +967,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <div class="tab-table-wrap red" id="iList"></div>
   </div><!-- /#iView -->
 
-  <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
-  <div id="resView" style="display:none">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:1rem">
-      <div class="mem-filters" id="mFil">
-        <button class="mff active" data-t="all"    onclick="fMem('all')"><i class="ti ti-users"></i> All</button>
-        <button class="mff" data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
-        <button class="mff" data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
-        <button class="mff" data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        <div class="sw" style="min-width:180px"><i class="ti ti-search"></i>
-          <input class="ctrl" type="text" id="memQ" placeholder="Search name or flat…" oninput="rResidents()"/>
-        </div>
-        <select class="ctrl" id="resTF" onchange="rResidents()">
-          <option value="all">All Vehicles</option>
-          <option value="2w">🏍 Has 2-Wheeler</option>
-          <option value="4w">🚗 Has 4-Wheeler</option>
-          <option value="none">No Vehicles</option>
-        </select>
-      </div>
-    </div>
-    <div class="veh-sum" id="vehSum" style="margin-bottom:1rem"></div>
-    <div class="veh-table-wrap tab-table-wrap sky">
-      <table class="veh-table">
-        <thead><tr>
-          <th>Flat</th><th>Resident</th><th>🏍 2W</th><th>🚗 4W</th><th style="text-align:right">Action</th>
-        </tr></thead>
-        <tbody id="resBody"></tbody>
-      </table>
-    </div>
-  </div><!-- /#resView -->
+
 
   <!-- PRESIDENT VIEW -->
   <div id="presView" style="display:none;padding:14px">
@@ -1113,6 +1073,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
                   <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
                   <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Owner</th>
                   <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+                  <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Vehicles</th>
                   <th style="padding:9px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Balance</th>
                   <th style="width:40px;border-bottom:1px solid var(--border2)"></th>
                 </tr>
@@ -1619,7 +1580,6 @@ function rStats() {
 
 
 window.fMem = fMem;
-window.rResidents = rResidents;
 
 function toggleResEdit(fid) {
   const editRow = document.getElementById('redit_'+fid);
@@ -1698,7 +1658,6 @@ function oFl(fid) {
       <button class="btn btn-indigo btn-sm" onclick="window._cD();window._oAFor('${f.block}','${fid}')">
         <i class="ti ti-plus"></i> Add
       </button>
-      <button class="icon-btn del" onclick="window._delFlat('${fid}')" title="Delete flat" style="margin-left:auto"><i class="ti ti-trash"></i></button>
     </div>
     ${ex.length > PAGE_SIZE ? `
     <div class="hist-toolbar">
@@ -2110,50 +2069,68 @@ async function sI(){
 ════════════════════════════════ */
 function oID(id){
   const iss=issues.find(i=>i.id===id);if(!iss)return;
-  const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
-  const pc={high:'var(--red)',medium:'var(--amber)',low:'var(--green)'}[iss.priority];
-  document.getElementById('idT').textContent=iss.title;
-  document.getElementById('idS').textContent=`${iss.cat} · Reported by ${iss.reporter}`;
-  const sL=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
+  document.getElementById('idT').textContent='Edit Issue';
+  document.getElementById('idS').textContent=`${iss.cat} · ${iss.flat||iss.block||''}`;
+  const cats=['Plumbing','Electrical','Lift','Security','Cleaning','Parking','Noise','Internet','Other'];
   document.getElementById('idC').innerHTML=`
-    <div class="dm">
-      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:14px;color:${sc}">${sL}</div></div>
-      <div class="dm-card"><div class="dm-label">Priority</div><div class="dm-value" style="font-size:14px;color:${pc}">${iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1)}</div></div>
-      <div class="dm-card"><div class="dm-label">Location</div><div class="dm-value" style="font-size:14px">${iss.flat||iss.block}</div></div>
+    <div class="fg2" style="margin-bottom:12px">
+      <div class="fg" style="margin-bottom:0"><label>Title *</label>
+        <input id="issEdTitle" type="text" value="${(iss.title||'').replace(/"/g,'&quot;')}" placeholder="Issue title"/></div>
+      <div class="fg" style="margin-bottom:0"><label>Category</label>
+        <select id="issEdCat">${cats.map(c=>`<option value="${c}"${c===iss.cat?' selected':''}>${c}</option>`).join('')}</select></div>
     </div>
-    <div class="etitle"><i class="ti ti-file-description"></i>Full Description</div>
-    <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:15px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-weight:500">${iss.desc}</div>
-    <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:20px">
-      <span><i class="ti ti-user" style="vertical-align:-2px;margin-right:4px"></i>${iss.reporter}</span>
-      <span><i class="ti ti-calendar" style="vertical-align:-2px;margin-right:4px"></i>${fdt(iss.createdAt)}</span>
+    <div class="fg2" style="margin-bottom:12px">
+      <div class="fg" style="margin-bottom:0"><label>Status</label>
+        <select id="issEdStatus">
+          <option value="open"${iss.status==='open'?' selected':''}>🔴 Open</option>
+          <option value="in-progress"${iss.status==='in-progress'?' selected':''}>🟡 In Progress</option>
+          <option value="resolved"${iss.status==='resolved'?' selected':''}>🟢 Resolved</option>
+        </select></div>
+      <div class="fg" style="margin-bottom:0"><label>Priority</label>
+        <select id="issEdPriority">
+          <option value="high"${iss.priority==='high'?' selected':''}>🔴 High</option>
+          <option value="medium"${iss.priority==='medium'?' selected':''}>🟡 Medium</option>
+          <option value="low"${iss.priority==='low'?' selected':''}>🟢 Low</option>
+        </select></div>
     </div>
-    ${iss.status!=='resolved'
-      ?`<div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${iss.status==='open'?`<button class="btn btn-white btn-sm" onclick="window._uIS('${id}','in-progress')"><i class="ti ti-progress"></i> Mark In Progress</button>`:''}
-          <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Resolved</button>
-          <button class="icon-btn del" style="margin-left:auto" onclick="window._delIss('${id}')" title="Delete issue"><i class="ti ti-trash"></i></button>
-        </div>`
-      :`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
-  `;
-  const tl=iss.timeline||[{action:'Issue reported',by:iss.reporter,status:'open',ts:null}];
-  const tlDotColor={open:'var(--red)',created:'var(--indigo)','in-progress':'var(--amber)',resolved:'var(--green)'};
-  document.getElementById('idTL').innerHTML=`
-    <div class="etitle" style="margin-top:18px"><i class="ti ti-timeline"></i>Activity Timeline</div>
-    ${tl.map((t,i)=>`
-      <div class="itl-item">
-        <div class="itl-dot-col">
-          <div class="itl-dot" style="background:${tlDotColor[t.status]||'var(--indigo)'}"></div>
-          ${i<tl.length-1?'<div class="itl-line"></div>':''}
-        </div>
-        <div class="itl-body">
-          <div class="itl-action">${t.action}</div>
-          <div class="itl-by">By ${t.by||'System'} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
-        </div>
-      </div>`).join('')}
-  `;
+    <div class="fg2" style="margin-bottom:12px">
+      <div class="fg" style="margin-bottom:0"><label>Reported by</label>
+        <input id="issEdReporter" type="text" value="${(iss.reporter||'').replace(/"/g,'&quot;')}"/></div>
+      <div class="fg" style="margin-bottom:0"><label>Flat / Location</label>
+        <input id="issEdFlat" type="text" value="${(iss.flat||iss.block||'').replace(/"/g,'&quot;')}"/></div>
+    </div>
+    <div class="fg" style="margin-bottom:16px"><label>Description</label>
+      <textarea id="issEdDesc" rows="3" style="width:100%;resize:vertical;font-family:var(--font);font-size:13px;border:1.5px solid var(--border2);border-radius:var(--r-md);padding:9px 12px;outline:none;background:var(--surface2);color:var(--text)">${iss.desc||''}</textarea>
+    </div>
+    <div class="mactions" style="padding-top:14px;border-top:1.5px solid var(--border2)">
+      <button class="btn btn-white" onclick="window._cID()">Cancel</button>
+      <button class="icon-btn del" onclick="window._delIss('${id}')" title="Delete issue" style="width:36px;height:36px"><i class="ti ti-trash"></i></button>
+      <button class="btn btn-indigo" onclick="window._saveIss('${id}')"><i class="ti ti-device-floppy"></i> Save Changes</button>
+    </div>`;
+  document.getElementById('idTL').innerHTML='';
   document.getElementById('idM').classList.add('open');
 }
 function cID(){document.getElementById('idM').classList.remove('open');}
+async function saveIss(id){
+  const title    = document.getElementById('issEdTitle')?.value.trim();
+  const cat      = document.getElementById('issEdCat')?.value;
+  const status   = document.getElementById('issEdStatus')?.value;
+  const priority = document.getElementById('issEdPriority')?.value;
+  const desc     = document.getElementById('issEdDesc')?.value.trim();
+  const reporter = document.getElementById('issEdReporter')?.value.trim();
+  const flat     = document.getElementById('issEdFlat')?.value.trim();
+  if(!title){toast('Enter a title.','error');return;}
+  sync('saving');
+  try{
+    const iss=issues.find(i=>i.id===id);
+    let tl=iss?.timeline||[];
+    if(status!==iss?.status){
+      tl=[...tl,{action:`Status changed to ${status}`,by:APT_NAME||'Admin',status,ts:new Date().toISOString()}];
+    }
+    await updateDoc(issueRef(id),{title,cat,status,priority,desc,reporter,flat,block:flat,timeline:tl});
+    sync('live'); cID(); toast('Issue updated ✓');
+  }catch(e){console.error(e);sync('error');toast('Update failed: '+e.message,'error');}
+}
 
 async function uIS(id,ns){
   const iss=issues.find(i=>i.id===id);if(!iss)return;
@@ -2232,23 +2209,13 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI
 ════════════════════════════════ */
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
 window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
-window._delIss = delIss;
-window._delFlat = async function(fid){
-  if(!confirm(`Delete flat ${fid}? This cannot be undone.`)) return;
-  sync('saving');
-  try{
-    const {deleteDoc:dd}=await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
-    await dd(flatRef(fid));
-    cD(); sync('live'); toast(`Flat ${fid} deleted ✓`);
-  }catch(e){console.error(e);sync('error');toast('Delete failed','error');}
-};
 window._autoSaveFlat=autoSaveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
 window._openExpEdit=openExpEdit; window._closeExpEdit=closeExpEdit; window._saveExpEdit=saveExpEdit; window._delExp=delExp;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
-window._oID  =oID;  window._cID=cID;    window._uIS=uIS; window._delIss=delIss;
+window._oID  =oID;  window._cID=cID;    window._uIS=uIS; window._saveIss=saveIss; window._delIss=delIss;
 // vehicles.js
 window._oVehM   = oVehM;   window._oVehFor = oVehFor;
 window._cVehM   = cVehM;   window._sVeh    = sVeh;   window._delVeh = delVeh;
@@ -2394,12 +2361,10 @@ function switchView(v) {
   refreshAPP();
   document.getElementById('pView').style.display         = v==='payments'  ? 'block' : 'none';
   document.getElementById('iView').style.display         = v==='issues'    ? 'block' : 'none';
-  document.getElementById('resView').style.display       = v==='residents' ? 'block' : 'none';
   document.getElementById('presView').style.display      = v==='president' ? 'block' : 'none';
   document.getElementById('analyticsView').style.display = v==='analytics' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
-  if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
   if(v==='president') {
     try{ rPresident(); } catch(e){ console.error(e); }
@@ -2413,8 +2378,7 @@ function rAll(){
   try{ rBTabs(); } catch(e){ console.error('rBTabs',e); }
   try{ rBlock(); } catch(e){ console.error('rBlock',e); }
   try{ rIssues(); } catch(e){ console.error('rIssues',e); }
-  const rv=document.getElementById('resView');
-  if(rv && rv.style.display!=='none') try{ rResidents(); } catch(e){ console.error('rResidents',e); }
+
   const p=document.getElementById('presView');
   if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
 }
@@ -2619,7 +2583,6 @@ function rIssues() {
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Priority</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
-          <th style="padding:9px 14px;width:36px;border-bottom:1px solid var(--border2)"></th>
         </tr>
       </thead>
       <tbody>
@@ -2653,11 +2616,6 @@ function rIssues() {
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
               <span class="tab-chip ${sColor}">${sLabel}</span>
-            </td>
-            <td style="padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
-              <button class="icon-btn edit" onclick="event.stopPropagation();window._oID('${iss.id}')" title="Edit issue">
-                <i class="ti ti-pencil"></i>
-              </button>
             </td>
           </tr>`;
         }).join('')}
@@ -2704,7 +2662,7 @@ function fmtDate(d) {
 function fMem(t) {
   MF = t;
   document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
-  rResidents();
+  rMembers();
 }
 
 /* ── Main render ── */
@@ -2841,7 +2799,7 @@ function rVehicles() {
       <td>${fwB}</td>
       <td style="font-size:12px;color:var(--text2)">${v.nums || '—'}</td>
       <td style="font-size:12px;color:var(--text2)">${v.slot || '—'}</td>
-      <td><button class="icon-btn edit" onclick="event.stopPropagation();window._oFlEdit('${f.flatId}')" title="Edit resident"><i class="ti ti-pencil"></i></button></td>
+      <td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')"><i class="ti ti-pencil"></i> Edit</button></td>
     </tr>`;
   }).join('');
 }
@@ -2868,15 +2826,6 @@ function oVehFor(fid) {
 }
 
 function cVehM() { document.getElementById('vehM').classList.remove('open'); }
-
-async function delIss(id){
-  if(!confirm('Delete this issue permanently?')) return;
-  sync('saving');
-  try{
-    await deleteDoc(issueRef(id));
-    sync('live'); cID(); toast('Issue deleted ✓');
-  }catch(e){console.error(e);sync('error');toast('Delete failed','error');}
-}
 
 async function sVeh() {
   const fid  = document.getElementById('vehFid').value;
@@ -3270,568 +3219,7 @@ async function saveSEEdit(id) {
 // Convenience: open Add Expense modal (alias used in phAct button)
 
 
-/* ══ RESIDENTS TAB (merged Members + Vehicles) ══ */
-function rResidents() {
-  // re-use rMembers for now — members tab shows in resView
-  // Vehicle summary cards
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const totTw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
-  const totFw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
-  const withVeh = all.filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
-  const vs = document.getElementById('vehSum');
-  if(vs) vs.innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>
-  `;
-
-  // Render member rows (reuse rMembers logic but target resBody)
-  const q = (document.getElementById('memQ')?.value||'').trim().toLowerCase();
-  const tf = document.getElementById('resTF')?.value||'all';
-  let rows = all.filter(f=>{
-    if(MF==='owner'  && (f.resType||'owner')!=='owner') return false;
-    if(MF==='tenant' && f.resType!=='tenant')            return false;
-    if(MF==='vacant' && (f.owner||'').trim())            return false;
-    if(q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    const v=vehicles.get(f.flatId)||{};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    if(tf==='2w'   && tw===0)     return false;
-    if(tf==='4w'   && fw===0)     return false;
-    if(tf==='none' && tw+fw>0)    return false;
-    return true;
-  }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
-
-  if(!rows.length){
-    document.getElementById('resBody').innerHTML=`<tr><td colspan="4" style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-users-off" style="font-size:32px;display:block;margin-bottom:8px;opacity:.3"></i>No residents match filter.</td></tr>`;
-    return;
-  }
-
-  function tenure2(moveIn,moveOut){
-    if(!moveIn)return'—';
-    const days=Math.floor(((moveOut?new Date(moveOut):new Date())-new Date(moveIn))/86400000);
-    if(days<0)return'—';
-    const y=Math.floor(days/365),m=Math.floor((days%365)/30);
-    return [y?y+'y':'',m?m+'m':''].filter(Boolean).join(' ')||days+'d';
-  }
-  function fmtD(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
-
-  document.getElementById('resBody').innerHTML = rows.map(f=>{
-    const isVacant=(!(f.owner||'').trim());
-    const rType=isVacant?'vacant':(f.resType||'owner');
-    const isTenant=rType==='tenant';
-    const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    const twB=tw>0?`<span class="vbadge tw"><i class="ti ti-motorbike"></i>${tw}</span>`:`<span class="vbadge none">–</span>`;
-    const fwB=fw>0?`<span class="vbadge fw"><i class="ti ti-car"></i>${fw}</span>`:`<span class="vbadge none">–</span>`;
-    const fid=f.flatId;
-    return `
-    <tr id="rrow_${fid}" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-        <strong style="color:var(--indigo);font-size:12px;font-weight:800">${fid}</strong>
-      </td>
-      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-        <div style="font-size:13px;font-weight:700;color:var(--text)">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-        <span class="mem-type ${rType}" style="margin-top:3px;display:inline-block">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span>
-      </td>
-      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${twB}</td>
-      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${fwB}</td>
-      <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:right">
-        <button onclick="window._toggleResEdit('${fid}')"
-          style="background:var(--indigo-bg);border:1px solid var(--indigo);border-radius:6px;padding:4px 10px;cursor:pointer;color:var(--indigo);font-size:11px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
-          <i class="ti ti-pencil" style="font-size:11px"></i> Edit
-        </button>
-      </td>
-    </tr>
-    <tr id="redit_${fid}" style="display:none">
-      <td colspan="5" style="padding:0;border-bottom:2px solid var(--indigo)">
-        <div style="background:var(--surface2);padding:14px 16px">
-          <div style="font-size:10px;font-weight:700;color:var(--indigo);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
-            <i class="ti ti-pencil"></i> Edit Resident — ${fid}
-            <button onclick="window._toggleResEdit('${fid}')" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);font-size:16px;line-height:1;padding:0"><i class="ti ti-x"></i></button>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:10px">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Name</div>
-              <input id="re_name_${fid}" type="text" value="${(f.owner||'').replace(/"/g,'&quot;')}" placeholder="Full name"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Type</div>
-              <select id="re_type_${fid}"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none">
-                <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
-                <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Monthly Due (₹)</div>
-              <input id="re_due_${fid}" type="number" value="${f.due||''}" placeholder="5000" min="0"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Move-In</div>
-              <input id="re_movein_${fid}" type="date" value="${f.moveIn||''}"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Move-Out</div>
-              <input id="re_moveout_${fid}" type="date" value="${f.moveOut||''}"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">2-Wheelers</div>
-              <input id="re_tw_${fid}" type="number" value="${tw}" min="0" max="10"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">4-Wheelers</div>
-              <input id="re_fw_${fid}" type="number" value="${fw}" min="0" max="10"
-                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;justify-content:flex-end">
-            <button onclick="window._toggleResEdit('${fid}')"
-              style="background:none;border:1px solid var(--border2);border-radius:6px;padding:5px 14px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font)">Cancel</button>
-            <button onclick="window._saveResEdit('${fid}')"
-              style="background:var(--indigo);border:none;border-radius:6px;padding:5px 16px;cursor:pointer;color:#fff;font-size:12px;font-weight:700;font-family:var(--font);display:inline-flex;align-items:center;gap:5px">
-              <i class="ti ti-check" style="font-size:12px"></i> Save
-            </button>
-          </div>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-/* ══ CUSTOM CATEGORIES ══ */
-// DEFAULT_FLAT_CATS moved to top-level state section
-// DEFAULT_SOC_CATS moved to top-level state section
-// customCats declared in state section above
-
-function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
-
-function renderCatOpts(selId, type){
-  const sel=document.getElementById(selId); if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML=getCats(type).map(c=>`<option value="${c}">${c}</option>`).join('')
-    + `<option value="__new__" style="color:var(--indigo);font-weight:700">＋ New Category…</option>`;
-  if(cur && getCats(type).includes(cur)) sel.value=cur;
-}
-
-function renderCatChips(listId, type){
-  const el=document.getElementById(listId); if(!el)return;
-  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
-  const custom=type==='flat'?customCats.flat:customCats.soc;
-  el.innerHTML=[...new Set([...def,...custom])].map(c=>`
-    <span class="cat-chip">${c}${!def.includes(c)?`<button class="cat-del" onclick="window._delCat('${type}','${c}')"><i class="ti ti-x"></i></button>`:''}</span>
-  `).join('');
-}
-
-function oCatM(){
-  renderCatChips('flatCatList','flat');
-  renderCatChips('socCatList','soc');
-  ['flatCatInput','socCatInput'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('catM').classList.add('open');
-}
-function cCatM(){ document.getElementById('catM').classList.remove('open'); }
-
-async function addCat(type){
-  const inp=document.getElementById(type==='flat'?'flatCatInput':'socCatInput');
-  const val=(inp?.value||'').trim(); if(!val){toast('Enter a category name.','error');return;}
-  const arr=type==='flat'?customCats.flat:customCats.soc;
-  const def=type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS;
-  if([...def,...arr].map(c=>c.toLowerCase()).includes(val.toLowerCase())){toast('Already exists.','error');return;}
-  arr.push(val); if(inp)inp.value='';
-  await saveCats();
-  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-  toast(`"${val}" added ✓`);
-}
-
-async function delCat(type,name){
-  const arr=type==='flat'?customCats.flat:customCats.soc;
-  const i=arr.indexOf(name); if(i===-1)return;
-  arr.splice(i,1);
-  await saveCats();
-  renderCatChips(type==='flat'?'flatCatList':'socCatList',type);
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-  toast(`"${name}" removed`);
-}
-
-async function saveCats(){
-  try{ await setDoc(doc(db,'apartments',UID,'config','categories'), customCats); sync('live'); }
-  catch(e){ console.error(e); toast('Failed to save categories.','error'); }
-}
-
-async function loadCats(){
-  try{
-    const snap=await getDoc(doc(db,'apartments',UID,'config','categories'));
-    if(snap.exists()){const d=snap.data();customCats.flat=d.flat||[];customCats.soc=d.soc||[];}
-  } catch(e){ console.error('loadCats:',e); }
-  renderCatOpts('fC','flat'); renderCatOpts('peCat','soc');
-}
-
-window._oCatM=oCatM; window._cCatM=cCatM;
-window._addCat=addCat; window._delCat=delCat;
-
-
-/* ── Inline category add in dropdowns ── */
-window._catSelChange = function(selId, type) {
-  const sel = document.getElementById(selId);
-  if (!sel) return;
-  if (sel.value === '__new__') {
-    // Revert to first valid option while input shows
-    sel.value = getCats(type)[0] || 'Maintenance';
-    window._showInlineCat(selId);
-  }
-};
-
-window._showInlineCat = function(selId) {
-  const wrap = document.getElementById(selId + '_new');
-  const inp  = document.getElementById(selId + '_input');
-  if (!wrap) return;
-  wrap.style.display = 'block';
-  if (inp) { inp.value = ''; inp.focus(); }
-};
-
-window._hideInlineCat = function(selId) {
-  const wrap = document.getElementById(selId + '_new');
-  if (wrap) wrap.style.display = 'none';
-};
-
-window._addInlineCat = async function(selId, type) {
-  const inp = document.getElementById(selId + '_input');
-  const val = (inp?.value || '').trim();
-  if (!val) { inp?.focus(); return; }
-  const arr = type==='flat' ? customCats.flat : customCats.soc;
-  const def = type==='flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
-  if ([...def,...arr].map(c=>c.toLowerCase()).includes(val.toLowerCase())) {
-    toast('Category already exists.','error');
-    inp?.focus(); return;
-  }
-  arr.push(val);
-  await saveCats();
-  renderCatOpts(selId, type);
-  // Select the newly added category
-  const sel = document.getElementById(selId);
-  if (sel) sel.value = val;
-  window._hideInlineCat(selId);
-  toast(`"${val}" added ✓`);
-};
-
-async function boot(){
-  refreshAPP();
-  // buildMonthSelect() — month dropdown removed from UI, AM defaults to current month
-  try{
-    // Load apartment config
-    const aptDoc = await getDoc(aptDocRef());
-    if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
-    if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
-    await loadCats();
-
-    // Check if any flats exist
-    const snap = await getDocs(flatsColl());
-    if(snap.empty){
-      // No flats yet — show in-app setup wizard
-      document.getElementById('lo').style.display = 'none';
-      const wiz = document.getElementById('setupWiz');
-      wiz.style.display = 'flex';
-      // Pre-fill name from config if available
-      if(aptDoc.exists() && aptDoc.data().name){
-        document.getElementById('wAptName').value = aptDoc.data().name;
-      }
-      wizSetStep(0);
-    } else {
-      listenFlats();
-      listenExp();
-      listenIssues();
-      listenVehicles();
-      listenSocExp();
-    }
-  }catch(err){
-    console.error('Boot error:',err);
-    document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
-  }
-}
-
-/* ══ ANALYTICS TAB ══ */
-
-// Store segments per canvas for tooltip hit-testing
-const _pieSegs = {};
-
-function _getCanvasSize(canvas) {
-  const rect = canvas.getBoundingClientRect();
-  return { W: rect.width, H: rect.height };
-}
-
-function drawPie(canvasId, segments, tooltipId) {
-  const canvas = document.getElementById(canvasId);
-  if (!canvas) return;
-  // Responsive: set canvas pixel size to display size
-  const rect = canvas.getBoundingClientRect();
-  const dpr  = window.devicePixelRatio||1;
-  const W = rect.width||200, H = rect.height||200;
-  canvas.width  = W * dpr;
-  canvas.height = H * dpr;
-  const ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  const cx = W/2, cy = H/2, r = Math.min(W,H)/2 - 8;
-  ctx.clearRect(0, 0, W, H);
-  const total = segments.reduce((s,sg)=>s+sg.value,0);
-  if (!total) {
-    ctx.fillStyle = '#e5e7eb';
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
-    ctx.fillStyle = '#9ca3af'; ctx.font = '11px sans-serif'; ctx.textAlign='center';
-    ctx.fillText('No data', cx, cy+4);
-    _pieSegs[canvasId] = [];
-    return;
-  }
-  let angle = -Math.PI/2;
-  const drawn = [];
-  segments.forEach(sg => {
-    const slice = (sg.value/total)*Math.PI*2;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.arc(cx, cy, r, angle, angle+slice);
-    ctx.closePath();
-    ctx.fillStyle = sg.color;
-    ctx.fill();
-    ctx.strokeStyle = '#fff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    drawn.push({ ...sg, startAngle: angle, endAngle: angle+slice, cx, cy, r, total });
-    angle += slice;
-  });
-  _pieSegs[canvasId] = drawn;
-  // donut hole
-  ctx.beginPath();
-  ctx.arc(cx, cy, r*0.45, 0, Math.PI*2);
-  const bg = getComputedStyle(document.documentElement).getPropertyValue('--surface2').trim()||'#f8f9fa';
-  ctx.fillStyle = bg; ctx.fill();
-  // center label
-  const textColor = getComputedStyle(document.documentElement).getPropertyValue('--text').trim()||'#111';
-  const mutedColor = getComputedStyle(document.documentElement).getPropertyValue('--muted').trim()||'#888';
-  ctx.textAlign='center';
-  ctx.font = `bold ${Math.max(11,Math.round(W*0.07))}px sans-serif`;
-  ctx.fillStyle = textColor;
-  ctx.fillText(segments[0]?.centerLabel||total, cx, cy+4);
-  ctx.font = `${Math.max(8,Math.round(W*0.05))}px sans-serif`;
-  ctx.fillStyle = mutedColor;
-  ctx.fillText('total', cx, cy+15);
-
-  // Attach tooltip mouse handler
-  if (tooltipId) {
-    canvas.onmousemove = (ev) => {
-      const tip  = document.getElementById(tooltipId);
-      if (!tip) return;
-      const cr   = canvas.getBoundingClientRect();
-      const mx   = ev.clientX - cr.left;
-      const my   = ev.clientY - cr.top;
-      const dx   = mx - cx, dy = my - cy;
-      const dist = Math.sqrt(dx*dx+dy*dy);
-      if (dist < r*0.45 || dist > r) { tip.style.display='none'; return; }
-      let a = Math.atan2(dy, dx);
-      if (a < -Math.PI/2) a += Math.PI*2;
-      const hit = drawn.find(sg => {
-        let s = sg.startAngle, e = sg.endAngle;
-        if (s < -Math.PI/2) { s += Math.PI*2; e += Math.PI*2; }
-        return a >= s && a < e;
-      });
-      if (hit) {
-        const pct = Math.round(hit.value/hit.total*100);
-        tip.textContent = `${hit.label}: ${hit.displayValue||hit.value} (${pct}%)`;
-        tip.style.display  = 'block';
-        tip.style.left     = (ev.clientX+12)+'px';
-        tip.style.top      = (ev.clientY-28)+'px';
-      } else {
-        tip.style.display = 'none';
-      }
-    };
-    canvas.onmouseleave = () => {
-      const tip = document.getElementById(tooltipId);
-      if (tip) tip.style.display='none';
-    };
-  }
-}
-
-function buildLegend(legendId, segments, total) {
-  const el = document.getElementById(legendId);
-  if (!el) return;
-  el.innerHTML = segments.map(sg => `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-      <div style="display:flex;align-items:center;gap:6px;min-width:0">
-        <span style="width:10px;height:10px;border-radius:50%;background:${sg.color};flex-shrink:0;display:inline-block"></span>
-        <span style="font-size:11px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${sg.label}</span>
-      </div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <span style="font-size:11px;font-weight:800;color:var(--text)">${sg.count!==undefined?sg.count:sg.value}</span>
-        <span style="font-size:10px;color:var(--muted)">${total?Math.round((sg.count!==undefined?sg.count:sg.value)/total*100):0}%</span>
-        ${sg.amt!==undefined?`<span style="font-size:10px;font-weight:700;color:var(--indigo)">${inr(sg.amt)}</span>`:''}
-      </div>
-    </div>`).join('');
-}
-
-function _buildAnalyticsFilters() {
-  // Gather all months from flats + socExps
-  const months = new Set();
-  [...flats.values()].forEach(f=>{ if(f.month) months.add(f.month); });
-  socExps.forEach(e=>{ if(e.month) months.add(e.month); });
-  const sorted = [...months].sort().reverse();
-
-  const mSel = document.getElementById('anFilterMonth');
-  const ySel = document.getElementById('anFilterYear');
-  if (!mSel || !ySel) return;
-
-  // Only populate if empty or stale
-  const existing = [...mSel.options].map(o=>o.value);
-  const fresh    = sorted;
-  if (JSON.stringify(existing) !== JSON.stringify(fresh)) {
-    mSel.innerHTML = fresh.map(m => {
-      const lbl = new Date(m+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-      return `<option value="${m}"${m===AM?' selected':''}>${lbl}</option>`;
-    }).join('');
-  }
-
-  const years = [...new Set(sorted.map(m=>m.slice(0,4)))].sort().reverse();
-  const curYear = new Date().getFullYear().toString();
-  if ([...ySel.options].length !== years.length) {
-    ySel.innerHTML = years.map(y=>`<option value="${y}"${y===curYear?' selected':''}>${y}</option>`).join('');
-  }
-}
-
-function rAnalytics() {
-  _buildAnalyticsFilters();
-
-  const filterType = document.getElementById('anFilterType')?.value||'month';
-  const mSel = document.getElementById('anFilterMonth');
-  const ySel = document.getElementById('anFilterYear');
-
-  // Toggle visible filter
-  if (mSel) mSel.style.display = filterType==='month' ? '' : 'none';
-  if (ySel) ySel.style.display = filterType==='year'  ? '' : 'none';
-
-  const selMonth = mSel?.value || AM;
-  const selYear  = ySel?.value || new Date().getFullYear().toString();
-
-  // Helper: does a record match the filter?
-  const matchM = m => filterType==='month' ? m===selMonth : (m||'').startsWith(selYear);
-
-  // Label
-  const labelText = filterType==='month'
-    ? new Date(selMonth+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})
-    : selYear;
-  const el = document.getElementById('analyticsMonth');
-  if (el) el.textContent = 'Showing data for: ' + labelText;
-
-  /* ── Payment status pie ── */
-  const all     = [...flats.values()].filter(f=>matchM(f.month));
-  const paid    = all.filter(f=>st(f)==='paid');
-  const partial = all.filter(f=>st(f)==='partial');
-  const pending = all.filter(f=>st(f)==='pending');
-  const vacant  = all.filter(f=>st(f)==='vacant');
-
-  const paySegs = [
-    { label:'Paid',    value:paid.length,    color:'#22c55e', amt:paid.reduce((s,f)=>s+(f.paid||0),0),    displayValue:paid.length    +' flats' },
-    { label:'Partial', value:partial.length, color:'#f59e0b', amt:partial.reduce((s,f)=>s+(f.paid||0),0), displayValue:partial.length +' flats' },
-    { label:'Pending', value:pending.length, color:'#ef4444', amt:0,                                       displayValue:pending.length +' flats' },
-    { label:'Vacant',  value:vacant.length,  color:'#d1d5db', amt:0,                                       displayValue:vacant.length  +' flats' },
-  ].filter(s=>s.value>0);
-
-  requestAnimationFrame(() => {
-    drawPie('payPie', paySegs, 'payTooltip');
-    buildLegend('payLegend',
-      paySegs.map(s=>({...s, count:s.value})),
-      all.length);
-  });
-
-  /* ── Summary totals ── */
-  const totalCollected   = all.reduce((s,f)=>s+(f.paid||0),0);
-  const totalDue         = all.reduce((s,f)=>s+(f.due||0),0);
-  const totalOutstanding = Math.max(0, totalDue - totalCollected);
-  const doc1 = document.getElementById('analyticsTotals');
-  if (doc1) doc1.innerHTML = `
-    <div class="vscard green"><div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div><div><div class="vscard-label">Collected</div><div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div></div></div>
-    <div class="vscard red"><div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div><div><div class="vscard-label">Outstanding</div><div class="vscard-val" style="color:var(--red)">${inr(totalOutstanding)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div></div></div>`;
-
-  renderAnPayTable();
-}
-window.rAnalytics = rAnalytics;
-
-/* ── Pending Flats Modal ── */
-function showPending() {
-  const all     = [...flats.values()].filter(f=>f.month===AM);
-  const pending = all.filter(f=>st(f)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
-  const partial = all.filter(f=>st(f)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
-  const rows    = [...pending, ...partial];
-
-  const totalBal = rows.reduce((s,f)=>s+(f.due-f.paid),0);
-  const modal    = document.getElementById('pendingModal');
-  const subtitle = document.getElementById('pendingSubtitle');
-  const summary  = document.getElementById('pendingSummary');
-  const tbody    = document.getElementById('pendingTableBody');
-
-  subtitle.textContent = `${rows.length} flat${rows.length!==1?'s':''} · ${new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'})}`;
-
-  summary.innerHTML = `
-    <div style="flex:1;background:var(--red-bg);border:1px solid var(--red-border);border-radius:var(--r-md);padding:8px 12px;text-align:center">
-      <div style="font-size:9px;font-weight:700;color:var(--red);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Not Paid</div>
-      <div style="font-size:16px;font-weight:800;color:var(--red)">${pending.length}</div>
-    </div>
-    <div style="flex:1;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-md);padding:8px 12px;text-align:center">
-      <div style="font-size:9px;font-weight:700;color:var(--amber);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Partial</div>
-      <div style="font-size:16px;font-weight:800;color:var(--amber)">${partial.length}</div>
-    </div>
-    <div style="flex:1;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-md);padding:8px 12px;text-align:center">
-      <div style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px">Total Due</div>
-      <div style="font-size:16px;font-weight:800;color:var(--red)">${inr(totalBal)}</div>
-    </div>`;
-
-  if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-circle-check" style="font-size:24px;color:var(--green);display:block;margin-bottom:8px"></i>All flats are paid!</td></tr>`;
-  } else {
-    tbody.innerHTML = rows.map((f,i) => {
-      const s   = st(f);
-      const bal = f.due - f.paid;
-      const sc  = s==='partial' ? '#f59e0b' : '#ef4444';
-      const sl  = s==='partial' ? '⚠️ Partial' : '❌ Not Paid';
-      const bg  = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
-      return `<tr style="background:${bg};border-bottom:1px solid var(--border)" onclick="window._closePending();window._oFl('${f.flatId}')" style="cursor:pointer">
-        <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
-        <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted);font-weight:400">No owner</em>'}</td>
-        <td style="padding:10px 14px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span></td>
-        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(f.paid)}</td>
-        <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(bal)}</td>
-      </tr>`;
-    }).join('') +
-    `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-      <td colspan="3" style="padding:10px 18px;font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
-      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+f.paid,0))}</td>
-      <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(totalBal)}</td>
-    </tr>`;
-  }
-
-  modal.style.display = 'flex';
-}
-function closePending() {
-  document.getElementById('pendingModal').style.display = 'none';
-}
-window._showPending  = showPending;
-window._closePending = closePending;
-
-let _anStatus = 'all';
-function anSetStatus(s) {
-  _anStatus = s;
-  document.querySelectorAll('.an-sf-btn').forEach(b => b.classList.toggle('active', b.dataset.s===s));
-  renderAnPayTable();
-}
-window.anSetStatus = anSetStatus;
+/* ══ MEMBERS TAB ══ */
 
 function renderAnPayTable() {
   const filterType = document.getElementById('anFilterType')?.value||'month';
@@ -3873,17 +3261,19 @@ function renderAnPayTable() {
     const sLbl     = { paid:'Paid', partial:'Partial', pending:'Pending', vacant:'Vacant' };
     const sc       = sMap[s]||'#9ca3af';
     const statusBadge = `<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sLbl[s]||s}</span>`;
+    const _vd=vehicles.get(f.flatId)||{};
+    const _tw=parseInt(_vd.tw)||0, _fw=parseInt(_vd.fw)||0;
+    const _vc=(_tw||_fw)?`${_tw?`<span style="font-size:10px;font-weight:700;background:var(--indigo-bg);color:var(--indigo);padding:1px 6px;border-radius:99px;margin-right:2px">🏍${_tw}</span>`:''}${_fw?`<span style="font-size:10px;font-weight:700;background:var(--sky-bg);color:var(--sky);padding:1px 6px;border-radius:99px">🚗${_fw}</span>`:''}`:'<span style="color:var(--muted);font-size:11px">—</span>';
     return `<tr style="background:${bg};border-bottom:1px solid var(--border)">
       <td style="padding:9px 10px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
       <td style="padding:9px 10px;font-size:12px;font-weight:600;color:var(--text);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
         ${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}
       </td>
       <td style="padding:9px 10px;text-align:center">${statusBadge}</td>
+      <td style="padding:9px 10px;text-align:center">${_vc}</td>
       <td style="padding:9px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px">${f.due ? inr(Math.abs(bal)) : '—'}</td>
       <td style="padding:9px 10px;text-align:center">
-        <button class="icon-btn edit" onclick="event.stopPropagation();window._oFl('${f.flatId}')" title="Edit flat">
-          <i class="ti ti-pencil"></i>
-        </button>
+        <button class="icon-btn edit" onclick="event.stopPropagation();window._oFl('${f.flatId}')" title="Edit flat"><i class="ti ti-pencil"></i></button>
       </td>
     </tr>`;
   }).join('');
@@ -3891,7 +3281,7 @@ function renderAnPayTable() {
   // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:9px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total (${rows.length} flats)</td>
+    <td style="padding:9px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="4">Total (${rows.length} flats)</td>
     <td style="padding:9px 10px;text-align:right;font-weight:800;color:${totBal>0?'#ef4444':'#22c55e'};font-size:12px">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
@@ -3937,9 +3327,6 @@ function renderAnPayTable() {
   </button>
   <button class="bnav-item" data-v="payments" onclick="switchView('payments')">
     <i class="ti ti-credit-card"></i>Payments
-  </button>
-  <button class="bnav-item" data-v="residents" onclick="switchView('residents')">
-    <i class="ti ti-users"></i>Residents
   </button>
   <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
     <i class="ti ti-alert-circle"></i>Issues
