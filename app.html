@@ -809,6 +809,82 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-radius:99px;background:var(--red);color:#fff;
   line-height:1.4;min-width:14px;text-align:center;
 }
+/* ════════════════════════════════
+   STRUCTURE VIEW
+════════════════════════════════ */
+.struc-block{
+  background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-xl);
+  margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm);
+}
+.struc-block-head{
+  display:flex;align-items:center;gap:10px;padding:13px 16px;
+  background:var(--surface2);border-bottom:1.5px solid var(--border2);
+  cursor:pointer;user-select:none;
+}
+.struc-block-head:hover{background:var(--surface3)}
+.struc-block-icon{
+  width:34px;height:34px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,#6366F1,#8B5CF6);
+  display:flex;align-items:center;justify-content:center;
+  font-size:15px;color:#fff;
+}
+.struc-block-name{font-size:15px;font-weight:800;color:var(--text);flex:1}
+.struc-block-meta{font-size:11px;color:var(--text2);font-weight:600}
+.struc-block-actions{display:flex;gap:6px;margin-left:auto}
+.struc-floor{border-bottom:1px solid var(--border)}
+.struc-floor:last-child{border-bottom:none}
+.struc-floor-head{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 16px 10px 22px;
+  background:var(--surface);
+}
+.struc-floor-label{
+  font-size:12px;font-weight:800;color:var(--indigo);
+  display:flex;align-items:center;gap:5px;min-width:70px;
+}
+.struc-flat-chips{
+  display:flex;flex-wrap:wrap;gap:6px;flex:1;
+}
+.struc-flat-chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;
+  background:var(--surface2);border:1.5px solid var(--border2);
+  color:var(--text);cursor:pointer;transition:all .15s;
+  position:relative;
+}
+.struc-flat-chip:hover{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
+.struc-flat-chip.has-data{border-color:var(--green-border);background:var(--green-bg);color:var(--green-txt)}
+.struc-flat-chip.vacant{border-color:var(--border2);background:var(--bg);color:var(--muted)}
+.struc-del-btn{
+  width:22px;height:22px;border-radius:5px;border:none;
+  background:var(--red-bg);color:var(--red);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;flex-shrink:0;transition:all .15s;
+}
+.struc-del-btn:hover{background:var(--red);color:#fff}
+.struc-add-floor-row{
+  display:flex;align-items:center;gap:8px;padding:10px 16px 12px 22px;
+}
+.struc-chip-add{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:5px 10px;border-radius:8px;font-size:12px;font-weight:700;
+  border:1.5px dashed var(--border3);background:transparent;
+  color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--font);
+}
+.struc-chip-add:hover{border-color:var(--indigo);color:var(--indigo);background:var(--indigo-bg)}
+.struc-summary-chip{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 14px;border-radius:99px;font-size:12px;font-weight:700;
+  background:#fff;border:1.5px solid var(--border2);color:var(--text2);
+  box-shadow:var(--shadow-sm);
+}
+.struc-summary-chip i{font-size:14px}
+/* inline rename input */
+.struc-rename-inp{
+  height:26px;padding:0 8px;border:1.5px solid var(--indigo);
+  border-radius:6px;font-size:12px;font-weight:700;font-family:var(--font);
+  background:var(--surface);color:var(--text);outline:none;width:70px;
+}
 </style>
 </head>
 <body>
@@ -918,11 +994,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
-
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
         <i class="ti ti-alert-circle"></i> Issues
         <span class="vtab-badge" id="openCnt">0</span>
       </button>
+      <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-building-cog"></i> Structure</button>
     </div>
   </div>
 
@@ -1099,6 +1175,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     </div><!-- /main grid -->
 
   </div><!-- /#analyticsView -->
+
+  <!-- STRUCTURE VIEW -->
+  <div id="structureView" style="display:none;padding:14px">
+
+    <!-- Header row -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div>
+        <div style="font-size:16px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px">
+          <i class="ti ti-building-cog" style="color:var(--indigo)"></i> Building Structure
+        </div>
+        <div style="font-size:12px;color:var(--text2);margin-top:3px">Add, rename or remove blocks · floors · flats</div>
+      </div>
+      <button class="btn btn-indigo" onclick="window._oAddBlock()">
+        <i class="ti ti-plus"></i> Add Block
+      </button>
+    </div>
+
+    <!-- Summary chips -->
+    <div id="strucSummary" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px"></div>
+
+    <!-- Block accordion list -->
+    <div id="strucList"></div>
+
+  </div><!-- /#structureView -->
 
 </div>
 </div><!-- /#app -->
@@ -2186,13 +2286,13 @@ document.getElementById('rtf').addEventListener('change',e=>{RTF=e.target.value;
 document.getElementById('flf').addEventListener('change',e=>{FLF=e.target.value;rBlock();});
 document.getElementById('qi').addEventListener('input', e=>{SQ=e.target.value.toLowerCase().trim();rBlock();});
 // #mf month dropdown removed from UI — AM stays as current month
-['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM','catM'].forEach(id=>{
+['flatM','addM','flatAddM','rIM','idM','vehM','presM','presExpM','catM','addBlockM','addFloorM','addFlatM','renameFlatM'].forEach(id=>{
   const el=document.getElementById(id);if(!el)return;
   el.addEventListener('click',e=>{
     if(e.target.id===id){cM();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();}
   });
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();}});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI();cID();cVehM();cPresM();cPresExp();cCatM();window._cAddBlock();window._cAddFloor();window._cAddFlatM();window._cRenameFlat();}});
 
 /* ════════════════════════════════
    WINDOW EXPOSE
@@ -2353,6 +2453,7 @@ function switchView(v) {
   document.getElementById('iView').style.display         = v==='issues'    ? 'block' : 'none';
   document.getElementById('presView').style.display      = v==='president' ? 'block' : 'none';
   document.getElementById('analyticsView').style.display = v==='analytics' ? 'block' : 'none';
+  document.getElementById('structureView').style.display = v==='structure' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
@@ -2360,6 +2461,7 @@ function switchView(v) {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
   }
+  if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
 }
 
 function rAll(){
@@ -3658,6 +3760,383 @@ window.buildLegend = buildLegend;
 window._oFlEdit         = oFlEdit;
 window.renderAnPayTable = renderAnPayTable;
 
+/* ════════════════════════════════
+   STRUCTURE MANAGEMENT
+════════════════════════════════ */
+
+/* ── Render the whole structure view ── */
+function rStructure() {
+  const all = [...flats.values()];
+
+  /* Summary chips */
+  const blocks  = [...new Set(all.map(f => f.block).filter(Boolean))].sort();
+  const floors  = [...new Set(all.map(f => f.floor).filter(x => x != null))];
+  const totFlats = all.length;
+  const occupied = all.filter(f => (f.owner||'').trim()).length;
+  document.getElementById('strucSummary').innerHTML = `
+    <div class="struc-summary-chip"><i class="ti ti-building" style="color:var(--indigo)"></i>${blocks.length} Block${blocks.length!==1?'s':''}</div>
+    <div class="struc-summary-chip"><i class="ti ti-stairs" style="color:var(--sky)"></i>${floors.length} Floor${floors.length!==1?'s':''}</div>
+    <div class="struc-summary-chip"><i class="ti ti-home" style="color:var(--green)"></i>${totFlats} Total Flats</div>
+    <div class="struc-summary-chip"><i class="ti ti-user-check" style="color:var(--green)"></i>${occupied} Occupied</div>
+    <div class="struc-summary-chip"><i class="ti ti-door" style="color:var(--muted)"></i>${totFlats-occupied} Vacant</div>
+  `;
+
+  if (!totFlats) {
+    document.getElementById('strucList').innerHTML = `
+      <div style="text-align:center;padding:3rem;color:var(--muted)">
+        <i class="ti ti-building-off" style="font-size:40px;display:block;margin-bottom:10px;opacity:.3"></i>
+        <div style="font-size:15px;font-weight:700">No flats yet</div>
+        <div style="font-size:13px;margin-top:4px">Click <strong>Add Block</strong> to get started.</div>
+      </div>`;
+    return;
+  }
+
+  /* Group by block → floor */
+  const byBlock = {};
+  all.forEach(f => {
+    const b  = f.block || '—';
+    const fl = f.floor ?? '—';
+    if (!byBlock[b]) byBlock[b] = {};
+    if (!byBlock[b][fl]) byBlock[b][fl] = [];
+    byBlock[b][fl].push(f);
+  });
+
+  /* Render */
+  const html = Object.keys(byBlock).sort().map(block => {
+    const floorMap = byBlock[block];
+    const sortedFloors = Object.keys(floorMap).sort((a,b) => Number(a)-Number(b));
+    const totalFlats   = sortedFloors.reduce((s,fl) => s+floorMap[fl].length, 0);
+    const occupiedB    = sortedFloors.reduce((s,fl) => s+floorMap[fl].filter(f=>(f.owner||'').trim()).length, 0);
+
+    const floorsHtml = sortedFloors.map(fl => {
+      const flist = floorMap[fl].sort((a,b) => (a.flatId||'').localeCompare(b.flatId||''));
+      const chips = flist.map(f => {
+        const hasOwner = (f.owner||'').trim();
+        const cls = hasOwner ? 'has-data' : 'vacant';
+        return `<div class="struc-flat-chip ${cls}" title="${f.owner||'Vacant'}" onclick="window._oFlatMenu('${f.flatId}')">
+          ${f.flatId}
+          ${hasOwner ? `<span style="font-size:10px;font-weight:600;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner}</span>` : ''}
+        </div>`;
+      }).join('');
+
+      return `<div class="struc-floor">
+        <div class="struc-floor-head">
+          <div class="struc-floor-label"><i class="ti ti-stairs" style="font-size:12px"></i> Floor ${fl}</div>
+          <div class="struc-flat-chips">${chips}
+            <button class="struc-chip-add" onclick="window._oAddFlatM('${block}','${fl}')">
+              <i class="ti ti-plus"></i> Flat
+            </button>
+          </div>
+          <button class="struc-del-btn" onclick="window._delFloor('${block}','${fl}')" title="Delete floor ${fl}">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+
+    return `<div class="struc-block" id="sblk_${block}">
+      <div class="struc-block-head" onclick="window._toggleBlock('${block}')">
+        <div class="struc-block-icon"><i class="ti ti-building"></i></div>
+        <div>
+          <div class="struc-block-name">Block ${block}</div>
+          <div class="struc-block-meta">${sortedFloors.length} floor${sortedFloors.length!==1?'s':''} · ${totalFlats} flats · ${occupiedB} occupied</div>
+        </div>
+        <div class="struc-block-actions" onclick="event.stopPropagation()">
+          <button class="btn btn-white btn-sm" onclick="window._oAddFloor('${block}')">
+            <i class="ti ti-stairs-up"></i> Floor
+          </button>
+          <button class="btn btn-red btn-sm" onclick="window._delBlock('${block}')">
+            <i class="ti ti-trash"></i>
+          </button>
+        </div>
+        <i class="ti ti-chevron-down" id="sblk_icon_${block}" style="font-size:16px;color:var(--muted);margin-left:4px;transition:transform .2s"></i>
+      </div>
+      <div id="sblk_body_${block}">
+        ${floorsHtml}
+        <div class="struc-add-floor-row">
+          <button class="struc-chip-add" onclick="window._oAddFloor('${block}')">
+            <i class="ti ti-stairs-up"></i> Add Floor
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('strucList').innerHTML = html;
+}
+
+/* ── Toggle block accordion ── */
+const _blockOpen = {};
+window._toggleBlock = function(block) {
+  const body = document.getElementById('sblk_body_'+block);
+  const icon = document.getElementById('sblk_icon_'+block);
+  if (!body) return;
+  const open = body.style.display !== 'none';
+  body.style.display = open ? 'none' : '';
+  if (icon) icon.style.transform = open ? 'rotate(-90deg)' : '';
+};
+
+/* ── Flat context menu: rename or delete ── */
+window._oFlatMenu = function(fid) {
+  const f = flats.get(fid); if (!f) return;
+  // Build a small inline popover by re-using the rename modal
+  document.getElementById('rfOldId').value  = fid;
+  document.getElementById('rfNewId').value  = fid;
+  document.getElementById('rfSub').textContent = `Current ID: ${fid}${f.owner ? ' — ' + f.owner : ''}`;
+  document.getElementById('rfBtn').disabled = false;
+  document.getElementById('rfLbl').textContent = ' Rename';
+  // Add a delete shortcut button inside modal
+  document.getElementById('renameFlatM').classList.add('open');
+};
+window._cRenameFlat = () => document.getElementById('renameFlatM').classList.remove('open');
+
+window._saveRenameFlat = async function() {
+  const oldId = document.getElementById('rfOldId').value.trim();
+  const newId = document.getElementById('rfNewId').value.trim().toUpperCase();
+  if (!newId) { toast('Enter a new flat ID.', 'error'); return; }
+  if (newId === oldId) { window._cRenameFlat(); return; }
+  if (flats.has(newId)) { toast(`Flat ${newId} already exists.`, 'error'); return; }
+  const btn = document.getElementById('rfBtn');
+  btn.disabled = true;
+  document.getElementById('rfLbl').textContent = ' Renaming…';
+  sync('saving');
+  try {
+    const oldData = flats.get(oldId);
+    // Copy flat doc to new ID
+    await setDoc(flatRef(newId), { ...oldData, flatId: newId });
+    // Copy expenses
+    const expSnap = await getDocs(query(expColl(), where('flatId','==',oldId)));
+    for (const d of expSnap.docs) {
+      await addDoc(expColl(), { ...d.data(), flatId: newId });
+      await deleteDoc(doc(db,'apartments',UID,'expenses',d.id));
+    }
+    // Delete old flat
+    await deleteDoc(flatRef(oldId));
+    sync('live');
+    window._cRenameFlat();
+    toast(`Renamed ${oldId} → ${newId} ✓`);
+    rStructure();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Rename failed: '+e.message,'error');
+    btn.disabled = false;
+    document.getElementById('rfLbl').textContent = ' Rename';
+  }
+};
+
+/* ── Add Block Modal ── */
+function _abUpdatePreview() {
+  const name   = (document.getElementById('abName')?.value||'').trim().toUpperCase();
+  const floors = parseInt(document.getElementById('abFloors')?.value)||0;
+  const fpf    = parseInt(document.getElementById('abFpf')?.value)||0;
+  const prev   = document.getElementById('abPreview');
+  if (!prev) return;
+  if (!name||!floors||!fpf) { prev.innerHTML = '<span style="color:var(--muted)">Fill fields to preview…</span>'; return; }
+  const ids = [];
+  for(let fl=1;fl<=Math.min(floors,2);fl++)
+    for(let f=1;f<=fpf;f++) ids.push(`${name}-${fl}${String(f).padStart(2,'0')}`);
+  prev.innerHTML = `<strong>Block ${name}</strong> · ${floors} floor${floors!==1?'s':''} · ${fpf} flat${fpf!==1?'s':''}/floor = <strong>${floors*fpf} flats</strong><br>
+    <span style="font-size:11px;color:var(--muted)">First flats: ${ids.join(', ')}${floors>2?' …':''}</span>`;
+}
+window._oAddBlock = function() {
+  ['abName','abFloors','abFpf','abDue'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
+  document.getElementById('abFloors').value = 4;
+  document.getElementById('abFpf').value    = 4;
+  document.getElementById('abPreview').innerHTML = '<span style="color:var(--muted)">Fill fields to preview…</span>';
+  document.getElementById('abBtn').disabled = false;
+  document.getElementById('abLbl').textContent = ' Create Block';
+  document.getElementById('addBlockM').classList.add('open');
+  // Live preview listeners
+  ['abName','abFloors','abFpf'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.oninput = _abUpdatePreview;
+  });
+};
+window._cAddBlock = () => document.getElementById('addBlockM').classList.remove('open');
+window._saveAddBlock = async function() {
+  const name   = (document.getElementById('abName').value||'').trim().toUpperCase();
+  const floors = parseInt(document.getElementById('abFloors').value)||0;
+  const fpf    = parseInt(document.getElementById('abFpf').value)||0;
+  const due    = parseInt(document.getElementById('abDue').value)||0;
+  if (!name)   { toast('Enter block name.','error'); return; }
+  if (!floors) { toast('Enter number of floors.','error'); return; }
+  if (!fpf)    { toast('Enter flats per floor.','error'); return; }
+  const existing = [...flats.values()].some(f => (f.block||'').toUpperCase()===name);
+  if (existing)  { toast(`Block ${name} already exists.`,'error'); return; }
+  const btn = document.getElementById('abBtn');
+  btn.disabled = true;
+  document.getElementById('abLbl').textContent = ' Creating…';
+  sync('saving');
+  try {
+    for(let fl=1; fl<=floors; fl++) {
+      for(let f=1; f<=fpf; f++) {
+        const fid = `${name}-${fl}${String(f).padStart(2,'0')}`;
+        await setDoc(flatRef(fid), { block:name, floor:fl, owner:'', resType:'owner', due, paid:0, month:AM });
+      }
+    }
+    sync('live');
+    window._cAddBlock();
+    toast(`Block ${name} created — ${floors*fpf} flats ✓`);
+    rStructure();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Failed: '+e.message,'error');
+    btn.disabled=false; document.getElementById('abLbl').textContent=' Create Block';
+  }
+};
+
+/* ── Add Floor Modal ── */
+let _afBlock = '';
+function _afUpdatePreview() {
+  const flNum = parseInt(document.getElementById('afNum')?.value)||0;
+  const fpf   = parseInt(document.getElementById('afFpf')?.value)||0;
+  const prev  = document.getElementById('afPreview');
+  if (!prev) return;
+  if (!flNum||!fpf) { prev.innerHTML = '<span style="color:var(--muted)">Fill fields to preview…</span>'; return; }
+  const ids = [];
+  for(let f=1;f<=fpf;f++) ids.push(`${_afBlock}-${flNum}${String(f).padStart(2,'0')}`);
+  prev.innerHTML = `Floor <strong>${flNum}</strong> in Block <strong>${_afBlock}</strong> · <strong>${fpf} flat${fpf!==1?'s':''}</strong><br>
+    <span style="font-size:11px;color:var(--muted)">Flat IDs: ${ids.join(', ')}</span>`;
+}
+window._oAddFloor = function(block) {
+  _afBlock = block;
+  document.getElementById('afSub').textContent = `Block ${block}`;
+  // Suggest next floor number
+  const existing = [...new Set([...flats.values()].filter(f=>f.block===block).map(f=>f.floor).filter(x=>x!=null))];
+  const nextFloor = existing.length ? Math.max(...existing)+1 : 1;
+  document.getElementById('afNum').value = nextFloor;
+  document.getElementById('afFpf').value = 4;
+  document.getElementById('afDue').value = '';
+  document.getElementById('afPreview').innerHTML = '';
+  document.getElementById('afBtn').disabled = false;
+  document.getElementById('afLbl').textContent = ' Add Floor';
+  document.getElementById('addFloorM').classList.add('open');
+  ['afNum','afFpf'].forEach(id => { const el=document.getElementById(id); if(el) el.oninput=_afUpdatePreview; });
+  _afUpdatePreview();
+};
+window._cAddFloor = () => document.getElementById('addFloorM').classList.remove('open');
+window._saveAddFloor = async function() {
+  const flNum = parseInt(document.getElementById('afNum').value)||0;
+  const fpf   = parseInt(document.getElementById('afFpf').value)||0;
+  const due   = parseInt(document.getElementById('afDue').value)||0;
+  if (!flNum) { toast('Enter floor number.','error'); return; }
+  if (!fpf)   { toast('Enter flats per floor.','error'); return; }
+  // Check for collision
+  const collision = [...flats.values()].filter(f => f.block===_afBlock && f.floor===flNum);
+  if (collision.length) { toast(`Floor ${flNum} already exists in Block ${_afBlock}.`,'error'); return; }
+  const btn = document.getElementById('afBtn');
+  btn.disabled = true;
+  document.getElementById('afLbl').textContent = ' Adding…';
+  sync('saving');
+  try {
+    for(let f=1; f<=fpf; f++) {
+      const fid = `${_afBlock}-${flNum}${String(f).padStart(2,'0')}`;
+      if (!flats.has(fid)) {
+        await setDoc(flatRef(fid), { block:_afBlock, floor:flNum, owner:'', resType:'owner', due, paid:0, month:AM });
+      }
+    }
+    sync('live');
+    window._cAddFloor();
+    toast(`Floor ${flNum} added to Block ${_afBlock} ✓`);
+    rStructure();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Failed: '+e.message,'error');
+    btn.disabled=false; document.getElementById('afLbl').textContent=' Add Floor';
+  }
+};
+
+/* ── Add Individual Flat Modal ── */
+window._oAddFlatM = function(block, floor) {
+  document.getElementById('addFlatBlock').value = block;
+  document.getElementById('addFlatFloor').value = floor;
+  document.getElementById('addFlatSub').textContent = `Block ${block} · Floor ${floor}`;
+  // Suggest a flat ID
+  const existing = [...flats.values()].filter(f => f.block===block && String(f.floor)===String(floor));
+  const nextNum  = existing.length+1;
+  document.getElementById('addFlatId').value    = `${block}-${floor}${String(nextNum).padStart(2,'0')}`;
+  document.getElementById('addFlatOwner').value = '';
+  document.getElementById('addFlatDue').value   = '';
+  document.getElementById('addFlatBtn').disabled = false;
+  document.getElementById('addFlatLbl').textContent = ' Add Flat';
+  document.getElementById('addFlatM').classList.add('open');
+};
+window._cAddFlatM = () => document.getElementById('addFlatM').classList.remove('open');
+window._saveAddFlat = async function() {
+  const block = document.getElementById('addFlatBlock').value;
+  const floor = parseInt(document.getElementById('addFlatFloor').value)||1;
+  const fid   = document.getElementById('addFlatId').value.trim().toUpperCase();
+  const owner = document.getElementById('addFlatOwner').value.trim();
+  const due   = parseInt(document.getElementById('addFlatDue').value)||0;
+  if (!fid) { toast('Enter a flat ID.','error'); return; }
+  if (flats.has(fid)) { toast(`Flat ${fid} already exists.`,'error'); return; }
+  const btn = document.getElementById('addFlatBtn');
+  btn.disabled = true;
+  document.getElementById('addFlatLbl').textContent = ' Adding…';
+  sync('saving');
+  try {
+    await setDoc(flatRef(fid), { block, floor, owner, resType:'owner', due, paid:0, month:AM });
+    sync('live');
+    window._cAddFlatM();
+    toast(`Flat ${fid} added ✓`);
+    rStructure();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Failed: '+e.message,'error');
+    btn.disabled=false; document.getElementById('addFlatLbl').textContent=' Add Flat';
+  }
+};
+
+/* ── Delete a single flat ── */
+window._delFlat = async function(fid) {
+  const f = flats.get(fid);
+  if (!f) return;
+  const expCount = (fex(fid)||[]).length;
+  const msg = expCount > 0
+    ? `Delete flat ${fid}?\n\nThis flat has ${expCount} payment record(s). All data will be permanently deleted.`
+    : `Delete flat ${fid}? This cannot be undone.`;
+  if (!confirm(msg)) return;
+  sync('saving');
+  try {
+    // Delete expenses
+    const expSnap = await getDocs(query(expColl(), where('flatId','==',fid)));
+    for (const d of expSnap.docs) await deleteDoc(doc(db,'apartments',UID,'expenses',d.id));
+    await deleteDoc(flatRef(fid));
+    sync('live'); toast(`Flat ${fid} deleted ✓`); rStructure();
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
+};
+
+/* ── Delete an entire floor ── */
+window._delFloor = async function(block, floor) {
+  const affected = [...flats.values()].filter(f => f.block===block && String(f.floor)===String(floor));
+  if (!affected.length) return;
+  if (!confirm(`Delete ALL ${affected.length} flat(s) on Floor ${floor} of Block ${block}?\n\nAll resident data and payment history will be permanently deleted.`)) return;
+  sync('saving');
+  try {
+    for (const f of affected) {
+      const expSnap = await getDocs(query(expColl(), where('flatId','==',f.flatId)));
+      for (const d of expSnap.docs) await deleteDoc(doc(db,'apartments',UID,'expenses',d.id));
+      await deleteDoc(flatRef(f.flatId));
+    }
+    sync('live'); toast(`Floor ${floor} in Block ${block} deleted ✓`); rStructure();
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
+};
+
+/* ── Delete an entire block ── */
+window._delBlock = async function(block) {
+  const affected = [...flats.values()].filter(f => f.block===block);
+  if (!affected.length) return;
+  if (!confirm(`Delete ENTIRE Block ${block}?\n\nThis will permanently delete all ${affected.length} flat(s), residents, and payment history.`)) return;
+  sync('saving');
+  try {
+    for (const f of affected) {
+      const expSnap = await getDocs(query(expColl(), where('flatId','==',f.flatId)));
+      for (const d of expSnap.docs) await deleteDoc(doc(db,'apartments',UID,'expenses',d.id));
+      await deleteDoc(flatRef(f.flatId));
+    }
+    sync('live'); toast(`Block ${block} deleted ✓`); rStructure();
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
+};
+
+/* expose */
+window.rStructure = rStructure;
+
 /* ── Re-expose everything that was removed from line 1614 ── */
 window._oCatM     = oCatM;
 window._cCatM     = cCatM;
@@ -3723,6 +4202,111 @@ window.buildLegend   = buildLegend;
     <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
   </button>
 </nav>
+
+<!-- ADD BLOCK MODAL -->
+<div class="mbg" id="addBlockM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--indigo-bg);color:var(--indigo)"><i class="ti ti-building-plus"></i></div>
+        <div><div class="mtitle">Add New Block</div><div class="msub">Auto-generates all flats</div></div>
+      </div>
+      <button class="mclose" onclick="window._cAddBlock()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block Name *</label><input type="text" id="abName" placeholder="e.g. D" maxlength="4"/></div>
+      <div class="fg"><label>Floors *</label><input type="number" id="abFloors" placeholder="4" min="1" max="50"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Flats per Floor *</label><input type="number" id="abFpf" placeholder="4" min="1" max="20"/></div>
+      <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="abDue" placeholder="0" min="0"/></div>
+    </div>
+    <div id="abPreview" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:12px;font-size:13px;color:var(--text2);font-weight:500;line-height:1.8;min-height:44px;margin-bottom:4px"></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAddBlock()">Cancel</button>
+      <button class="btn btn-indigo" id="abBtn" onclick="window._saveAddBlock()">
+        <i class="ti ti-rocket"></i><span id="abLbl"> Create Block</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FLOOR MODAL -->
+<div class="mbg" id="addFloorM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--sky-bg);color:var(--sky)"><i class="ti ti-stairs-up"></i></div>
+        <div><div class="mtitle">Add Floor</div><div class="msub" id="afSub">to Block</div></div>
+      </div>
+      <button class="mclose" onclick="window._cAddFloor()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Floor Number *</label><input type="number" id="afNum" placeholder="e.g. 5" min="1" max="99"/></div>
+      <div class="fg"><label>Flats on this Floor *</label><input type="number" id="afFpf" placeholder="4" min="1" max="20"/></div>
+    </div>
+    <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="afDue" placeholder="0" min="0"/></div>
+    <div id="afPreview" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:12px;font-size:13px;color:var(--text2);font-weight:500;line-height:1.8;margin-bottom:4px"></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAddFloor()">Cancel</button>
+      <button class="btn btn-indigo" id="afBtn" onclick="window._saveAddFloor()">
+        <i class="ti ti-plus"></i><span id="afLbl"> Add Floor</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FLAT MODAL -->
+<div class="mbg" id="addFlatM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--green-bg);color:var(--green)"><i class="ti ti-home-plus"></i></div>
+        <div><div class="mtitle">Add Flat</div><div class="msub" id="addFlatSub">to Floor</div></div>
+      </div>
+      <button class="mclose" onclick="window._cAddFlatM()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="addFlatBlock"/>
+    <input type="hidden" id="addFlatFloor"/>
+    <div class="fg"><label>Flat Number / ID *</label>
+      <input type="text" id="addFlatId" placeholder="e.g. A-301" style="text-transform:uppercase"/>
+    </div>
+    <div class="fg"><label>Resident Name</label><input type="text" id="addFlatOwner" placeholder="Optional — fill later"/></div>
+    <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="addFlatDue" placeholder="0" min="0"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAddFlatM()">Cancel</button>
+      <button class="btn btn-indigo" id="addFlatBtn" onclick="window._saveAddFlat()">
+        <i class="ti ti-plus"></i><span id="addFlatLbl"> Add Flat</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- RENAME FLAT MODAL -->
+<div class="mbg" id="renameFlatM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-pencil"></i></div>
+        <div><div class="mtitle">Rename Flat</div><div class="msub" id="rfSub"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cRenameFlat()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="rfOldId"/>
+    <div class="fg"><label>New Flat ID *</label>
+      <input type="text" id="rfNewId" placeholder="e.g. A-205" style="text-transform:uppercase"/>
+    </div>
+    <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:var(--r-md);padding:10px 14px;font-size:12px;color:var(--amber-txt);font-weight:600;margin-bottom:4px">
+      <i class="ti ti-alert-triangle"></i> This will move all payment history and data to the new ID.
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cRenameFlat()">Cancel</button>
+      <button class="btn btn-indigo" id="rfBtn" onclick="window._saveRenameFlat()">
+        <i class="ti ti-pencil"></i><span id="rfLbl"> Rename</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
