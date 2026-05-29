@@ -1487,6 +1487,7 @@ function refreshAPP() { /* no-op — all functions use closure vars directly */ 
 /* ── Month selector ── */
 function buildMonthSelect() {
   const sel = document.getElementById('mf');
+  if (!sel) return; // month selector not present in this UI
   const opts = [];
   for (let i=0; i<12; i++) {
     const d = new Date();
