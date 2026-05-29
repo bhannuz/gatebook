@@ -1454,7 +1454,7 @@ const flats  = new Map();
 const exps   = new Map();
 const issues = [];
 
-let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all';
+let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all', _anStatus='all';
 let eu=null, iu=null, vu=null, pu=null;
 const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
@@ -1579,8 +1579,6 @@ function rStats() {
 }
 
 
-window.fMem = fMem;
-
 function toggleResEdit(fid) {
   const editRow = document.getElementById('redit_'+fid);
   if (!editRow) return;
@@ -1610,16 +1608,7 @@ async function saveResEdit(fid) {
 
 window._toggleResEdit = toggleResEdit;
 window._saveResEdit   = saveResEdit;
-
-window._oCatM = oCatM;
-window._cCatM = cCatM;
-window._addCat = addCat;
-window._delCat = delCat;
-window._cD=cD;
-window.switchView=switchView;
-window.fIss=fIss;
-window.fMem=fMem;
-window.rMembers=rMembers;
+/* window._oCatM etc. assigned below after function definitions */
 
 /* ════════════════════════════════
    FLAT DETAIL MODAL
@@ -2391,8 +2380,8 @@ function listenVehicles(){
   vu=onSnapshot(vehColl(),snap=>{
     vehicles.clear();
     snap.forEach(d=>vehicles.set(d.id,{...d.data()}));
-    rStats();
-    if(document.getElementById('vehView').style.display!=='none')rVehicles();
+    try { rStats(); } catch(e){}
+    try { if(AV==='vehicles') rVehicles(); } catch(e){}
   },e=>console.error('veh listener',e));
 }
 function listenSocExp(){
@@ -2401,9 +2390,13 @@ function listenSocExp(){
   pu=onSnapshot(q,snap=>{
     socExps.length=0;
     snap.forEach(d=>socExps.push({id:d.id,...d.data()}));
-    if(document.getElementById('presView').style.display!=='none')rPresident();
+    try { if(AV==='president') rPresident(); } catch(e){}
   },()=>{
-    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));if(document.getElementById('presView').style.display!=='none')rPresident();});
+    pu=onSnapshot(sexpColl(),snap=>{
+      socExps.length=0;
+      snap.forEach(d=>socExps.push({id:d.id,...d.data()}));
+      try { if(AV==='president') rPresident(); } catch(e){}
+    });
   });
 }
 
@@ -3285,6 +3278,402 @@ function renderAnPayTable() {
     <td style="padding:9px 10px;text-align:right;font-weight:800;color:${totBal>0?'#ef4444':'#22c55e'};font-size:12px">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
+
+/* ════════════════════════════════
+   PATCH — ALL MISSING FUNCTIONS
+════════════════════════════════ */
+
+/* ── rAll is already defined above; this is a no-op alias for safety ── */
+
+/* ── oFlEdit already defined above at line ~1672 ── */
+
+/* ── boot — entry point called by onAuthStateChanged ── */
+async function boot() {
+  try {
+    buildMonthSelect();
+    const aptDoc = await getDoc(aptDocRef());
+    if (aptDoc.exists()) {
+      const d = aptDoc.data();
+      if (d.name) applyAptName(d.name);
+      president = d.president || null;
+      if (d.customCats) {
+        customCats.flat = d.customCats.flat || [];
+        customCats.soc  = d.customCats.soc  || [];
+      }
+    }
+    const snap = await getDocs(flatsColl());
+    if (snap.empty) {
+      document.getElementById('lo').style.display       = 'none';
+      document.getElementById('setupWiz').style.display = 'flex';
+      wizRenderBlocks();
+    } else {
+      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+    }
+  } catch(e) {
+    console.error('Boot error:', e);
+    const sub = document.getElementById('loSub');
+    if (sub) sub.textContent = '⚠ Firebase connection failed. Check console.';
+  }
+}
+
+/* ── listenVehicles & listenSocExp already defined above ── */
+
+/* ── renderCatOpts — fills a <select> with flat or soc categories ── */
+function renderCatOpts(selectId, type) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  const base   = type === 'flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
+  const custom = customCats[type] || [];
+  const all    = [...new Set([...base, ...custom])];
+  const cur    = sel.value;
+  sel.innerHTML = all.map(c => `<option value="${c}"${c===cur?' selected':''}>${c}</option>`).join('');
+  sel.innerHTML += `<option value="__new__">+ New category…</option>`;
+}
+window.renderCatOpts = renderCatOpts;
+
+/* ── Inline "new category" helpers for modal <select> fields ── */
+function _catSelChange(selectId, type) {
+  const sel = document.getElementById(selectId);
+  if (!sel) return;
+  if (sel.value === '__new__') {
+    const wrap = document.getElementById(selectId + '_new');
+    if (wrap) wrap.style.display = 'block';
+    sel.value = (type === 'flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS)[0];
+  }
+}
+async function _addInlineCat(selectId, type) {
+  const inp = document.getElementById(selectId + '_input');
+  const val = (inp?.value || '').trim();
+  if (!val) { toast('Enter a category name.', 'error'); return; }
+  if (!customCats[type]) customCats[type] = [];
+  const base = type === 'flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
+  if (!base.includes(val) && !customCats[type].includes(val)) {
+    customCats[type].push(val);
+    sync('saving');
+    try {
+      await setDoc(aptDocRef(), { customCats }, { merge: true });
+      sync('live'); toast(`Category "${val}" added ✓`);
+    } catch(e) { console.error(e); sync('error'); }
+  }
+  if (inp) inp.value = '';
+  const wrap = document.getElementById(selectId + '_new');
+  if (wrap) wrap.style.display = 'none';
+  renderCatOpts(selectId, type);
+  const sel = document.getElementById(selectId);
+  if (sel) sel.value = val;
+}
+function _hideInlineCat(selectId) {
+  const wrap = document.getElementById(selectId + '_new');
+  if (wrap) wrap.style.display = 'none';
+}
+window._catSelChange  = _catSelChange;
+window._addInlineCat  = _addInlineCat;
+window._hideInlineCat = _hideInlineCat;
+
+/* ── Category manager modal (catM) ── */
+function _renderCatModal() {
+  ['flat', 'soc'].forEach(type => {
+    const listId = type === 'flat' ? 'flatCatList' : 'socCatList';
+    const el = document.getElementById(listId);
+    if (!el) return;
+    const base   = type === 'flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
+    const custom = customCats[type] || [];
+    el.innerHTML = [...base, ...custom].map(c => {
+      const isCustom = custom.includes(c);
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 2px;border-bottom:1px solid var(--border)">
+        <span style="font-size:13px;font-weight:600;color:var(--text)">${c}</span>
+        ${isCustom
+          ? `<button onclick="window._delCat('${type}','${c}')"
+               style="background:var(--red-bg);border:1px solid var(--red-border);border-radius:6px;
+                      padding:3px 10px;cursor:pointer;color:var(--red);font-size:11px;
+                      font-family:var(--font);font-weight:700;display:inline-flex;align-items:center;gap:4px">
+               <i class="ti ti-trash" style="font-size:11px"></i> Remove</button>`
+          : `<span style="font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.4px">Default</span>`}
+      </div>`;
+    }).join('');
+  });
+}
+function oCatM() {
+  const fi = document.getElementById('flatCatInput'); if (fi) fi.value = '';
+  const si = document.getElementById('socCatInput');  if (si) si.value = '';
+  _renderCatModal();
+  document.getElementById('catM').classList.add('open');
+}
+function cCatM() { document.getElementById('catM').classList.remove('open'); }
+async function addCat(type) {
+  const inp = document.getElementById(type === 'flat' ? 'flatCatInput' : 'socCatInput');
+  const val = (inp?.value || '').trim();
+  if (!val) { toast('Enter a category name.', 'error'); return; }
+  if (!customCats[type]) customCats[type] = [];
+  const base = type === 'flat' ? DEFAULT_FLAT_CATS : DEFAULT_SOC_CATS;
+  if ([...base, ...customCats[type]].includes(val)) { toast(`"${val}" already exists.`, 'error'); return; }
+  customCats[type].push(val);
+  sync('saving');
+  try {
+    await setDoc(aptDocRef(), { customCats }, { merge: true });
+    sync('live'); toast(`Category "${val}" added ✓`);
+  } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
+  if (inp) inp.value = '';
+  _renderCatModal();
+}
+async function delCat(type, cat) {
+  if (!confirm(`Remove category "${cat}"?`)) return;
+  customCats[type] = (customCats[type] || []).filter(c => c !== cat);
+  sync('saving');
+  try {
+    await setDoc(aptDocRef(), { customCats }, { merge: true });
+    sync('live'); toast('Category removed ✓');
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
+  _renderCatModal();
+}
+window._oCatM = oCatM;
+window._cCatM = cCatM;
+window._addCat = addCat;
+window._delCat = delCat;
+
+/* ── delIss — delete issue from Firestore ── */
+async function delIss(id) {
+  if (!confirm('Delete this issue permanently?')) return;
+  sync('saving');
+  try {
+    await deleteDoc(issueRef(id));
+    sync('live'); cID(); toast('Issue deleted ✓');
+  } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
+}
+window._delIss = delIss;
+
+/* ── Pending Payments Modal ── */
+function showPending() {
+  const all  = [...flats.values()].filter(f => f.month === AM && st(f) !== 'paid');
+  const pCnt = all.filter(f => st(f) === 'pending').length;
+  const aCnt = all.filter(f => st(f) === 'partial').length;
+  const bal  = all.reduce((s, f) => s + Math.max(0, f.due - f.paid), 0);
+
+  const sub = document.getElementById('pendingSubtitle');
+  if (sub) sub.textContent = `${all.length} flat${all.length !== 1 ? 's' : ''} · Outstanding: ${inr(bal)}`;
+
+  const sum = document.getElementById('pendingSummary');
+  if (sum) sum.innerHTML = `
+    <div style="flex:1;text-align:center;background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px">
+      <div style="font-size:10px;font-weight:700;color:var(--red-txt);text-transform:uppercase;letter-spacing:.5px">Not Paid</div>
+      <div style="font-size:20px;font-weight:800;color:var(--red)">${pCnt}</div>
+    </div>
+    <div style="flex:1;text-align:center;background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:10px">
+      <div style="font-size:10px;font-weight:700;color:var(--amber-txt);text-transform:uppercase;letter-spacing:.5px">Partial</div>
+      <div style="font-size:20px;font-weight:800;color:var(--amber)">${aCnt}</div>
+    </div>
+    <div style="flex:1;text-align:center;background:var(--red-bg);border:1px solid var(--red-border);border-radius:10px;padding:10px">
+      <div style="font-size:10px;font-weight:700;color:var(--red-txt);text-transform:uppercase;letter-spacing:.5px">Balance</div>
+      <div style="font-size:16px;font-weight:800;color:var(--red)">${inr(bal)}</div>
+    </div>`;
+
+  const tbody = document.getElementById('pendingTableBody');
+  if (tbody) tbody.innerHTML = all
+    .sort((a, b) => (b.due - b.paid) - (a.due - a.paid))
+    .map(f => {
+      const s   = st(f), b2 = Math.max(0, f.due - f.paid);
+      const sc  = s === 'partial' ? 'var(--amber)' : 'var(--red)';
+      const sl2 = s === 'partial' ? '⚠️ Partial'  : '❌ Not Paid';
+      return `<tr onclick="closePending();window._oFl('${f.flatId}')" style="cursor:pointer"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:13px">${f.flatId}</td>
+        <td style="padding:10px 14px;font-size:13px;font-weight:600;color:var(--text)">${f.owner || '—'}</td>
+        <td style="padding:10px 14px;text-align:center;font-size:11px;font-weight:700;color:${sc}">${sl2}</td>
+        <td style="padding:10px 14px;text-align:right;font-size:13px;font-weight:700;color:var(--green)">${inr(f.paid)}</td>
+        <td style="padding:10px 18px;text-align:right;font-size:13px;font-weight:800;color:var(--red)">${inr(b2)}</td>
+      </tr>`;
+    }).join('');
+
+  const m = document.getElementById('pendingModal');
+  if (m) m.style.display = 'flex';
+}
+function closePending() {
+  const m = document.getElementById('pendingModal');
+  if (m) m.style.display = 'none';
+}
+window._showPending  = showPending;
+window._closePending = closePending;
+window.closePending  = closePending;
+
+/* ── Analytics helpers ── */
+function anSetStatus(s) {
+  _anStatus = s;
+  document.querySelectorAll('.an-sf-btn').forEach(b => b.classList.toggle('active', b.dataset.s === s));
+  renderAnPayTable();
+}
+window.anSetStatus = anSetStatus;
+
+function rAnalytics() {
+  // Build month/year selects
+  const allMonths = [...new Set([...flats.values()].map(f => f.month).filter(Boolean))].sort().reverse();
+  const mSel    = document.getElementById('anFilterMonth');
+  const ySel    = document.getElementById('anFilterYear');
+  const typeSel = document.getElementById('anFilterType');
+
+  if (mSel) {
+    const cur = mSel.value || AM;
+    mSel.innerHTML = (allMonths.length ? allMonths : [AM])
+      .map(m => `<option value="${m}"${m===cur?' selected':''}>${m}</option>`).join('');
+  }
+  if (ySel) {
+    const years = [...new Set(allMonths.map(m => m.slice(0,4)))].sort().reverse();
+    const curY  = ySel.value || new Date().getFullYear().toString();
+    ySel.innerHTML = (years.length ? years : [String(new Date().getFullYear())])
+      .map(y => `<option value="${y}"${y===curY?' selected':''}>${y}</option>`).join('');
+  }
+
+  const filterType = typeSel?.value || 'month';
+  const selMonth   = mSel?.value   || AM;
+  const selYear    = ySel?.value   || new Date().getFullYear().toString();
+  const matchM     = m => filterType === 'month' ? m === selMonth : (m || '').startsWith(selYear);
+
+  if (mSel) mSel.style.display = filterType === 'month' ? '' : 'none';
+  if (ySel) ySel.style.display = filterType === 'year'  ? '' : 'none';
+
+  const lbl = document.getElementById('analyticsMonth');
+  if (lbl) lbl.textContent = filterType === 'month' ? selMonth : `Year ${selYear}`;
+
+  const filtered = [...flats.values()].filter(f => matchM(f.month));
+  const due    = filtered.reduce((s, f) => s + f.due,  0);
+  const paid   = filtered.reduce((s, f) => s + f.paid, 0);
+  const paidC  = filtered.filter(f => st(f) === 'paid').length;
+  const partC  = filtered.filter(f => st(f) === 'partial').length;
+  const pendC  = filtered.filter(f => st(f) === 'pending').length;
+  const pct    = due ? Math.round(paid / due * 100) : 0;
+
+  const totEl = document.getElementById('analyticsTotals');
+  if (totEl) totEl.innerHTML = `
+    <div class="scard green">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div>
+        <span class="sc-trend up">${paidC} flats</span></div>
+      <div class="sc-label">Fully Paid</div>
+      <div class="sc-value">${inr(paid)}</div>
+      <div class="sc-sub">${pct}% collection rate</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
+    </div>
+    <div class="scard red">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div>
+        <span class="sc-trend dn">${pendC + partC} flats</span></div>
+      <div class="sc-label">Outstanding</div>
+      <div class="sc-value">${inr(due - paid)}</div>
+      <div class="sc-sub">${partC} partial · ${pendC} not paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
+    </div>`;
+
+  renderAnPayTable();
+
+  // Draw payment status pie chart
+  const paySegs = [
+    { label:'Paid',    value:paidC, color:'#10B981', displayValue:`${paidC} flats` },
+    { label:'Partial', value:partC, color:'#F59E0B', displayValue:`${partC} flats` },
+    { label:'Pending', value:pendC, color:'#EF4444', displayValue:`${pendC} flats` },
+  ].filter(s => s.value > 0);
+  requestAnimationFrame(() => {
+    drawPie('payPie', paySegs, 'payTooltip');
+    buildLegend('payLegend', paySegs, filtered.length);
+  });
+}
+window.rAnalytics = rAnalytics;
+
+/* ── drawPie — Canvas 2D donut chart ── */
+function drawPie(canvasId, segs, tooltipId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  // If it's not a canvas element (e.g. a div), fall back to SVG
+  if (typeof canvas.getContext !== 'function') {
+    if (!segs || !segs.length) { canvas.innerHTML = ''; return; }
+    const total = segs.reduce((s, g) => s + g.value, 0);
+    if (!total) { canvas.innerHTML = ''; return; }
+    const size = 200, cx = size/2, cy = size/2, r = 80, inner = 50;
+    let ang = -Math.PI / 2;
+    const paths = segs.map(g => {
+      const slice = (g.value / total) * 2 * Math.PI;
+      const x1 = cx + r*Math.cos(ang), y1 = cy + r*Math.sin(ang);
+      ang += slice;
+      const x2 = cx + r*Math.cos(ang), y2 = cy + r*Math.sin(ang);
+      const ix1 = cx + inner*Math.cos(ang-slice), iy1 = cy + inner*Math.sin(ang-slice);
+      const ix2 = cx + inner*Math.cos(ang), iy2 = cy + inner*Math.sin(ang);
+      return `<path d="M${ix1},${iy1} L${x1},${y1} A${r},${r} 0 ${slice>Math.PI?1:0},1 ${x2},${y2} L${ix2},${iy2} A${inner},${inner} 0 ${slice>Math.PI?1:0},0 ${ix1},${iy1}Z"
+        fill="${g.color}" stroke="#fff" stroke-width="2"><title>${g.label}: ${g.displayValue||g.value}</title></path>`;
+    }).join('');
+    canvas.innerHTML = `<svg viewBox="0 0 ${size} ${size}" width="100%" height="100%" style="max-width:200px;display:block;margin:0 auto">${paths}</svg>`;
+    return;
+  }
+
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(rect.width,  160);
+  const h = Math.max(rect.height, 160);
+  canvas.width  = w * devicePixelRatio;
+  canvas.height = h * devicePixelRatio;
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(devicePixelRatio, devicePixelRatio);
+  ctx.clearRect(0, 0, w, h);
+
+  if (!segs || !segs.length) return;
+  const total = segs.reduce((s, g) => s + g.value, 0);
+  if (!total) return;
+
+  const cx = w/2, cy = h/2;
+  const r  = Math.min(w, h) * 0.38;
+  const ir = r * 0.55;
+  let ang  = -Math.PI / 2;
+
+  segs.forEach(g => {
+    const slice = (g.value / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx + ir * Math.cos(ang), cy + ir * Math.sin(ang));
+    ctx.arc(cx, cy, r,  ang, ang + slice);
+    ctx.arc(cx, cy, ir, ang + slice, ang, true);
+    ctx.closePath();
+    ctx.fillStyle   = g.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 2.5;
+    ctx.stroke();
+    ang += slice;
+  });
+}
+window.drawPie = drawPie;
+
+/* ── buildLegend ── */
+function buildLegend(legendId, segs, total) {
+  const el = document.getElementById(legendId);
+  if (!el) return;
+  el.innerHTML = segs.map(g => {
+    const pct = total ? Math.round(g.value / total * 100) : 0;
+    return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border)">
+      <div style="width:10px;height:10px;border-radius:3px;background:${g.color};flex-shrink:0"></div>
+      <div style="flex:1;font-size:12px;font-weight:600;color:var(--text)">${g.label}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--text2)">${g.displayValue || g.value} · ${pct}%</div>
+    </div>`;
+  }).join('');
+}
+window.buildLegend = buildLegend;
+
+/* ── Expose remaining missing window bindings ── */
+window._oFlEdit         = oFlEdit;
+window.renderAnPayTable = renderAnPayTable;
+
+/* ── Re-expose everything that was removed from line 1614 ── */
+window._oCatM     = oCatM;
+window._cCatM     = cCatM;
+window._addCat    = addCat;
+window._delCat    = delCat;
+window._cD        = cD;
+window.switchView = switchView;
+window.fIss       = fIss;
+window.fMem       = fMem;
+window.rMembers   = rMembers;
+window._showPending  = showPending;
+window._closePending = closePending;
+window.closePending  = closePending;
+window.anSetStatus   = anSetStatus;
+window.rAnalytics    = rAnalytics;
+window.drawPie       = drawPie;
+window.buildLegend   = buildLegend;
 </script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
