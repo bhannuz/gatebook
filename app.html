@@ -1967,8 +1967,10 @@ async function saveExpEdit(eid, fid) {
   const expDocRef = doc(db,'apartments',UID,'expenses',eid);
   sync('saving');
   try {
+    // Get the expense's month before updating
+    const expMonth = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid)?.month || AM;
     await updateDoc(expDocRef,{cat,amt,date,rawDate,note});
-    const allEx = (exps.get(fid)||[]).filter(e => e.month === AM);
+    const allEx = (exps.get(fid)||[]).filter(e => e.month === expMonth);
     const totalPaid = allEx.reduce((s,e)=> (e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Saved ✓'); closeExpEdit(eid);
@@ -1981,8 +1983,9 @@ async function delExp(expId, fid) {
   const expDocRef = doc(db,'apartments',UID,'expenses',expId);
   sync('saving');
   try {
+    const expMonth = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===expId)?.month || AM;
     await deleteDoc(expDocRef);
-    const allEx = (exps.get(fid)||[]).filter(e => e.month === AM && (e.expId||e.id)!==expId);
+    const allEx = (exps.get(fid)||[]).filter(e => e.month === expMonth && (e.expId||e.id)!==expId);
     const totalPaid = allEx.reduce((s,e)=>s+(e.amt||0),0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Deleted ✓');
@@ -2016,7 +2019,8 @@ async function sE(){
   const btn=document.getElementById('svBtn');btn.disabled=true;
   document.getElementById('svLbl').textContent='Saving…';
   try{
-    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),rawDate:dv||new Date().toISOString().split('T')[0],note,status:s,month:AM,createdAt:serverTimestamp()});
+    const payMonth = dv ? dv.slice(0,7) : AM;
+    await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),rawDate:dv||new Date().toISOString().split('T')[0],note,status:s,month:payMonth,createdAt:serverTimestamp()});
     let np=f.paid;
     if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(flatRef(fid),{paid:np});
@@ -2691,6 +2695,7 @@ function rIssues() {
       </tbody>
     </table>`;
 }
+
 function fIss(f) {
   IF = f;
   const el = document.getElementById('issStatusFilter');
