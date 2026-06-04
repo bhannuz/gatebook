@@ -126,12 +126,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .vtab[data-v="president"]  {border-color:#6366F1;color:#6366F1;background:rgba(99,102,241,.06)}
 .vtab[data-v="payments"]   {border-color:#6366F1;color:#6366F1;background:rgba(99,102,241,.06)}
 .vtab[data-v="issues"]     {border-color:#6366F1;color:#6366F1;background:rgba(99,102,241,.06)}
+.vtab[data-v="structure"]  {border-color:#6366F1;color:#6366F1;background:rgba(99,102,241,.06)}
 
 /* Active — filled solid */
 .vtab[data-v="analytics"].active  {background:#6366F1;color:#fff;border-color:#6366F1;box-shadow:0 2px 8px rgba(99,102,241,.3)}
 .vtab[data-v="president"].active  {background:#6366F1;color:#fff;border-color:#6366F1;box-shadow:0 2px 8px rgba(99,102,241,.3)}
 .vtab[data-v="payments"].active   {background:#6366F1;color:#fff;border-color:#6366F1;box-shadow:0 2px 8px rgba(99,102,241,.3)}
 .vtab[data-v="issues"].active     {background:#6366F1;color:#fff;border-color:#6366F1;box-shadow:0 2px 8px rgba(99,102,241,.3)}
+.vtab[data-v="structure"].active  {background:#6366F1;color:#fff;border-color:#6366F1;box-shadow:0 2px 8px rgba(99,102,241,.3)}
 
 /* Hover — slightly deeper tint */
 .vtab:hover:not(.active){filter:brightness(.95)}
@@ -762,6 +764,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .bottom-nav-bar{display:flex}
   .tab-bar-wrap{display:none}
   .app{padding:0 1rem 5rem}
+  /* Analytics: stat cards full width, chart as card below table */
+  #analyticsTotals{grid-template-columns:1fr 1fr!important}
+  .an-layout-grid .exp-pie-panel{
+    border-radius:var(--r-lg);border:1px solid var(--border2);
+    border-top:3px solid #6366F1;padding:14px;background:#fff;
+  }
+  /* Expenses: chart card below */
+  #fundRow{grid-template-columns:1fr 1fr!important}
+  .exp-layout-grid .exp-pie-panel{
+    border-radius:var(--r-lg);border:1px solid var(--border2);
+    border-top:3px solid #6366F1;padding:14px;background:#fff;
+  }
+  /* Reduce chart canvas height on mobile */
+  .chart-wrap{height:200px!important}
+  /* Structure blocks stack */
+  .str-floor-grid{grid-template-columns:repeat(3,1fr)!important}
 }
 /* ── Bottom Nav Bar (mobile ≤600px only) ── */
 .bottom-nav-bar{
@@ -908,6 +926,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
       <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-chart-pie"></i> Analytics</button>
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="payments" onclick="switchView('payments')"><i class="ti ti-credit-card"></i> Payments</button>
+      <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-building"></i> Structure</button>
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
         <i class="ti ti-alert-circle"></i> Issues
         <span class="vtab-badge" id="openCnt">0</span>
@@ -916,7 +935,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   </div>
 
   <!-- PAYMENTS VIEW -->
-  <div id="pView">
+  <div id="pView" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
       <select class="ctrl" id="sf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="FS=this.value;rBlock()">
         <option value="all">All Status</option>
@@ -1091,8 +1110,70 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
   </div><!-- /#analyticsView -->
 
-</div>
-</div><!-- /#app -->
+  <!-- STRUCTURE VIEW -->
+  <div id="structureView" style="display:none;padding:10px 14px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:var(--text)">🏢 Society Structure</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Block · Floor · Flat overview</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <select id="strBlockFilter" class="ctrl" style="height:32px;font-size:12px;padding:0 10px" onchange="rStructure()">
+          <option value="all">All Blocks</option>
+        </select>
+        <div style="position:relative">
+          <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none"></i>
+          <input type="text" id="strSearch" class="ctrl" placeholder="Search flat…" style="height:32px;font-size:12px;padding-left:32px" oninput="rStructure()">
+        </div>
+      </div>
+    </div>
+    <!-- Summary stat cards -->
+    <div id="strStats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px"></div>
+    <!-- Block accordion -->
+    <div id="strBlocks"></div>
+  </div><!-- /#structureView -->
+
+  <!-- RESIDENTS VIEW -->
+  <div id="resView" style="display:none;padding:10px 14px 14px">
+    <!-- Vehicle summary cards -->
+    <div id="vehSum" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px"></div>
+    <!-- Toolbar -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <button class="mff active" data-t="all"    onclick="fMem('all')">All</button>
+        <button class="mff"        data-t="owner"  onclick="fMem('owner')"><i class="ti ti-home"></i> Owners</button>
+        <button class="mff"        data-t="tenant" onclick="fMem('tenant')"><i class="ti ti-key"></i> Tenants</button>
+        <button class="mff"        data-t="vacant" onclick="fMem('vacant')"><i class="ti ti-door"></i> Vacant</button>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <select id="resTF" class="ctrl" style="height:32px;font-size:12px;padding:0 10px" onchange="rResidents()">
+          <option value="all">All Vehicles</option>
+          <option value="2w">🏍 2-Wheeler</option>
+          <option value="4w">🚗 4-Wheeler</option>
+          <option value="none">No Vehicle</option>
+        </select>
+        <div style="position:relative">
+          <i class="ti ti-search" style="position:absolute;left:9px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px;pointer-events:none"></i>
+          <input type="text" id="memQ" class="ctrl" placeholder="Search…" style="height:32px;font-size:12px;padding-left:32px" oninput="rResidents()">
+        </div>
+      </div>
+    </div>
+    <!-- Residents table -->
+    <div class="tab-table-wrap">
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:var(--surface3)">
+            <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+            <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Resident</th>
+            <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">🏍</th>
+            <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">🚗</th>
+            <th style="padding:9px 14px;text-align:right;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)"></th>
+          </tr>
+        </thead>
+        <tbody id="resBody"></tbody>
+      </table>
+    </div>
+  </div><!-- /#resView -->
 
 <!-- FLAT DETAIL BOTTOM DRAWER -->
 <div id="drawerBg" onclick="window._cD()"></div>
@@ -2425,10 +2506,12 @@ window._wizLaunch = async function() {
 function switchView(v) {
   AV = v;
   refreshAPP();
-  document.getElementById('pView').style.display         = v==='payments'  ? 'block' : 'none';
-  document.getElementById('iView').style.display         = v==='issues'    ? 'block' : 'none';
-  document.getElementById('presView').style.display      = v==='president' ? 'block' : 'none';
-  document.getElementById('analyticsView').style.display = v==='analytics' ? 'block' : 'none';
+  document.getElementById('pView').style.display          = v==='payments'  ? 'block' : 'none';
+  document.getElementById('iView').style.display          = v==='issues'    ? 'block' : 'none';
+  document.getElementById('presView').style.display       = v==='president' ? 'block' : 'none';
+  document.getElementById('analyticsView').style.display  = v==='analytics' ? 'block' : 'none';
+  document.getElementById('structureView').style.display  = v==='structure' ? 'block' : 'none';
+  document.getElementById('resView').style.display        = v==='residents' ? 'block' : 'none';
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
@@ -2436,6 +2519,9 @@ function switchView(v) {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
   }
+  if(v==='payments')  try{ rBTabs(); rBlock(); } catch(e){ console.error(e); }
+  if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
+  if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
 }
 
 function rAll(){
@@ -2448,11 +2534,108 @@ function rAll(){
   if(p && p.style.display!=='none') try{ rPresident(); } catch(e){ console.error('rPresident',e); }
   const av=document.getElementById('analyticsView');
   if(av && av.style.display!=='none') try{ rAnalytics(); } catch(e){ console.error('rAnalytics',e); }
+  const sv=document.getElementById('structureView');
+  if(sv && sv.style.display!=='none') try{ rStructure(); } catch(e){ console.error('rStructure',e); }
+  const rv=document.getElementById('resView');
+  if(rv && rv.style.display!=='none') try{ rResidents(); } catch(e){ console.error('rResidents',e); }
 }
 
 /* ════════════════════════════════
-   LISTENERS for Vehicles + SocExp
+   STRUCTURE TAB
 ════════════════════════════════ */
+function rStructure() {
+  const all = [...flats.values()].filter(f => f.month === AM);
+  const blocks = [...new Set(all.map(f => f.block).filter(Boolean))].sort();
+  const q = (document.getElementById('strSearch')?.value||'').toLowerCase().trim();
+  const bf = document.getElementById('strBlockFilter')?.value||'all';
+
+  // Rebuild block filter dropdown
+  const bSel = document.getElementById('strBlockFilter');
+  if (bSel) {
+    const cur = bSel.value;
+    bSel.innerHTML = `<option value="all">All Blocks</option>` +
+      blocks.map(b=>`<option value="${b}"${b===cur?' selected':''}>Block ${b}</option>`).join('');
+  }
+
+  // Summary stat cards
+  const total  = all.length;
+  const occupied = all.filter(f=>(f.owner||'').trim()).length;
+  const vacant   = total - occupied;
+  const owners   = all.filter(f=>f.resType!=='tenant'&&(f.owner||'').trim()).length;
+  const tenants  = all.filter(f=>f.resType==='tenant').length;
+  document.getElementById('strStats').innerHTML = `
+    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-building"></i></div><div><div class="vscard-label">Total Flats</div><div class="vscard-val">${total}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-users"></i></div><div><div class="vscard-label">Occupied</div><div class="vscard-val" style="color:var(--green)">${occupied}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-door"></i></div><div><div class="vscard-label">Vacant</div><div class="vscard-val" style="color:var(--amber)">${vacant}</div></div></div>
+    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-home"></i></div><div><div class="vscard-label">Owners / Tenants</div><div class="vscard-val" style="font-size:14px">${owners} / ${tenants}</div></div></div>
+  `;
+
+  // Filter flats
+  const vis = all.filter(f => {
+    if (bf !== 'all' && f.block !== bf) return false;
+    if (q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Group by block → floor
+  const blockMap = new Map();
+  vis.forEach(f => {
+    const bl = f.block||'–';
+    if (!blockMap.has(bl)) blockMap.set(bl, new Map());
+    const fl = f.floor ?? '–';
+    if (!blockMap.get(bl).has(fl)) blockMap.get(bl).set(fl, []);
+    blockMap.get(bl).get(fl).push(f);
+  });
+
+  const statusColor = f => {const s=st(f); return s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';};
+  const statusIcon  = f => {const s=st(f); return s==='paid'?'ti-circle-check':s==='partial'?'ti-clock':'ti-alert-circle';};
+
+  let html = '';
+  [...blockMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([bl, floorMap]) => {
+    const blFlats = [...floorMap.values()].flat();
+    const blPaid  = blFlats.filter(f=>st(f)==='paid').length;
+    html += `
+    <div style="background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden">
+      <!-- Block header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(139,92,246,.04));border-bottom:1px solid var(--border2)">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800">${bl}</div>
+          <div>
+            <div style="font-size:14px;font-weight:800;color:var(--text)">Block ${bl}</div>
+            <div style="font-size:11px;color:var(--muted)">${blFlats.length} flats · ${floorMap.size} floor${floorMap.size!==1?'s':''}</div>
+          </div>
+        </div>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)">✅ ${blPaid}/${blFlats.length} paid</span>
+      </div>
+      <!-- Floors -->
+      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
+        ${[...floorMap.entries()].sort((a,b)=>Number(b[0])-Number(a[0])).map(([fl, fls]) => `
+          <div>
+            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Floor ${fl}</div>
+            <div class="str-floor-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
+              ${fls.sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||'')).map(f => {
+                const sc = statusColor(f);
+                const si = statusIcon(f);
+                const isVacant = !(f.owner||'').trim();
+                return `<div onclick="window._oFl('${f.flatId}')" style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${sc};border-radius:8px;padding:8px 10px;cursor:pointer;transition:box-shadow .15s"
+                  onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+                    <span style="font-size:12px;font-weight:800;color:var(--text)">${f.flatId}</span>
+                    <i class="ti ${si}" style="font-size:12px;color:${sc}"></i>
+                  </div>
+                  <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isVacant?'<em style="color:var(--muted)">Vacant</em>':f.owner}</div>
+                  <div style="font-size:9px;font-weight:700;margin-top:3px;color:${sc}">${isVacant?'':inr(f.paid)+' / '+inr(f.due)}</div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`;
+  });
+
+  document.getElementById('strBlocks').innerHTML = html || `<div style="text-align:center;padding:3rem;color:var(--muted)"><i class="ti ti-building-off" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3"></i>No flats found.</div>`;
+}
+window.rStructure = rStructure;
 function listenVehicles(){
   if(vu)vu();
   vu=onSnapshot(vehColl(),snap=>{
@@ -4031,8 +4214,8 @@ function renderAnPayTable(filterType, selMonth, selYear) {
   <button class="bnav-item" data-v="payments" onclick="switchView('payments')">
     <i class="ti ti-credit-card"></i>Payments
   </button>
-  <button class="bnav-item" data-v="residents" onclick="switchView('residents')">
-    <i class="ti ti-users"></i>Residents
+  <button class="bnav-item" data-v="structure" onclick="switchView('structure')">
+    <i class="ti ti-building"></i>Structure
   </button>
   <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
     <i class="ti ti-alert-circle"></i>Issues
