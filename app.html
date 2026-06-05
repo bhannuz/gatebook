@@ -983,6 +983,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- PAYMENTS VIEW -->
   <div id="pView" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <select class="ctrl" id="pbf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="AB=this.value==='all'?(bks()[0]||''):this.value;rBTabs();rBlock()">
+        <option value="all">All Blocks</option>
+      </select>
       <select class="ctrl" id="sf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="FS=this.value;rBlock()">
         <option value="all">All Status</option>
         <option value="paid">✅ Paid</option>
@@ -1091,6 +1094,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     <!-- Filters only — right-aligned, tight to tab bar -->
     <div style="display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;margin-bottom:10px">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <select id="anBlockFilter" class="ctrl" style="font-size:11px;height:30px;padding:0 8px;display:none" onchange="rAnalytics()">
+          <option value="all">All Blocks</option>
+        </select>
         <select id="anFilterType" class="ctrl" style="font-size:11px;height:30px;padding:0 8px" onchange="rAnalytics()">
           <option value="month">Month</option>
           <option value="year">Year</option>
@@ -1113,12 +1119,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
         <div class="exp-records-panel tab-table-wrap">
           <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap;gap:6px">
             <div style="font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px"><i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span></div>
-            <select id="anStatusFilter" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="anSetStatus(this.value)">
-              <option value="all">All</option>
-              <option value="paid">✅ Paid</option>
-              <option value="partial">⚠️ Partial</option>
-              <option value="pending">❌ Pending</option>
-            </select>
+            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+              <select id="anBlockFilter2" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;display:none" onchange="anSetBlock(this.value)">
+              <select id="anStatusFilter" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="anSetStatus(this.value)">
+                <option value="all">All</option>
+                <option value="paid">✅ Paid</option>
+                <option value="partial">⚠️ Partial</option>
+                <option value="pending">❌ Pending</option>
+              </select>
+            </div>
           </div>
           <div style="overflow-x:auto;max-height:340px;overflow-y:auto">
             <table style="width:100%;border-collapse:collapse">
@@ -1574,7 +1583,7 @@ const issues = [];
 
 let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all';
 // Analytics tab state — declared here to avoid TDZ errors
-let _anStatus='all', _anFilterType='month', _anSelMonth=AM, _anSelYear=new Date().getFullYear().toString();
+let _anStatus='all', _anFilterType='month', _anSelMonth=AM, _anSelYear=new Date().getFullYear().toString(), _anBlock='all';
 const _pieSegs={};
 let eu=null, iu=null, vu=null, pu=null;
 const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
@@ -2592,821 +2601,9 @@ function rAll(){
   if(rv && rv.style.display!=='none') try{ rResidents(); } catch(e){ console.error('rResidents',e); }
 }
 
-/* ════════════════════════════════
-   STRUCTURE TAB
-════════════════════════════════ */
-/* ════════════════════════════════
-   STRUCTURE TAB — view + full edit
-════════════════════════════════ */
 
-const STR_INP = s => `style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none" onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"`;
+/* structure.js functions loaded via import below — see js/structure.js */
 
-/* toggle edit panel open/close */
-window._openStrEdit = function(bl) {
-  document.querySelectorAll('[id^="str-edit-"]').forEach(el => {
-    if (el.id !== 'str-edit-'+bl) el.style.display = 'none';
-  });
-  const el = document.getElementById('str-edit-'+bl);
-  if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
-};
-
-/* rename block — updates block field on all flats */
-window._renameBlock = async function(oldName) {
-  const inp = document.getElementById('str-bname-'+oldName);
-  const newName = (inp?.value||'').trim().toUpperCase();
-  if (!newName) { toast('Enter a block name.','error'); return; }
-  if (newName === oldName) { toast('No change.'); return; }
-  const affected = [...flats.values()].filter(f => f.block === oldName);
-  if (!confirm(`Rename Block ${oldName} → ${newName}? Updates ${affected.length} flat records.`)) return;
-  sync('saving');
-  try {
-    await Promise.all(affected.map(f => updateDoc(flatRef(f.flatId), { block: newName })));
-    sync('live'); toast(`Block renamed to ${newName} ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Rename failed.','error'); }
-};
-
-/* save edits for a single flat row (flatId, floor, due) */
-window._saveStrFlat = async function(origFid) {
-  const newIdEl  = document.getElementById('str-fid-'+origFid);
-  const floorEl  = document.getElementById('str-fl-'+origFid);
-  const dueEl    = document.getElementById('str-due-'+origFid);
-  const newFid   = (newIdEl?.value||'').trim().toUpperCase();
-  const newFloor = parseInt(floorEl?.value)||1;
-  const newDue   = parseInt(dueEl?.value)||0;
-  const f        = flats.get(origFid);
-  if (!f) { toast('Flat not found.','error'); return; }
-  if (!newFid)   { toast('Flat ID cannot be empty.','error'); return; }
-
-  sync('saving');
-  try {
-    if (newFid !== origFid) {
-      /* Rename: create new doc, copy data, delete old */
-      if (flats.has(newFid)) { toast(`${newFid} already exists.`,'error'); sync('live'); return; }
-      await setDoc(flatRef(newFid), { ...f, flatId: newFid, floor: newFloor, due: newDue });
-      await deleteDoc(flatRef(origFid));
-    } else {
-      await updateDoc(flatRef(origFid), { floor: newFloor, due: newDue });
-    }
-    sync('live'); toast(`${newFid} saved ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Save failed.','error'); }
-};
-
-/* add floor to a block */
-window._addFloor = async function(bl) {
-  const all     = [...flats.values()].filter(f => f.block === bl);
-  const floors  = [...new Set(all.map(f => parseInt(f.floor)).filter(n => !isNaN(n)))];
-  const nextFloor = floors.length ? Math.max(...floors)+1 : 1;
-  const cntEl   = document.getElementById('str-newfloor-cnt-'+bl);
-  const dueEl   = document.getElementById('str-newfloor-due-'+bl);
-  const cnt     = parseInt(cntEl?.value)||4;
-  const due     = parseInt(dueEl?.value)||0;
-  if (cnt < 1 || cnt > 20) { toast('Flats per floor: 1–20.','error'); return; }
-  if (!confirm(`Add Floor ${nextFloor} to Block ${bl} with ${cnt} flat${cnt!==1?'s':''}?`)) return;
-  sync('saving');
-  try {
-    const batch = [];
-    for (let i = 1; i <= cnt; i++) {
-      const fid = `${bl}-${nextFloor}${String(i).padStart(2,'0')}`;
-      if (!flats.has(fid))
-        batch.push(setDoc(flatRef(fid), { block:bl, floor:nextFloor, owner:'', resType:'owner', due, paid:0, month:AM }));
-    }
-    await Promise.all(batch);
-    sync('live'); toast(`Floor ${nextFloor} added ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Add floor failed.','error'); }
-};
-
-/* delete entire floor */
-window._deleteFloor = async function(bl, fl) {
-  const victims = [...flats.values()].filter(f => f.block === bl && String(f.floor) === String(fl));
-  if (!victims.length) { toast('No flats on this floor.','error'); return; }
-  const hasPaid = victims.some(f => (f.paid||0) > 0);
-  if (!confirm(`Delete all ${victims.length} flat${victims.length!==1?'s':''} on Floor ${fl}, Block ${bl}?${hasPaid?'\n⚠️ Some flats have payment records.':''}\nCannot be undone.`)) return;
-  sync('saving');
-  try {
-    await Promise.all(victims.map(f => deleteDoc(flatRef(f.flatId))));
-    sync('live'); toast(`Floor ${fl} deleted ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
-
-/* add a single flat */
-window._addSingleFlat = async function(bl, fl) {
-  const numEl = document.getElementById(`str-newflatnum-${bl}-${fl}`);
-  const dueEl = document.getElementById(`str-newflatdue-${bl}-${fl}`);
-  const rawId = (numEl?.value||'').trim().toUpperCase();
-  const due   = parseInt(dueEl?.value)||0;
-  if (!rawId) { toast('Enter a flat number.','error'); return; }
-  const fid   = rawId.includes('-') ? rawId : `${bl}-${rawId}`;
-  if (flats.has(fid)) { toast(`${fid} already exists.`,'error'); return; }
-  sync('saving');
-  try {
-    await setDoc(flatRef(fid), { block:bl, floor:parseInt(fl)||1, owner:'', resType:'owner', due, paid:0, month:AM });
-    if (numEl) numEl.value=''; if (dueEl) dueEl.value='';
-    sync('live'); toast(`${fid} added ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Failed.','error'); }
-};
-
-/* delete a single flat */
-window._deleteSingleFlat = async function(fid) {
-  const f = flats.get(fid);
-  if (!f) return;
-  if (!confirm(`Delete flat ${fid} (${f.owner||'Vacant'})?${(f.paid||0)>0?'\n⚠️ Has payment records.':''}`)) return;
-  sync('saving');
-  try {
-    await deleteDoc(flatRef(fid));
-    sync('live'); toast(`${fid} deleted ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
-
-/* add a brand new block */
-window._addNewBlock = async function() {
-  const bl    = (document.getElementById('str-newblock-name')?.value||'').trim().toUpperCase();
-  const floors = parseInt(document.getElementById('str-newblock-floors')?.value)||1;
-  const fpf    = parseInt(document.getElementById('str-newblock-fpf')?.value)||4;
-  const due    = parseInt(document.getElementById('str-newblock-due')?.value)||0;
-  if (!bl)                        { toast('Enter block name.','error'); return; }
-  if (floors < 1 || floors > 50)  { toast('Floors: 1–50.','error'); return; }
-  if (fpf < 1 || fpf > 20)        { toast('Flats/floor: 1–20.','error'); return; }
-  if ([...flats.values()].some(f => f.block === bl)) { toast(`Block ${bl} already exists.`,'error'); return; }
-  if (!confirm(`Create Block ${bl}: ${floors} floors × ${fpf} flats = ${floors*fpf} flats?`)) return;
-  sync('saving');
-  try {
-    const batch = [];
-    for (let fl = 1; fl <= floors; fl++)
-      for (let i = 1; i <= fpf; i++) {
-        const fid = `${bl}-${fl}${String(i).padStart(2,'0')}`;
-        batch.push(setDoc(flatRef(fid), { block:bl, floor:fl, owner:'', resType:'owner', due, paid:0, month:AM }));
-      }
-    await Promise.all(batch);
-    ['str-newblock-name','str-newblock-floors','str-newblock-fpf','str-newblock-due']
-      .forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
-    sync('live'); toast(`Block ${bl} created ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Failed.','error'); }
-};
-
-function rStructure() {
-  const all    = [...flats.values()].filter(f => f.month === AM);
-  const blocks = [...new Set(all.map(f => f.block).filter(Boolean))].sort();
-  const q      = (document.getElementById('strSearch')?.value||'').toLowerCase().trim();
-  const bf     = document.getElementById('strBlockFilter')?.value||'all';
-
-  /* block filter dropdown */
-  const bSel = document.getElementById('strBlockFilter');
-  if (bSel) {
-    const cur = bSel.value;
-    bSel.innerHTML = `<option value="all">All Blocks</option>` +
-      blocks.map(b=>`<option value="${b}"${b===cur?' selected':''}>Block ${b}</option>`).join('');
-  }
-
-  /* summary cards */
-  const total    = all.length;
-  const occupied = all.filter(f=>(f.owner||'').trim()).length;
-  const owners   = all.filter(f=>f.resType!=='tenant'&&(f.owner||'').trim()).length;
-  const tenants  = all.filter(f=>f.resType==='tenant').length;
-  document.getElementById('strStats').innerHTML = `
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-building"></i></div><div><div class="vscard-label">Total Flats</div><div class="vscard-val">${total}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-users"></i></div><div><div class="vscard-label">Occupied</div><div class="vscard-val" style="color:var(--green)">${occupied}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-door"></i></div><div><div class="vscard-label">Vacant</div><div class="vscard-val" style="color:var(--amber)">${total-occupied}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-home"></i></div><div><div class="vscard-label">Owners / Tenants</div><div class="vscard-val" style="font-size:14px">${owners} / ${tenants}</div></div></div>
-  `;
-
-  /* filter + group */
-  const vis = all.filter(f => {
-    if (bf !== 'all' && f.block !== bf) return false;
-    if (q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    return true;
-  });
-  const blockMap = new Map();
-  vis.forEach(f => {
-    const bl = f.block||'–';
-    if (!blockMap.has(bl)) blockMap.set(bl, new Map());
-    const fl = f.floor ?? '–';
-    if (!blockMap.get(bl).has(fl)) blockMap.get(bl).set(fl, []);
-    blockMap.get(bl).get(fl).push(f);
-  });
-
-  const sc = f => {const s=st(f);return s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';};
-  const si = f => {const s=st(f);return s==='paid'?'ti-circle-check':s==='partial'?'ti-clock':'ti-alert-circle';};
-
-  /* ── input style helper (inline) ── */
-  const fi = (id,type,val,extra='') =>
-    `<input id="${id}" type="${type}" value="${String(val).replace(/"/g,'&quot;')}" ${extra}
-      style="box-sizing:border-box;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;
-        font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none;width:100%"
-      onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>`;
-
-  let html = '';
-  [...blockMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([bl, floorMap]) => {
-    const blFlats  = [...floorMap.values()].flat();
-    const blPaid   = blFlats.filter(f=>st(f)==='paid').length;
-    const floors   = [...floorMap.keys()].sort((a,b)=>Number(a)-Number(b));
-    const maxFloor = Math.max(...floors.map(Number).filter(n=>!isNaN(n)), 0);
-
-    html += `
-    <div style="background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);margin-bottom:14px;overflow:hidden;box-shadow:var(--shadow-sm)">
-
-      <!-- ═══ BLOCK HEADER ═══ -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;
-        background:linear-gradient(135deg,rgba(99,102,241,.07),rgba(139,92,246,.04));
-        border-bottom:1px solid var(--border2);flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:38px;height:38px;border-radius:10px;background:var(--indigo);color:#fff;
-            display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;flex-shrink:0">${bl}</div>
-          <div>
-            <div style="font-size:14px;font-weight:800;color:var(--text)">Block ${bl}</div>
-            <div style="font-size:11px;color:var(--muted)">${blFlats.length} flats · ${floorMap.size} floor${floorMap.size!==1?'s':''}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;
-            background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)">
-            ✅ ${blPaid}/${blFlats.length} paid
-          </span>
-          <button onclick="window._openStrEdit('${bl}')"
-            style="display:inline-flex;align-items:center;gap:5px;padding:6px 13px;
-              border:1.5px solid var(--indigo);border-radius:8px;background:var(--indigo-bg);
-              color:var(--indigo);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);
-              transition:background .15s"
-            onmouseover="this.style.background='var(--indigo)';this.style.color='#fff'"
-            onmouseout="this.style.background='var(--indigo-bg)';this.style.color='var(--indigo)'">
-            <i class="ti ti-settings" style="font-size:12px"></i> Edit Structure
-          </button>
-        </div>
-      </div>
-
-      <!-- ═══ EDIT PANEL ═══ -->
-      <div id="str-edit-${bl}" style="display:none;border-bottom:2px solid var(--indigo)">
-        <div style="padding:16px;background:var(--surface2)">
-
-          <div style="font-size:10px;font-weight:800;color:var(--indigo);text-transform:uppercase;
-            letter-spacing:.8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between">
-            <span><i class="ti ti-settings"></i> &nbsp;Block ${bl} — Structure Editor</span>
-            <button onclick="window._openStrEdit('${bl}')"
-              style="background:none;border:1px solid var(--border2);border-radius:6px;padding:3px 10px;
-                cursor:pointer;color:var(--text2);font-size:11px;font-weight:600;font-family:var(--font)">
-              ✕ Close
-            </button>
-          </div>
-
-          <!-- Rename block -->
-          <div style="padding:12px 14px;background:#fff;border:1px solid var(--border2);border-radius:var(--r-md);margin-bottom:12px">
-            <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:6px">
-              <i class="ti ti-pencil" style="color:var(--indigo)"></i> Rename Block
-            </div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input id="str-bname-${bl}" type="text" value="${bl}" maxlength="4"
-                style="width:80px;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);
-                  font-family:var(--font);font-size:14px;font-weight:800;color:var(--indigo);background:#fff;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"
-                oninput="this.value=this.value.toUpperCase()"
-                onkeydown="if(event.key==='Enter')window._renameBlock('${bl}')"/>
-              <button onclick="window._renameBlock('${bl}')" class="btn btn-indigo btn-sm">
-                <i class="ti ti-check"></i> Apply Rename
-              </button>
-              <span style="font-size:11px;color:var(--muted)">Updates all ${blFlats.length} flat records</span>
-            </div>
-          </div>
-
-          <!-- Per-floor editable tables -->
-          ${[...floorMap.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([fl, fls]) => `
-          <div style="padding:12px 14px;background:#fff;border:1px solid var(--border2);border-radius:var(--r-md);margin-bottom:10px">
-
-            <!-- Floor header row -->
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:6px">
-              <div style="font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:7px">
-                <i class="ti ti-stairs" style="color:var(--indigo);font-size:13px"></i>
-                Floor ${fl}
-                <span style="font-size:10px;font-weight:600;color:var(--muted)">${fls.length} flat${fls.length!==1?'s':''}</span>
-              </div>
-              <button onclick="window._deleteFloor('${bl}','${fl}')"
-                style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;
-                  border:1.5px solid var(--red-border);border-radius:6px;background:var(--red-bg);
-                  color:var(--red);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font)">
-                <i class="ti ti-trash" style="font-size:11px"></i> Delete Entire Floor
-              </button>
-            </div>
-
-            <!-- Editable flat table -->
-            <div style="overflow-x:auto">
-              <table style="width:100%;border-collapse:collapse;min-width:480px">
-                <thead>
-                  <tr style="background:var(--surface3)">
-                    <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border2)">Flat ID</th>
-                    <th style="padding:7px 10px;text-align:left;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border2)">Owner</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border2)">Floor #</th>
-                    <th style="padding:7px 10px;text-align:right;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border2)">Monthly Due (₹)</th>
-                    <th style="padding:7px 10px;text-align:center;font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--border2)">Status</th>
-                    <th style="padding:7px 6px;border-bottom:1px solid var(--border2);width:80px"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  ${fls.sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||'')).map(f => {
-                    const sColor = sc(f);
-                    const sIcon  = si(f);
-                    const isVacant = !(f.owner||'').trim();
-                    return `<tr style="border-bottom:1px solid var(--border)" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-                      <td style="padding:7px 10px">
-                        <input id="str-fid-${f.flatId}" type="text" value="${f.flatId}"
-                          style="box-sizing:border-box;width:90px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:800;color:var(--indigo);background:#fff;outline:none"
-                          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"
-                          oninput="this.value=this.value.toUpperCase()"/>
-                      </td>
-                      <td style="padding:7px 10px">
-                        <div style="font-size:12px;font-weight:600;color:${isVacant?'var(--muted)':'var(--text)'};font-style:${isVacant?'italic':'normal'}">${isVacant?'Vacant':f.owner}</div>
-                        ${!isVacant?`<div style="font-size:9px;color:var(--muted)">${f.resType==='tenant'?'🔑 Tenant':'🏠 Owner'}</div>`:''}
-                      </td>
-                      <td style="padding:7px 10px;text-align:center">
-                        <input id="str-fl-${f.flatId}" type="number" value="${f.floor??fl}" min="1" max="50"
-                          style="box-sizing:border-box;width:56px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none;text-align:center"
-                          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-                      </td>
-                      <td style="padding:7px 10px;text-align:right">
-                        <input id="str-due-${f.flatId}" type="number" value="${f.due||0}" min="0"
-                          style="box-sizing:border-box;width:90px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none;text-align:right"
-                          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-                      </td>
-                      <td style="padding:7px 10px;text-align:center">
-                        <i class="ti ${sIcon}" style="font-size:14px;color:${sColor}" title="${st(f)}"></i>
-                      </td>
-                      <td style="padding:7px 6px;text-align:center">
-                        <div style="display:flex;gap:4px;justify-content:center">
-                          <button onclick="window._saveStrFlat('${f.flatId}')" title="Save changes"
-                            style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border:1.5px solid var(--indigo);
-                              border-radius:5px;background:var(--indigo-bg);color:var(--indigo);
-                              font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font)">
-                            <i class="ti ti-check" style="font-size:10px"></i> Save
-                          </button>
-                          <button onclick="window._deleteSingleFlat('${f.flatId}')" title="Delete flat"
-                            style="display:inline-flex;align-items:center;padding:3px 6px;border:1.5px solid var(--red-border);
-                              border-radius:5px;background:var(--red-bg);color:var(--red);
-                              font-size:10px;cursor:pointer">
-                            <i class="ti ti-trash" style="font-size:10px"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>`;
-                  }).join('')}
-                </tbody>
-              </table>
-            </div>
-
-            <!-- Add flat to this floor -->
-            <div style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 10px;
-              border:1.5px dashed var(--border3);border-radius:var(--r-md);flex-wrap:wrap;background:var(--surface2)">
-              <span style="font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">+ Add flat:</span>
-              <input id="str-newflatnum-${bl}-${fl}" type="text" placeholder="Flat no. e.g. 301"
-                style="flex:1;min-width:90px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;
-                  font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"
-                onkeydown="if(event.key==='Enter')window._addSingleFlat('${bl}','${fl}')"/>
-              <input id="str-newflatdue-${bl}-${fl}" type="number" placeholder="Due ₹"
-                style="width:80px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;
-                  font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-              <button onclick="window._addSingleFlat('${bl}','${fl}')"
-                style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border:1.5px solid var(--green);
-                  border-radius:6px;background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;
-                  cursor:pointer;font-family:var(--font)">
-                <i class="ti ti-plus" style="font-size:11px"></i> Add
-              </button>
-            </div>
-          </div>`).join('')}
-
-          <!-- Add new floor -->
-          <div style="padding:12px 14px;background:#fff;border:1.5px dashed var(--border3);border-radius:var(--r-md);margin-bottom:4px">
-            <div style="font-size:11px;font-weight:800;color:var(--text2);margin-bottom:8px">
-              <i class="ti ti-plus" style="color:var(--indigo)"></i> Add Floor ${maxFloor+1}
-            </div>
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <div style="display:flex;flex-direction:column;gap:3px">
-                <span style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Flats / Floor</span>
-                <input id="str-newfloor-cnt-${bl}" type="number" value="4" min="1" max="20" placeholder="4"
-                  style="width:72px;height:30px;padding:0 8px;border:1.5px solid var(--border2);border-radius:6px;
-                    font-family:var(--font);font-size:12px;font-weight:700;color:var(--text);background:#fff;outline:none"
-                  onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-              </div>
-              <div style="display:flex;flex-direction:column;gap:3px">
-                <span style="font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Monthly Due (₹)</span>
-                <input id="str-newfloor-due-${bl}" type="number" value="0" min="0" placeholder="0"
-                  style="width:100px;height:30px;padding:0 8px;border:1.5px solid var(--border2);border-radius:6px;
-                    font-family:var(--font);font-size:12px;font-weight:700;color:var(--text);background:#fff;outline:none"
-                  onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-              </div>
-              <div style="display:flex;flex-direction:column;justify-content:flex-end;padding-top:14px">
-                <button onclick="window._addFloor('${bl}')" class="btn btn-green btn-sm">
-                  <i class="ti ti-plus"></i> Add Floor ${maxFloor+1}
-                </button>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- ═══ FLAT CARDS VIEW ═══ -->
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
-        ${[...floorMap.entries()].sort((a,b)=>Number(b[0])-Number(a[0])).map(([fl, fls]) => `
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">
-              Floor ${fl} <span style="font-weight:400;opacity:.5">·</span> ${fls.length} flat${fls.length!==1?'s':''}
-            </div>
-            <div class="str-floor-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
-              ${fls.sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||'')).map(f => {
-                const sColor = sc(f); const sIcon = si(f);
-                const isVacant = !(f.owner||'').trim();
-                return `<div onclick="window._oFl('${f.flatId}')"
-                  style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${sColor};
-                    border-radius:8px;padding:8px 10px;cursor:pointer;transition:box-shadow .15s"
-                  onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-                    <span style="font-size:12px;font-weight:800;color:var(--text)">${f.flatId}</span>
-                    <i class="ti ${sIcon}" style="font-size:12px;color:${sColor}"></i>
-                  </div>
-                  <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                    ${isVacant?'<em style="color:var(--muted)">Vacant</em>':f.owner}
-                  </div>
-                  <div style="font-size:9px;font-weight:700;margin-top:3px;color:${sColor}">
-                    ${isVacant?'':inr(f.paid)+' / '+inr(f.due)}
-                  </div>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>`).join('')}
-      </div>
-
-    </div>`; /* end block card */
-  });
-
-  /* ═══ ADD NEW BLOCK ═══ */
-  html += `
-  <div style="background:#fff;border:1.5px dashed var(--border3);border-radius:var(--r-lg);padding:16px 18px;margin-top:4px">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:7px">
-      <i class="ti ti-plus" style="color:var(--indigo)"></i> Add New Block
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px">
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Block Name</div>
-        <input id="str-newblock-name" type="text" placeholder="e.g. C" maxlength="4"
-          style="width:100%;box-sizing:border-box;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:800;color:var(--indigo);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'" oninput="this.value=this.value.toUpperCase()"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">No. of Floors</div>
-        <input id="str-newblock-floors" type="number" placeholder="4" min="1" max="50"
-          style="width:100%;box-sizing:border-box;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Flats / Floor</div>
-        <input id="str-newblock-fpf" type="number" placeholder="4" min="1" max="20"
-          style="width:100%;box-sizing:border-box;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Monthly Due (₹)</div>
-        <input id="str-newblock-due" type="number" placeholder="0" min="0"
-          style="width:100%;box-sizing:border-box;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-    </div>
-    <button onclick="window._addNewBlock()" class="btn btn-indigo btn-sm">
-      <i class="ti ti-plus"></i> Create Block
-    </button>
-  </div>`;
-
-  document.getElementById('strBlocks').innerHTML = html;
-}
-window.rStructure = rStructure;
-
-/* ── rename a block (updates all flats' block field) ── */
-window._renameBlock = async function(oldName) {
-  const inp = document.getElementById('str-bname-'+oldName);
-  const newName = (inp?.value||'').trim().toUpperCase();
-  if (!newName) { toast('Enter a block name.','error'); return; }
-  if (newName === oldName) { toast('Same name — no change.'); return; }
-  const affected = [...flats.values()].filter(f => f.block === oldName);
-  if (!affected.length) { toast('No flats in this block.','error'); return; }
-  if (!confirm(`Rename Block ${oldName} → Block ${newName}? This will update all ${affected.length} flat records.`)) return;
-  sync('saving');
-  try {
-    await Promise.all(affected.map(f => updateDoc(flatRef(f.flatId), { block: newName })));
-    sync('live'); toast(`Block renamed to ${newName} ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Rename failed.','error'); }
-};
-
-/* ── add a new floor to a block ── */
-window._addFloor = async function(bl) {
-  const all = [...flats.values()].filter(f => f.block === bl && f.month === AM);
-  const floors = [...new Set(all.map(f => parseInt(f.floor)).filter(n => !isNaN(n)))].sort((a,b)=>a-b);
-  const nextFloor = floors.length ? Math.max(...floors)+1 : 1;
-  const cntEl = document.getElementById('str-newfloor-cnt-'+bl);
-  const cnt = parseInt(cntEl?.value)||4;
-  if (cnt < 1 || cnt > 20) { toast('Flats per floor must be 1–20.','error'); return; }
-  if (!confirm(`Add Floor ${nextFloor} to Block ${bl} with ${cnt} flat${cnt!==1?'s':''}?`)) return;
-  sync('saving');
-  try {
-    const batch = [];
-    for (let i = 1; i <= cnt; i++) {
-      const fid = `${bl}-${nextFloor}${String(i).padStart(2,'0')}`;
-      if (!flats.has(fid)) {
-        batch.push(setDoc(flatRef(fid), { block:bl, floor:nextFloor, owner:'', resType:'owner', due:0, paid:0, month:AM }));
-      }
-    }
-    await Promise.all(batch);
-    sync('live'); toast(`Floor ${nextFloor} added to Block ${bl} ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Failed to add floor.','error'); }
-};
-
-/* ── delete an entire floor ── */
-window._deleteFloor = async function(bl, fl) {
-  const victims = [...flats.values()].filter(f => f.block === bl && String(f.floor) === String(fl));
-  if (!victims.length) { toast('No flats found on this floor.','error'); return; }
-  const hasPaid = victims.some(f => (f.paid||0) > 0);
-  const warn = hasPaid ? '\n⚠️ Some flats have payment records.' : '';
-  if (!confirm(`Delete all ${victims.length} flat${victims.length!==1?'s':''} on Floor ${fl}, Block ${bl}?${warn}\nThis cannot be undone.`)) return;
-  sync('saving');
-  try {
-    await Promise.all(victims.map(f => deleteDoc(flatRef(f.flatId))));
-    sync('live'); toast(`Floor ${fl} deleted ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
-
-/* ── add a single flat ── */
-window._addSingleFlat = async function(bl, fl) {
-  const numEl = document.getElementById(`str-newflatnum-${bl}-${fl}`);
-  const rawId = (numEl?.value||'').trim().toUpperCase();
-  if (!rawId) { toast('Enter a flat number.','error'); return; }
-  const fid = rawId.startsWith(bl+'-') ? rawId : `${bl}-${rawId}`;
-  if (flats.has(fid)) { toast(`Flat ${fid} already exists.`,'error'); return; }
-  sync('saving');
-  try {
-    await setDoc(flatRef(fid), { block:bl, floor:parseInt(fl)||1, owner:'', resType:'owner', due:0, paid:0, month:AM });
-    if (numEl) numEl.value = '';
-    sync('live'); toast(`Flat ${fid} added ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Failed.','error'); }
-};
-
-/* ── delete a single flat ── */
-window._deleteSingleFlat = async function(fid) {
-  const f = flats.get(fid);
-  if (!f) return;
-  const warn = (f.paid||0) > 0 ? '\n⚠️ This flat has payment records.' : '';
-  if (!confirm(`Delete flat ${fid} (${f.owner||'Vacant'})?${warn}`)) return;
-  sync('saving');
-  try {
-    await deleteDoc(flatRef(fid));
-    sync('live'); toast(`${fid} deleted ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
-
-/* ── add a brand new block ── */
-window._addNewBlock = async function() {
-  const nameEl  = document.getElementById('str-newblock-name');
-  const flrEl   = document.getElementById('str-newblock-floors');
-  const cntEl   = document.getElementById('str-newblock-fpf');
-  const dueEl   = document.getElementById('str-newblock-due');
-  const bl      = (nameEl?.value||'').trim().toUpperCase();
-  const floors  = parseInt(flrEl?.value)||1;
-  const fpf     = parseInt(cntEl?.value)||4;
-  const due     = parseInt(dueEl?.value)||0;
-  if (!bl)  { toast('Enter block name.','error'); return; }
-  if (floors < 1 || floors > 50) { toast('Floors must be 1–50.','error'); return; }
-  if (fpf < 1 || fpf > 20)       { toast('Flats/floor must be 1–20.','error'); return; }
-  const existing = [...flats.values()].filter(f => f.block === bl);
-  if (existing.length) { toast(`Block ${bl} already exists.`,'error'); return; }
-  if (!confirm(`Create Block ${bl} with ${floors} floors × ${fpf} flats = ${floors*fpf} flats?`)) return;
-  sync('saving');
-  try {
-    const batch = [];
-    for (let fl = 1; fl <= floors; fl++) {
-      for (let i = 1; i <= fpf; i++) {
-        const fid = `${bl}-${fl}${String(i).padStart(2,'0')}`;
-        batch.push(setDoc(flatRef(fid), { block:bl, floor:fl, owner:'', resType:'owner', due, paid:0, month:AM }));
-      }
-    }
-    await Promise.all(batch);
-    if (nameEl) nameEl.value=''; if (flrEl) flrEl.value=''; if (cntEl) cntEl.value=''; if (dueEl) dueEl.value='';
-    sync('live'); toast(`Block ${bl} created ✓`);
-  } catch(e) { console.error(e); sync('error'); toast('Failed.','error'); }
-};
-
-function rStructure() {
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const blocks = [...new Set(all.map(f => f.block).filter(Boolean))].sort();
-  const q  = (document.getElementById('strSearch')?.value||'').toLowerCase().trim();
-  const bf = document.getElementById('strBlockFilter')?.value||'all';
-
-  // Rebuild block filter dropdown
-  const bSel = document.getElementById('strBlockFilter');
-  if (bSel) {
-    const cur = bSel.value;
-    bSel.innerHTML = `<option value="all">All Blocks</option>` +
-      blocks.map(b=>`<option value="${b}"${b===cur?' selected':''}>Block ${b}</option>`).join('');
-  }
-
-  // Summary stat cards
-  const total    = all.length;
-  const occupied = all.filter(f=>(f.owner||'').trim()).length;
-  const vacant   = total - occupied;
-  const owners   = all.filter(f=>f.resType!=='tenant'&&(f.owner||'').trim()).length;
-  const tenants  = all.filter(f=>f.resType==='tenant').length;
-  document.getElementById('strStats').innerHTML = `
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-building"></i></div><div><div class="vscard-label">Total Flats</div><div class="vscard-val">${total}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-users"></i></div><div><div class="vscard-label">Occupied</div><div class="vscard-val" style="color:var(--green)">${occupied}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-door"></i></div><div><div class="vscard-label">Vacant</div><div class="vscard-val" style="color:var(--amber)">${vacant}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-home"></i></div><div><div class="vscard-label">Owners / Tenants</div><div class="vscard-val" style="font-size:14px">${owners} / ${tenants}</div></div></div>
-  `;
-
-  // Filter flats
-  const vis = all.filter(f => {
-    if (bf !== 'all' && f.block !== bf) return false;
-    if (q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  // Group by block → floor
-  const blockMap = new Map();
-  vis.forEach(f => {
-    const bl = f.block||'–';
-    if (!blockMap.has(bl)) blockMap.set(bl, new Map());
-    const fl = f.floor ?? '–';
-    if (!blockMap.get(bl).has(fl)) blockMap.get(bl).set(fl, []);
-    blockMap.get(bl).get(fl).push(f);
-  });
-
-  const statusColor = f => {const s=st(f);return s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';};
-  const statusIcon  = f => {const s=st(f);return s==='paid'?'ti-circle-check':s==='partial'?'ti-clock':'ti-alert-circle';};
-
-  let html = '';
-  [...blockMap.entries()].sort((a,b)=>a[0].localeCompare(b[0])).forEach(([bl, floorMap]) => {
-    const blFlats = [...floorMap.values()].flat();
-    const blPaid  = blFlats.filter(f=>st(f)==='paid').length;
-    const floors  = [...floorMap.keys()].sort((a,b)=>Number(a)-Number(b));
-    const maxFloor = Math.max(...floors.map(Number).filter(n=>!isNaN(n)), 0);
-
-    html += `
-    <div style="background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);margin-bottom:12px;overflow:hidden">
-      <!-- Block header -->
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:linear-gradient(135deg,rgba(99,102,241,.06),rgba(139,92,246,.04));border-bottom:1px solid var(--border2);flex-wrap:wrap;gap:8px">
-        <div style="display:flex;align-items:center;gap:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:var(--indigo);color:#fff;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800">${bl}</div>
-          <div>
-            <div style="font-size:14px;font-weight:800;color:var(--text)">Block ${bl}</div>
-            <div style="font-size:11px;color:var(--muted)">${blFlats.length} flats · ${floorMap.size} floor${floorMap.size!==1?'s':''}</div>
-          </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:99px;background:var(--green-bg);color:var(--green-txt);border:1px solid var(--green-border)">✅ ${blPaid}/${blFlats.length} paid</span>
-          <button onclick="window._openStrEdit('${bl}')"
-            style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;border:1.5px solid var(--indigo);border-radius:7px;background:var(--indigo-bg);color:var(--indigo);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font)">
-            <i class="ti ti-settings" style="font-size:12px"></i> Edit Structure
-          </button>
-        </div>
-      </div>
-
-      <!-- EDIT PANEL (hidden by default) -->
-      <div id="str-edit-${bl}" style="display:none;border-bottom:2px solid var(--indigo);background:var(--surface2)">
-        <div style="padding:14px 16px">
-          <div style="font-size:10px;font-weight:800;color:var(--indigo);text-transform:uppercase;letter-spacing:.8px;margin-bottom:12px;display:flex;align-items:center;gap:6px">
-            <i class="ti ti-settings"></i> Block ${bl} — Structure Editor
-          </div>
-
-          <!-- Rename block -->
-          <div style="margin-bottom:14px;padding:12px;background:#fff;border:1px solid var(--border2);border-radius:var(--r-md)">
-            <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:8px"><i class="ti ti-pencil" style="color:var(--indigo)"></i> Rename Block</div>
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-              <input id="str-bname-${bl}" type="text" value="${bl}" maxlength="3"
-                style="width:80px;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:700;color:var(--text);background:#fff;outline:none;text-transform:uppercase"
-                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'" oninput="this.value=this.value.toUpperCase()"/>
-              <button onclick="window._renameBlock('${bl}')" class="btn btn-indigo btn-sm"><i class="ti ti-check"></i> Rename</button>
-              <span style="font-size:11px;color:var(--muted)">Updates all ${blFlats.length} flat records</span>
-            </div>
-          </div>
-
-          <!-- Per-floor management -->
-          <div style="margin-bottom:14px;padding:12px;background:#fff;border:1px solid var(--border2);border-radius:var(--r-md)">
-            <div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:10px"><i class="ti ti-stairs" style="color:var(--indigo)"></i> Floors</div>
-            ${[...floorMap.entries()].sort((a,b)=>Number(a[0])-Number(b[0])).map(([fl, fls]) => `
-              <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 10px;background:var(--surface2);border-radius:8px;margin-bottom:6px;flex-wrap:wrap;gap:6px">
-                <div style="font-size:12px;font-weight:700;color:var(--text)">Floor ${fl} <span style="font-size:10px;color:var(--muted);font-weight:500">${fls.length} flat${fls.length!==1?'s':''}</span></div>
-                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-                  <div style="display:flex;align-items:center;gap:4px">
-                    <input id="str-newflatnum-${bl}-${fl}" type="text" placeholder="Flat no."
-                      style="width:80px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none"
-                      onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"
-                      onkeydown="if(event.key==='Enter')window._addSingleFlat('${bl}','${fl}')"/>
-                    <button onclick="window._addSingleFlat('${bl}','${fl}')"
-                      style="height:28px;padding:0 10px;border:1.5px solid var(--green);border-radius:6px;background:var(--green-bg);color:var(--green);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
-                      <i class="ti ti-plus" style="font-size:11px"></i> Add Flat
-                    </button>
-                  </div>
-                  <button onclick="window._deleteFloor('${bl}','${fl}')"
-                    style="height:28px;padding:0 10px;border:1.5px solid var(--red-border);border-radius:6px;background:var(--red-bg);color:var(--red);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
-                    <i class="ti ti-trash" style="font-size:11px"></i> Delete Floor
-                  </button>
-                </div>
-              </div>
-              <!-- Flat chips on this floor -->
-              <div style="display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 10px 0;padding-left:4px">
-                ${fls.sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||'')).map(f=>`
-                  <div style="display:inline-flex;align-items:center;gap:4px;padding:2px 6px 2px 8px;background:${(f.owner||'').trim()?'var(--indigo-bg)':'var(--surface3)'};border:1px solid ${(f.owner||'').trim()?'var(--indigo-glow)':'var(--border2)'};border-radius:99px;font-size:10px;font-weight:700;color:${(f.owner||'').trim()?'var(--indigo)':'var(--muted)'}">
-                    ${f.flatId}${(f.owner||'').trim()?'<span style="font-size:9px;font-weight:500;color:var(--text2)"> · '+f.owner+'</span>':''}
-                    <button onclick="window._deleteSingleFlat('${f.flatId}')"
-                      style="background:none;border:none;cursor:pointer;color:var(--muted);font-size:11px;padding:0;line-height:1;margin-left:2px" title="Delete ${f.flatId}">
-                      <i class="ti ti-x"></i>
-                    </button>
-                  </div>`).join('')}
-              </div>`).join('')}
-
-            <!-- Add new floor row -->
-            <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border:1.5px dashed var(--border3);border-radius:var(--r-md);flex-wrap:wrap">
-              <span style="font-size:11px;font-weight:700;color:var(--text2)">Add Floor ${maxFloor+1}:</span>
-              <div style="display:flex;align-items:center;gap:6px">
-                <input id="str-newfloor-cnt-${bl}" type="number" value="4" min="1" max="20" placeholder="Flats"
-                  style="width:64px;height:28px;padding:0 7px;border:1.5px solid var(--border2);border-radius:6px;font-family:var(--font);font-size:11px;font-weight:600;color:var(--text);background:#fff;outline:none"
-                  onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-                <span style="font-size:11px;color:var(--muted)">flats</span>
-                <button onclick="window._addFloor('${bl}')" class="btn btn-green btn-sm" style="height:28px;padding:0 12px">
-                  <i class="ti ti-plus"></i> Add Floor
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div style="text-align:right">
-            <button onclick="window._openStrEdit('${bl}')"
-              style="padding:5px 14px;border:1px solid var(--border2);border-radius:6px;background:none;color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)">
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Floors view -->
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px">
-        ${[...floorMap.entries()].sort((a,b)=>Number(b[0])-Number(a[0])).map(([fl, fls]) => `
-          <div>
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Floor ${fl} <span style="font-weight:500;color:var(--border3)">·</span> ${fls.length} flat${fls.length!==1?'s':''}</div>
-            <div class="str-floor-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
-              ${fls.sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||'')).map(f => {
-                const sc = statusColor(f);
-                const si = statusIcon(f);
-                const isVacant = !(f.owner||'').trim();
-                return `<div onclick="window._oFl('${f.flatId}')"
-                  style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${sc};border-radius:8px;padding:8px 10px;cursor:pointer;transition:box-shadow .15s"
-                  onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'">
-                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-                    <span style="font-size:12px;font-weight:800;color:var(--text)">${f.flatId}</span>
-                    <i class="ti ${si}" style="font-size:12px;color:${sc}"></i>
-                  </div>
-                  <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${isVacant?'<em style="color:var(--muted)">Vacant</em>':f.owner}</div>
-                  <div style="font-size:9px;font-weight:700;margin-top:3px;color:${sc}">${isVacant?'':inr(f.paid)+' / '+inr(f.due)}</div>
-                </div>`;
-              }).join('')}
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`;
-  });
-
-  // Add New Block panel
-  html += `
-  <div style="background:#fff;border:1.5px dashed var(--border3);border-radius:var(--r-lg);padding:16px 18px;margin-top:4px">
-    <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:7px">
-      <i class="ti ti-plus" style="color:var(--indigo)"></i> Add New Block
-    </div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:10px">
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Block Name</div>
-        <input id="str-newblock-name" type="text" placeholder="e.g. C" maxlength="3"
-          style="width:100%;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:700;color:var(--text);background:#fff;outline:none;text-transform:uppercase"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'" oninput="this.value=this.value.toUpperCase()"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Floors</div>
-        <input id="str-newblock-floors" type="number" placeholder="4" min="1" max="50"
-          style="width:100%;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Flats / Floor</div>
-        <input id="str-newblock-fpf" type="number" placeholder="4" min="1" max="20"
-          style="width:100%;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-      <div>
-        <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Monthly Due (₹)</div>
-        <input id="str-newblock-due" type="number" placeholder="0" min="0"
-          style="width:100%;height:32px;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;outline:none"
-          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
-      </div>
-    </div>
-    <button onclick="window._addNewBlock()" class="btn btn-indigo btn-sm"><i class="ti ti-plus"></i> Create Block</button>
-  </div>`;
-
-  document.getElementById('strBlocks').innerHTML = html;
-}
-window.rStructure = rStructure;
 function listenVehicles(){
   if(vu)vu();
   vu=onSnapshot(vehColl(),snap=>{
@@ -3464,6 +2661,17 @@ function updateFloorFilter(block) {
 
 function rBTabs() {
   const useBlocks = hasBlocks();
+
+  // Populate payments block filter dropdown
+  const pbf = document.getElementById('pbf');
+  if (pbf) {
+    const curPbf = pbf.value;
+    const allBlocks = bks();
+    pbf.innerHTML = `<option value="all">All Blocks</option>` +
+      allBlocks.map(b => `<option value="${b}"${b === curPbf ? ' selected' : ''}>Block ${b}</option>`).join('');
+    if (allBlocks.length <= 1) pbf.style.display = 'none';
+    else pbf.style.display = '';
+  }
 
   if (useBlocks) {
     const bs = bks();
@@ -4665,7 +3873,21 @@ function _buildAnalyticsFilters() {
 
   const mSel = document.getElementById('anFilterMonth');
   const ySel = document.getElementById('anFilterYear');
+  const bSel  = document.getElementById('anBlockFilter');
+  const bSel2 = document.getElementById('anBlockFilter2');
   if (!mSel || !ySel) return;
+
+  // Populate block filter (both top filter bar + table header)
+  const allBlocks = [...new Set([...flats.values()].map(f => f.block).filter(Boolean))].sort();
+  [bSel, bSel2].forEach(sel => {
+    if (!sel) return;
+    const curB = sel.value || _anBlock;
+    sel.innerHTML = `<option value="all">All Blocks</option>` +
+      allBlocks.map(b => `<option value="${b}"${b === curB ? ' selected' : ''}>Block ${b}</option>`).join('');
+    if (allBlocks.length > 1) sel.style.display = '';
+    else sel.style.display = 'none';
+    if (allBlocks.includes(curB)) sel.value = curB;
+  });
 
   // Read current user selection BEFORE touching innerHTML
   const prevMonth = mSel.value || _anSelMonth || AM;
@@ -4685,14 +3907,17 @@ function _buildAnalyticsFilters() {
   else ySel.value = years[0] || new Date().getFullYear().toString();
 }
 
-function _buildFlatSummary(filterType, selMonth, selYear) {
+function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
   const matchM = m => filterType==='month' ? m===selMonth : (m||'').startsWith(selYear);
+  const matchB = b => !selBlock || selBlock === 'all' || b === selBlock;
 
   // Aggregate all payment transactions for the period from the expenses collection
   const byFlat = new Map();
   exps.forEach((records, fid) => {
     records.forEach(e => {
       if (!matchM(e.month)) return;
+      const f = flats.get(fid);
+      if (!matchB(f?.block || e.block || '')) return;
       if (!byFlat.has(fid)) byFlat.set(fid, { flatId:fid, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
       const rec = byFlat.get(fid);
       rec.paid += (e.amt || 0);
@@ -4718,6 +3943,7 @@ function _buildFlatSummary(filterType, selMonth, selYear) {
   // Include all flats with no payments for the period (truly pending/not paid)
   if (filterType === 'month') {
     flats.forEach((f, fid) => {
+      if (!matchB(f.block || '')) return;
       if (!byFlat.has(fid)) {
         byFlat.set(fid, { flatId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
       }
@@ -4737,17 +3963,29 @@ function rAnalytics() {
   _buildAnalyticsFilters();
 
   const filterType = document.getElementById('anFilterType')?.value || 'month';
-  const mSel = document.getElementById('anFilterMonth');
-  const ySel = document.getElementById('anFilterYear');
+  const mSel  = document.getElementById('anFilterMonth');
+  const ySel  = document.getElementById('anFilterYear');
+  const bSel  = document.getElementById('anBlockFilter');
+  const bSel2 = document.getElementById('anBlockFilter2');
 
   if (mSel) mSel.style.display = filterType==='month' ? '' : 'none';
   if (ySel) ySel.style.display = filterType==='year'  ? '' : 'none';
 
   const selMonth = mSel?.value || AM;
   const selYear  = ySel?.value || new Date().getFullYear().toString();
-  _anFilterType = filterType; _anSelMonth = selMonth; _anSelYear = selYear;
+  const selBlock = bSel?.value || 'all';
+  _anFilterType = filterType; _anSelMonth = selMonth; _anSelYear = selYear; _anBlock = selBlock;
 
-  const all     = _buildFlatSummary(filterType, selMonth, selYear);
+  // Keep both block selects in sync
+  if (bSel2 && bSel2.value !== selBlock) bSel2.value = selBlock;
+
+  // Human-readable period label for cards
+  const periodLabel = filterType === 'month'
+    ? new Date(selMonth + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })
+    : `FY ${selYear}`;
+  const blockLabel  = selBlock !== 'all' ? ` · Block ${selBlock}` : '';
+
+  const all     = _buildFlatSummary(filterType, selMonth, selYear, selBlock);
   const paid    = all.filter(f => f._status==='paid');
   const partial = all.filter(f => f._status==='partial');
   const pending = all.filter(f => f._status==='pending');
@@ -4768,12 +4006,30 @@ function rAnalytics() {
   const totalCollected   = all.reduce((s,f) => s+(f.paid||0), 0);
   const totalDue         = all.reduce((s,f) => s+(f.due||0),  0);
   const totalOutstanding = Math.max(0, totalDue - totalCollected);
+  const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
+
   const doc1 = document.getElementById('analyticsTotals');
   if (doc1) doc1.innerHTML = `
-    <div class="vscard green"><div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div><div><div class="vscard-label">Collected</div><div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats paid</div></div></div>
-    <div class="vscard red"><div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div><div><div class="vscard-label">Outstanding</div><div class="vscard-val" style="color:var(--red)">${inr(totalOutstanding)}</div><div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} flats pending</div></div></div>`;
+    <div class="vscard green" style="cursor:default">
+      <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
+      <div>
+        <div class="vscard-label">Collected</div>
+        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${paid.length+partial.length} flats · ${pct}%</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}${blockLabel}</div>
+      </div>
+    </div>
+    <div class="vscard red" onclick="window._showPending()" style="cursor:pointer" title="Click to view pending flats">
+      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
+      <div>
+        <div class="vscard-label">Outstanding</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(totalOutstanding)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending.length} pending · ${partial.length} partial</div>
+        <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}${blockLabel}</div>
+      </div>
+    </div>`;
 
-  renderAnPayTable(filterType, selMonth, selYear);
+  renderAnPayTable(filterType, selMonth, selYear, selBlock);
 }
 window.rAnalytics = rAnalytics;
 
@@ -4853,20 +4109,33 @@ function anSetStatus(s) {
   _anStatus = s;
   const el = document.getElementById('anStatusFilter');
   if (el) el.value = s;
-  renderAnPayTable(_anFilterType, _anSelMonth, _anSelYear);
+  renderAnPayTable();
 }
 window.anSetStatus = anSetStatus;
 
-function renderAnPayTable(filterType, selMonth, selYear) {
+function anSetBlock(b) {
+  _anBlock = b;
+  // Sync both block selects
+  ['anBlockFilter','anBlockFilter2'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = b;
+  });
+  rAnalytics();
+}
+window.anSetBlock = anSetBlock;
+
+function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   if (filterType !== undefined) _anFilterType = filterType;
   if (selMonth   !== undefined) _anSelMonth   = selMonth || AM;
   if (selYear    !== undefined) _anSelYear    = selYear  || new Date().getFullYear().toString();
+  if (selBlock   !== undefined) _anBlock      = selBlock || 'all';
 
   const ft = _anFilterType || 'month';
   const sm = _anSelMonth   || AM;
   const sy = _anSelYear    || new Date().getFullYear().toString();
+  const sb = _anBlock      || 'all';
 
-  let rows = _buildFlatSummary(ft, sm, sy);
+  let rows = _buildFlatSummary(ft, sm, sy, sb);
   if (_anStatus !== 'all') rows = rows.filter(f => f._status === _anStatus);
 
   const tbody   = document.getElementById('anPayTable');
@@ -4942,6 +4211,22 @@ function renderAnPayTable(filterType, selMonth, selYear) {
     <td></td>
   </tr>`;
 }
+
+/* ── structure.js: loaded as side-effect module, reads closure vars via window ── */
+/* expose shared state so structure.js can read/write */
+window._APP = {
+  get flats()    { return flats; },
+  get AM()       { return AM; },
+  get st()       { return st; },
+  get inr()      { return inr; },
+  get sync()     { return sync; },
+  get toast()    { return toast; },
+  get flatRef()  { return flatRef; },
+  get setDoc()   { return setDoc; },
+  get updateDoc(){ return updateDoc; },
+  get deleteDoc(){ return deleteDoc; },
+};
+import './js/structure.js';
 </script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
