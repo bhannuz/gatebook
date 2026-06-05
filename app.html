@@ -50,6 +50,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .lo-fill{height:100%;background:linear-gradient(90deg,#6366F1,#8B5CF6,#06B6D4);background-size:200%;animation:loSlide 1.6s ease-in-out infinite}
 @keyframes loSlide{0%{background-position:0%}100%{background-position:200%}}
 
+@keyframes spin{to{transform:rotate(360deg)}}
 /* ── Issue timeline ── */
 .iss-timeline{margin-top:14px}
 .itl-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)}
@@ -1823,25 +1824,22 @@ function oFlEdit(fid) {
   const tw = parseInt(veh.tw)||0, fw = parseInt(veh.fw)||0;
 
   document.getElementById('dBody').innerHTML = `
-    <!-- ── Resident Info Edit Panel ── -->
     <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:14px;margin-bottom:14px;margin-top:4px">
-      <div style="font-size:12px;font-weight:800;color:var(--text);letter-spacing:-.1px;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <div style="font-size:12px;font-weight:800;color:var(--text);margin-bottom:12px;display:flex;align-items:center;gap:6px">
         <i class="ti ti-pencil" style="color:var(--indigo);font-size:13px"></i> Resident Info
-        <span style="font-size:10px;font-weight:500;color:var(--muted);margin-left:auto">Auto-saves on change</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Resident Name</label>
-          <input id="edOwner" type="text" value="${f.owner||''}" placeholder="Full name"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+          <input id="edOwner" type="text" value="${(f.owner||'').replace(/"/g,'&quot;')}" placeholder="Full name"
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Type</label>
           <select id="edType"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onchange="toggleOwnerFields(this.value);autoSaveFlat('${fid}')">
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onchange="window._toggleOwnerFields(this.value)">
             <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
             <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
           </select>
@@ -1849,57 +1847,64 @@ function oFlEdit(fid) {
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Monthly Due (₹)</label>
           <input id="edDue" type="number" value="${f.due||''}" placeholder="5000" min="0"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Move-In Date</label>
           <input id="edMoveIn" type="date" value="${f.moveIn||''}"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Move-Out Date</label>
           <input id="edMoveOut" type="date" value="${f.moveOut||''}"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">🏍 2-Wheelers</label>
           <input id="edTw" type="number" value="${tw}" min="0" max="10"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveVeh('${fid}')"
-            onchange="autoSaveVeh('${fid}')"/>
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">🚗 4-Wheelers</label>
           <input id="edFw" type="number" value="${fw}" min="0" max="10"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveVeh('${fid}')"
-            onchange="autoSaveVeh('${fid}')"/>
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
       </div>
-      <div id="ownerSection" style="display:${isTenant?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">
+      <div id="ownerSection" style="display:${isTenant?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;padding-top:10px;border-top:1px solid var(--border)">
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Owner Name</label>
-          <input id="edOwnerName" type="text" value="${f.ownerName||''}" placeholder="Actual flat owner"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+          <input id="edOwnerName" type="text" value="${(f.ownerName||'').replace(/"/g,'&quot;')}" placeholder="Actual flat owner"
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Owner Phone</label>
-          <input id="edOwnerPhone" type="tel" value="${f.ownerPhone||''}" placeholder="Owner contact"
-            style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:var(--r-md);outline:none"
-            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)';autoSaveFlat('${fid}')"
-            onchange="autoSaveFlat('${fid}')"/>
+          <input id="edOwnerPhone" type="tel" value="${(f.ownerPhone||'').replace(/"/g,'&quot;')}" placeholder="Owner contact"
+            style="width:100%;box-sizing:border-box;height:34px;padding:0 9px;background:#fff;border:1.5px solid var(--border2);color:var(--text);font-family:var(--font);font-size:13px;font-weight:600;border-radius:var(--r-md);outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
       </div>
+      <!-- Save button -->
+      <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:10px;border-top:1px solid var(--border)">
+        <button onclick="window._cD()"
+          style="padding:8px 18px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:none;
+            color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font)">
+          Cancel
+        </button>
+        <button id="edSaveBtn" onclick="window._saveFlat('${fid}')"
+          style="display:inline-flex;align-items:center;gap:7px;padding:8px 22px;
+            border:none;border-radius:var(--r-md);background:linear-gradient(135deg,#6366F1,#8B5CF6);
+            color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);
+            box-shadow:0 4px 14px rgba(99,102,241,0.3)">
+          <i class="ti ti-device-floppy" style="font-size:15px"></i> Save Changes
+        </button>
+      </div>
     </div>
-    <!-- ── end Resident Info ── -->
   `;
 
   document.getElementById('flatDrawer').classList.add('open');
@@ -2044,40 +2049,45 @@ function cM(){document.getElementById('flatM').classList.remove('open');}
 
 /* auto-save flat fields on blur / select change — no button needed */
 let _autoSaveTimer=null;
-async function autoSaveFlat(fid) {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(async()=>{
-    const owner      = (document.getElementById('edOwner')?.value||'').trim();
-    const resType    = document.getElementById('edType')?.value||'owner';
-    const due        = parseInt(document.getElementById('edDue')?.value)||0;
-    const moveIn     = document.getElementById('edMoveIn')?.value||'';
-    const moveOut    = document.getElementById('edMoveOut')?.value||'';
-    const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
-    const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
-    sync('saving');
-    try {
-      await updateDoc(flatRef(fid),{owner,resType,due,moveIn,moveOut,ownerName,ownerPhone});
-      sync('live');
-      document.getElementById('mdT').textContent=`${fid} — ${owner||'(No resident)'}`;
-      toast('Saved ✓');
-    } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
-  }, 400);
+async function saveFlat(fid) {
+  const btn = document.getElementById('edSaveBtn');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<i class="ti ti-loader-2" style="font-size:14px;animation:spin .8s linear infinite"></i> Saving…'; }
+  const owner      = (document.getElementById('edOwner')?.value||'').trim();
+  const resType    = document.getElementById('edType')?.value||'owner';
+  const due        = parseInt(document.getElementById('edDue')?.value)||0;
+  const moveIn     = document.getElementById('edMoveIn')?.value||'';
+  const moveOut    = document.getElementById('edMoveOut')?.value||'';
+  const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
+  const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
+  const tw         = parseInt(document.getElementById('edTw')?.value)||0;
+  const fw         = parseInt(document.getElementById('edFw')?.value)||0;
+  sync('saving');
+  try {
+    await updateDoc(flatRef(fid), { owner, resType, due, moveIn, moveOut, ownerName, ownerPhone });
+    await setDoc(vehRef(fid), { flatId:fid, tw, fw, updatedAt:serverTimestamp() }, { merge:true });
+    vehicles.set(fid, { ...(vehicles.get(fid)||{}), tw, fw });
+    sync('live');
+    toast('Saved ✓');
+    cD(); // close drawer
+    rAll(); // refresh data
+  } catch(e) {
+    console.error(e); sync('error'); toast('Save failed.', 'error');
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy" style="font-size:15px"></i> Save Changes'; }
+  }
 }
+// Keep autoSaveFlat as alias for legacy callers
+async function autoSaveFlat(fid) { return saveFlat(fid); }
 
 async function autoSaveVeh(fid) {
-  clearTimeout(_autoSaveVehTimer);
-  _autoSaveVehTimer = setTimeout(async()=>{
-    const tw = parseInt(document.getElementById('edTw')?.value)||0;
-    const fw = parseInt(document.getElementById('edFw')?.value)||0;
-    sync('saving');
-    try {
-      await setDoc(vehRef(fid),{flatId:fid,tw,fw,updatedAt:serverTimestamp()},{merge:true});
-      vehicles.set(fid,{...(vehicles.get(fid)||{}),tw,fw});
-      sync('live');
-      toast('Vehicles saved ✓');
-      renderAnPayTable();
-    } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
-  }, 400);
+  const tw = parseInt(document.getElementById('edTw')?.value)||0;
+  const fw = parseInt(document.getElementById('edFw')?.value)||0;
+  sync('saving');
+  try {
+    await setDoc(vehRef(fid),{flatId:fid,tw,fw,updatedAt:serverTimestamp()},{merge:true});
+    vehicles.set(fid,{...(vehicles.get(fid)||{}),tw,fw});
+    sync('live');
+    renderAnPayTable();
+  } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
 }
 let _autoSaveVehTimer = null;
 
@@ -2411,6 +2421,7 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
 window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
+window._saveFlat=saveFlat;
 window._toggleOwnerFields=toggleOwnerFields;
 window.autoSaveVeh=autoSaveVeh;
 window._openExpEdit=openExpEdit; window._closeExpEdit=closeExpEdit; window._saveExpEdit=saveExpEdit; window._delExp=delExp;
