@@ -260,47 +260,47 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .floor-divider{display:none}
 .floor-divider i{display:none}
 
-/* ── FLAT CARDS — minimal 2025 ── */
-.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1rem}
+/* ── FLAT CARDS (Payments tab) — compact ── */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:.75rem}
 .fcard{
-  background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);
-  padding:14px 14px 12px;cursor:pointer;position:relative;overflow:hidden;
+  background:#fff;border:1px solid var(--border);border-radius:var(--r-md);
+  padding:8px 8px 7px;cursor:pointer;position:relative;overflow:hidden;
   width:100%;box-sizing:border-box;transition:box-shadow .2s,border-color .2s;
 }
 .fcard:hover{box-shadow:var(--shadow);border-color:var(--border2)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
-.fcard::before{content:'';position:absolute;top:12px;bottom:12px;left:0;width:3px;border-radius:0 3px 3px 0}
+.fcard::before{content:'';position:absolute;top:7px;bottom:7px;left:0;width:2px;border-radius:0 2px 2px 0}
 .fcard.paid::before   {background:var(--green)}
 .fcard.partial::before{background:var(--amber)}
 .fcard.pending::before{background:var(--red)}
 
-.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:4px}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:3px}
 .fc-left{min-width:0}
-.fc-num{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.1px}
-.fc-owner{font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
-.fc-type{font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;display:inline-block;margin-top:3px}
+.fc-num{font-size:11px;font-weight:800;color:var(--text);letter-spacing:-.1px}
+.fc-owner{font-size:9px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
+.fc-type{font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block;margin-top:2px}
 .fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
 .fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
-.fc-indicator{width:22px;height:22px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
+.fc-indicator{width:16px;height:16px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
 .fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
 
-.fc-amount{font-size:16px;font-weight:800;letter-spacing:-.4px;line-height:1;margin-bottom:2px}
+.fc-amount{font-size:12px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:1px}
 .fcard.paid    .fc-amount{color:var(--text)}
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
-.fc-due{font-size:10px;color:var(--muted);font-weight:500}
+.fc-due{font-size:9px;color:var(--muted);font-weight:500}
 
-.fprog{height:3px;background:var(--bg2);border-radius:99px;margin:8px 0 6px;overflow:hidden}
+.fprog{height:2px;background:var(--bg2);border-radius:99px;margin:5px 0 4px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fcard.paid    .fpbar{background:var(--green)}
 .fcard.partial .fpbar{background:var(--amber)}
 .fcard.pending .fpbar{background:var(--red)}
 
-.spill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;
-  padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
-.spill i{font-size:9px}
+.spill{display:inline-flex;align-items:center;gap:2px;font-size:8px;font-weight:700;
+  padding:1px 5px;border-radius:99px;text-transform:uppercase;letter-spacing:.2px}
+.spill i{font-size:8px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt)}
 .spill.partial{background:var(--amber-bg);color:var(--amber-txt)}
 .spill.pending{background:var(--red-bg);  color:var(--red-txt)}
@@ -730,13 +730,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hist-empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
 .hist-empty i{font-size:28px;display:block;margin-bottom:6px;opacity:.4}
 
-/* Tablet: 3 cols */
+/* Tablet: 4 cols */
 @media(min-width:481px) and (max-width:900px){
-  .fgrid{grid-template-columns:repeat(3,1fr)}
+  .fgrid{grid-template-columns:repeat(4,1fr)}
 }
 /* Desktop: auto cols */
 @media(min-width:901px){
-  .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
 }
 @media(max-width:900px){
   .navbar{padding:0 1rem}
@@ -744,7 +744,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .app{padding:0 1rem 1.5rem}
   .fg2{grid-template-columns:1fr}
   .dm{grid-template-columns:1fr 1fr}
-  .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
   .user-chip span{display:none}
   .vtab{padding:0 10px;font-size:11px;height:30px}
   /* Stack both layout grids to single column */
@@ -821,9 +821,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   #analyticsView > div:first-child select{
     flex:1;min-width:0;font-size:11px;
   }
-
-  /* ── Structure floor grid: 3 cols on mobile ── */
-  .str-floor-grid{grid-template-columns:repeat(3,1fr)!important}
 
   /* ── Expense filter selects in presView ── */
   #histMonthFilter,#histCatFilter{font-size:11px;height:30px}
@@ -3754,118 +3751,6 @@ async function boot(){
     document.getElementById('loSub').textContent='⚠ Firebase connection failed. Check console.';
   }
 }
-
-/* ══ STRUCTURE TAB ══ */
-function rStructure() {
-  // Populate block filter
-  const bfSel = document.getElementById('strBlockFilter');
-  if (bfSel) {
-    const blocks = [...new Set([...flats.values()].map(f=>f.block).filter(Boolean))].sort();
-    const cur = bfSel.value || 'all';
-    bfSel.innerHTML = `<option value="all">All Blocks</option>` +
-      blocks.map(b=>`<option value="${b}"${b===cur?' selected':''}>${'Block '+b}</option>`).join('');
-  }
-
-  const selBlock = bfSel?.value || 'all';
-  const q = (document.getElementById('strSearch')?.value||'').trim().toLowerCase();
-
-  let rows = [...flats.values()].filter(f => {
-    if (selBlock !== 'all' && f.block !== selBlock) return false;
-    if (q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    return true;
-  }).sort((a,b) => (a.flatId||'').localeCompare(b.flatId||''));
-
-  // Stats
-  const total   = rows.length;
-  const owners  = rows.filter(f=>(f.resType||'owner')==='owner' && (f.owner||'').trim()).length;
-  const tenants = rows.filter(f=>f.resType==='tenant').length;
-  const vacant  = rows.filter(f=>!(f.owner||'').trim()).length;
-  const statEl  = document.getElementById('strStats');
-  if (statEl) statEl.innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-home"></i></div><div><div class="vscard-label">Total Flats</div><div class="vscard-val">${total}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-user-check"></i></div><div><div class="vscard-label">Owners</div><div class="vscard-val">${owners}</div></div></div>
-    <div class="vscard"><div class="vscard-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-key"></i></div><div><div class="vscard-label">Tenants</div><div class="vscard-val">${tenants}</div></div></div>
-    <div class="vscard"><div class="vscard-icon" style="background:var(--surface3);color:var(--muted)"><i class="ti ti-door"></i></div><div><div class="vscard-label">Vacant</div><div class="vscard-val">${vacant}</div></div></div>`;
-
-  // Group by block
-  const byBlock = new Map();
-  rows.forEach(f => {
-    const b = f.block || '(No Block)';
-    if (!byBlock.has(b)) byBlock.set(b, []);
-    byBlock.get(b).push(f);
-  });
-
-  const blocksEl = document.getElementById('strBlocks');
-  if (!blocksEl) return;
-
-  if (!rows.length) {
-    blocksEl.innerHTML = `<div style="text-align:center;padding:4rem;color:var(--muted)">
-      <i class="ti ti-building-off" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i>
-      No flats found. <button class="btn btn-indigo btn-sm" style="margin-left:8px" onclick="window._oAF()"><i class="ti ti-plus"></i> Add Flat</button>
-    </div>`;
-    return;
-  }
-
-  blocksEl.innerHTML = [...byBlock.entries()].map(([block, bFlats]) => {
-    const paidCnt = bFlats.filter(f=>{
-      const am = _anSelMonth||AM;
-      const paid = (exps.get(f.flatId)||[]).filter(e=>e.month===am).reduce((s,e)=>s+(e.amt||0),0);
-      return paid > 0 && paid >= (f.due||0);
-    }).length;
-
-    const tableRows = bFlats.map(f => {
-      const isVacant = !(f.owner||'').trim();
-      const rType    = isVacant ? 'vacant' : (f.resType||'owner');
-      const typeCls  = isVacant ? 'muted' : rType==='tenant' ? 'amber' : 'indigo';
-      const typeLabel= isVacant ? 'Vacant' : rType==='tenant' ? '🔑 Tenant' : '🏠 Owner';
-      const v        = vehicles.get(f.flatId)||{};
-      const tw = parseInt(v.tw)||0, fw = parseInt(v.fw)||0;
-      const veh = (tw||fw) ? `🏍${tw} 🚗${fw}` : '<span style="color:var(--muted)">—</span>';
-      return `<tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:800;color:var(--indigo);font-size:13px">${f.flatId}</td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border)">
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-          ${f.ownerName&&rType==='tenant'?`<div style="font-size:10px;color:var(--text2)">Owner: ${f.ownerName}</div>`:''}
-        </td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="tab-chip ${typeCls}">${typeLabel}</span></td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);text-align:right">${f.due?inr(f.due):'<span style="color:var(--muted)">—</span>'}</td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);text-align:center">${veh}</td>
-        <td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:center">
-          <button onclick="window._oFlEdit('${f.flatId}')" title="Edit"
-            style="background:none;border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--indigo);display:inline-flex;align-items:center;justify-content:center"
-            onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)'"
-            onmouseout="this.style.background='none';this.style.borderColor='var(--border2)'">
-            <i class="ti ti-pencil" style="font-size:12px"></i>
-          </button>
-        </td>
-      </tr>`;
-    }).join('');
-
-    return `<div style="margin-bottom:16px">
-      <div class="tab-table-wrap">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;background:var(--surface3)">
-          <div style="font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px">
-            <i class="ti ti-building" style="color:var(--indigo)"></i> Block ${block}
-            <span style="font-size:10px;font-weight:600;color:var(--muted)">${bFlats.length} flats · ${paidCnt} paid</span>
-          </div>
-          <button class="btn btn-indigo btn-sm" onclick="window._oAF()" style="padding:3px 10px;font-size:11px"><i class="ti ti-plus"></i> Add</button>
-        </div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="background:var(--surface3)">
-            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
-            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Resident</th>
-            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Type</th>
-            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);text-align:right">Due</th>
-            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);text-align:center">Vehicles</th>
-            <th style="padding:8px 14px;width:36px;border-bottom:1px solid var(--border2)"></th>
-          </tr></thead>
-          <tbody>${tableRows}</tbody>
-        </table>
-      </div>
-    </div>`;
-  }).join('');
-}
-window.rStructure = rStructure;
 
 /* ══ ANALYTICS TAB ══ */
 
