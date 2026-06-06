@@ -19,6 +19,12 @@ const fsSet  = (...a) => APP().setDoc(...a);
 const fsUpd  = (...a) => APP().updateDoc(...a);
 const fsDel  = (...a) => APP().deleteDoc(...a);
 
+/* trigger full app refresh (re-renders all tabs via Firestore listener) */
+const rAll   = () => { try { APP().rAll(); } catch(e) { console.error(e); } };
+
+/* track which block edit panel is currently open — survives re-renders */
+let _openEditBlock = null;
+
 /* ── CSS helpers ── */
 const inp = (extra='') =>
   `style="box-sizing:border-box;height:28px;padding:0 7px;border:1.5px solid var(--border2);
@@ -36,24 +42,29 @@ window._openStrEdit = function(bl) {
   });
   const el = document.getElementById('str-edit-' + bl);
   if (!el) return;
-  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  const opening = el.style.display === 'none';
+  el.style.display = opening ? 'block' : 'none';
+  _openEditBlock = opening ? bl : null;
 };
 
 /* ══════════════════════════════════════════
    RENAME BLOCK
 ══════════════════════════════════════════ */
 window._renameBlock = async function(oldName) {
-  const inp   = document.getElementById('str-bname-' + oldName);
+  const inp     = document.getElementById('str-bname-' + oldName);
   const newName = (inp?.value || '').trim().toUpperCase();
-  if (!newName)              { toast('Enter a block name.', 'error'); return; }
-  if (newName === oldName)   { toast('No change.'); return; }
+  if (!newName)            { toast('Enter a block name.', 'error'); return; }
+  if (newName === oldName) { toast('No change.'); return; }
   const affected = [...flats().values()].filter(f => f.block === oldName);
-  if (!affected.length)      { toast('No flats in this block.', 'error'); return; }
+  if (!affected.length)    { toast('No flats in this block.', 'error'); return; }
   if (!confirm(`Rename Block ${oldName} → ${newName}?\nThis updates all ${affected.length} flat records.`)) return;
   sync('saving');
   try {
     await Promise.all(affected.map(f => fsUpd(flatRef(f.flatId), { block: newName })));
+    /* track new name so panel stays open after re-render */
+    _openEditBlock = newName;
     sync('live'); toast(`Block renamed to ${newName} ✓`);
+    /* onSnapshot fires rAll() automatically */
   } catch(e) { console.error(e); sync('error'); toast('Rename failed.', 'error'); }
 };
 
@@ -186,12 +197,13 @@ window._deleteBlock = async function(bl) {
   const hasPaid = victims.some(f => (f.paid || 0) > 0);
   if (!confirm(`⚠️ DELETE entire Block ${bl} (${victims.length} flats)?` +
     (hasPaid ? '\n⚠️ Some flats have payment records!' : '') +
-    '\nThis CANNOT be undone. Type block name to confirm.')) return;
+    '\nThis CANNOT be undone.')) return;
   const conf = prompt(`Type "${bl}" to permanently delete Block ${bl}:`);
   if ((conf || '').trim().toUpperCase() !== bl) { toast('Cancelled — name did not match.'); return; }
   sync('saving');
   try {
     await Promise.all(victims.map(f => fsDel(flatRef(f.flatId))));
+    _openEditBlock = null; /* panel gone after delete */
     sync('live'); toast(`Block ${bl} deleted ✓`);
   } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
 };
@@ -612,6 +624,17 @@ function rStructure() {
   </div>`;
 
   document.getElementById('strBlocks').innerHTML = html;
+
+  /* restore open edit panel after re-render */
+  if (_openEditBlock) {
+    const el = document.getElementById('str-edit-' + _openEditBlock);
+    if (el) {
+      el.style.display = 'block';
+      requestAnimationFrame(() => el.scrollIntoView({ behavior: 'smooth', block: 'nearest' }));
+    } else {
+      _openEditBlock = null; /* block was deleted */
+    }
+  }
 }
 
 window.rStructure = rStructure;
