@@ -984,22 +984,22 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- PAYMENTS VIEW -->
   <div id="pView" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
-      <select class="ctrl" id="pbf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="AB=this.value==='all'?(bks()[0]||''):this.value;rBTabs();rBlock()">
+      <select class="ctrl" id="pbf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._sB(this.value==='all'?(window.bks()[0]||''):this.value)">
         <option value="all">All Blocks</option>
       </select>
-      <select class="ctrl" id="sf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="FS=this.value;rBlock()">
+      <select class="ctrl" id="sf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._setFS(this.value)">
         <option value="all">All Status</option>
         <option value="paid">✅ Paid</option>
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
       </select>
-      <select class="ctrl" id="rtf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="RTF=this.value;rBlock()">
+      <select class="ctrl" id="rtf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._setRTF(this.value)">
         <option value="all">All Types</option>
         <option value="owner">🏠 Owner</option>
         <option value="tenant">🔑 Tenant</option>
         <option value="vacant">🚪 Vacant</option>
       </select>
-      <select class="ctrl" id="flf" style="display:none;height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="FLF=this.value;rBlock()">
+      <select class="ctrl" id="flf" style="display:none;height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._setFLF(this.value)">
         <option value="all">All Floors</option>
       </select>
       <div class="sw" style="margin-left:auto">
@@ -2419,6 +2419,17 @@ document.addEventListener('keydown',e=>{if(e.key==='Escape'){cD();cA();cAF();cRI
    WINDOW EXPOSE
 ════════════════════════════════ */
 window._sB = b => { AB=b; FLF='all'; const flf=document.getElementById('flf'); if(flf)flf.value='all'; refreshAPP(); rBTabs(); rBlock(); };
+// Expose functions used in inline onchange/oninput HTML handlers
+window.rBTabs  = () => rBTabs();
+window.rBlock  = () => rBlock();
+window.rStats  = () => rStats();
+window.rIssues = () => rIssues();
+window.rStructure = rStructure;
+window.bks     = bks;
+window._setFS  = v => { FS  = v; rBlock(); };
+window._setRTF = v => { RTF = v; rBlock(); };
+window._setFLF = v => { FLF = v; rBlock(); };
+window._setAM  = v => { AM  = v; rBTabs(); rBlock(); rStats(); };
 window._oFl  =oFl;  window._oFlEdit=oFlEdit;  window._cM=cD;
 window._autoSaveFlat=autoSaveFlat;
 window._saveFlat=saveFlat;
@@ -2581,6 +2592,7 @@ function switchView(v) {
   document.querySelectorAll('.vtab').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
+  if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
   if(v==='president') {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
@@ -2611,9 +2623,6 @@ function rAll(){
   const rv=document.getElementById('resView');
   if(rv && rv.style.display!=='none') try{ rResidents(); } catch(e){ console.error('rResidents',e); }
 }
-
-
-  if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
 
 function listenVehicles(){
   if(vu)vu();
