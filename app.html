@@ -260,47 +260,47 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .floor-divider{display:none}
 .floor-divider i{display:none}
 
-/* ── FLAT CARDS (Payments tab) — compact ── */
-.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:.75rem}
+/* ── FLAT CARDS — minimal 2025 ── */
+.fgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:1rem}
 .fcard{
-  background:#fff;border:1px solid var(--border);border-radius:var(--r-md);
-  padding:8px 8px 7px;cursor:pointer;position:relative;overflow:hidden;
+  background:#fff;border:1px solid var(--border);border-radius:var(--r-lg);
+  padding:14px 14px 12px;cursor:pointer;position:relative;overflow:hidden;
   width:100%;box-sizing:border-box;transition:box-shadow .2s,border-color .2s;
 }
 .fcard:hover{box-shadow:var(--shadow);border-color:var(--border2)}
 .fcard:focus{outline:2px solid var(--indigo);outline-offset:2px}
-.fcard::before{content:'';position:absolute;top:7px;bottom:7px;left:0;width:2px;border-radius:0 2px 2px 0}
+.fcard::before{content:'';position:absolute;top:12px;bottom:12px;left:0;width:3px;border-radius:0 3px 3px 0}
 .fcard.paid::before   {background:var(--green)}
 .fcard.partial::before{background:var(--amber)}
 .fcard.pending::before{background:var(--red)}
 
-.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px;gap:3px}
+.fc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;gap:4px}
 .fc-left{min-width:0}
-.fc-num{font-size:11px;font-weight:800;color:var(--text);letter-spacing:-.1px}
-.fc-owner{font-size:9px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
-.fc-type{font-size:8px;font-weight:700;padding:1px 4px;border-radius:99px;display:inline-block;margin-top:2px}
+.fc-num{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-.1px}
+.fc-owner{font-size:11px;color:var(--text2);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;font-weight:500}
+.fc-type{font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;display:inline-block;margin-top:3px}
 .fc-type.owner{background:var(--indigo-bg);color:var(--indigo)}
 .fc-type.tenant{background:var(--amber-bg);color:var(--amber)}
-.fc-indicator{width:16px;height:16px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px}
+.fc-indicator{width:22px;height:22px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:12px}
 .fcard.paid    .fc-indicator{background:var(--green-bg); color:var(--green)}
 .fcard.partial .fc-indicator{background:var(--amber-bg); color:var(--amber)}
 .fcard.pending .fc-indicator{background:var(--red-bg);   color:var(--red)}
 
-.fc-amount{font-size:12px;font-weight:800;letter-spacing:-.3px;line-height:1;margin-bottom:1px}
+.fc-amount{font-size:16px;font-weight:800;letter-spacing:-.4px;line-height:1;margin-bottom:2px}
 .fcard.paid    .fc-amount{color:var(--text)}
 .fcard.partial .fc-amount{color:var(--amber)}
 .fcard.pending .fc-amount{color:var(--red)}
-.fc-due{font-size:9px;color:var(--muted);font-weight:500}
+.fc-due{font-size:10px;color:var(--muted);font-weight:500}
 
-.fprog{height:2px;background:var(--bg2);border-radius:99px;margin:5px 0 4px;overflow:hidden}
+.fprog{height:3px;background:var(--bg2);border-radius:99px;margin:8px 0 6px;overflow:hidden}
 .fpbar{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1)}
 .fcard.paid    .fpbar{background:var(--green)}
 .fcard.partial .fpbar{background:var(--amber)}
 .fcard.pending .fpbar{background:var(--red)}
 
-.spill{display:inline-flex;align-items:center;gap:2px;font-size:8px;font-weight:700;
-  padding:1px 5px;border-radius:99px;text-transform:uppercase;letter-spacing:.2px}
-.spill i{font-size:8px}
+.spill{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;
+  padding:2px 8px;border-radius:99px;text-transform:uppercase;letter-spacing:.3px}
+.spill i{font-size:9px}
 .spill.paid   {background:var(--green-bg);color:var(--green-txt)}
 .spill.partial{background:var(--amber-bg);color:var(--amber-txt)}
 .spill.pending{background:var(--red-bg);  color:var(--red-txt)}
@@ -730,13 +730,13 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .hist-empty{text-align:center;padding:2rem;color:var(--muted);font-size:13px}
 .hist-empty i{font-size:28px;display:block;margin-bottom:6px;opacity:.4}
 
-/* Tablet: 4 cols */
+/* Tablet: 3 cols */
 @media(min-width:481px) and (max-width:900px){
-  .fgrid{grid-template-columns:repeat(4,1fr)}
+  .fgrid{grid-template-columns:repeat(3,1fr)}
 }
 /* Desktop: auto cols */
 @media(min-width:901px){
-  .fgrid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
 }
 @media(max-width:900px){
   .navbar{padding:0 1rem}
@@ -744,7 +744,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .app{padding:0 1rem 1.5rem}
   .fg2{grid-template-columns:1fr}
   .dm{grid-template-columns:1fr 1fr}
-  .fgrid{grid-template-columns:repeat(auto-fill,minmax(100px,1fr))}
+  .fgrid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}
   .user-chip span{display:none}
   .vtab{padding:0 10px;font-size:11px;height:30px}
   /* Stack both layout grids to single column */
@@ -821,6 +821,9 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   #analyticsView > div:first-child select{
     flex:1;min-width:0;font-size:11px;
   }
+
+  /* ── Structure floor grid: 3 cols on mobile ── */
+  .str-floor-grid{grid-template-columns:repeat(3,1fr)!important}
 
   /* ── Expense filter selects in presView ── */
   #histMonthFilter,#histCatFilter{font-size:11px;height:30px}
@@ -981,8 +984,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- PAYMENTS VIEW -->
   <div id="pView" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
-      <select class="ctrl" id="pmf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;font-weight:700" onchange="AM=this.value;rBTabs();rBlock();rStats()">
-      </select>
       <select class="ctrl" id="pbf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="AB=this.value==='all'?(bks()[0]||''):this.value;rBTabs();rBlock()">
         <option value="all">All Blocks</option>
       </select>
@@ -1597,17 +1598,7 @@ let APT_NAME = 'Gatebook';
 /* ════════════════════════════════
    HELPERS
 ════════════════════════════════ */
-/* compute paid amount for a flat in a given month from expenses */
-const paidAM = (fid, month) => {
-  const m = month || AM;
-  return (exps.get(fid)||[]).filter(e=>e.month===m).reduce((s,e)=>s+(e.amt||0),0);
-};
-const st = (f, month) => {
-  const paid = paidAM(f.flatId, month);
-  const due  = f.due || 0;
-  if (!due) return 'pending';
-  return paid >= due ? 'paid' : paid > 0 ? 'partial' : 'pending';
-};
+const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
 const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
 const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
 const inr = n => '₹'+Number(n||0).toLocaleString('en-IN');
@@ -1621,23 +1612,8 @@ const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
 const bfl = b => [...flats.values()].filter(f=>f.block===b);
 const fex = id => exps.get(id)||[];
 
-/* ── Build payments month dropdown ── */
-function buildPayMonthSelect() {
-  const sel = document.getElementById('pmf');
-  if (!sel) return;
-  const cur = sel.value || AM;
-  // Gather all months from expenses + current month
-  const months = new Set([AM]);
-  exps.forEach(recs => recs.forEach(e => { if(e.month) months.add(e.month); }));
-  const sorted = [...months].sort().reverse();
-  sel.innerHTML = sorted.map(m => {
-    const lbl = new Date(m+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'});
-    return `<option value="${m}"${m===cur?' selected':''}>${lbl}</option>`;
-  }).join('');
-  // Keep AM in sync
-  if (sorted.includes(cur)) { sel.value = cur; AM = cur; }
-  else { sel.value = sorted[0]; AM = sorted[0]; }
-}
+/* ── Shared APP context for tab modules ── */
+function refreshAPP() { /* no-op — all functions use closure vars directly */ }
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -1687,27 +1663,29 @@ function toast(msg, t='success') {
 ════════════════════════════════ */
 function rStats() {
   const all=[...flats.values()];
-  const due=all.reduce((s,f)=>s+(f.due||0),0);
-  const paid=all.reduce((s,f)=>s+paidAM(f.flatId,AM),0);
-  const pc=all.filter(f=>st(f,AM)==='paid').length;
-  const pen=all.filter(f=>st(f,AM)==='pending').length;
+  const due=all.reduce((s,f)=>s+f.due,0);
+  const paid=all.reduce((s,f)=>s+f.paid,0);
+  const pc=all.filter(f=>st(f)==='paid').length;
+  const pen=all.filter(f=>st(f)==='pending').length;
   const pct=due?Math.round(paid/due*100):0;
   const oi=issues.filter(i=>i.status==='open').length;
   const ip=issues.filter(i=>i.status==='in-progress').length;
-  const monthLbl = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'});
 
   document.getElementById('openCnt').textContent=oi;
   const bnavBadge = document.getElementById('bnavIssueCnt');
   if (bnavBadge) { bnavBadge.textContent=oi; bnavBadge.style.display=oi>0?'':'none'; }
+  // Update flat count badge in navbar
   const badge=document.getElementById('flatCountBadge');
   if(badge){badge.textContent=`${all.length} flats`;badge.style.display='';}
+  const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
+  const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   document.getElementById('phAct').innerHTML=`
-    <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
-    <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+    <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
+    <button class="btn btn-indigo"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
-      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">${monthLbl}</span></div>
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">This month</span></div>
       <div class="sc-label">Total Due</div><div class="sc-value">${inr(due)}</div>
       <div class="sc-sub">${all.filter(f=>f.resType!=='tenant').length} owners · ${all.filter(f=>f.resType==='tenant').length} tenants</div>
     </div>
@@ -1720,7 +1698,7 @@ function rStats() {
     <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
       <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
-      <div class="sc-sub">${all.filter(f=>st(f,AM)==='partial').length} partial · ${pen} not paid</div>
+      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
       <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
     </div>
     <div class="scard red">
@@ -1788,9 +1766,8 @@ function oFl(fid) {
   _dQ    = '';
   _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
-  const s   = st(f, AM);
-  const paid = paidAM(fid, AM);
-  const bal = f.due - paid;
+  const s   = st(f);
+  const bal = f.due - f.paid;
   const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
@@ -1804,7 +1781,7 @@ function oFl(fid) {
 
   document.getElementById('dBody').innerHTML = `
     <div class="drawer-stats">
-      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(paid)}</div></div>
+      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
       <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
       <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
     </div>
@@ -2190,9 +2167,9 @@ async function sE(){
   try{
     const payMonth = dv ? dv.slice(0,7) : AM;
     await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),rawDate:dv||new Date().toISOString().split('T')[0],note,status:s,month:payMonth,createdAt:serverTimestamp()});
-    /* paid field on flat doc kept in sync for legacy queries */
-    const totalPaid = (exps.get(fid)||[]).filter(e=>e.month===payMonth).reduce((t,e)=>t+(e.amt||0),0) + amt;
-    await updateDoc(flatRef(fid),{paid:totalPaid});
+    let np=f.paid;
+    if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
+    await updateDoc(flatRef(fid),{paid:np});
     sync('live');cA();toast('Payment saved ✓');
   }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
@@ -2608,7 +2585,7 @@ function switchView(v) {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
   }
-  if(v==='payments')  try{ buildPayMonthSelect(); rBTabs(); rBlock(); } catch(e){ console.error(e); }
+  if(v==='payments')  try{ rBTabs(); rBlock(); } catch(e){ console.error(e); }
   if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
   if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   // Re-draw charts after layout settles (needed after CSS reorder on mobile)
@@ -2621,7 +2598,6 @@ function switchView(v) {
 
 function rAll(){
   refreshAPP();
-  buildPayMonthSelect();
   rStats();
   try{ rBTabs(); } catch(e){ console.error('rBTabs',e); }
   try{ rBlock(); } catch(e){ console.error('rBlock',e); }
@@ -2637,7 +2613,7 @@ function rAll(){
 }
 
 
-/* structure.js functions loaded via import below — see js/structure.js */
+  if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
 
 function listenVehicles(){
   if(vu)vu();
@@ -2713,7 +2689,7 @@ function rBTabs() {
     if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
     document.getElementById('btabs').innerHTML = bs.map(b => {
       const bf = [...flats.values()].filter(f => f.block === b);
-      const pc = bf.filter(f => st(f,AM) === 'paid').length;
+      const pc = bf.filter(f => st(f) === 'paid').length;
       return `<button class="btab${b === AB ? ' active' : ''}" onclick="window._sB('${b}')">
         <i class="ti ti-building"></i> Block ${b}
         <span class="btab-badge">${pc}/${bf.length}</span>
@@ -2728,7 +2704,7 @@ function rBTabs() {
     if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
     document.getElementById('btabs').innerHTML = floors.map(fl => {
       const bf = all.filter(f => f.floor === fl);
-      const pc = bf.filter(f => st(f,AM) === 'paid').length;
+      const pc = bf.filter(f => st(f) === 'paid').length;
       return `<button class="btab${String(fl) === String(AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
         <i class="ti ti-stairs"></i> Floor ${fl}
         <span class="btab-badge">${pc}/${bf.length}</span>
@@ -2749,7 +2725,7 @@ function rBlock() {
   }
 
   const vis = bf.filter(f => {
-    if (FS !== 'all' && st(f,AM) !== FS) return false;
+    if (FS !== 'all' && st(f) !== FS) return false;
     if (RTF !== 'all') {
       const vacant = !(f.owner || '').trim();
       if (RTF === 'vacant' && !vacant) return false;
@@ -2761,8 +2737,8 @@ function rBlock() {
     return true;
   });
 
-  const pc  = bf.filter(f => st(f,AM) === 'paid').length;
-  const col = bf.reduce((s, f) => s + paidAM(f.flatId,AM), 0);
+  const pc  = bf.filter(f => st(f) === 'paid').length;
+  const col = bf.reduce((s, f) => s + f.paid, 0);
   const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
 
   let h = `<div class="bhead">
@@ -2789,7 +2765,7 @@ function rBlock() {
         h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
       }
       byFloor[fl].forEach(f => {
-        const s = st(f,AM), paid = paidAM(f.flatId,AM), pct = f.due ? Math.round(Math.min(paid/f.due*100,100)) : 0;
+        const s = st(f), pct = f.due ? Math.round(Math.min(f.paid/f.due*100,100)) : 0;
         h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
           onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
           <div class="fc-top">
@@ -2800,7 +2776,7 @@ function rBlock() {
             </div>
             <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
           </div>
-          <div class="fc-amount">${inr(paid)}</div>
+          <div class="fc-amount">${inr(f.paid)}</div>
           <div class="fc-due">of ${inr(f.due)} monthly due</div>
           <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
           <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
@@ -2966,7 +2942,7 @@ function rMembers() {
     const movedOut   = fmtDate(f.moveOut);
     const allEx      = fex(f.flatId);
     const totalPaid  = allEx.reduce((s, e) => s + e.amt, 0);
-    const balance    = (f.due || 0) - paidAM(f.flatId,AM);
+    const balance    = (f.due || 0) - (f.paid || 0);
     const payMonths  = [...new Set(allEx.map(e => e.month || e.date?.slice(0, 7)))].filter(Boolean);
     const statusColor = balance > 0 ? 'var(--red)' : balance === 0 && f.due > 0 ? 'var(--green)' : 'var(--muted)';
 
@@ -3779,6 +3755,118 @@ async function boot(){
   }
 }
 
+/* ══ STRUCTURE TAB ══ */
+function rStructure() {
+  // Populate block filter
+  const bfSel = document.getElementById('strBlockFilter');
+  if (bfSel) {
+    const blocks = [...new Set([...flats.values()].map(f=>f.block).filter(Boolean))].sort();
+    const cur = bfSel.value || 'all';
+    bfSel.innerHTML = `<option value="all">All Blocks</option>` +
+      blocks.map(b=>`<option value="${b}"${b===cur?' selected':''}>${'Block '+b}</option>`).join('');
+  }
+
+  const selBlock = bfSel?.value || 'all';
+  const q = (document.getElementById('strSearch')?.value||'').trim().toLowerCase();
+
+  let rows = [...flats.values()].filter(f => {
+    if (selBlock !== 'all' && f.block !== selBlock) return false;
+    if (q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b) => (a.flatId||'').localeCompare(b.flatId||''));
+
+  // Stats
+  const total   = rows.length;
+  const owners  = rows.filter(f=>(f.resType||'owner')==='owner' && (f.owner||'').trim()).length;
+  const tenants = rows.filter(f=>f.resType==='tenant').length;
+  const vacant  = rows.filter(f=>!(f.owner||'').trim()).length;
+  const statEl  = document.getElementById('strStats');
+  if (statEl) statEl.innerHTML = `
+    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-home"></i></div><div><div class="vscard-label">Total Flats</div><div class="vscard-val">${total}</div></div></div>
+    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-user-check"></i></div><div><div class="vscard-label">Owners</div><div class="vscard-val">${owners}</div></div></div>
+    <div class="vscard"><div class="vscard-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-key"></i></div><div><div class="vscard-label">Tenants</div><div class="vscard-val">${tenants}</div></div></div>
+    <div class="vscard"><div class="vscard-icon" style="background:var(--surface3);color:var(--muted)"><i class="ti ti-door"></i></div><div><div class="vscard-label">Vacant</div><div class="vscard-val">${vacant}</div></div></div>`;
+
+  // Group by block
+  const byBlock = new Map();
+  rows.forEach(f => {
+    const b = f.block || '(No Block)';
+    if (!byBlock.has(b)) byBlock.set(b, []);
+    byBlock.get(b).push(f);
+  });
+
+  const blocksEl = document.getElementById('strBlocks');
+  if (!blocksEl) return;
+
+  if (!rows.length) {
+    blocksEl.innerHTML = `<div style="text-align:center;padding:4rem;color:var(--muted)">
+      <i class="ti ti-building-off" style="font-size:40px;display:block;margin-bottom:12px;opacity:.4"></i>
+      No flats found. <button class="btn btn-indigo btn-sm" style="margin-left:8px" onclick="window._oAF()"><i class="ti ti-plus"></i> Add Flat</button>
+    </div>`;
+    return;
+  }
+
+  blocksEl.innerHTML = [...byBlock.entries()].map(([block, bFlats]) => {
+    const paidCnt = bFlats.filter(f=>{
+      const am = _anSelMonth||AM;
+      const paid = (exps.get(f.flatId)||[]).filter(e=>e.month===am).reduce((s,e)=>s+(e.amt||0),0);
+      return paid > 0 && paid >= (f.due||0);
+    }).length;
+
+    const tableRows = bFlats.map(f => {
+      const isVacant = !(f.owner||'').trim();
+      const rType    = isVacant ? 'vacant' : (f.resType||'owner');
+      const typeCls  = isVacant ? 'muted' : rType==='tenant' ? 'amber' : 'indigo';
+      const typeLabel= isVacant ? 'Vacant' : rType==='tenant' ? '🔑 Tenant' : '🏠 Owner';
+      const v        = vehicles.get(f.flatId)||{};
+      const tw = parseInt(v.tw)||0, fw = parseInt(v.fw)||0;
+      const veh = (tw||fw) ? `🏍${tw} 🚗${fw}` : '<span style="color:var(--muted)">—</span>';
+      return `<tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-weight:800;color:var(--indigo);font-size:13px">${f.flatId}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border)">
+          <div style="font-size:13px;font-weight:600;color:var(--text)">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
+          ${f.ownerName&&rType==='tenant'?`<div style="font-size:10px;color:var(--text2)">Owner: ${f.ownerName}</div>`:''}
+        </td>
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border)"><span class="tab-chip ${typeCls}">${typeLabel}</span></td>
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;font-weight:700;color:var(--text);text-align:right">${f.due?inr(f.due):'<span style="color:var(--muted)">—</span>'}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);text-align:center">${veh}</td>
+        <td style="padding:10px 14px;border-bottom:1px solid var(--border);text-align:center">
+          <button onclick="window._oFlEdit('${f.flatId}')" title="Edit"
+            style="background:none;border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--indigo);display:inline-flex;align-items:center;justify-content:center"
+            onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)'"
+            onmouseout="this.style.background='none';this.style.borderColor='var(--border2)'">
+            <i class="ti ti-pencil" style="font-size:12px"></i>
+          </button>
+        </td>
+      </tr>`;
+    }).join('');
+
+    return `<div style="margin-bottom:16px">
+      <div class="tab-table-wrap">
+        <div style="padding:10px 14px;border-bottom:1px solid var(--border2);display:flex;align-items:center;justify-content:space-between;background:var(--surface3)">
+          <div style="font-size:12px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px">
+            <i class="ti ti-building" style="color:var(--indigo)"></i> Block ${block}
+            <span style="font-size:10px;font-weight:600;color:var(--muted)">${bFlats.length} flats · ${paidCnt} paid</span>
+          </div>
+          <button class="btn btn-indigo btn-sm" onclick="window._oAF()" style="padding:3px 10px;font-size:11px"><i class="ti ti-plus"></i> Add</button>
+        </div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="background:var(--surface3)">
+            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Resident</th>
+            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Type</th>
+            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);text-align:right">Due</th>
+            <th style="padding:8px 14px;font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);text-align:center">Vehicles</th>
+            <th style="padding:8px 14px;width:36px;border-bottom:1px solid var(--border2)"></th>
+          </tr></thead>
+          <tbody>${tableRows}</tbody>
+        </table>
+      </div>
+    </div>`;
+  }).join('');
+}
+window.rStructure = rStructure;
+
 /* ══ ANALYTICS TAB ══ */
 
 function _getCanvasSize(canvas) {
@@ -4082,11 +4170,11 @@ window.addEventListener('resize', () => {
 /* ── Pending Flats Modal ── */
 function showPending() {
   const all     = [...flats.values()];
-  const pending = all.filter(f=>st(f,AM)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
-  const partial = all.filter(f=>st(f,AM)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const pending = all.filter(f=>st(f)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const partial = all.filter(f=>st(f)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
   const rows    = [...pending, ...partial];
 
-  const totalBal = rows.reduce((s,f)=>s+(f.due-paidAM(f.flatId,AM)),0);
+  const totalBal = rows.reduce((s,f)=>s+(f.due-f.paid),0);
   const modal    = document.getElementById('pendingModal');
   const subtitle = document.getElementById('pendingSubtitle');
   const summary  = document.getElementById('pendingSummary');
@@ -4112,8 +4200,8 @@ function showPending() {
     tbody.innerHTML = `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-circle-check" style="font-size:24px;color:var(--green);display:block;margin-bottom:8px"></i>All flats are paid!</td></tr>`;
   } else {
     tbody.innerHTML = rows.map((f,i) => {
-      const s   = st(f, AM);
-      const bal = f.due - paidAM(f.flatId, AM);
+      const s   = st(f);
+      const bal = f.due - f.paid;
       const sc  = s==='partial' ? '#f59e0b' : '#ef4444';
       const sl  = s==='partial' ? '⚠️ Partial' : '❌ Not Paid';
       const bg  = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
@@ -4121,13 +4209,13 @@ function showPending() {
         <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
         <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted);font-weight:400">No owner</em>'}</td>
         <td style="padding:10px 14px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span></td>
-        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(paidAM(f.flatId,AM))}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(f.paid)}</td>
         <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(bal)}</td>
       </tr>`;
     }).join('') +
     `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
       <td colspan="3" style="padding:10px 18px;font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
-      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+paidAM(f.flatId),0))}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+f.paid,0))}</td>
       <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(totalBal)}</td>
     </tr>`;
   }
@@ -4247,22 +4335,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   </tr>`;
 }
 
-/* ── structure.js: loaded as side-effect module, reads closure vars via window ── */
-/* expose shared state so structure.js can read/write */
-window._APP = {
-  get flats()    { return flats; },
-  get AM()       { return AM; },
-  get st()       { return st; },
-  get inr()      { return inr; },
-  get sync()     { return sync; },
-  get toast()    { return toast; },
-  get flatRef()  { return flatRef; },
-  get setDoc()   { return setDoc; },
-  get updateDoc(){ return updateDoc; },
-  get deleteDoc(){ return deleteDoc; },
-  get rAll()     { return rAll; },
-};
-import './js/structure.js';
+/* rStructure is defined inline above */
 </script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
