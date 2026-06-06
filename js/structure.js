@@ -240,7 +240,8 @@ window._addNewBlock = async function() {
    MAIN RENDER
 ══════════════════════════════════════════ */
 function rStructure() {
-  const all    = [...flats().values()].filter(f => f.month === AM());
+  /* Structure shows ALL flats — it's a physical view, not month-scoped */
+  const all    = [...flats().values()];
   const blocks = [...new Set(all.map(f => f.block).filter(Boolean))].sort();
   const q      = (document.getElementById('strSearch')?.value || '').toLowerCase().trim();
   const bf     = document.getElementById('strBlockFilter')?.value || 'all';
