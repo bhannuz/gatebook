@@ -1595,7 +1595,14 @@ let APT_NAME = 'Gatebook';
 /* ════════════════════════════════
    HELPERS
 ════════════════════════════════ */
-const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
+/* compute paid amount for a flat in current month from expenses */
+const paidAM = fid => (exps.get(fid)||[]).filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
+const st  = f => {
+  const paid = paidAM(f.flatId);
+  const due  = f.due || 0;
+  if (!due) return 'pending';
+  return paid >= due ? 'paid' : paid > 0 ? 'partial' : 'pending';
+};
 const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
 const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
 const inr = n => '₹'+Number(n||0).toLocaleString('en-IN');
@@ -1660,8 +1667,8 @@ function toast(msg, t='success') {
 ════════════════════════════════ */
 function rStats() {
   const all=[...flats.values()];
-  const due=all.reduce((s,f)=>s+f.due,0);
-  const paid=all.reduce((s,f)=>s+f.paid,0);
+  const due=all.reduce((s,f)=>s+(f.due||0),0);
+  const paid=all.reduce((s,f)=>s+paidAM(f.flatId),0);
   const pc=all.filter(f=>st(f)==='paid').length;
   const pen=all.filter(f=>st(f)==='pending').length;
   const pct=due?Math.round(paid/due*100):0;
@@ -1764,7 +1771,8 @@ function oFl(fid) {
   _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
   const s   = st(f);
-  const bal = f.due - f.paid;
+  const paid = paidAM(fid);
+  const bal = f.due - paid;
   const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
@@ -1778,7 +1786,7 @@ function oFl(fid) {
 
   document.getElementById('dBody').innerHTML = `
     <div class="drawer-stats">
-      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(f.paid)}</div></div>
+      <div class="dstat"><div class="dstat-label">Paid</div><div class="dstat-val" style="color:var(--green)">${inr(paid)}</div></div>
       <div class="dstat"><div class="dstat-label">Balance</div><div class="dstat-val" style="color:${bal>0?'var(--red)':'var(--green)'}">${inr(Math.abs(bal))}</div></div>
       <div class="dstat"><div class="dstat-label">Status</div><div class="dstat-val" style="font-size:11px;color:${sc}">${sl(s)}</div></div>
     </div>
@@ -2164,9 +2172,9 @@ async function sE(){
   try{
     const payMonth = dv ? dv.slice(0,7) : AM;
     await addDoc(expColl(),{flatId:fid,block,cat,amt,date:dv?fd(dv):fd(new Date().toISOString()),rawDate:dv||new Date().toISOString().split('T')[0],note,status:s,month:payMonth,createdAt:serverTimestamp()});
-    let np=f.paid;
-    if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
-    await updateDoc(flatRef(fid),{paid:np});
+    /* paid field on flat doc kept in sync for legacy queries */
+    const totalPaid = (exps.get(fid)||[]).filter(e=>e.month===payMonth).reduce((t,e)=>t+(e.amt||0),0) + amt;
+    await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live');cA();toast('Payment saved ✓');
   }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
@@ -2735,7 +2743,7 @@ function rBlock() {
   });
 
   const pc  = bf.filter(f => st(f) === 'paid').length;
-  const col = bf.reduce((s, f) => s + f.paid, 0);
+  const col = bf.reduce((s, f) => s + paidAM(f.flatId), 0);
   const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
 
   let h = `<div class="bhead">
@@ -2762,7 +2770,7 @@ function rBlock() {
         h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
       }
       byFloor[fl].forEach(f => {
-        const s = st(f), pct = f.due ? Math.round(Math.min(f.paid/f.due*100,100)) : 0;
+        const s = st(f), paid = paidAM(f.flatId), pct = f.due ? Math.round(Math.min(paid/f.due*100,100)) : 0;
         h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
           onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
           <div class="fc-top">
@@ -2773,7 +2781,7 @@ function rBlock() {
             </div>
             <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
           </div>
-          <div class="fc-amount">${inr(f.paid)}</div>
+          <div class="fc-amount">${inr(paid)}</div>
           <div class="fc-due">of ${inr(f.due)} monthly due</div>
           <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
           <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
@@ -2939,7 +2947,7 @@ function rMembers() {
     const movedOut   = fmtDate(f.moveOut);
     const allEx      = fex(f.flatId);
     const totalPaid  = allEx.reduce((s, e) => s + e.amt, 0);
-    const balance    = (f.due || 0) - (f.paid || 0);
+    const balance    = (f.due || 0) - paidAM(f.flatId);
     const payMonths  = [...new Set(allEx.map(e => e.month || e.date?.slice(0, 7)))].filter(Boolean);
     const statusColor = balance > 0 ? 'var(--red)' : balance === 0 && f.due > 0 ? 'var(--green)' : 'var(--muted)';
 
@@ -4059,7 +4067,7 @@ function showPending() {
   const partial = all.filter(f=>st(f)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
   const rows    = [...pending, ...partial];
 
-  const totalBal = rows.reduce((s,f)=>s+(f.due-f.paid),0);
+  const totalBal = rows.reduce((s,f)=>s+(f.due-paidAM(f.flatId)),0);
   const modal    = document.getElementById('pendingModal');
   const subtitle = document.getElementById('pendingSubtitle');
   const summary  = document.getElementById('pendingSummary');
@@ -4086,7 +4094,7 @@ function showPending() {
   } else {
     tbody.innerHTML = rows.map((f,i) => {
       const s   = st(f);
-      const bal = f.due - f.paid;
+      const bal = f.due - paidAM(f.flatId);
       const sc  = s==='partial' ? '#f59e0b' : '#ef4444';
       const sl  = s==='partial' ? '⚠️ Partial' : '❌ Not Paid';
       const bg  = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
@@ -4094,13 +4102,13 @@ function showPending() {
         <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
         <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted);font-weight:400">No owner</em>'}</td>
         <td style="padding:10px 14px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span></td>
-        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(f.paid)}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(paidAM(f.flatId))}</td>
         <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(bal)}</td>
       </tr>`;
     }).join('') +
     `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
       <td colspan="3" style="padding:10px 18px;font-size:11px;font-weight:800;color:var(--text2)">Total (${rows.length} flats)</td>
-      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+f.paid,0))}</td>
+      <td style="padding:10px 14px;text-align:right;font-weight:800;color:var(--green);font-size:12px">${inr(rows.reduce((s,f)=>s+paidAM(f.flatId),0))}</td>
       <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(totalBal)}</td>
     </tr>`;
   }
