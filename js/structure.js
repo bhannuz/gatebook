@@ -274,25 +274,33 @@ function rStructure() {
   const sc = f => { const s = st(f); return s === 'paid' ? 'var(--green)' : s === 'partial' ? 'var(--amber)' : 'var(--red)'; };
   const si = f => { const s = st(f); return s === 'paid' ? 'ti-circle-check' : s === 'partial' ? 'ti-clock' : 'ti-alert-circle'; };
 
-  /* ── flat card view ── */
-  const flatCards = (fls) => fls.sort((a, b) => (a.flatId || '').localeCompare(b.flatId || '')).map(f => {
-    const sColor = sc(f), sIcon = si(f), isVacant = !(f.owner || '').trim();
-    return `<div onclick="window._oFl('${f.flatId}')"
-      style="background:var(--surface2);border:1px solid var(--border);border-left:3px solid ${sColor};
-        border-radius:8px;padding:8px 10px;cursor:pointer;transition:box-shadow .15s"
-      onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='none'">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
-        <span style="font-size:12px;font-weight:800;color:var(--text)">${f.flatId}</span>
-        <i class="ti ${sIcon}" style="font-size:12px;color:${sColor}"></i>
-      </div>
-      <div style="font-size:10px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-        ${isVacant ? '<em style="color:var(--muted)">Vacant</em>' : f.owner}
-      </div>
-      <div style="font-size:9px;font-weight:700;margin-top:3px;color:${sColor}">
-        ${isVacant ? '' : inr(f.paid) + ' / ' + inr(f.due)}
-      </div>
-    </div>`;
-  }).join('');
+  /* ── flat card view (structure) ── */
+  const flatCards = (fls) => {
+    const sorted = fls.sort((a, b) => (a.flatId || '').localeCompare(b.flatId || ''));
+    return sorted.map(f => {
+      const s = st(f);
+      const dotColor = s === 'paid' ? 'var(--green)' : s === 'partial' ? 'var(--amber)' : 'var(--red)';
+      const isVacant = !(f.owner || '').trim();
+      const badgeBg  = isVacant ? 'var(--surface3)' : s === 'paid' ? 'var(--green-bg)' : s === 'partial' ? 'var(--amber-bg)' : 'var(--red-bg)';
+      const badgeClr = isVacant ? 'var(--muted)'    : s === 'paid' ? 'var(--green-txt)': s === 'partial' ? 'var(--amber-txt)': 'var(--red-txt)';
+      return `<div onclick="window._oFl('${f.flatId}')"
+        style="display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:7px;
+          cursor:pointer;transition:background .12s;border:1px solid transparent"
+        onmouseover="this.style.background='var(--surface2)';this.style.borderColor='var(--border)'"
+        onmouseout="this.style.background='';this.style.borderColor='transparent'">
+        <span style="width:6px;height:6px;border-radius:50%;background:${dotColor};flex-shrink:0"></span>
+        <span style="font-size:11px;font-weight:800;color:var(--indigo);flex-shrink:0;min-width:48px">${f.flatId}</span>
+        <span style="font-size:11px;color:${isVacant ? 'var(--muted)' : 'var(--text)'};
+          font-style:${isVacant ? 'italic' : 'normal'};flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          ${isVacant ? 'Vacant' : f.owner}
+        </span>
+        ${!isVacant ? `<span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:99px;
+          background:${badgeBg};color:${badgeClr};flex-shrink:0;white-space:nowrap">
+          ${s === 'paid' ? '✓ Paid' : s === 'partial' ? '~ Partial' : '✗ Pending'}
+        </span>` : ''}
+      </div>`;
+    }).join('');
+  };
 
   /* ── editable flat table row ── */
   const flatEditRow = (f, fl) => {
@@ -537,15 +545,22 @@ function rStructure() {
         </div>
       </div><!-- /edit panel -->
 
-      <!-- ═ FLAT CARDS VIEW ═ -->
-      <div style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+      <!-- ═ FLAT LIST VIEW ═ -->
+      <div style="padding:10px 12px;display:flex;flex-direction:column;gap:10px">
         ${[...floorMap.entries()].sort((a, b) => Number(b[0]) - Number(a[0])).map(([fl, fls]) => `
           <div>
-            <div style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;
-              letter-spacing:.8px;margin-bottom:6px">
-              Floor ${fl} <span style="font-weight:400;opacity:.4">·</span> ${fls.length} flat${fls.length !== 1 ? 's' : ''}
+            <div style="display:flex;align-items:center;justify-content:space-between;
+              padding:4px 10px 6px;margin-bottom:2px">
+              <span style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.8px">
+                Floor ${fl}
+              </span>
+              <span style="font-size:10px;color:var(--muted)">${fls.length} flat${fls.length !== 1 ? 's' : ''} ·
+                <span style="color:var(--green);font-weight:700">${fls.filter(f=>st(f)==='paid').length} paid</span>
+                ${fls.filter(f=>st(f)==='pending').length > 0
+                  ? ` · <span style="color:var(--red);font-weight:700">${fls.filter(f=>st(f)==='pending').length} pending</span>` : ''}
+              </span>
             </div>
-            <div class="str-floor-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px">
+            <div style="background:var(--surface2);border-radius:var(--r-md);overflow:hidden;border:1px solid var(--border)">
               ${flatCards(fls)}
             </div>
           </div>`).join('')}
