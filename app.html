@@ -981,6 +981,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   <!-- PAYMENTS VIEW -->
   <div id="pView" style="display:none">
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <select class="ctrl" id="pmf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;font-weight:700" onchange="AM=this.value;rBTabs();rBlock();rStats()">
+      </select>
       <select class="ctrl" id="pbf" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="AB=this.value==='all'?(bks()[0]||''):this.value;rBTabs();rBlock()">
         <option value="all">All Blocks</option>
       </select>
@@ -1595,10 +1597,13 @@ let APT_NAME = 'Gatebook';
 /* ════════════════════════════════
    HELPERS
 ════════════════════════════════ */
-/* compute paid amount for a flat in current month from expenses */
-const paidAM = fid => (exps.get(fid)||[]).filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
-const st  = f => {
-  const paid = paidAM(f.flatId);
+/* compute paid amount for a flat in a given month from expenses */
+const paidAM = (fid, month) => {
+  const m = month || AM;
+  return (exps.get(fid)||[]).filter(e=>e.month===m).reduce((s,e)=>s+(e.amt||0),0);
+};
+const st = (f, month) => {
+  const paid = paidAM(f.flatId, month);
   const due  = f.due || 0;
   if (!due) return 'pending';
   return paid >= due ? 'paid' : paid > 0 ? 'partial' : 'pending';
@@ -1616,8 +1621,23 @@ const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
 const bfl = b => [...flats.values()].filter(f=>f.block===b);
 const fex = id => exps.get(id)||[];
 
-/* ── Shared APP context for tab modules ── */
-function refreshAPP() { /* no-op — all functions use closure vars directly */ }
+/* ── Build payments month dropdown ── */
+function buildPayMonthSelect() {
+  const sel = document.getElementById('pmf');
+  if (!sel) return;
+  const cur = sel.value || AM;
+  // Gather all months from expenses + current month
+  const months = new Set([AM]);
+  exps.forEach(recs => recs.forEach(e => { if(e.month) months.add(e.month); }));
+  const sorted = [...months].sort().reverse();
+  sel.innerHTML = sorted.map(m => {
+    const lbl = new Date(m+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'});
+    return `<option value="${m}"${m===cur?' selected':''}>${lbl}</option>`;
+  }).join('');
+  // Keep AM in sync
+  if (sorted.includes(cur)) { sel.value = cur; AM = cur; }
+  else { sel.value = sorted[0]; AM = sorted[0]; }
+}
 
 /* ── Month selector ── */
 function buildMonthSelect() {
@@ -1668,28 +1688,26 @@ function toast(msg, t='success') {
 function rStats() {
   const all=[...flats.values()];
   const due=all.reduce((s,f)=>s+(f.due||0),0);
-  const paid=all.reduce((s,f)=>s+paidAM(f.flatId),0);
-  const pc=all.filter(f=>st(f)==='paid').length;
-  const pen=all.filter(f=>st(f)==='pending').length;
+  const paid=all.reduce((s,f)=>s+paidAM(f.flatId,AM),0);
+  const pc=all.filter(f=>st(f,AM)==='paid').length;
+  const pen=all.filter(f=>st(f,AM)==='pending').length;
   const pct=due?Math.round(paid/due*100):0;
   const oi=issues.filter(i=>i.status==='open').length;
   const ip=issues.filter(i=>i.status==='in-progress').length;
+  const monthLbl = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'short',year:'numeric'});
 
   document.getElementById('openCnt').textContent=oi;
   const bnavBadge = document.getElementById('bnavIssueCnt');
   if (bnavBadge) { bnavBadge.textContent=oi; bnavBadge.style.display=oi>0?'':'none'; }
-  // Update flat count badge in navbar
   const badge=document.getElementById('flatCountBadge');
   if(badge){badge.textContent=`${all.length} flats`;badge.style.display='';}
-  const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
-  const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   document.getElementById('phAct').innerHTML=`
-    <button class="btn btn-indigo"  onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
-    <button class="btn btn-indigo"   onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+    <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
+    <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
   `;
   document.getElementById('statsRow').innerHTML=`
     <div class="scard indigo">
-      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">This month</span></div>
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-receipt"></i></div><span class="sc-trend up">${monthLbl}</span></div>
       <div class="sc-label">Total Due</div><div class="sc-value">${inr(due)}</div>
       <div class="sc-sub">${all.filter(f=>f.resType!=='tenant').length} owners · ${all.filter(f=>f.resType==='tenant').length} tenants</div>
     </div>
@@ -1702,7 +1720,7 @@ function rStats() {
     <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
       <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
-      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
+      <div class="sc-sub">${all.filter(f=>st(f,AM)==='partial').length} partial · ${pen} not paid</div>
       <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
     </div>
     <div class="scard red">
@@ -1770,8 +1788,8 @@ function oFl(fid) {
   _dQ    = '';
   _dCat  = 'all';
   const f = flats.get(fid); if (!f) return;
-  const s   = st(f);
-  const paid = paidAM(fid);
+  const s   = st(f, AM);
+  const paid = paidAM(fid, AM);
   const bal = f.due - paid;
   const sc  = s==='paid'?'var(--green)':s==='partial'?'var(--amber)':'var(--red)';
   const month = new Date(AM+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
@@ -2590,7 +2608,7 @@ function switchView(v) {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
   }
-  if(v==='payments')  try{ rBTabs(); rBlock(); } catch(e){ console.error(e); }
+  if(v==='payments')  try{ buildPayMonthSelect(); rBTabs(); rBlock(); } catch(e){ console.error(e); }
   if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
   if(v==='residents') try{ rResidents(); } catch(e){ console.error(e); }
   // Re-draw charts after layout settles (needed after CSS reorder on mobile)
@@ -2603,6 +2621,7 @@ function switchView(v) {
 
 function rAll(){
   refreshAPP();
+  buildPayMonthSelect();
   rStats();
   try{ rBTabs(); } catch(e){ console.error('rBTabs',e); }
   try{ rBlock(); } catch(e){ console.error('rBlock',e); }
@@ -2694,7 +2713,7 @@ function rBTabs() {
     if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
     document.getElementById('btabs').innerHTML = bs.map(b => {
       const bf = [...flats.values()].filter(f => f.block === b);
-      const pc = bf.filter(f => st(f) === 'paid').length;
+      const pc = bf.filter(f => st(f,AM) === 'paid').length;
       return `<button class="btab${b === AB ? ' active' : ''}" onclick="window._sB('${b}')">
         <i class="ti ti-building"></i> Block ${b}
         <span class="btab-badge">${pc}/${bf.length}</span>
@@ -2709,7 +2728,7 @@ function rBTabs() {
     if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
     document.getElementById('btabs').innerHTML = floors.map(fl => {
       const bf = all.filter(f => f.floor === fl);
-      const pc = bf.filter(f => st(f) === 'paid').length;
+      const pc = bf.filter(f => st(f,AM) === 'paid').length;
       return `<button class="btab${String(fl) === String(AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
         <i class="ti ti-stairs"></i> Floor ${fl}
         <span class="btab-badge">${pc}/${bf.length}</span>
@@ -2730,7 +2749,7 @@ function rBlock() {
   }
 
   const vis = bf.filter(f => {
-    if (FS !== 'all' && st(f) !== FS) return false;
+    if (FS !== 'all' && st(f,AM) !== FS) return false;
     if (RTF !== 'all') {
       const vacant = !(f.owner || '').trim();
       if (RTF === 'vacant' && !vacant) return false;
@@ -2742,8 +2761,8 @@ function rBlock() {
     return true;
   });
 
-  const pc  = bf.filter(f => st(f) === 'paid').length;
-  const col = bf.reduce((s, f) => s + paidAM(f.flatId), 0);
+  const pc  = bf.filter(f => st(f,AM) === 'paid').length;
+  const col = bf.reduce((s, f) => s + paidAM(f.flatId,AM), 0);
   const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
 
   let h = `<div class="bhead">
@@ -2770,7 +2789,7 @@ function rBlock() {
         h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
       }
       byFloor[fl].forEach(f => {
-        const s = st(f), paid = paidAM(f.flatId), pct = f.due ? Math.round(Math.min(paid/f.due*100,100)) : 0;
+        const s = st(f,AM), paid = paidAM(f.flatId,AM), pct = f.due ? Math.round(Math.min(paid/f.due*100,100)) : 0;
         h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
           onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
           <div class="fc-top">
@@ -2947,7 +2966,7 @@ function rMembers() {
     const movedOut   = fmtDate(f.moveOut);
     const allEx      = fex(f.flatId);
     const totalPaid  = allEx.reduce((s, e) => s + e.amt, 0);
-    const balance    = (f.due || 0) - paidAM(f.flatId);
+    const balance    = (f.due || 0) - paidAM(f.flatId,AM);
     const payMonths  = [...new Set(allEx.map(e => e.month || e.date?.slice(0, 7)))].filter(Boolean);
     const statusColor = balance > 0 ? 'var(--red)' : balance === 0 && f.due > 0 ? 'var(--green)' : 'var(--muted)';
 
@@ -4063,11 +4082,11 @@ window.addEventListener('resize', () => {
 /* ── Pending Flats Modal ── */
 function showPending() {
   const all     = [...flats.values()];
-  const pending = all.filter(f=>st(f)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
-  const partial = all.filter(f=>st(f)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const pending = all.filter(f=>st(f,AM)==='pending').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
+  const partial = all.filter(f=>st(f,AM)==='partial').sort((a,b)=>(b.due-b.paid)-(a.due-a.paid));
   const rows    = [...pending, ...partial];
 
-  const totalBal = rows.reduce((s,f)=>s+(f.due-paidAM(f.flatId)),0);
+  const totalBal = rows.reduce((s,f)=>s+(f.due-paidAM(f.flatId,AM)),0);
   const modal    = document.getElementById('pendingModal');
   const subtitle = document.getElementById('pendingSubtitle');
   const summary  = document.getElementById('pendingSummary');
@@ -4093,8 +4112,8 @@ function showPending() {
     tbody.innerHTML = `<tr><td colspan="5" style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-circle-check" style="font-size:24px;color:var(--green);display:block;margin-bottom:8px"></i>All flats are paid!</td></tr>`;
   } else {
     tbody.innerHTML = rows.map((f,i) => {
-      const s   = st(f);
-      const bal = f.due - paidAM(f.flatId);
+      const s   = st(f, AM);
+      const bal = f.due - paidAM(f.flatId, AM);
       const sc  = s==='partial' ? '#f59e0b' : '#ef4444';
       const sl  = s==='partial' ? '⚠️ Partial' : '❌ Not Paid';
       const bg  = i%2===0 ? 'var(--surface)' : 'var(--surface2)';
@@ -4102,7 +4121,7 @@ function showPending() {
         <td style="padding:10px 18px;font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
         <td style="padding:10px 14px;font-size:12px;font-weight:600;color:var(--text);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner||'<em style="color:var(--muted);font-weight:400">No owner</em>'}</td>
         <td style="padding:10px 14px;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px;background:${sc}18;color:${sc};border:1px solid ${sc}40">${sl}</span></td>
-        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(paidAM(f.flatId))}</td>
+        <td style="padding:10px 14px;text-align:right;font-weight:700;color:var(--green);font-size:12px">${inr(paidAM(f.flatId,AM))}</td>
         <td style="padding:10px 18px;text-align:right;font-weight:800;color:#ef4444;font-size:12px">${inr(bal)}</td>
       </tr>`;
     }).join('') +
