@@ -605,6 +605,48 @@
   </div>
 </div>
 
+<!-- MONTHLY SUMMARY REPORT MODAL -->
+<div class="mbg" id="monthlySummaryM" style="display:none;align-items:flex-start;padding-top:32px">
+  <div class="modal" style="width:min(780px,96vw);max-height:86vh;display:flex;flex-direction:column">
+    <div class="mhead" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-file-description"></i></div>
+        <div>
+          <div class="mtitle">Monthly Summary Report</div>
+          <div class="msub">Per-flat payment status · WhatsApp &amp; Print</div>
+        </div>
+      </div>
+      <button class="mclose" onclick="window._cMonthlySummary()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Filters -->
+    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:12px 0 14px;border-bottom:1px solid var(--border2);flex-shrink:0">
+      <select id="msMonth" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer"></select>
+      <select id="msBlock" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer"></select>
+      <select id="msStatus" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer">
+        <option value="all">All Status</option>
+        <option value="paid">✅ Paid</option>
+        <option value="partial">⚠️ Partial</option>
+        <option value="pending">❌ Pending</option>
+      </select>
+      <button class="btn btn-white" onclick="window._printMonthlySummary()"
+        style="margin-left:auto;border:1.5px solid var(--border2)">
+        <i class="ti ti-printer"></i> Print
+      </button>
+    </div>
+
+    <!-- Summary totals header -->
+    <div id="msSummaryHead" style="flex-shrink:0;padding-top:14px"></div>
+
+    <!-- Flat rows -->
+    <div id="msSummaryBody" style="overflow-y:auto;flex:1;border:1.5px solid var(--border2);border-radius:var(--r-lg);margin-top:10px"></div>
+  </div>
+</div>
+
+
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
