@@ -4053,63 +4053,249 @@ function _printMonthlySummary() {
   if (!d) return;
   const { rows, monthLabel, totDue, totPaid, totBal } = d;
 
-  const statusLabel = s => ({ paid: '✅ Paid', partial: '⚠️ Partial', pending: '❌ Pending' }[s]);
+  const paidCnt = rows.filter(f => f._status === 'paid').length;
+  const partCnt = rows.filter(f => f._status === 'partial').length;
+  const pendCnt = rows.filter(f => f._status === 'pending').length;
+  const collPct = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
+  const genDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
-  <title>${APT_NAME} — Monthly Summary — ${monthLabel}</title>
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Segoe UI',Arial,sans-serif;color:#111;padding:24px 28px;font-size:12px}
-    h1{font-size:20px;font-weight:800;margin-bottom:2px}
-    .sub{font-size:12px;color:#555;margin-bottom:18px}
-    .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-    .tot-card{border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 14px}
-    .tot-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}
-    .tot-val{font-size:17px;font-weight:800;margin-top:3px}
-    table{width:100%;border-collapse:collapse;margin-top:4px}
-    th{background:#f9fafb;padding:7px 10px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#374151;border-bottom:2px solid #e5e7eb}
-    td{padding:7px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;vertical-align:middle}
-    tr:nth-child(even) td{background:#fafafa}
-    .badge-paid{background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
-    .badge-partial{background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
-    .badge-pending{background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
-    .tfoot td{font-weight:800;background:#f3f4f6;border-top:2px solid #e5e7eb}
-    .footer{margin-top:20px;font-size:10px;color:#9ca3af;text-align:center}
-    @media print{body{padding:0} @page{margin:16mm}}
-  </style></head><body>
-  <h1>${APT_NAME}</h1>
-  <div class="sub">Monthly Maintenance Summary — ${monthLabel} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
-  <div class="totals">
-    <div class="tot-card"><div class="tot-label">Total Due</div><div class="tot-val">₹${Number(totDue).toLocaleString('en-IN')}</div></div>
-    <div class="tot-card" style="border-color:#6EE7B7"><div class="tot-label" style="color:#065F46">Collected</div><div class="tot-val" style="color:#065F46">₹${Number(totPaid).toLocaleString('en-IN')}</div></div>
-    <div class="tot-card" style="border-color:${totBal>0?'#FCA5A5':'#6EE7B7'}"><div class="tot-label" style="color:${totBal>0?'#991B1B':'#065F46'}">Balance</div><div class="tot-val" style="color:${totBal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</div></div>
+  const statusBadge = s => ({
+    paid:    '<span class="badge paid">Paid</span>',
+    partial: '<span class="badge partial">Partial</span>',
+    pending: '<span class="badge pending">Pending</span>',
+  }[s]);
+
+  const barW = f => {
+    if (!f._due) return 0;
+    return Math.min(100, Math.round(f._paid / f._due * 100));
+  };
+
+  const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
+<title>${APT_NAME} — Maintenance Report — ${monthLabel}</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+
+  /* ── PAGE WRAPPER ── */
+  .page{max-width:900px;margin:0 auto;padding:28px 32px}
+
+  /* ── HEADER BANNER ── */
+  .header{background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 60%,#9333EA 100%);border-radius:16px;padding:28px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
+  .header::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.07);border-radius:50%}
+  .header::after{content:'';position:absolute;bottom:-60px;right:60px;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%}
+  .header-inner{position:relative;z-index:1}
+  .apt-name{font-size:26px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+  .report-title{font-size:13px;font-weight:600;opacity:.85;margin-bottom:2px}
+  .report-meta{font-size:11px;opacity:.65;font-weight:500}
+  .header-badge{position:absolute;top:28px;right:32px;z-index:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-align:center;backdrop-filter:blur(4px)}
+  .header-badge .pct{font-size:28px;font-weight:800;line-height:1}
+  .header-badge .pct-label{font-size:10px;opacity:.8;font-weight:600;margin-top:2px}
+
+  /* ── KPI CARDS ── */
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
+  .kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1.5px solid #e2e8f0;position:relative;overflow:hidden}
+  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
+  .kpi.due::before{background:#6366F1}
+  .kpi.collected::before{background:#10B981}
+  .kpi.balance::before{background:#EF4444}
+  .kpi.balance.clear::before{background:#10B981}
+  .kpi-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
+  .kpi.due .kpi-icon{background:#EEF2FF;color:#4F46E5}
+  .kpi.collected .kpi-icon{background:#D1FAE5;color:#059669}
+  .kpi.balance .kpi-icon{background:#FEE2E2;color:#DC2626}
+  .kpi.balance.clear .kpi-icon{background:#D1FAE5;color:#059669}
+  .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:4px}
+  .kpi-val{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-.3px}
+  .kpi.collected .kpi-val{color:#059669}
+  .kpi.balance .kpi-val{color:#DC2626}
+  .kpi.balance.clear .kpi-val{color:#059669}
+  .kpi-sub{font-size:10px;color:#94a3b8;font-weight:500;margin-top:3px}
+
+  /* ── STATUS CHIPS ROW ── */
+  .chips{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid}
+  .chip.c-paid{background:#F0FDF4;color:#166534;border-color:#86EFAC}
+  .chip.c-part{background:#FFFBEB;color:#92400E;border-color:#FCD34D}
+  .chip.c-pend{background:#FFF1F2;color:#9F1239;border-color:#FCA5A5}
+  .chip .dot{width:7px;height:7px;border-radius:50%}
+  .chip.c-paid .dot{background:#22C55E}
+  .chip.c-part .dot{background:#F59E0B}
+  .chip.c-pend .dot{background:#F43F5E}
+
+  /* ── COLLECTION BAR ── */
+  .coll-bar-wrap{background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:20px}
+  .coll-bar-label{font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;display:flex;justify-content:space-between}
+  .coll-bar-track{height:10px;background:#f1f5f9;border-radius:99px;overflow:hidden}
+  .coll-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4F46E5,#10B981);transition:width .3s}
+
+  /* ── TABLE ── */
+  .tbl-wrap{background:#fff;border-radius:12px;border:1.5px solid #e2e8f0;overflow:hidden;margin-bottom:20px}
+  .tbl-head{background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:12px 18px;color:#fff}
+  .tbl-head-title{font-size:12px;font-weight:800;letter-spacing:.2px}
+  .tbl-head-sub{font-size:10px;opacity:.7;margin-top:1px}
+  table{width:100%;border-collapse:collapse}
+  thead tr{background:#f8fafc}
+  th{padding:9px 12px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#64748b;border-bottom:1.5px solid #e2e8f0;white-space:nowrap}
+  th.r{text-align:right}
+  td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:11px;font-weight:500;color:#1e293b;vertical-align:middle}
+  td.r{text-align:right}
+  tr:last-child td{border-bottom:none}
+  tr:nth-child(even) td{background:#fafbfd}
+  tr:hover td{background:#f0f4ff}
+  .flat-id{font-weight:800;font-size:12px;color:#4F46E5}
+  .owner-cell{display:flex;flex-direction:column;gap:1px}
+  .owner-name{font-weight:700;font-size:11px;color:#1e293b}
+  .owner-phone{font-size:10px;color:#94a3b8;font-weight:500}
+  .mini-bar{height:4px;background:#f1f5f9;border-radius:99px;margin-top:4px;width:80px}
+  .mini-bar-fill{height:100%;border-radius:99px}
+  .paid-fill{background:#10B981}
+  .partial-fill{background:#F59E0B}
+  .pending-fill{background:#EF4444}
+  .amt-due{color:#64748b;font-weight:600}
+  .amt-paid{color:#059669;font-weight:700}
+  .amt-bal-neg{color:#DC2626;font-weight:800}
+  .amt-bal-ok{color:#059669;font-weight:700}
+  .badge{padding:3px 9px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+  .badge.paid{background:#D1FAE5;color:#065F46}
+  .badge.partial{background:#FEF3C7;color:#92400E}
+  .badge.pending{background:#FEE2E2;color:#991B1B}
+  .tfoot-row td{background:#f8fafc;font-weight:800;border-top:2px solid #e2e8f0;font-size:12px}
+
+  /* ── FOOTER ── */
+  .footer{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1.5px solid #e2e8f0;margin-top:4px}
+  .footer-left{font-size:10px;color:#94a3b8;font-weight:500}
+  .footer-right{font-size:10px;color:#94a3b8;font-weight:600}
+  .powered{font-size:9px;font-weight:700;letter-spacing:.5px;color:#c7d2fe;background:#4F46E5;padding:3px 8px;border-radius:4px}
+
+  /* ── PRINT ── */
+  @media print {
+    body{background:#fff}
+    .page{padding:0}
+    .header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{margin:12mm 14mm;size:A4}
+    tr{page-break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-inner">
+      <div class="apt-name">🏢 ${APT_NAME}</div>
+      <div class="report-title">Monthly Maintenance Summary Report</div>
+      <div class="report-meta">${monthLabel} &nbsp;·&nbsp; Generated on ${genDate}</div>
+    </div>
+    <div class="header-badge">
+      <div class="pct">${collPct}%</div>
+      <div class="pct-label">Collected</div>
+    </div>
   </div>
-  <table>
-    <thead><tr><th>#</th><th>Flat</th><th>Block</th><th>Owner</th><th>Phone</th><th style="text-align:right">Due (₹)</th><th style="text-align:right">Paid (₹)</th><th style="text-align:right">Balance (₹)</th><th>Status</th></tr></thead>
-    <tbody>
-    ${rows.map((f, i) => `<tr>
-      <td style="color:#9ca3af">${i+1}</td>
-      <td style="font-weight:700">${f.flatId}</td>
-      <td>${f.block||'–'}</td>
-      <td>${f.owner||'–'}</td>
-      <td>${f.ownerPhone||'–'}</td>
-      <td style="text-align:right">₹${Number(f._due).toLocaleString('en-IN')}</td>
-      <td style="text-align:right">₹${Number(f._paid).toLocaleString('en-IN')}</td>
-      <td style="text-align:right;font-weight:700;color:${f._bal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}</td>
-      <td><span class="badge-${f._status}">${statusLabel(f._status)}</span></td>
-    </tr>`).join('')}
-    </tbody>
-    <tfoot><tr class="tfoot">
-      <td colspan="5">Total — ${rows.length} flats</td>
-      <td style="text-align:right">₹${Number(totDue).toLocaleString('en-IN')}</td>
-      <td style="text-align:right;color:#065F46">₹${Number(totPaid).toLocaleString('en-IN')}</td>
-      <td style="text-align:right;color:${totBal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</td>
-      <td></td>
-    </tr></tfoot>
-  </table>
-  <div class="footer">${APT_NAME} · Powered by AK Group · Gatebook</div>
-  <script>window.onload=()=>{window.print()}<\/script>
-  </body></html>`;
+
+  <!-- KPI CARDS -->
+  <div class="kpi-row">
+    <div class="kpi due">
+      <div class="kpi-icon">💰</div>
+      <div class="kpi-label">Total Due</div>
+      <div class="kpi-val">₹${Number(totDue).toLocaleString('en-IN')}</div>
+      <div class="kpi-sub">${rows.length} flats</div>
+    </div>
+    <div class="kpi collected">
+      <div class="kpi-icon">✅</div>
+      <div class="kpi-label">Collected</div>
+      <div class="kpi-val">₹${Number(totPaid).toLocaleString('en-IN')}</div>
+      <div class="kpi-sub">${collPct}% of total due</div>
+    </div>
+    <div class="kpi balance${totBal <= 0 ? ' clear' : ''}">
+      <div class="kpi-icon">${totBal > 0 ? '⚠️' : '🎉'}</div>
+      <div class="kpi-label">Outstanding</div>
+      <div class="kpi-val">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</div>
+      <div class="kpi-sub">${totBal <= 0 ? 'Fully collected!' : 'Pending recovery'}</div>
+    </div>
+  </div>
+
+  <!-- STATUS CHIPS -->
+  <div class="chips">
+    <div class="chip c-paid"><div class="dot"></div> ${paidCnt} Fully Paid</div>
+    <div class="chip c-part"><div class="dot"></div> ${partCnt} Partial Payment</div>
+    <div class="chip c-pend"><div class="dot"></div> ${pendCnt} Not Paid</div>
+  </div>
+
+  <!-- COLLECTION PROGRESS BAR -->
+  <div class="coll-bar-wrap">
+    <div class="coll-bar-label">
+      <span>Collection Progress</span>
+      <span style="font-weight:800;color:#4F46E5">${collPct}% collected</span>
+    </div>
+    <div class="coll-bar-track">
+      <div class="coll-bar-fill" style="width:${collPct}%"></div>
+    </div>
+  </div>
+
+  <!-- FLAT TABLE -->
+  <div class="tbl-wrap">
+    <div class="tbl-head">
+      <div class="tbl-head-title">Flat-wise Payment Details</div>
+      <div class="tbl-head-sub">${rows.length} flats · ${monthLabel}</div>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Flat</th>
+          <th>Block</th>
+          <th>Owner / Resident</th>
+          <th class="r">Due (₹)</th>
+          <th class="r">Paid (₹)</th>
+          <th class="r">Balance (₹)</th>
+          <th style="text-align:center">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map((f, i) => `
+        <tr>
+          <td style="color:#cbd5e1;font-weight:700;font-size:10px">${i + 1}</td>
+          <td class="flat-id">${f.flatId}</td>
+          <td><span style="background:#EEF2FF;color:#4F46E5;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">${f.block || '–'}</span></td>
+          <td>
+            <div class="owner-cell">
+              <span class="owner-name">${f.owner || '–'}</span>
+              ${f.ownerPhone ? `<span class="owner-phone">📱 ${f.ownerPhone}</span>` : ''}
+              <div class="mini-bar"><div class="mini-bar-fill ${f._status}-fill" style="width:${barW(f)}%"></div></div>
+            </div>
+          </td>
+          <td class="r amt-due">₹${Number(f._due).toLocaleString('en-IN')}</td>
+          <td class="r amt-paid">₹${Number(f._paid).toLocaleString('en-IN')}</td>
+          <td class="r ${f._bal > 0 ? 'amt-bal-neg' : 'amt-bal-ok'}">₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}</td>
+          <td style="text-align:center">${statusBadge(f._status)}</td>
+        </tr>`).join('')}
+      </tbody>
+      <tfoot>
+        <tr class="tfoot-row">
+          <td colspan="4" style="font-size:12px">Grand Total — ${rows.length} flats</td>
+          <td class="r">₹${Number(totDue).toLocaleString('en-IN')}</td>
+          <td class="r" style="color:#059669">₹${Number(totPaid).toLocaleString('en-IN')}</td>
+          <td class="r" style="color:${totBal > 0 ? '#DC2626' : '#059669'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-left">${APT_NAME} · ${monthLabel} Maintenance Report</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="footer-right">Powered by</span>
+      <span class="powered">GATEBOOK</span>
+    </div>
+  </div>
+
+</div>
+<script>window.onload = () => { window.print(); }<\/script>
+</body></html>`;
 
   const w = window.open('', '_blank');
   w.document.write(html);
