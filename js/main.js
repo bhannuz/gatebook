@@ -2395,6 +2395,7 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -3904,3 +3905,215 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
 }
 
 /* rStructure is defined inline above */
+
+/* ════════════════════════════════
+   MONTHLY SUMMARY REPORT
+════════════════════════════════ */
+
+function oMonthlySummary() {
+  const el = document.getElementById('monthlySummaryM');
+  if (!el) return;
+
+  // Populate month selector
+  const monthSet = new Set();
+  exps.forEach(records => records.forEach(e => { if (e.month) monthSet.add(e.month); }));
+  monthSet.add(AM);
+  const months = [...monthSet].sort().reverse();
+
+  const mSel = document.getElementById('msMonth');
+  mSel.innerHTML = months.map(m => {
+    const [y, mo] = m.split('-');
+    const label = new Date(y, mo - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    return `<option value="${m}"${m === AM ? ' selected' : ''}>${label}</option>`;
+  }).join('');
+
+  // Block filter
+  const bSel = document.getElementById('msBlock');
+  const blks = bks();
+  bSel.innerHTML = '<option value="all">All Blocks</option>' +
+    blks.map(b => `<option value="${b}">Block ${b}</option>`).join('');
+
+  el.style.display = 'flex';
+  _renderSummary();
+}
+
+window._oMonthlySummary = oMonthlySummary;
+window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
+
+function _renderSummary() {
+  const month = document.getElementById('msMonth').value;
+  const block = document.getElementById('msBlock').value;
+  const status = document.getElementById('msStatus').value;
+
+  const [y, mo] = month.split('-');
+  const monthLabel = new Date(+y, +mo - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+  let rows = [...flats.values()];
+  if (block !== 'all') rows = rows.filter(f => f.block === block);
+
+  // Compute per-flat payment for selected month
+  rows = rows.map(f => {
+    const monthExps = (exps.get(f.id) || []).filter(e => e.month === month);
+    const paid = monthExps.reduce((s, e) => s + (e.amt || 0), 0);
+    const due  = f.due || 0;
+    const bal  = due - paid;
+    const s    = paid >= due ? 'paid' : paid > 0 ? 'partial' : 'pending';
+    return { ...f, _paid: paid, _due: due, _bal: bal, _status: s, _monthExps: monthExps };
+  });
+
+  if (status !== 'all') rows = rows.filter(f => f._status === status);
+  rows.sort((a, b) => (a.block||'').localeCompare(b.block||'') || (a.flatId||'').localeCompare(b.flatId||''));
+
+  const totDue  = rows.reduce((s, f) => s + f._due, 0);
+  const totPaid = rows.reduce((s, f) => s + f._paid, 0);
+  const totBal  = rows.reduce((s, f) => s + f._bal, 0);
+  const paidCnt = rows.filter(f => f._status === 'paid').length;
+  const partCnt = rows.filter(f => f._status === 'partial').length;
+  const pendCnt = rows.filter(f => f._status === 'pending').length;
+
+  const statusBadge = s => ({
+    paid:    '<span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">✅ Paid</span>',
+    partial: '<span style="background:#FEF3C7;color:#92400E;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">⚠️ Partial</span>',
+    pending: '<span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">❌ Pending</span>',
+  }[s]);
+
+  document.getElementById('msSummaryHead').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;border:1.5px solid var(--border2)">
+        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total Due</div>
+        <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:4px">${inr(totDue)}</div>
+      </div>
+      <div style="background:#D1FAE5;border-radius:10px;padding:12px 14px;border:1.5px solid #6EE7B7">
+        <div style="font-size:10px;font-weight:800;color:#065F46;text-transform:uppercase;letter-spacing:.5px">Collected</div>
+        <div style="font-size:18px;font-weight:800;color:#065F46;margin-top:4px">${inr(totPaid)}</div>
+      </div>
+      <div style="background:${totBal>0?'#FEE2E2':'#D1FAE5'};border-radius:10px;padding:12px 14px;border:1.5px solid ${totBal>0?'#FCA5A5':'#6EE7B7'}">
+        <div style="font-size:10px;font-weight:800;color:${totBal>0?'#991B1B':'#065F46'};text-transform:uppercase;letter-spacing:.5px">Balance</div>
+        <div style="font-size:18px;font-weight:800;color:${totBal>0?'#991B1B':'#065F46'};margin-top:4px">${inr(Math.abs(totBal))}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+      <span style="font-size:11px;font-weight:700;color:var(--text2)">${rows.length} flats</span>
+      <span style="background:#D1FAE5;color:#065F46;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">✅ ${paidCnt} Paid</span>
+      <span style="background:#FEF3C7;color:#92400E;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">⚠️ ${partCnt} Partial</span>
+      <span style="background:#FEE2E2;color:#991B1B;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">❌ ${pendCnt} Pending</span>
+    </div>`;
+
+  document.getElementById('msSummaryBody').innerHTML = rows.length === 0
+    ? '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No flats match the selected filters</div>'
+    : rows.map(f => {
+        const phone = (f.ownerPhone || '').replace(/\D/g, '');
+        const waAvail = phone.length >= 10;
+        const waMsg = encodeURIComponent(
+          `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),\n\n` +
+          `Monthly Maintenance Summary — ${monthLabel}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `🏠 Flat     : ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}\n` +
+          `💰 Due      : ₹${Number(f._due).toLocaleString('en-IN')}\n` +
+          `✅ Paid     : ₹${Number(f._paid).toLocaleString('en-IN')}\n` +
+          `📊 Balance  : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}${f._bal <= 0 ? ' (Cleared ✅)' : ' (Pending ❌)'}\n` +
+          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `— ${APT_NAME} Society`
+        );
+
+        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span style="font-size:13px;font-weight:700;color:var(--text)">${f.flatId}</span>
+              ${f.block ? `<span style="font-size:10px;font-weight:700;color:var(--muted);background:var(--surface3);padding:1px 6px;border-radius:4px">Blk ${f.block}</span>` : ''}
+              ${statusBadge(f._status)}
+            </div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.owner || '–'}${f.ownerPhone ? ' · '+f.ownerPhone : ''}</div>
+            <div style="display:flex;gap:12px;margin-top:4px">
+              <span style="font-size:11px;color:var(--text2)">Due <strong>${inr(f._due)}</strong></span>
+              <span style="font-size:11px;color:var(--green)">Paid <strong>${inr(f._paid)}</strong></span>
+              <span style="font-size:11px;color:${f._bal>0?'var(--red)':'var(--green)'}">Bal <strong>${inr(Math.abs(f._bal))}</strong></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            ${waAvail
+              ? `<a href="https://wa.me/91${phone}?text=${waMsg}" target="_blank"
+                   style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:#25D366;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">
+                   <i class="ti ti-brand-whatsapp"></i> Send
+                 </a>`
+              : `<span style="font-size:10px;color:var(--muted);padding:5px 8px">No phone</span>`
+            }
+          </div>
+        </div>`;
+      }).join('');
+
+  // Store current data for print
+  window._msSummaryData = { rows, monthLabel, totDue, totPaid, totBal };
+}
+
+window._renderSummary = _renderSummary;
+
+function _printMonthlySummary() {
+  const d = window._msSummaryData;
+  if (!d) return;
+  const { rows, monthLabel, totDue, totPaid, totBal } = d;
+
+  const statusLabel = s => ({ paid: '✅ Paid', partial: '⚠️ Partial', pending: '❌ Pending' }[s]);
+
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/>
+  <title>${APT_NAME} — Monthly Summary — ${monthLabel}</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI',Arial,sans-serif;color:#111;padding:24px 28px;font-size:12px}
+    h1{font-size:20px;font-weight:800;margin-bottom:2px}
+    .sub{font-size:12px;color:#555;margin-bottom:18px}
+    .totals{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+    .tot-card{border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 14px}
+    .tot-label{font-size:10px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.5px}
+    .tot-val{font-size:17px;font-weight:800;margin-top:3px}
+    table{width:100%;border-collapse:collapse;margin-top:4px}
+    th{background:#f9fafb;padding:7px 10px;text-align:left;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;color:#374151;border-bottom:2px solid #e5e7eb}
+    td{padding:7px 10px;border-bottom:1px solid #f3f4f6;font-size:11px;vertical-align:middle}
+    tr:nth-child(even) td{background:#fafafa}
+    .badge-paid{background:#D1FAE5;color:#065F46;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
+    .badge-partial{background:#FEF3C7;color:#92400E;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
+    .badge-pending{background:#FEE2E2;color:#991B1B;padding:2px 7px;border-radius:12px;font-size:10px;font-weight:800}
+    .tfoot td{font-weight:800;background:#f3f4f6;border-top:2px solid #e5e7eb}
+    .footer{margin-top:20px;font-size:10px;color:#9ca3af;text-align:center}
+    @media print{body{padding:0} @page{margin:16mm}}
+  </style></head><body>
+  <h1>${APT_NAME}</h1>
+  <div class="sub">Monthly Maintenance Summary — ${monthLabel} &nbsp;·&nbsp; Generated ${new Date().toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+  <div class="totals">
+    <div class="tot-card"><div class="tot-label">Total Due</div><div class="tot-val">₹${Number(totDue).toLocaleString('en-IN')}</div></div>
+    <div class="tot-card" style="border-color:#6EE7B7"><div class="tot-label" style="color:#065F46">Collected</div><div class="tot-val" style="color:#065F46">₹${Number(totPaid).toLocaleString('en-IN')}</div></div>
+    <div class="tot-card" style="border-color:${totBal>0?'#FCA5A5':'#6EE7B7'}"><div class="tot-label" style="color:${totBal>0?'#991B1B':'#065F46'}">Balance</div><div class="tot-val" style="color:${totBal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</div></div>
+  </div>
+  <table>
+    <thead><tr><th>#</th><th>Flat</th><th>Block</th><th>Owner</th><th>Phone</th><th style="text-align:right">Due (₹)</th><th style="text-align:right">Paid (₹)</th><th style="text-align:right">Balance (₹)</th><th>Status</th></tr></thead>
+    <tbody>
+    ${rows.map((f, i) => `<tr>
+      <td style="color:#9ca3af">${i+1}</td>
+      <td style="font-weight:700">${f.flatId}</td>
+      <td>${f.block||'–'}</td>
+      <td>${f.owner||'–'}</td>
+      <td>${f.ownerPhone||'–'}</td>
+      <td style="text-align:right">₹${Number(f._due).toLocaleString('en-IN')}</td>
+      <td style="text-align:right">₹${Number(f._paid).toLocaleString('en-IN')}</td>
+      <td style="text-align:right;font-weight:700;color:${f._bal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}</td>
+      <td><span class="badge-${f._status}">${statusLabel(f._status)}</span></td>
+    </tr>`).join('')}
+    </tbody>
+    <tfoot><tr class="tfoot">
+      <td colspan="5">Total — ${rows.length} flats</td>
+      <td style="text-align:right">₹${Number(totDue).toLocaleString('en-IN')}</td>
+      <td style="text-align:right;color:#065F46">₹${Number(totPaid).toLocaleString('en-IN')}</td>
+      <td style="text-align:right;color:${totBal>0?'#991B1B':'#065F46'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</td>
+      <td></td>
+    </tr></tfoot>
+  </table>
+  <div class="footer">${APT_NAME} · Powered by AK Group · Gatebook</div>
+  <script>window.onload=()=>{window.print()}<\/script>
+  </body></html>`;
+
+  const w = window.open('', '_blank');
+  w.document.write(html);
+  w.document.close();
+}
+
+window._printMonthlySummary = _printMonthlySummary;
