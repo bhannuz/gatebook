@@ -722,14 +722,23 @@ async function saveFlat(fid) {
   const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
   const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
   
-  // Handle block - check if new block is being created
-  let block = document.getElementById('edBlock')?.value || '';
-  if (block === '__new__') {
-    block = (document.getElementById('edNewBlock')?.value||'').trim();
-    if (!block) { toast('Enter new block name', 'error'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy" style="font-size:15px"></i> Save Changes'; } return; }
+  // Handle block - preserve existing block/floor if fields not present in drawer
+  const existingFlat = flats.get(fid) || {};
+  const edBlockEl = document.getElementById('edBlock');
+  let block;
+  if (edBlockEl) {
+    block = edBlockEl.value;
+    if (block === '__new__') {
+      block = (document.getElementById('edNewBlock')?.value||'').trim();
+      if (!block) { toast('Enter new block name', 'error'); if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-device-floppy" style="font-size:15px"></i> Save Changes'; } return; }
+    }
+  } else {
+    // edBlock field not in this drawer — keep existing block intact
+    block = existingFlat.block || '';
   }
-  
-  const floor = parseInt(document.getElementById('edFloor')?.value)||0;
+
+  const edFloorEl = document.getElementById('edFloor');
+  const floor = edFloorEl ? (parseInt(edFloorEl.value)||0) : (existingFlat.floor || 0);
   
   // Parse vehicles format "2/1" into tw and fw
   const vehiclesInput = (document.getElementById('edVehicles')?.value||'0/0').trim();
@@ -739,7 +748,12 @@ async function saveFlat(fid) {
   
   sync('saving');
   try {
-    await updateDoc(flatRef(fid), { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, block, floor });
+    // Build update payload — always include block/floor to ensure they're preserved
+    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone };
+    // Only write block/floor if they have valid values (prevent wiping with empty string)
+    if (block !== undefined && block !== null) updatePayload.block = block;
+    if (floor !== undefined) updatePayload.floor = floor;
+    await updateDoc(flatRef(fid), updatePayload);
     await setDoc(vehRef(fid), { flatId:fid, tw, fw, updatedAt:serverTimestamp() }, { merge:true });
     vehicles.set(fid, { ...(vehicles.get(fid)||{}), tw, fw });
     sync('live');
