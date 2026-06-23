@@ -3033,6 +3033,34 @@ async function boot(){
   try{
     // Load apartment config
     const aptDoc = await getDoc(aptDocRef());
+
+    // ── PAUSE CHECK — block access if admin has paused this account ──
+    if (aptDoc.exists() && aptDoc.data().status === 'paused') {
+      document.getElementById('lo').style.display = 'none';
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+          background:linear-gradient(135deg,#EEF2FF,#FDF4FF);font-family:'Plus Jakarta Sans',sans-serif;padding:24px">
+          <div style="background:#fff;border-radius:20px;padding:40px 36px;width:min(460px,100%);
+            text-align:center;box-shadow:0 24px 64px rgba(99,102,241,.15);border:1.5px solid #E0E7FF">
+            <div style="width:64px;height:64px;border-radius:18px;background:#FEF3C7;
+              display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px">⏸</div>
+            <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Account Paused</h2>
+            <p style="font-size:13px;color:#6B7280;font-weight:500;line-height:1.6;margin-bottom:24px">
+              Your Gatebook account has been temporarily suspended by the administrator.<br><br>
+              Please contact <strong>support@gatebook.app</strong> to reactivate your account.
+            </p>
+            <button onclick="window._doSignOut()"
+              style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;
+              background:#6366F1;color:#fff;border:none;border-radius:10px;font-size:13px;
+              font-weight:700;cursor:pointer;font-family:inherit">
+              <i class="ti ti-logout"></i> Sign Out
+            </button>
+          </div>
+        </div>`;
+      return;
+    }
+    // ── END PAUSE CHECK ──
+
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
     await loadCats();
@@ -3982,19 +4010,19 @@ window._oMonthlySummary = oMonthlySummary;
 window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
 
 function _renderSummary() {
-  const month = document.getElementById('msMonth').value;
-  const block = document.getElementById('msBlock').value;
-  const status = document.getElementById('msStatus').value;
+  const month  = document.getElementById('msMonth')?.value  || AM;
+  const block  = document.getElementById('msBlock')?.value  || 'all';
+  const status = document.getElementById('msStatus')?.value || 'all';
+
+  if (!month) return;
 
   const [y, mo] = month.split('-');
   const monthLabel = new Date(+y, +mo - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 
-  let rows = [...flats.values()];
-  if (block !== 'all') rows = rows.filter(f => f.block === block);
-
-  // Compute per-flat payment for selected month
-  rows = rows.map(f => {
-    const monthExps = (exps.get(f.id) || []).filter(e => e.month === month);
+  // Compute per-flat payment for selected month (use flatId as key — matches exps Map)
+  let allRows = [...flats.values()].map(f => {
+    const fid      = f.flatId;                                        // correct key
+    const monthExps = (exps.get(fid) || []).filter(e => e.month === month);
     const paid = monthExps.reduce((s, e) => s + (e.amt || 0), 0);
     const due  = f.due || 0;
     const bal  = due - paid;
@@ -4002,15 +4030,30 @@ function _renderSummary() {
     return { ...f, _paid: paid, _due: due, _bal: bal, _status: s, _monthExps: monthExps };
   });
 
-  if (status !== 'all') rows = rows.filter(f => f._status === status);
+  // Apply block filter
+  if (block !== 'all') allRows = allRows.filter(f => (f.block || '') === block);
+
+  // Store block-filtered totals for print (before status filter)
+  const printRows = [...allRows].sort((a, b) =>
+    (a.block||'').localeCompare(b.block||'') || (a.flatId||'').localeCompare(b.flatId||''));
+  const printTotDue  = printRows.reduce((s, f) => s + f._due,  0);
+  const printTotPaid = printRows.reduce((s, f) => s + f._paid, 0);
+  const printTotBal  = printRows.reduce((s, f) => s + f._bal,  0);
+
+  // Apply status filter for display
+  let rows = block !== 'all' || status !== 'all'
+    ? allRows.filter(f => status === 'all' || f._status === status)
+    : allRows;
+
   rows.sort((a, b) => (a.block||'').localeCompare(b.block||'') || (a.flatId||'').localeCompare(b.flatId||''));
 
-  const totDue  = rows.reduce((s, f) => s + f._due, 0);
+  // Display totals reflect current visible rows
+  const totDue  = rows.reduce((s, f) => s + f._due,  0);
   const totPaid = rows.reduce((s, f) => s + f._paid, 0);
-  const totBal  = rows.reduce((s, f) => s + f._bal, 0);
-  const paidCnt = rows.filter(f => f._status === 'paid').length;
-  const partCnt = rows.filter(f => f._status === 'partial').length;
-  const pendCnt = rows.filter(f => f._status === 'pending').length;
+  const totBal  = rows.reduce((s, f) => s + f._bal,  0);
+  const paidCnt = allRows.filter(f => f._status === 'paid').length;
+  const partCnt = allRows.filter(f => f._status === 'partial').length;
+  const pendCnt = allRows.filter(f => f._status === 'pending').length;
 
   const statusBadge = s => ({
     paid:    '<span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">✅ Paid</span>',
@@ -4083,8 +4126,8 @@ function _renderSummary() {
         </div>`;
       }).join('');
 
-  // Store current data for print
-  window._msSummaryData = { rows, monthLabel, totDue, totPaid, totBal };
+  // Store print data = all rows for the month (ignores status filter so print is complete)
+  window._msSummaryData = { rows: printRows, monthLabel, totDue: printTotDue, totPaid: printTotPaid, totBal: printTotBal };
 }
 
 window._renderSummary = _renderSummary;
