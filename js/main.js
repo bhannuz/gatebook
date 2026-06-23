@@ -10,6 +10,7 @@ import {
    AUTH GUARD
 ════════════════════════════════ */
 let UID = null;
+let _booted = false; // prevent duplicate boot on auth token refresh
 
 const ADMIN_EMAIL = 'admin@gatebook.app';
 onAuthStateChanged(auth, user => {
@@ -22,11 +23,15 @@ onAuthStateChanged(auth, user => {
     window.location.replace('admin.html');
     return;
   }
-  UID = user.uid;
-  // Show user info in nav
+  // Show user info in nav (always update)
   const initials = (user.displayName||user.email||'A').charAt(0).toUpperCase();
   document.getElementById('userAvatar').textContent = initials;
   document.getElementById('userName').textContent   = user.displayName || user.email.split('@')[0];
+
+  // Only boot once — onAuthStateChanged can fire multiple times
+  if (_booted) return;
+  _booted = true;
+  UID = user.uid;
   boot();
 });
 
@@ -1030,9 +1035,11 @@ window._saveIss = saveIss;
    FIRESTORE LISTENERS
    (scoped under apartments/{uid}/...)
 ════════════════════════════════ */
+let _unsubFlats = null; // unsubscribe handle for flats listener
 function listenFlats(){
+  if (_unsubFlats) { try { _unsubFlats(); } catch(_){} _unsubFlats = null; }
   let _firstLoad = true;
-  onSnapshot(flatsColl(), snap => {
+  _unsubFlats = onSnapshot(flatsColl(), snap => {
     snap.docChanges().forEach(ch => {
       const d = {flatId:ch.doc.id,...ch.doc.data()};
       ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
@@ -1810,6 +1817,15 @@ window._wizLaunch = async function() {
     // Save apt config (merge so name is preserved if set)
     await setDoc(aptDocRef(), { name: APT_NAME, blocks: WIZ_BLOCKS }, { merge: true });
     // Create flats
+    // Check if flats already exist (prevent duplicate creation on double-tap)
+    const existingSnap = await getDocs(flatsColl());
+    if (!existingSnap.empty) {
+      toast('Society already set up — loading…');
+      document.getElementById('setupWiz').style.display = 'none';
+      document.getElementById('lo').style.display = '';
+      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+      return;
+    }
     for(const b of WIZ_BLOCKS) {
       for(let fl=1; fl<=b.floors; fl++) {
         for(let f=1; f<=b.flatsPerFloor; f++) {
@@ -1820,6 +1836,10 @@ window._wizLaunch = async function() {
     }
     document.getElementById('setupWiz').style.display = 'none';
     document.getElementById('lo').style.display = '';
+    // Detach any stale listeners before starting fresh
+    [_unsubFlats, eu, iu, vu, pu].forEach(unsub => { try { if(unsub) unsub(); } catch(_){} });
+    _unsubFlats = null; eu = null; iu = null; vu = null; pu = null;
+    flats.clear(); exps.clear(); issues.length = 0; vehicles.clear(); socExps.length = 0;
     listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
