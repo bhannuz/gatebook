@@ -3023,24 +3023,31 @@ async function boot(){
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
     await loadCats();
 
-    // Check if any flats exist
+    // Check if society is already configured (registered via register.html)
+    // register.html writes blocks[] to the apt doc AND creates all flats
+    // so if blocks exist in apt doc, skip the wizard entirely
+    const aptData = aptDoc.exists() ? aptDoc.data() : {};
+    const hasAptBlocks = aptData.blocks && aptData.blocks.length > 0;
+
+    // Also check flat count
     const snap = await getDocs(flatsColl());
-    if(snap.empty){
-      // No flats yet — show in-app setup wizard
-      document.getElementById('lo').style.display = 'none';
-      const wiz = document.getElementById('setupWiz');
-      wiz.style.display = 'flex';
-      // Pre-fill name from config if available
-      if(aptDoc.exists() && aptDoc.data().name){
-        document.getElementById('wAptName').value = aptDoc.data().name;
-      }
-      wizSetStep(0);
-    } else {
+
+    if (!snap.empty || hasAptBlocks) {
+      // Society already set up — go straight to app
       listenFlats();
       listenExp();
       listenIssues();
       listenVehicles();
       listenSocExp();
+    } else {
+      // Brand new society with no config — show in-app setup wizard
+      document.getElementById('lo').style.display = 'none';
+      const wiz = document.getElementById('setupWiz');
+      wiz.style.display = 'flex';
+      if (aptData.name) {
+        document.getElementById('wAptName').value = aptData.name;
+      }
+      wizSetStep(0);
     }
   }catch(err){
     console.error('Boot error:',err);
