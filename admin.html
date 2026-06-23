@@ -42,7 +42,7 @@
   .page{padding:24px;max-width:1200px;margin:0 auto}
 
   /* ── Stats row ── */
-  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .stats-row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:24px}
   .scard{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);
     padding:16px 18px;box-shadow:var(--shadow)}
   .scard-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
@@ -81,6 +81,9 @@
   .badge-amber{background:var(--amber-bg);color:var(--amber);border:1px solid #FDE68A}
   .badge-indigo{background:var(--indigo-bg);color:var(--indigo);border:1px solid #C7D2FE}
   .badge-gray{background:var(--surface3);color:var(--text2);border:1px solid var(--border2)}
+  .badge-paused{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D}
+  .btn-amber{background:#D97706;color:#fff}
+  .btn-green{background:#16A34A;color:#fff}
 
   /* ── User detail modal ── */
   .modal-bg{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);
@@ -116,8 +119,9 @@
     .stats-row{grid-template-columns:1fr 1fr}
     .page{padding:14px}
     .detail-grid{grid-template-columns:1fr}
-    th:nth-child(4),td:nth-child(4),
-    th:nth-child(5),td:nth-child(5){display:none}
+    th:nth-child(5),td:nth-child(5),
+    th:nth-child(8),td:nth-child(8),
+    th:nth-child(9),td:nth-child(9){display:none}
   }
 </style>
 </head>
@@ -154,6 +158,11 @@
       <div class="scard-sub">Past expiry date</div>
     </div>
     <div class="scard">
+      <div class="scard-label">Paused</div>
+      <div class="scard-val" style="color:var(--amber)" id="statPaused">—</div>
+      <div class="scard-sub">Access suspended</div>
+    </div>
+    <div class="scard">
       <div class="scard-label">This Month</div>
       <div class="scard-val" style="color:var(--indigo)" id="statThisMonth">—</div>
       <div class="scard-sub">New registrations</div>
@@ -169,6 +178,7 @@
     <select class="ctrl" id="filterStatus" onchange="renderTable()">
       <option value="all">All status</option>
       <option value="active">Active</option>
+      <option value="paused">Paused</option>
       <option value="expired">Expired</option>
       <option value="trial">Trial</option>
     </select>
@@ -267,6 +277,7 @@ window.loadUsers = async function() {
 };
 
 function getStatus(u) {
+  if (u.status === 'paused') return 'paused';
   if (!u.expiryDate) return 'unknown';
   const exp = new Date(u.expiryDate);
   return exp > new Date() ? (u.plan === 'paid' ? 'paid' : 'active') : 'expired';
@@ -289,10 +300,12 @@ function renderStats() {
   const thisM = now.toISOString().slice(0,7);
   const active  = allUsers.filter(u=>getStatus(u)==='active'||getStatus(u)==='paid').length;
   const expired = allUsers.filter(u=>getStatus(u)==='expired').length;
+  const paused  = allUsers.filter(u=>getStatus(u)==='paused').length;
   const newM    = allUsers.filter(u=>(u.createdAt||'').startsWith(thisM)).length;
   document.getElementById('statTotal').textContent     = allUsers.length;
   document.getElementById('statActive').textContent    = active;
   document.getElementById('statExpired').textContent   = expired;
+  document.getElementById('statPaused').textContent    = paused;
   document.getElementById('statThisMonth').textContent = newM;
   document.getElementById('totalBadge').textContent    = `${allUsers.length} users`;
 }
@@ -309,6 +322,7 @@ window.renderTable = function() {
       if (fs === 'active'  && s !== 'active' && s !== 'paid') return false;
       if (fs === 'expired' && s !== 'expired') return false;
       if (fs === 'trial'   && u.plan !== 'trial') return false;
+      if (fs === 'paused'  && s !== 'paused') return false;
     }
     if (fp !== 'all' && (u.plan||'trial') !== fp) return false;
     if (q) {
@@ -329,6 +343,7 @@ window.renderTable = function() {
   const statusBadge = u => {
     const s = getStatus(u);
     const days = daysLeft(u.expiryDate);
+    if (s === 'paused')  return `<span class="badge badge-paused"><i class="ti ti-player-pause"></i> Paused</span>`;
     if (s === 'expired') return `<span class="badge badge-red"><i class="ti ti-clock-off"></i> Expired</span>`;
     if (s === 'paid')    return `<span class="badge badge-green"><i class="ti ti-circle-check"></i> Paid</span>`;
     if (days !== null && days <= 7) return `<span class="badge badge-amber"><i class="ti ti-clock"></i> ${days}d left</span>`;
@@ -349,12 +364,13 @@ window.renderTable = function() {
           <th>#</th>
           <th>Apartment</th>
           <th>Admin</th>
+          <th>Username</th>
           <th>Flats</th>
           <th>Plan</th>
           <th>Status</th>
           <th>Activated</th>
           <th>Expiry</th>
-          <th></th>
+          <th>Actions</th>
         </tr></thead>
         <tbody>
           ${rows.map((u,i) => `
@@ -374,9 +390,23 @@ window.renderTable = function() {
             <td style="color:var(--text2)">${fmtDate(u.activatedAt||u.createdAt)}</td>
             <td style="color:var(--text2)">${fmtDate(u.expiryDate)}</td>
             <td>
-              <button class="btn btn-white btn-sm" onclick="openUser('${u.uid}')">
-                <i class="ti ti-eye"></i> View
-              </button>
+              <div style="font-weight:700;font-size:12px">${u.adminName ? u.adminName.split(' ')[0] : '—'}</div>
+              <div style="font-size:10px;color:var(--muted)">${(u.adminEmail||'—').split('@')[0]}</div>
+            </td>
+            <td>
+              <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+                <button class="btn btn-white btn-sm" onclick="openUser('${u.uid}')">
+                  <i class="ti ti-eye"></i> View
+                </button>
+                ${getStatus(u) === 'paused'
+                  ? `<button class="btn btn-green btn-sm" onclick="togglePause('${u.uid}',false)">
+                       <i class="ti ti-player-play"></i> Activate
+                     </button>`
+                  : `<button class="btn btn-amber btn-sm" onclick="togglePause('${u.uid}',true)">
+                       <i class="ti ti-player-pause"></i> Pause
+                     </button>`
+                }
+              </div>
             </td>
           </tr>`).join('')}
         </tbody>
@@ -393,6 +423,8 @@ window.openUser = function(uid) {
 
   document.getElementById('modalTitle').textContent = u.name || 'Unknown';
   document.getElementById('modalSub').textContent   = u.adminEmail || '';
+  // Will be populated after innerHTML is set — defer to after modal body renders
+  window._currentModalUid = uid;
 
   document.getElementById('modalBody').innerHTML = `
     <div class="detail-grid">
@@ -427,12 +459,35 @@ window.openUser = function(uid) {
       <div id="planMsg" style="font-size:11px;margin-top:8px;color:var(--green);display:none">✓ Saved successfully</div>
     </div>
 
+    <div class="section-title"><i class="ti ti-shield" style="color:var(--indigo)"></i> Account Access</div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div>
+        <div style="font-size:12px;font-weight:700;color:var(--text)" id="pauseStatusLbl">—</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px">Pausing prevents the user from accessing the app</div>
+      </div>
+      <div style="display:flex;gap:6px" id="pauseActionBtns"></div>
+    </div>
+
     <div class="section-title"><i class="ti ti-id" style="color:var(--indigo)"></i> UID</div>
     <div style="font-size:11px;color:var(--muted);word-break:break-all;padding:8px;
       background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border)">${u.uid}</div>
   `;
 
   document.getElementById('detailModal').classList.add('open');
+  _renderPauseSection(u);
+};
+
+function _renderPauseSection(u) {
+  const s = getStatus(u);
+  const isPaused = s === 'paused';
+  const lbl = document.getElementById('pauseStatusLbl');
+  const btns = document.getElementById('pauseActionBtns');
+  if (!lbl || !btns) return;
+  lbl.textContent = isPaused ? '⏸ Account is currently PAUSED' : '✅ Account is currently ACTIVE';
+  lbl.style.color = isPaused ? 'var(--amber)' : 'var(--green)';
+  btns.innerHTML = isPaused
+    ? `<button class="btn btn-green btn-sm" onclick="togglePause('${u.uid}',false)"><i class="ti ti-player-play"></i> Activate</button>`
+    : `<button class="btn btn-amber btn-sm" onclick="togglePause('${u.uid}',true)"><i class="ti ti-player-pause"></i> Pause</button>`;
 };
 
 window.closeModal = function() {
@@ -469,6 +524,23 @@ window.savePlan = async function(uid) {
     renderTable();
     renderStats();
   } catch(e) { alert('Save failed: '+e.message); }
+};
+
+window.togglePause = async function(uid, pause) {
+  const label = pause ? 'Pause' : 'Activate';
+  if (!confirm(`${label} this account? ${pause ? 'The user will not be able to access the app.' : 'The user will regain full access.'}`)) return;
+  try {
+    await updateDoc(doc(db,'apartments',uid), { status: pause ? 'paused' : 'active' });
+    const u = allUsers.find(x=>x.uid===uid);
+    if (u) u.status = pause ? 'paused' : 'active';
+    renderTable();
+    renderStats();
+    // Refresh modal if open
+    if (window._currentModalUid === uid) _renderPauseSection(u);
+    alert(`Account ${pause ? 'paused' : 'activated'} successfully.`);
+  } catch(e) {
+    alert('Failed: ' + e.message);
+  }
 };
 
 window.doSignOut = async function() {
