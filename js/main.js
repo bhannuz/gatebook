@@ -4053,247 +4053,227 @@ function _printMonthlySummary() {
   if (!d) return;
   const { rows, monthLabel, totDue, totPaid, totBal } = d;
 
-  const paidCnt = rows.filter(f => f._status === 'paid').length;
-  const partCnt = rows.filter(f => f._status === 'partial').length;
-  const pendCnt = rows.filter(f => f._status === 'pending').length;
-  const collPct = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
-  const genDate = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+  const paidCnt  = rows.filter(f => f._status === 'paid').length;
+  const partCnt  = rows.filter(f => f._status === 'partial').length;
+  const pendCnt  = rows.filter(f => f._status === 'pending').length;
+  const collPct  = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
+  const genDate  = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 
-  const statusBadge = s => ({
-    paid:    '<span class="badge paid">Paid</span>',
-    partial: '<span class="badge partial">Partial</span>',
-    pending: '<span class="badge pending">Pending</span>',
-  }[s]);
+  /* ── Society expenses for the selected month ── */
+  const msMonth = document.getElementById('msMonth')?.value || AM;
+  const monthExps = socExps.filter(e => (e.month || (e.date||'').slice(0,7)) === msMonth);
+  const totSocExp = monthExps.reduce((s, e) => s + (e.amt || 0), 0);
 
-  const barW = f => {
-    if (!f._due) return 0;
-    return Math.min(100, Math.round(f._paid / f._due * 100));
-  };
+  /* ── Category breakdown of society expenses ── */
+  const catMap = {};
+  monthExps.forEach(e => { catMap[e.cat || 'Other'] = (catMap[e.cat || 'Other'] || 0) + (e.amt || 0); });
+  const catRows = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+
+  const netBalance = totPaid - totSocExp;
 
   const html = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>
-<title>${APT_NAME} — Maintenance Report — ${monthLabel}</title>
+<title>${APT_NAME} — Summary — ${monthLabel}</title>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8fafc;color:#0f172a;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{font-family:'Plus Jakarta Sans',sans-serif;background:#fff;color:#0f172a;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:28px 32px}
 
-  /* ── PAGE WRAPPER ── */
-  .page{max-width:900px;margin:0 auto;padding:28px 32px}
+  /* HEADER */
+  .header{background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 60%,#9333EA 100%);border-radius:14px;padding:22px 28px;color:#fff;margin-bottom:22px;display:flex;justify-content:space-between;align-items:center}
+  .h-left .apt{font-size:22px;font-weight:800;letter-spacing:-.3px}
+  .h-left .sub{font-size:11px;opacity:.75;font-weight:500;margin-top:3px}
+  .h-right{text-align:right}
+  .h-right .pct{font-size:32px;font-weight:800;line-height:1}
+  .h-right .pct-lbl{font-size:10px;opacity:.7;font-weight:600;margin-top:2px}
 
-  /* ── HEADER BANNER ── */
-  .header{background:linear-gradient(135deg,#4F46E5 0%,#7C3AED 60%,#9333EA 100%);border-radius:16px;padding:28px 32px;color:#fff;margin-bottom:24px;position:relative;overflow:hidden}
-  .header::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:rgba(255,255,255,.07);border-radius:50%}
-  .header::after{content:'';position:absolute;bottom:-60px;right:60px;width:240px;height:240px;background:rgba(255,255,255,.05);border-radius:50%}
-  .header-inner{position:relative;z-index:1}
-  .apt-name{font-size:26px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
-  .report-title{font-size:13px;font-weight:600;opacity:.85;margin-bottom:2px}
-  .report-meta{font-size:11px;opacity:.65;font-weight:500}
-  .header-badge{position:absolute;top:28px;right:32px;z-index:1;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:10px;padding:8px 14px;text-align:center;backdrop-filter:blur(4px)}
-  .header-badge .pct{font-size:28px;font-weight:800;line-height:1}
-  .header-badge .pct-label{font-size:10px;opacity:.8;font-weight:600;margin-top:2px}
+  /* SECTION TITLE */
+  .sec-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.7px;color:#6366F1;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+  .sec-title::after{content:'';flex:1;height:1.5px;background:#e0e7ff}
 
-  /* ── KPI CARDS ── */
-  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px}
-  .kpi{background:#fff;border-radius:12px;padding:16px 18px;border:1.5px solid #e2e8f0;position:relative;overflow:hidden}
-  .kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:12px 12px 0 0}
-  .kpi.due::before{background:#6366F1}
-  .kpi.collected::before{background:#10B981}
-  .kpi.balance::before{background:#EF4444}
-  .kpi.balance.clear::before{background:#10B981}
-  .kpi-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;margin-bottom:10px}
-  .kpi.due .kpi-icon{background:#EEF2FF;color:#4F46E5}
-  .kpi.collected .kpi-icon{background:#D1FAE5;color:#059669}
-  .kpi.balance .kpi-icon{background:#FEE2E2;color:#DC2626}
-  .kpi.balance.clear .kpi-icon{background:#D1FAE5;color:#059669}
-  .kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:4px}
-  .kpi-val{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-.3px}
-  .kpi.collected .kpi-val{color:#059669}
-  .kpi.balance .kpi-val{color:#DC2626}
-  .kpi.balance.clear .kpi-val{color:#059669}
-  .kpi-sub{font-size:10px;color:#94a3b8;font-weight:500;margin-top:3px}
+  /* KPI GRID */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+  .kpi{border-radius:10px;padding:14px 16px;border:1.5px solid #e2e8f0}
+  .kpi-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#94a3b8;margin-bottom:5px}
+  .kpi-val{font-size:18px;font-weight:800;letter-spacing:-.3px}
+  .kpi-sub{font-size:9px;color:#94a3b8;margin-top:3px;font-weight:500}
+  .kpi.indig{border-color:#c7d2fe;background:#EEF2FF}.kpi.indig .kpi-val{color:#4F46E5}
+  .kpi.grn  {border-color:#6EE7B7;background:#F0FDF4}.kpi.grn   .kpi-val{color:#059669}
+  .kpi.red  {border-color:#FCA5A5;background:#FFF1F2}.kpi.red   .kpi-val{color:#DC2626}
+  .kpi.netg {border-color:#6EE7B7;background:#F0FDF4}.kpi.netg  .kpi-val{color:#059669}
+  .kpi.netr {border-color:#FCA5A5;background:#FFF1F2}.kpi.netr  .kpi-val{color:#DC2626}
 
-  /* ── STATUS CHIPS ROW ── */
-  .chips{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
-  .chip{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;font-size:11px;font-weight:700;border:1.5px solid}
-  .chip.c-paid{background:#F0FDF4;color:#166534;border-color:#86EFAC}
-  .chip.c-part{background:#FFFBEB;color:#92400E;border-color:#FCD34D}
-  .chip.c-pend{background:#FFF1F2;color:#9F1239;border-color:#FCA5A5}
-  .chip .dot{width:7px;height:7px;border-radius:50%}
-  .chip.c-paid .dot{background:#22C55E}
-  .chip.c-part .dot{background:#F59E0B}
-  .chip.c-pend .dot{background:#F43F5E}
+  /* PROGRESS BAR */
+  .prog-wrap{margin-bottom:22px}
+  .prog-row{display:flex;justify-content:space-between;font-size:10px;font-weight:700;color:#64748b;margin-bottom:6px}
+  .prog-track{height:10px;background:#f1f5f9;border-radius:99px;overflow:hidden}
+  .prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4F46E5,#10B981)}
 
-  /* ── COLLECTION BAR ── */
-  .coll-bar-wrap{background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px 18px;margin-bottom:20px}
-  .coll-bar-label{font-size:11px;font-weight:700;color:#64748b;margin-bottom:8px;display:flex;justify-content:space-between}
-  .coll-bar-track{height:10px;background:#f1f5f9;border-radius:99px;overflow:hidden}
-  .coll-bar-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#4F46E5,#10B981);transition:width .3s}
+  /* STATUS ROW */
+  .status-row{display:flex;gap:10px;margin-bottom:22px}
+  .st-chip{flex:1;border-radius:10px;padding:12px 14px;text-align:center;border:1.5px solid}
+  .st-chip .st-cnt{font-size:22px;font-weight:800;line-height:1}
+  .st-chip .st-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+  .st-chip.paid {border-color:#86EFAC;background:#F0FDF4}.st-chip.paid .st-cnt{color:#166534}.st-chip.paid .st-lbl{color:#4ade80}
+  .st-chip.partial{border-color:#FCD34D;background:#FFFBEB}.st-chip.partial .st-cnt{color:#92400E}.st-chip.partial .st-lbl{color:#F59E0B}
+  .st-chip.pending{border-color:#FCA5A5;background:#FFF1F2}.st-chip.pending .st-cnt{color:#9F1239}.st-chip.pending .st-lbl{color:#F87171}
 
-  /* ── TABLE ── */
-  .tbl-wrap{background:#fff;border-radius:12px;border:1.5px solid #e2e8f0;overflow:hidden;margin-bottom:20px}
-  .tbl-head{background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:12px 18px;color:#fff}
-  .tbl-head-title{font-size:12px;font-weight:800;letter-spacing:.2px}
-  .tbl-head-sub{font-size:10px;opacity:.7;margin-top:1px}
+  /* TWO-COLUMN LAYOUT */
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+
+  /* TABLES */
+  .tbl-card{border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden}
+  .tbl-card-head{background:#f8fafc;padding:10px 14px;font-size:10px;font-weight:800;color:#374151;border-bottom:1.5px solid #e2e8f0;text-transform:uppercase;letter-spacing:.5px}
   table{width:100%;border-collapse:collapse}
-  thead tr{background:#f8fafc}
-  th{padding:9px 12px;text-align:left;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:#64748b;border-bottom:1.5px solid #e2e8f0;white-space:nowrap}
+  th{padding:7px 10px;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;border-bottom:1px solid #f1f5f9;text-align:left}
   th.r{text-align:right}
-  td{padding:9px 12px;border-bottom:1px solid #f1f5f9;font-size:11px;font-weight:500;color:#1e293b;vertical-align:middle}
-  td.r{text-align:right}
+  td{padding:7px 10px;font-size:11px;border-bottom:1px solid #f8fafc;vertical-align:middle}
+  td.r{text-align:right;font-weight:700}
   tr:last-child td{border-bottom:none}
-  tr:nth-child(even) td{background:#fafbfd}
-  tr:hover td{background:#f0f4ff}
-  .flat-id{font-weight:800;font-size:12px;color:#4F46E5}
-  .owner-cell{display:flex;flex-direction:column;gap:1px}
-  .owner-name{font-weight:700;font-size:11px;color:#1e293b}
-  .owner-phone{font-size:10px;color:#94a3b8;font-weight:500}
-  .mini-bar{height:4px;background:#f1f5f9;border-radius:99px;margin-top:4px;width:80px}
-  .mini-bar-fill{height:100%;border-radius:99px}
-  .paid-fill{background:#10B981}
-  .partial-fill{background:#F59E0B}
-  .pending-fill{background:#EF4444}
-  .amt-due{color:#64748b;font-weight:600}
-  .amt-paid{color:#059669;font-weight:700}
-  .amt-bal-neg{color:#DC2626;font-weight:800}
-  .amt-bal-ok{color:#059669;font-weight:700}
-  .badge{padding:3px 9px;border-radius:99px;font-size:9px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;white-space:nowrap}
+  .badge{padding:2px 8px;border-radius:99px;font-size:9px;font-weight:800}
   .badge.paid{background:#D1FAE5;color:#065F46}
   .badge.partial{background:#FEF3C7;color:#92400E}
   .badge.pending{background:#FEE2E2;color:#991B1B}
-  .tfoot-row td{background:#f8fafc;font-weight:800;border-top:2px solid #e2e8f0;font-size:12px}
+  .cat-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:5px}
+  .tfoot-row td{background:#f8fafc;font-weight:800;border-top:1.5px solid #e2e8f0}
 
-  /* ── FOOTER ── */
-  .footer{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-top:1.5px solid #e2e8f0;margin-top:4px}
-  .footer-left{font-size:10px;color:#94a3b8;font-weight:500}
-  .footer-right{font-size:10px;color:#94a3b8;font-weight:600}
-  .powered{font-size:9px;font-weight:700;letter-spacing:.5px;color:#c7d2fe;background:#4F46E5;padding:3px 8px;border-radius:4px}
+  /* FOOTER */
+  .footer{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1.5px solid #e2e8f0;margin-top:4px}
+  .footer-l{font-size:10px;color:#94a3b8}
+  .powered{font-size:9px;font-weight:800;letter-spacing:.5px;background:#4F46E5;color:#fff;padding:3px 9px;border-radius:4px}
 
-  /* ── PRINT ── */
-  @media print {
-    body{background:#fff}
-    .page{padding:0}
-    .header{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-    @page{margin:12mm 14mm;size:A4}
-    tr{page-break-inside:avoid}
-  }
+  @media print{body{padding:0}@page{margin:12mm 14mm;size:A4}tr{page-break-inside:avoid}}
 </style>
 </head>
 <body>
-<div class="page">
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="header-inner">
-      <div class="apt-name">🏢 ${APT_NAME}</div>
-      <div class="report-title">Monthly Maintenance Summary Report</div>
-      <div class="report-meta">${monthLabel} &nbsp;·&nbsp; Generated on ${genDate}</div>
-    </div>
-    <div class="header-badge">
-      <div class="pct">${collPct}%</div>
-      <div class="pct-label">Collected</div>
-    </div>
+<!-- HEADER -->
+<div class="header">
+  <div class="h-left">
+    <div class="apt">🏢 ${APT_NAME}</div>
+    <div class="sub">Monthly Maintenance Summary &nbsp;·&nbsp; ${monthLabel}</div>
+    <div class="sub" style="margin-top:2px;opacity:.55">Generated ${genDate}</div>
   </div>
-
-  <!-- KPI CARDS -->
-  <div class="kpi-row">
-    <div class="kpi due">
-      <div class="kpi-icon">💰</div>
-      <div class="kpi-label">Total Due</div>
-      <div class="kpi-val">₹${Number(totDue).toLocaleString('en-IN')}</div>
-      <div class="kpi-sub">${rows.length} flats</div>
-    </div>
-    <div class="kpi collected">
-      <div class="kpi-icon">✅</div>
-      <div class="kpi-label">Collected</div>
-      <div class="kpi-val">₹${Number(totPaid).toLocaleString('en-IN')}</div>
-      <div class="kpi-sub">${collPct}% of total due</div>
-    </div>
-    <div class="kpi balance${totBal <= 0 ? ' clear' : ''}">
-      <div class="kpi-icon">${totBal > 0 ? '⚠️' : '🎉'}</div>
-      <div class="kpi-label">Outstanding</div>
-      <div class="kpi-val">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</div>
-      <div class="kpi-sub">${totBal <= 0 ? 'Fully collected!' : 'Pending recovery'}</div>
-    </div>
+  <div class="h-right">
+    <div class="pct">${collPct}%</div>
+    <div class="pct-lbl">Collected</div>
   </div>
+</div>
 
-  <!-- STATUS CHIPS -->
-  <div class="chips">
-    <div class="chip c-paid"><div class="dot"></div> ${paidCnt} Fully Paid</div>
-    <div class="chip c-part"><div class="dot"></div> ${partCnt} Partial Payment</div>
-    <div class="chip c-pend"><div class="dot"></div> ${pendCnt} Not Paid</div>
+<!-- KPI CARDS -->
+<div class="sec-title">Financial Overview</div>
+<div class="kpi-grid">
+  <div class="kpi indig">
+    <div class="kpi-lbl">Total Due</div>
+    <div class="kpi-val">₹${Number(totDue).toLocaleString('en-IN')}</div>
+    <div class="kpi-sub">${rows.length} flats</div>
   </div>
-
-  <!-- COLLECTION PROGRESS BAR -->
-  <div class="coll-bar-wrap">
-    <div class="coll-bar-label">
-      <span>Collection Progress</span>
-      <span style="font-weight:800;color:#4F46E5">${collPct}% collected</span>
-    </div>
-    <div class="coll-bar-track">
-      <div class="coll-bar-fill" style="width:${collPct}%"></div>
-    </div>
+  <div class="kpi grn">
+    <div class="kpi-lbl">Maintenance Collected</div>
+    <div class="kpi-val">₹${Number(totPaid).toLocaleString('en-IN')}</div>
+    <div class="kpi-sub">${collPct}% of due</div>
   </div>
+  <div class="kpi red">
+    <div class="kpi-lbl">Society Expenses</div>
+    <div class="kpi-val">₹${Number(totSocExp).toLocaleString('en-IN')}</div>
+    <div class="kpi-sub">${monthExps.length} expense${monthExps.length !== 1 ? 's' : ''}</div>
+  </div>
+  <div class="kpi ${netBalance >= 0 ? 'netg' : 'netr'}">
+    <div class="kpi-lbl">Net Balance</div>
+    <div class="kpi-val">₹${Number(Math.abs(netBalance)).toLocaleString('en-IN')}</div>
+    <div class="kpi-sub">${netBalance >= 0 ? 'Surplus' : 'Deficit'}</div>
+  </div>
+</div>
 
-  <!-- FLAT TABLE -->
-  <div class="tbl-wrap">
-    <div class="tbl-head">
-      <div class="tbl-head-title">Flat-wise Payment Details</div>
-      <div class="tbl-head-sub">${rows.length} flats · ${monthLabel}</div>
-    </div>
+<!-- PROGRESS BAR -->
+<div class="prog-wrap">
+  <div class="prog-row"><span>Collection Progress</span><span style="color:#4F46E5;font-weight:800">${collPct}% collected</span></div>
+  <div class="prog-track"><div class="prog-fill" style="width:${collPct}%"></div></div>
+</div>
+
+<!-- STATUS CHIPS -->
+<div class="sec-title">Payment Status</div>
+<div class="status-row">
+  <div class="st-chip paid">
+    <div class="st-cnt">${paidCnt}</div>
+    <div class="st-lbl">Fully Paid</div>
+  </div>
+  <div class="st-chip partial">
+    <div class="st-cnt">${partCnt}</div>
+    <div class="st-lbl">Partial</div>
+  </div>
+  <div class="st-chip pending">
+    <div class="st-cnt">${pendCnt}</div>
+    <div class="st-lbl">Not Paid</div>
+  </div>
+</div>
+
+<!-- PAYMENTS + EXPENSES SIDE BY SIDE -->
+<div class="sec-title">Details</div>
+<div class="two-col">
+
+  <!-- PAYMENTS SUMMARY BY BLOCK -->
+  <div class="tbl-card">
+    <div class="tbl-card-head">💰 Payments by Block</div>
     <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Flat</th>
-          <th>Block</th>
-          <th>Owner / Resident</th>
-          <th class="r">Due (₹)</th>
-          <th class="r">Paid (₹)</th>
-          <th class="r">Balance (₹)</th>
-          <th style="text-align:center">Status</th>
-        </tr>
-      </thead>
+      <thead><tr><th>Block</th><th class="r">Due</th><th class="r">Collected</th><th class="r">Pending</th></tr></thead>
       <tbody>
-        ${rows.map((f, i) => `
-        <tr>
-          <td style="color:#cbd5e1;font-weight:700;font-size:10px">${i + 1}</td>
-          <td class="flat-id">${f.flatId}</td>
-          <td><span style="background:#EEF2FF;color:#4F46E5;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700">${f.block || '–'}</span></td>
-          <td>
-            <div class="owner-cell">
-              <span class="owner-name">${f.owner || '–'}</span>
-              ${f.ownerPhone ? `<span class="owner-phone">📱 ${f.ownerPhone}</span>` : ''}
-              <div class="mini-bar"><div class="mini-bar-fill ${f._status}-fill" style="width:${barW(f)}%"></div></div>
-            </div>
-          </td>
-          <td class="r amt-due">₹${Number(f._due).toLocaleString('en-IN')}</td>
-          <td class="r amt-paid">₹${Number(f._paid).toLocaleString('en-IN')}</td>
-          <td class="r ${f._bal > 0 ? 'amt-bal-neg' : 'amt-bal-ok'}">₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}</td>
-          <td style="text-align:center">${statusBadge(f._status)}</td>
-        </tr>`).join('')}
+        ${(() => {
+          const blks = [...new Set(rows.map(f => f.block || '–'))].sort();
+          return blks.map(b => {
+            const bRows = rows.filter(f => (f.block || '–') === b);
+            const bDue  = bRows.reduce((s,f) => s + f._due, 0);
+            const bPaid = bRows.reduce((s,f) => s + f._paid, 0);
+            const bBal  = bDue - bPaid;
+            return `<tr>
+              <td><strong>Block ${b}</strong><br><span style="font-size:9px;color:#94a3b8">${bRows.length} flats</span></td>
+              <td class="r" style="color:#64748b">₹${Number(bDue).toLocaleString('en-IN')}</td>
+              <td class="r" style="color:#059669">₹${Number(bPaid).toLocaleString('en-IN')}</td>
+              <td class="r" style="color:${bBal>0?'#DC2626':'#059669'}">₹${Number(bBal).toLocaleString('en-IN')}</td>
+            </tr>`;
+          }).join('') + `<tr class="tfoot-row">
+            <td>Total</td>
+            <td class="r">₹${Number(totDue).toLocaleString('en-IN')}</td>
+            <td class="r" style="color:#059669">₹${Number(totPaid).toLocaleString('en-IN')}</td>
+            <td class="r" style="color:${totBal>0?'#DC2626':'#059669'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</td>
+          </tr>`;
+        })()}
       </tbody>
-      <tfoot>
-        <tr class="tfoot-row">
-          <td colspan="4" style="font-size:12px">Grand Total — ${rows.length} flats</td>
-          <td class="r">₹${Number(totDue).toLocaleString('en-IN')}</td>
-          <td class="r" style="color:#059669">₹${Number(totPaid).toLocaleString('en-IN')}</td>
-          <td class="r" style="color:${totBal > 0 ? '#DC2626' : '#059669'}">₹${Number(Math.abs(totBal)).toLocaleString('en-IN')}</td>
-          <td></td>
-        </tr>
-      </tfoot>
     </table>
   </div>
 
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-left">${APT_NAME} · ${monthLabel} Maintenance Report</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span class="footer-right">Powered by</span>
-      <span class="powered">GATEBOOK</span>
-    </div>
+  <!-- SOCIETY EXPENSES BY CATEGORY -->
+  <div class="tbl-card">
+    <div class="tbl-card-head">🧾 Society Expenses</div>
+    ${monthExps.length === 0
+      ? `<div style="padding:24px;text-align:center;color:#94a3b8;font-size:11px">No expenses recorded for ${monthLabel}</div>`
+      : `<table>
+          <thead><tr><th>Category</th><th>Description</th><th class="r">Amount</th></tr></thead>
+          <tbody>
+            ${monthExps.sort((a,b)=>(b.amt||0)-(a.amt||0)).map(e => `<tr>
+              <td style="font-size:10px;font-weight:700;color:#6366F1">${e.cat||'Other'}</td>
+              <td style="font-size:10px;color:#64748b">${e.title||'–'}</td>
+              <td class="r" style="color:#DC2626">₹${Number(e.amt||0).toLocaleString('en-IN')}</td>
+            </tr>`).join('')}
+          </tbody>
+          <tfoot><tr class="tfoot-row">
+            <td colspan="2">Total Expenses</td>
+            <td class="r" style="color:#DC2626">₹${Number(totSocExp).toLocaleString('en-IN')}</td>
+          </tr></tfoot>
+        </table>`
+    }
   </div>
 
 </div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-l">${APT_NAME} &nbsp;·&nbsp; ${monthLabel} Maintenance Report</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <span style="font-size:10px;color:#94a3b8">Powered by</span>
+    <span class="powered">GATEBOOK</span>
+  </div>
+</div>
+
 <script>window.onload = () => { window.print(); }<\/script>
 </body></html>`;
 
