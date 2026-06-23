@@ -278,8 +278,12 @@ import {
   doc, setDoc, collection, getDocs,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
-/* ── Auth guard: already logged in → go to app ── */
-onAuthStateChanged(auth, user => { if (user) window.location.replace('app.html'); });
+/* ── Auth guard: already registered & logged in → go to app ── */
+onAuthStateChanged(auth, user => {
+  // Only auto-redirect if already logged in BEFORE this page loaded
+  // (i.e. don't redirect mid-registration after createUserWithEmailAndPassword)
+  if (user && !window._registering) window.location.replace('app.html');
+});
 
 /* ── State ── */
 let blocks = [{ name:'', floors:4, flatsPerFloor:2 }];
@@ -422,6 +426,7 @@ window.doLaunch = async function() {
 
   try {
     // 1. Create Firebase Auth account
+    window._registering = true; // prevent onAuthStateChanged from redirecting mid-setup
     const cred = await createUserWithEmailAndPassword(auth, adminEmail, adminPw);
     await updateProfile(cred.user, { displayName: adminName });
 
@@ -458,7 +463,8 @@ window.doLaunch = async function() {
       }
     }
 
-    // 4. Done — redirect to app
+    // 4. Done — all flats written, now safe to redirect
+    window._registering = false;
     window.location.replace('app.html');
   } catch(err) {
     console.error('Launch error:', err);
@@ -473,6 +479,7 @@ window.doLaunch = async function() {
     };
     showAlert('s3Alert', msgs[err.code] || `Setup failed: ${err.message} (${err.code})`);
     console.error('Firebase error code:', err.code, err);
+    window._registering = false;
     btn.disabled = false;
     document.getElementById('launchLbl').textContent = ' Launch App';
   }
