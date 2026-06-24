@@ -326,7 +326,7 @@ function oFlEdit(fid) {
         <i class="ti ti-user" style="color:var(--indigo);font-size:15px;"></i>
         <span style="font-size:13px;font-weight:800;color:var(--text);">Resident</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
         ${_fld('Name', _inp('edOwner','text',(f.owner||'').replace(/"/g,'&quot;'),'Full name'))}
         ${_fld('Type', `<select id="edType" onchange="window._toggleOwnerFields(this.value)"
           style="width:100%;height:38px;padding:0 11px;background:#fff;border:1.5px solid var(--border2);
@@ -334,6 +334,14 @@ function oFlEdit(fid) {
           <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
           <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
         </select>`)}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        ${_fld('📱 Mobile Number', _inp('edPhone','tel',(f.phone||f.ownerPhone||'').replace(/"/g,'&quot;'),'10-digit mobile no.'))}
+        ${_fld('WhatsApp', `<div style="display:flex;align-items:center;height:38px;gap:8px;">
+          <input type="checkbox" id="edWA" ${f.waEnabled!==false?'checked':''}
+            style="width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;"/>
+          <label for="edWA" style="font-size:12px;font-weight:600;color:var(--text);cursor:pointer;">WhatsApp enabled</label>
+        </div>`)}
       </div>
 
       <!-- Owner fields (tenant only) -->
@@ -721,6 +729,8 @@ async function saveFlat(fid) {
   const moveOut    = document.getElementById('edMoveOut')?.value||'';
   const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
   const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
+  const phone      = (document.getElementById('edPhone')?.value||'').trim();
+  const waEnabled  = document.getElementById('edWA')?.checked !== false;
   
   // Handle block - preserve existing block/floor if fields not present in drawer
   const existingFlat = flats.get(fid) || {};
@@ -749,7 +759,7 @@ async function saveFlat(fid) {
   sync('saving');
   try {
     // Build update payload — always include block/floor to ensure they're preserved
-    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone };
+    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone, waEnabled };
     // Only write block/floor if they have valid values (prevent wiping with empty string)
     if (block !== undefined && block !== null) updatePayload.block = block;
     if (floor !== undefined) updatePayload.floor = floor;
@@ -3033,6 +3043,34 @@ async function boot(){
   try{
     // Load apartment config
     const aptDoc = await getDoc(aptDocRef());
+
+    // ── PAUSE CHECK — block access if admin has paused this account ──
+    if (aptDoc.exists() && aptDoc.data().status === 'paused') {
+      document.getElementById('lo').style.display = 'none';
+      document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;
+          background:linear-gradient(135deg,#EEF2FF,#FDF4FF);font-family:'Plus Jakarta Sans',sans-serif;padding:24px">
+          <div style="background:#fff;border-radius:20px;padding:40px 36px;width:min(460px,100%);
+            text-align:center;box-shadow:0 24px 64px rgba(99,102,241,.15);border:1.5px solid #E0E7FF">
+            <div style="width:64px;height:64px;border-radius:18px;background:#FEF3C7;
+              display:flex;align-items:center;justify-content:center;font-size:28px;margin:0 auto 18px">⏸</div>
+            <h2 style="font-size:20px;font-weight:800;color:#111827;margin-bottom:8px">Account Paused</h2>
+            <p style="font-size:13px;color:#6B7280;font-weight:500;line-height:1.6;margin-bottom:24px">
+              Your Gatebook account has been temporarily suspended by the administrator.<br><br>
+              Please contact <strong>support@gatebook.app</strong> to reactivate your account.
+            </p>
+            <button onclick="window._doSignOut()"
+              style="display:inline-flex;align-items:center;gap:8px;padding:10px 24px;
+              background:#6366F1;color:#fff;border:none;border-radius:10px;font-size:13px;
+              font-weight:700;cursor:pointer;font-family:inherit">
+              <i class="ti ti-logout"></i> Sign Out
+            </button>
+          </div>
+        </div>`;
+      return;
+    }
+    // ── END PAUSE CHECK ──
+
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
     await loadCats();
@@ -3981,20 +4019,46 @@ function oMonthlySummary() {
 window._oMonthlySummary = oMonthlySummary;
 window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
 
+window._sendAllWA = function() {
+  if (!window._msSummaryData) return;
+  const { rows, monthLabel } = window._msSummaryData;
+  const pending = rows.filter(f => {
+    const ph = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
+    return ph.length >= 10 && f.waEnabled !== false && f._status !== 'paid';
+  });
+  if (!pending.length) { toast('No pending flats with phone numbers', 'error'); return; }
+  if (!confirm(`Open WhatsApp for ${pending.length} pending flat(s)? Links will open one by one.`)) return;
+  pending.forEach((f, i) => {
+    const ph = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
+    const msg = encodeURIComponent(
+      `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),\n\n` +
+      `Monthly Maintenance Summary — ${monthLabel}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `🏠 Flat    : ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}\n` +
+      `💰 Due     : ₹${Number(f._due).toLocaleString('en-IN')}\n` +
+      `✅ Paid    : ₹${Number(f._paid).toLocaleString('en-IN')}\n` +
+      `📊 Balance : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}${f._bal <= 0 ? ' (Cleared ✅)' : ' (Pending ❌)'}\n` +
+      `━━━━━━━━━━━━━━━━━━━━━━━\n` +
+      `— ${APT_NAME} Society`
+    );
+    setTimeout(() => window.open(`https://wa.me/91${ph}?text=${msg}`, '_blank'), i * 600);
+  });
+};
+
 function _renderSummary() {
-  const month = document.getElementById('msMonth').value;
-  const block = document.getElementById('msBlock').value;
-  const status = document.getElementById('msStatus').value;
+  const month  = document.getElementById('msMonth')?.value  || AM;
+  const block  = document.getElementById('msBlock')?.value  || 'all';
+  const status = document.getElementById('msStatus')?.value || 'all';
+
+  if (!month) return;
 
   const [y, mo] = month.split('-');
   const monthLabel = new Date(+y, +mo - 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
 
-  let rows = [...flats.values()];
-  if (block !== 'all') rows = rows.filter(f => f.block === block);
-
-  // Compute per-flat payment for selected month
-  rows = rows.map(f => {
-    const monthExps = (exps.get(f.id) || []).filter(e => e.month === month);
+  // Compute per-flat payment for selected month (use flatId as key — matches exps Map)
+  let allRows = [...flats.values()].map(f => {
+    const fid      = f.flatId;                                        // correct key
+    const monthExps = (exps.get(fid) || []).filter(e => e.month === month);
     const paid = monthExps.reduce((s, e) => s + (e.amt || 0), 0);
     const due  = f.due || 0;
     const bal  = due - paid;
@@ -4002,15 +4066,30 @@ function _renderSummary() {
     return { ...f, _paid: paid, _due: due, _bal: bal, _status: s, _monthExps: monthExps };
   });
 
-  if (status !== 'all') rows = rows.filter(f => f._status === status);
+  // Apply block filter
+  if (block !== 'all') allRows = allRows.filter(f => (f.block || '') === block);
+
+  // Store block-filtered totals for print (before status filter)
+  const printRows = [...allRows].sort((a, b) =>
+    (a.block||'').localeCompare(b.block||'') || (a.flatId||'').localeCompare(b.flatId||''));
+  const printTotDue  = printRows.reduce((s, f) => s + f._due,  0);
+  const printTotPaid = printRows.reduce((s, f) => s + f._paid, 0);
+  const printTotBal  = printRows.reduce((s, f) => s + f._bal,  0);
+
+  // Apply status filter for display
+  let rows = block !== 'all' || status !== 'all'
+    ? allRows.filter(f => status === 'all' || f._status === status)
+    : allRows;
+
   rows.sort((a, b) => (a.block||'').localeCompare(b.block||'') || (a.flatId||'').localeCompare(b.flatId||''));
 
-  const totDue  = rows.reduce((s, f) => s + f._due, 0);
+  // Display totals reflect current visible rows
+  const totDue  = rows.reduce((s, f) => s + f._due,  0);
   const totPaid = rows.reduce((s, f) => s + f._paid, 0);
-  const totBal  = rows.reduce((s, f) => s + f._bal, 0);
-  const paidCnt = rows.filter(f => f._status === 'paid').length;
-  const partCnt = rows.filter(f => f._status === 'partial').length;
-  const pendCnt = rows.filter(f => f._status === 'pending').length;
+  const totBal  = rows.reduce((s, f) => s + f._bal,  0);
+  const paidCnt = allRows.filter(f => f._status === 'paid').length;
+  const partCnt = allRows.filter(f => f._status === 'partial').length;
+  const pendCnt = allRows.filter(f => f._status === 'pending').length;
 
   const statusBadge = s => ({
     paid:    '<span style="background:#D1FAE5;color:#065F46;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">✅ Paid</span>',
@@ -4043,8 +4122,8 @@ function _renderSummary() {
   document.getElementById('msSummaryBody').innerHTML = rows.length === 0
     ? '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No flats match the selected filters</div>'
     : rows.map(f => {
-        const phone = (f.ownerPhone || '').replace(/\D/g, '');
-        const waAvail = phone.length >= 10;
+        const phone = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
+        const waAvail = phone.length >= 10 && f.waEnabled !== false;
         const waMsg = encodeURIComponent(
           `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),\n\n` +
           `Monthly Maintenance Summary — ${monthLabel}\n` +
@@ -4064,7 +4143,7 @@ function _renderSummary() {
               ${f.block ? `<span style="font-size:10px;font-weight:700;color:var(--muted);background:var(--surface3);padding:1px 6px;border-radius:4px">Blk ${f.block}</span>` : ''}
               ${statusBadge(f._status)}
             </div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.owner || '–'}${f.ownerPhone ? ' · '+f.ownerPhone : ''}</div>
+            <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.owner || '–'}${(f.phone||f.ownerPhone) ? ' · 📱 '+(f.phone||f.ownerPhone) : ''}</div>
             <div style="display:flex;gap:12px;margin-top:4px">
               <span style="font-size:11px;color:var(--text2)">Due <strong>${inr(f._due)}</strong></span>
               <span style="font-size:11px;color:var(--green)">Paid <strong>${inr(f._paid)}</strong></span>
@@ -4083,8 +4162,8 @@ function _renderSummary() {
         </div>`;
       }).join('');
 
-  // Store current data for print
-  window._msSummaryData = { rows, monthLabel, totDue, totPaid, totBal };
+  // Store print data = all rows for the month (ignores status filter so print is complete)
+  window._msSummaryData = { rows: printRows, monthLabel, totDue: printTotDue, totPaid: printTotPaid, totBal: printTotBal };
 }
 
 window._renderSummary = _renderSummary;
