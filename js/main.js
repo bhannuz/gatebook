@@ -4019,6 +4019,44 @@ function oMonthlySummary() {
 window._oMonthlySummary = oMonthlySummary;
 window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
 
+function _buildWAMsg(f, monthLabel, totDue, totPaid, totBal, totSocExp) {
+  const netBal = totPaid - totSocExp;
+  return (
+    `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),
+
+` +
+    `*${APT_NAME}*
+` +
+    `Monthly Maintenance — *${monthLabel}*
+
+` +
+    `*🏠 Your Flat: ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}*
+` +
+    `━━━━━━━━━━━━━━━━━━━━━━━
+` +
+    `💰 Monthly Due  : ₹${Number(f._due).toLocaleString('en-IN')}
+` +
+    `✅ Paid          : ₹${Number(f._paid).toLocaleString('en-IN')}
+` +
+    `📊 Your Balance  : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')} ${f._bal <= 0 ? '(Cleared ✅)' : '(Pending ❌)'}
+
+` +
+    `*🏢 Society Overview*
+` +
+    `━━━━━━━━━━━━━━━━━━━━━━━
+` +
+    `🏘 Total Collected : ₹${Number(totPaid).toLocaleString('en-IN')} / ₹${Number(totDue).toLocaleString('en-IN')}
+` +
+    `🧾 Society Expenses: ₹${Number(totSocExp).toLocaleString('en-IN')}
+` +
+    `💼 Net Balance     : ₹${Number(Math.abs(netBal)).toLocaleString('en-IN')} ${netBal >= 0 ? '(Surplus ✅)' : '(Deficit ⚠️)'}
+` +
+    `━━━━━━━━━━━━━━━━━━━━━━━
+` +
+    `— ${APT_NAME} Society`
+  );
+}
+
 window._sendAllWA = function() {
   if (!window._msSummaryData) return;
   const { rows, monthLabel } = window._msSummaryData;
@@ -4028,19 +4066,14 @@ window._sendAllWA = function() {
   });
   if (!pending.length) { toast('No pending flats with phone numbers', 'error'); return; }
   if (!confirm(`Open WhatsApp for ${pending.length} pending flat(s)? Links will open one by one.`)) return;
+  const { totDue, totPaid, totBal } = window._msSummaryData;
+  const msMonth = document.getElementById('msMonth')?.value || AM;
+  const totSocExp = socExps
+    .filter(e => (e.month || (e.date||'').slice(0,7)) === msMonth)
+    .reduce((s,e) => s + (e.amt||0), 0);
   pending.forEach((f, i) => {
     const ph = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
-    const msg = encodeURIComponent(
-      `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),\n\n` +
-      `Monthly Maintenance Summary — ${monthLabel}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `🏠 Flat    : ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}\n` +
-      `💰 Due     : ₹${Number(f._due).toLocaleString('en-IN')}\n` +
-      `✅ Paid    : ₹${Number(f._paid).toLocaleString('en-IN')}\n` +
-      `📊 Balance : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}${f._bal <= 0 ? ' (Cleared ✅)' : ' (Pending ❌)'}\n` +
-      `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-      `— ${APT_NAME} Society`
-    );
+    const msg = encodeURIComponent(_buildWAMsg(f, monthLabel, totDue, totPaid, totBal, totSocExp));
     setTimeout(() => window.open(`https://wa.me/91${ph}?text=${msg}`, '_blank'), i * 600);
   });
 };
@@ -4124,16 +4157,11 @@ function _renderSummary() {
     : rows.map(f => {
         const phone = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
         const waAvail = phone.length >= 10 && f.waEnabled !== false;
+        const _socExpAmt = socExps
+          .filter(e => (e.month || (e.date||'').slice(0,7)) === month)
+          .reduce((s,e) => s + (e.amt||0), 0);
         const waMsg = encodeURIComponent(
-          `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),\n\n` +
-          `Monthly Maintenance Summary — ${monthLabel}\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `🏠 Flat     : ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}\n` +
-          `💰 Due      : ₹${Number(f._due).toLocaleString('en-IN')}\n` +
-          `✅ Paid     : ₹${Number(f._paid).toLocaleString('en-IN')}\n` +
-          `📊 Balance  : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}${f._bal <= 0 ? ' (Cleared ✅)' : ' (Pending ❌)'}\n` +
-          `━━━━━━━━━━━━━━━━━━━━━━━\n` +
-          `— ${APT_NAME} Society`
+          _buildWAMsg(f, monthLabel, printTotDue, printTotPaid, printTotBal, _socExpAmt)
         );
 
         return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
