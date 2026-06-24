@@ -632,10 +632,16 @@
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
       </select>
-      <button class="btn btn-white" onclick="window._printMonthlySummary()"
-        style="margin-left:auto;border:1.5px solid var(--border2)">
-        <i class="ti ti-printer"></i> Print
-      </button>
+      <div style="display:flex;gap:8px;margin-left:auto">
+        <button class="btn btn-white" onclick="window._sendAllWA()"
+          style="border:1.5px solid #25D366;color:#25D366;background:#fff;display:flex;align-items:center;gap:6px">
+          <i class="ti ti-brand-whatsapp"></i> Send All Pending
+        </button>
+        <button class="btn btn-white" onclick="window._printMonthlySummary()"
+          style="border:1.5px solid var(--border2)">
+          <i class="ti ti-printer"></i> Print
+        </button>
+      </div>
     </div>
 
     <!-- Summary totals header -->
