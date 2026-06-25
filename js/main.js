@@ -4020,40 +4020,67 @@ window._oMonthlySummary = oMonthlySummary;
 window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
 
 function _buildWAMsg(f, monthLabel, totDue, totPaid, totBal, totSocExp) {
-  const netBal = totPaid - totSocExp;
+  const netBal   = totPaid - totSocExp;
+  const collPct  = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
+  const flatStat = f._bal <= 0 ? '✅ CLEARED' : f._paid > 0 ? '⚠️ PARTIAL' : '❌ PENDING';
+  const flatBar  = (() => {
+    if (!f._due) return '░░░░░░░░░░';
+    const filled = Math.round(Math.min(f._paid / f._due, 1) * 10);
+    return '█'.repeat(filled) + '░'.repeat(10 - filled);
+  })();
+  const socBar = (() => {
+    const filled = Math.round(collPct / 10);
+    return '█'.repeat(filled) + '░'.repeat(10 - filled);
+  })();
+
   return (
-    `Dear ${f.owner || 'Resident'} (Flat ${f.flatId}),
+    `🏢 *${APT_NAME}*
+` +
+    `📅 _${monthLabel} — Maintenance Report_
+` +
+    `▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
 
 ` +
-    `*${APT_NAME}*
+
+    `👤 *Dear ${f.owner || 'Resident'}*
 ` +
-    `Monthly Maintenance — *${monthLabel}*
+    `🏠 Flat *${f.flatId}*${f.block ? '  |  Block *' + f.block + '*' : ''}
 
 ` +
-    `*🏠 Your Flat: ${f.flatId}${f.block ? ' (Block '+f.block+')' : ''}*
+
+    `┌─ 💳 *YOUR PAYMENT* ─────────
 ` +
-    `━━━━━━━━━━━━━━━━━━━━━━━
+    `│  Due       ₹${Number(f._due).toLocaleString('en-IN')}
 ` +
-    `💰 Monthly Due  : ₹${Number(f._due).toLocaleString('en-IN')}
+    `│  Paid      ₹${Number(f._paid).toLocaleString('en-IN')}
 ` +
-    `✅ Paid          : ₹${Number(f._paid).toLocaleString('en-IN')}
+    `│  Balance   *₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}*
 ` +
-    `📊 Your Balance  : ₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')} ${f._bal <= 0 ? '(Cleared ✅)' : '(Pending ❌)'}
+    `│  ${flatBar}  ${flatStat}
+` +
+    `└─────────────────────────────
 
 ` +
-    `*🏢 Society Overview*
+
+    `┌─ 🏘 *SOCIETY SUMMARY* ──────
 ` +
-    `━━━━━━━━━━━━━━━━━━━━━━━
+    `│  Total Due      ₹${Number(totDue).toLocaleString('en-IN')}
 ` +
-    `🏘 Total Collected : ₹${Number(totPaid).toLocaleString('en-IN')} / ₹${Number(totDue).toLocaleString('en-IN')}
+    `│  Collected      ₹${Number(totPaid).toLocaleString('en-IN')}
 ` +
-    `🧾 Society Expenses: ₹${Number(totSocExp).toLocaleString('en-IN')}
+    `│  ${socBar}  ${collPct}%
 ` +
-    `💼 Net Balance     : ₹${Number(Math.abs(netBal)).toLocaleString('en-IN')} ${netBal >= 0 ? '(Surplus ✅)' : '(Deficit ⚠️)'}
+    `│
 ` +
-    `━━━━━━━━━━━━━━━━━━━━━━━
+    `│  Expenses       ₹${Number(totSocExp).toLocaleString('en-IN')}
 ` +
-    `— ${APT_NAME} Society`
+    `│  Net Balance    *₹${Number(Math.abs(netBal)).toLocaleString('en-IN')}* ${netBal >= 0 ? '✅ Surplus' : '⚠️ Deficit'}
+` +
+    `└─────────────────────────────
+
+` +
+
+    `_Powered by Gatebook · AK Group_`
   );
 }
 
