@@ -3037,6 +3037,159 @@ window._addInlineCat = async function(selId, type) {
   toast(`"${val}" added ✓`);
 };
 
+/* ════════════════════════════════
+   PAYMENT HISTORY EDITOR (Analytics tab)
+════════════════════════════════ */
+function _openPayHistory(fid) {
+  const f = flats.get(fid);
+  if (!f) return;
+  const modal = document.getElementById('payHistM');
+  document.getElementById('payHistTitle').textContent = `${fid} — Payment History`;
+  document.getElementById('payHistSub').textContent   = f.owner || 'Vacant';
+  modal.dataset.fid = fid;
+  modal.classList.add('open');
+  _renderPayHistory(fid);
+}
+window._openPayHistory = _openPayHistory;
+
+function _renderPayHistory(fid) {
+  const records = (exps.get(fid) || []).slice().sort((a, b) => (b.rawDate||'').localeCompare(a.rawDate||''));
+  const body = document.getElementById('payHistBody');
+  if (!body) return;
+
+  if (!records.length) {
+    body.innerHTML = `<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px">
+      <i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No payment records found</div>`;
+    return;
+  }
+
+  body.innerHTML = records.map(e => {
+    const eid    = e.expId || e.id;
+    const isPaid = (e.status||'paid') === 'paid';
+    const isPartial = (e.status||'') === 'partial';
+    const statusColor = isPaid ? 'var(--green)' : isPartial ? 'var(--amber)' : 'var(--red)';
+    const statusLabel = isPaid ? '✅ Paid' : isPartial ? '⚠️ Partial' : '❌ Pending';
+    return `
+    <div id="phrow_${eid}" style="border:1.5px solid var(--border2);border-radius:10px;padding:12px 14px;margin-bottom:8px;background:var(--surface2)">
+      <!-- VIEW MODE -->
+      <div id="phview_${eid}" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px">
+            <span style="font-size:13px;font-weight:800;color:var(--indigo)">${inr(e.amt||0)}</span>
+            <span style="font-size:10px;font-weight:700;background:var(--surface3);color:var(--text2);padding:2px 8px;border-radius:20px">${e.cat||'–'}</span>
+            <span style="font-size:10px;font-weight:700;color:${statusColor}">${statusLabel}</span>
+          </div>
+          <div style="font-size:11px;color:var(--muted)">${e.date||'–'}${e.note ? ' · '+e.note : ''}${e.month ? ' · '+e.month : ''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="window._phEdit('${eid}')"
+            style="height:28px;padding:0 10px;background:none;border:1px solid var(--border2);border-radius:6px;font-size:11px;font-weight:600;color:var(--indigo);cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
+            <i class="ti ti-pencil" style="font-size:11px"></i> Edit
+          </button>
+          <button onclick="window._phDelete('${eid}','${fid}')"
+            style="height:28px;padding:0 10px;background:none;border:1px solid #FCA5A5;border-radius:6px;font-size:11px;font-weight:600;color:var(--red);cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:4px">
+            <i class="ti ti-trash" style="font-size:11px"></i>
+          </button>
+        </div>
+      </div>
+      <!-- EDIT MODE -->
+      <div id="phedit_${eid}" style="display:none;margin-top:10px;border-top:1px solid var(--border2);padding-top:10px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Category</label>
+            <input id="phe_cat_${eid}" type="text" value="${(e.cat||'').replace(/"/g,'&quot;')}"
+              style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--text);background:#fff;box-sizing:border-box"/>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Amount (₹)</label>
+            <input id="phe_amt_${eid}" type="number" value="${e.amt||0}"
+              style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--text);background:#fff;box-sizing:border-box"/>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Date</label>
+            <input id="phe_date_${eid}" type="date" value="${e.rawDate||''}"
+              style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--text);background:#fff;box-sizing:border-box"/>
+          </div>
+          <div>
+            <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Status</label>
+            <select id="phe_status_${eid}"
+              style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:600;font-family:var(--font);color:var(--text);background:#fff;box-sizing:border-box">
+              <option value="paid"    ${(e.status||'paid')==='paid'   ?'selected':''}>✅ Paid</option>
+              <option value="partial" ${(e.status||'')==='partial'?'selected':''}>⚠️ Partial</option>
+              <option value="pending" ${(e.status||'')==='pending'?'selected':''}>❌ Pending</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px">
+          <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px">Note</label>
+          <input id="phe_note_${eid}" type="text" value="${(e.note||'').replace(/"/g,'&quot;')}" placeholder="Optional note…"
+            style="width:100%;height:34px;padding:0 10px;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:500;font-family:var(--font);color:var(--text);background:#fff;box-sizing:border-box"/>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="window._phCancelEdit('${eid}')"
+            style="height:32px;padding:0 14px;background:none;border:1.5px solid var(--border2);border-radius:8px;font-size:12px;font-weight:600;color:var(--text2);cursor:pointer;font-family:var(--font)">Cancel</button>
+          <button onclick="window._phSave('${eid}','${fid}')"
+            style="height:32px;padding:0 14px;background:var(--indigo);border:none;border-radius:8px;font-size:12px;font-weight:700;color:#fff;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px">
+            <i class="ti ti-device-floppy" style="font-size:13px"></i> Save
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+window._renderPayHistory = _renderPayHistory;
+
+window._phEdit = function(eid) {
+  // Close any other open edits first
+  document.querySelectorAll('[id^="phedit_"]').forEach(el => el.style.display = 'none');
+  document.querySelectorAll('[id^="phview_"]').forEach(el => el.style.display = 'flex');
+  document.getElementById('phedit_'+eid).style.display = 'block';
+  document.getElementById('phview_'+eid).style.display = 'none';
+};
+
+window._phCancelEdit = function(eid) {
+  document.getElementById('phedit_'+eid).style.display = 'none';
+  document.getElementById('phview_'+eid).style.display = 'flex';
+};
+
+window._phSave = async function(eid, fid) {
+  const cat    = (document.getElementById('phe_cat_'+eid)?.value||'').trim();
+  const amt    = parseInt(document.getElementById('phe_amt_'+eid)?.value)||0;
+  const rawDate= document.getElementById('phe_date_'+eid)?.value||'';
+  const status = document.getElementById('phe_status_'+eid)?.value||'paid';
+  const note   = (document.getElementById('phe_note_'+eid)?.value||'').trim();
+  const date   = rawDate ? fd(rawDate) : '';
+  const payMonth = rawDate ? rawDate.slice(0,7) : AM;
+
+  if (!amt || amt <= 0) { toast('Enter a valid amount','error'); return; }
+  sync('saving');
+  try {
+    await updateDoc(doc(db,'apartments',UID,'expenses',eid), { cat, amt, date, rawDate, note, status, month: payMonth });
+    // Recompute flat paid total for that month
+    const allEx  = (exps.get(fid)||[]).filter(e => (e.month || payMonth) === payMonth);
+    const newPaid = allEx.reduce((s,e) => (e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
+    await updateDoc(flatRef(fid), { paid: newPaid });
+    sync('live'); toast('Payment updated ✓');
+    window._phCancelEdit(eid);
+  } catch(err) { console.error(err); sync('error'); toast('Save failed','error'); }
+};
+
+window._phDelete = async function(eid, fid) {
+  if (!confirm('Delete this payment record?')) return;
+  sync('saving');
+  try {
+    const payMonth = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid)?.month || AM;
+    await deleteDoc(doc(db,'apartments',UID,'expenses',eid));
+    const allEx   = (exps.get(fid)||[]).filter(e => e.month===payMonth && (e.expId||e.id)!==eid);
+    const newPaid = allEx.reduce((s,e)=>s+(e.amt||0), 0);
+    await updateDoc(flatRef(fid), { paid: newPaid });
+    sync('live'); toast('Deleted ✓');
+    _renderPayHistory(fid);
+  } catch(err) { console.error(err); sync('error'); toast('Delete failed','error'); }
+};
+
 async function boot(){
   refreshAPP();
   // buildMonthSelect() — month dropdown removed from UI, AM defaults to current month
@@ -3216,10 +3369,12 @@ function rStructure() {
       const blockPaid = allFlats.filter(f => paidAM(f.flatId, AM) >= (f.due||0)).length;
       const floors = [...floorMap.entries()].sort((a,b)=>(parseInt(a[0])||0)-(parseInt(b[0])||0));
 
+      const blkKey = 'blk_'+block;
       return `<div style="display:flex;flex-direction:column;gap:8px;">
-        <!-- Block header -->
-        <div style="margin:0 -4px;padding:10px 14px;background:var(--indigo);
-          border-radius:12px;display:flex;align-items:center;gap:10px;">
+        <!-- Block header — toggleable -->
+        <div onclick="(function(el){const body=el.nextElementSibling;const icon=el.querySelector('.blk-toggle-icon');const open=body.style.display!=='none';body.style.display=open?'none':'flex';icon.style.transform=open?'rotate(-90deg)':'rotate(0)'})(this)"
+          style="margin:0 -4px;padding:10px 14px;background:var(--indigo);
+            border-radius:12px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
           <div style="width:32px;height:32px;border-radius:8px;background:rgba(255,255,255,.18);
             display:flex;align-items:center;justify-content:center;flex-shrink:0;">
             <i class="ti ti-building" style="color:#fff;font-size:16px;"></i>
@@ -3234,8 +3389,10 @@ function rStructure() {
             background:rgba(255,255,255,.22);color:#fff;letter-spacing:.2px;">
             ${blockPaid}/${allFlats.length}
           </span>
+          <i class="ti ti-chevron-down blk-toggle-icon" style="color:rgba(255,255,255,.8);font-size:15px;transition:transform .2s;"></i>
         </div>
-        <!-- Floors stacked -->
+        <!-- Floors stacked (collapsible) -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
         ${floors.map(([floor, fts]) => {
           const paidCnt = fts.filter(f => paidAM(f.flatId, AM) >= (f.due||0)).length;
           return `<div>
@@ -3254,6 +3411,7 @@ function rStructure() {
             </div>
           </div>`;
         }).join('')}
+        </div>
       </div>`;
     }).join('');
 
@@ -3275,15 +3433,19 @@ function rStructure() {
         }).length;
         
         return `<div style="margin-bottom:6px;">
-          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;background:linear-gradient(135deg,var(--indigo-bg),var(--surface2));border-radius:10px;border-left:3px solid var(--indigo);">
+          <div onclick="(function(el){const body=el.nextElementSibling;const icon=el.querySelector('.blk-toggle-icon');const open=body.style.display!=='none';body.style.display=open?'none':'grid';icon.style.transform=open?'rotate(-90deg)':'rotate(0)'})(this)"
+            style="display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:6px 10px;
+              background:linear-gradient(135deg,var(--indigo-bg),var(--surface2));border-radius:10px;
+              border-left:3px solid var(--indigo);cursor:pointer;user-select:none;">
             <i class="ti ti-building" style="color:var(--indigo);font-size:15px;flex-shrink:0;"></i>
             <div style="flex:1;min-width:0;">
               <div style="font-weight:800;color:var(--text);font-size:12px;letter-spacing:.2px;">Block ${block}</div>
               <div style="font-size:10px;color:var(--muted);margin-top:1px;">${fts.length} flat${fts.length!==1?'s':''} &nbsp;·&nbsp; <span style="color:var(--green);font-weight:700;">${paidCnt} paid</span></div>
             </div>
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${paidCnt===fts.length?'var(--green)':paidCnt>0?'var(--amber)':'var(--red)'};color:#fff;">${paidCnt}/${fts.length}</span>
+            <i class="ti ti-chevron-down blk-toggle-icon" style="color:var(--indigo);font-size:13px;transition:transform .2s;"></i>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;">
             ${fts.map(f => makeChip(f)).join('')}
           </div>
         </div>`
@@ -3291,54 +3453,44 @@ function rStructure() {
 
   } else {
     // All flats in one grid
-    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;">
+    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;">
       ${rows.map(f => makeChip(f)).join('')}
     </div>`;
   }
 
   function makeChip(f) {
     const isVacant = !(f.owner||'').trim();
-    const rType = isVacant ? 'vacant' : (f.resType||'owner');
-    
-    const paid = paidAM(f.flatId, AM);
-    const due = f.due || 0;
-    const status = paid >= due ? 'paid' : paid > 0 ? 'partial' : 'pending';
-    
-    // Find the fid (Firestore document ID) for this flat
+    const rType    = isVacant ? 'vacant' : (f.resType||'owner');
+    const paid     = paidAM(f.flatId, AM);
+    const due      = f.due || 0;
+    const status   = paid >= due && due > 0 ? 'paid' : paid > 0 ? 'partial' : due > 0 ? 'pending' : 'vacant';
+
     let fid = '';
     for (const [key, flat] of flats.entries()) {
-      if (flat.flatId === f.flatId && flat.block === f.block) {
-        fid = key;
-        break;
-      }
+      if (flat.flatId === f.flatId && flat.block === f.block) { fid = key; break; }
     }
-    
-    // Colors based on status
-    const borderColor = {paid:'var(--green)',partial:'var(--amber)',pending:'var(--red)'}[status];
-    const statusIcon = {paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[status];
-    const statusIconColor = {paid:'var(--green)',partial:'var(--amber)',pending:'var(--red)'}[status];
 
-    const ini = isVacant ? '?' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-    const avatarBg = {paid:'#dcfce7',partial:'#fef9c3',pending:'#fee2e2'}[status]||'#f3f4f6';
-    const avatarClr = {paid:'#16a34a',partial:'#d97706',pending:'#dc2626'}[status]||'#9ca3af';
-    const typeLabel = isVacant ? '🚪 Vacant' : rType==='tenant' ? '🔑 Tenant' : '🏠 Owner';
-    const statusDot = {paid:'#16a34a',partial:'#f59e0b',pending:'#ef4444'}[status]||'#9ca3af';
-    const bal = due - paid;
+    const barClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#e5e7eb'}[status];
+    const nameIni = isVacant ? '—' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
+    const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
 
-    return `<button
-      onclick="window.oFlEdit('${fid}')"
-      style="background:#fff;border:none;border-radius:12px;padding:0;cursor:pointer;font-family:var(--font);
-        text-align:left;box-shadow:0 1px 4px rgba(0,0,0,.08);overflow:hidden;width:100%;
-        transition:transform .12s,box-shadow .12s;border:1px solid var(--border2);"
-      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,.12)'"
-      onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 1px 4px rgba(0,0,0,.08)'"
-    >
-      <div style="padding:10px;display:flex;align-items:center;gap:8px;">
-        <div style="width:32px;height:32px;border-radius:50%;background:${avatarBg};color:${avatarClr};
-          font-weight:800;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${ini}</div>
-        <div style="flex:1;min-width:0;">
-          <div style="font-weight:800;font-size:13px;color:var(--indigo);line-height:1.2;">${f.flatId}</div>
-          <div style="font-size:10px;color:var(--muted);">${typeLabel}</div>
+    return `<button onclick="window.oFlEdit('${fid}')"
+      style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:0;
+        cursor:pointer;font-family:var(--font);text-align:left;overflow:hidden;width:100%;
+        transition:transform .12s,box-shadow .12s,border-color .12s;box-shadow:0 1px 3px rgba(0,0,0,.06);"
+      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 10px rgba(0,0,0,.1)';this.style.borderColor='${barClr}'"
+      onmouseout="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.06)';this.style.borderColor='#e5e7eb'">
+      <!-- colour bar at top -->
+      <div style="height:4px;background:${barClr};width:100%;"></div>
+      <!-- chip body -->
+      <div style="padding:6px 8px;display:flex;align-items:center;gap:6px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${barClr}22;
+          color:${barClr};font-weight:800;font-size:9px;
+          display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.5px;">${nameIni}</div>
+        <div style="flex:1;min-width:0;overflow:hidden;">
+          <div style="font-weight:800;font-size:11px;color:#4f46e5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.flatId}</div>
+          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
         </div>
       </div>
     </button>`;
@@ -3961,11 +4113,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border)">${vehCell}</td>
       <td style="padding:10px 14px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border)">${f.due ? inr(Math.abs(bal)) : '—'}</td>
       <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border)">
-        <button onclick="window._oFlEdit('${f.flatId}')" title="Edit"
+        <button onclick="window._openPayHistory('${f.flatId}')" title="Edit Payment History"
           style="background:none;border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--indigo);display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s"
           onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)'"
           onmouseout="this.style.background='none';this.style.borderColor='var(--border2)'">
-          <i class="ti ti-pencil" style="font-size:12px"></i>
+          <i class="ti ti-history" style="font-size:12px"></i>
         </button>
       </td>
     </tr>`;
