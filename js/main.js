@@ -4019,91 +4019,6 @@ function oMonthlySummary() {
 window._oMonthlySummary = oMonthlySummary;
 window._cMonthlySummary = () => { document.getElementById('monthlySummaryM').style.display = 'none'; };
 
-function _buildWAMsg(f, monthLabel, totDue, totPaid, totBal, totSocExp) {
-  const netBal   = totPaid - totSocExp;
-  const collPct  = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
-  const flatStat = f._bal <= 0 ? '✅ CLEARED' : f._paid > 0 ? '⚠️ PARTIAL' : '❌ PENDING';
-  const flatBar  = (() => {
-    if (!f._due) return '░░░░░░░░░░';
-    const filled = Math.round(Math.min(f._paid / f._due, 1) * 10);
-    return '█'.repeat(filled) + '░'.repeat(10 - filled);
-  })();
-  const socBar = (() => {
-    const filled = Math.round(collPct / 10);
-    return '█'.repeat(filled) + '░'.repeat(10 - filled);
-  })();
-
-  return (
-    `🏢 *${APT_NAME}*
-` +
-    `📅 _${monthLabel} — Maintenance Report_
-` +
-    `▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬
-
-` +
-
-    `👤 *Dear ${f.owner || 'Resident'}*
-` +
-    `🏠 Flat *${f.flatId}*${f.block ? '  |  Block *' + f.block + '*' : ''}
-
-` +
-
-    `┌─ 💳 *YOUR PAYMENT* ─────────
-` +
-    `│  Due       ₹${Number(f._due).toLocaleString('en-IN')}
-` +
-    `│  Paid      ₹${Number(f._paid).toLocaleString('en-IN')}
-` +
-    `│  Balance   *₹${Number(Math.abs(f._bal)).toLocaleString('en-IN')}*
-` +
-    `│  ${flatBar}  ${flatStat}
-` +
-    `└─────────────────────────────
-
-` +
-
-    `┌─ 🏘 *SOCIETY SUMMARY* ──────
-` +
-    `│  Total Due      ₹${Number(totDue).toLocaleString('en-IN')}
-` +
-    `│  Collected      ₹${Number(totPaid).toLocaleString('en-IN')}
-` +
-    `│  ${socBar}  ${collPct}%
-` +
-    `│
-` +
-    `│  Expenses       ₹${Number(totSocExp).toLocaleString('en-IN')}
-` +
-    `│  Net Balance    *₹${Number(Math.abs(netBal)).toLocaleString('en-IN')}* ${netBal >= 0 ? '✅ Surplus' : '⚠️ Deficit'}
-` +
-    `└─────────────────────────────
-
-` +
-
-    `_Powered by Gatebook · AK Group_`
-  );
-}
-
-window._sendAllWA = function() {
-  if (!window._msSummaryData) return;
-  const { rows, monthLabel } = window._msSummaryData;
-  const pending = rows.filter(f => {
-    const ph = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
-    return ph.length >= 10 && f.waEnabled !== false && f._status !== 'paid';
-  });
-  if (!pending.length) { toast('No pending flats with phone numbers', 'error'); return; }
-  if (!confirm(`Open WhatsApp for ${pending.length} pending flat(s)? Links will open one by one.`)) return;
-  const { totDue, totPaid, totBal } = window._msSummaryData;
-  const msMonth = document.getElementById('msMonth')?.value || AM;
-  const totSocExp = socExps
-    .filter(e => (e.month || (e.date||'').slice(0,7)) === msMonth)
-    .reduce((s,e) => s + (e.amt||0), 0);
-  pending.forEach((f, i) => {
-    const ph = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
-    const msg = encodeURIComponent(_buildWAMsg(f, monthLabel, totDue, totPaid, totBal, totSocExp));
-    setTimeout(() => window.open(`https://wa.me/91${ph}?text=${msg}`, '_blank'), i * 600);
-  });
-};
 
 function _renderSummary() {
   const month  = document.getElementById('msMonth')?.value  || AM;
@@ -4182,14 +4097,8 @@ function _renderSummary() {
   document.getElementById('msSummaryBody').innerHTML = rows.length === 0
     ? '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No flats match the selected filters</div>'
     : rows.map(f => {
-        const phone = (f.phone || f.ownerPhone || '').replace(/\D/g, '');
-        const waAvail = phone.length >= 10 && f.waEnabled !== false;
-        const _socExpAmt = socExps
-          .filter(e => (e.month || (e.date||'').slice(0,7)) === month)
-          .reduce((s,e) => s + (e.amt||0), 0);
-        const waMsg = encodeURIComponent(
-          _buildWAMsg(f, monthLabel, printTotDue, printTotPaid, printTotBal, _socExpAmt)
-        );
+
+
 
         return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
           <div style="flex:1;min-width:0">
@@ -4205,15 +4114,7 @@ function _renderSummary() {
               <span style="font-size:11px;color:${f._bal>0?'var(--red)':'var(--green)'}">Bal <strong>${inr(Math.abs(f._bal))}</strong></span>
             </div>
           </div>
-          <div style="display:flex;gap:6px;flex-shrink:0">
-            ${waAvail
-              ? `<a href="https://wa.me/91${phone}?text=${waMsg}" target="_blank"
-                   style="display:inline-flex;align-items:center;gap:4px;padding:5px 10px;background:#25D366;color:#fff;border-radius:8px;font-size:11px;font-weight:700;text-decoration:none;white-space:nowrap">
-                   <i class="ti ti-brand-whatsapp"></i> Send
-                 </a>`
-              : `<span style="font-size:10px;color:var(--muted);padding:5px 8px">No phone</span>`
-            }
-          </div>
+
         </div>`;
       }).join('');
 
