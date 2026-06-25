@@ -647,6 +647,24 @@
 </div>
 
 
+<!-- PAYMENT HISTORY EDIT MODAL -->
+<div class="mbg" id="payHistM">
+  <div class="modal" style="width:min(540px,96vw);max-height:82vh;display:flex;flex-direction:column">
+    <div class="mhead" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-history"></i></div>
+        <div>
+          <div class="mtitle" id="payHistTitle">Payment History</div>
+          <div class="msub" id="payHistSub"></div>
+        </div>
+      </div>
+      <button class="mclose" onclick="document.getElementById('payHistM').classList.remove('open')"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="payHistBody" style="overflow-y:auto;flex:1;padding:4px 2px 8px"></div>
+  </div>
+</div>
+
+
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
