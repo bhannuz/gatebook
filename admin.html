@@ -72,6 +72,7 @@
   .badge-indigo{background:var(--indigo-bg);color:var(--indigo);border:1px solid #C7D2FE}
   .badge-gray{background:var(--surface3);color:var(--text2);border:1px solid var(--border2)}
   .badge-purple{background:var(--purple-bg);color:var(--purple);border:1px solid #DDD6FE}
+  .badge-paused{background:var(--amber-bg);color:var(--amber);border:1px solid #FDE68A}
   .modal-bg{display:none;position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.45);
     align-items:flex-end;justify-content:center}
   .modal-bg.open{display:flex}
@@ -104,12 +105,12 @@
     .page{padding:14px}
     .detail-grid{grid-template-columns:1fr}
     th:nth-child(5),td:nth-child(5),
-    th:nth-child(7),td:nth-child(7){display:none}
+    th:nth-child(8),td:nth-child(8){display:none}
   }
   @media(max-width:600px){
     .stats-row{grid-template-columns:repeat(2,1fr)}
     th:nth-child(4),td:nth-child(4),
-    th:nth-child(6),td:nth-child(6){display:none}
+    th:nth-child(7),td:nth-child(7){display:none}
   }
 </style>
 </head>
@@ -118,9 +119,7 @@
 <nav class="navbar">
   <div class="nav-brand">
     <div class="nav-logo"><i class="ti ti-shield-check"></i></div>
-    <div>
-      <div class="nav-title">Gate<span>book</span> Admin</div>
-    </div>
+    <div><div class="nav-title">Gate<span>book</span> Admin</div></div>
     <span class="nav-badge" id="totalBadge">Loading…</span>
   </div>
   <button class="btn btn-white btn-sm" onclick="doSignOut()"><i class="ti ti-logout"></i> Sign Out</button>
@@ -128,7 +127,6 @@
 
 <div class="page">
 
-  <!-- Stats -->
   <div class="stats-row">
     <div class="scard">
       <div class="scard-label">Total Users</div>
@@ -146,14 +144,14 @@
       <div class="scard-sub">Past expiry</div>
     </div>
     <div class="scard">
+      <div class="scard-label">Paused</div>
+      <div class="scard-val" style="color:var(--amber)" id="statPaused">—</div>
+      <div class="scard-sub">Access suspended</div>
+    </div>
+    <div class="scard">
       <div class="scard-label">This Month</div>
       <div class="scard-val" style="color:var(--indigo)" id="statThisMonth">—</div>
       <div class="scard-sub">New signups</div>
-    </div>
-    <div class="scard">
-      <div class="scard-label">Total Flats</div>
-      <div class="scard-val" style="color:var(--purple)" id="statFlats">—</div>
-      <div class="scard-sub">Across all users</div>
     </div>
     <div class="scard">
       <div class="scard-label">Paid Users</div>
@@ -162,7 +160,6 @@
     </div>
   </div>
 
-  <!-- Filters -->
   <div class="filters">
     <div class="search-wrap">
       <i class="ti ti-search" style="color:var(--muted);font-size:14px"></i>
@@ -171,6 +168,7 @@
     <select class="ctrl" id="filterStatus" onchange="renderTable()">
       <option value="all">All status</option>
       <option value="active">Active</option>
+      <option value="paused">Paused</option>
       <option value="expired">Expired</option>
       <option value="trial">Trial</option>
     </select>
@@ -182,10 +180,11 @@
     <button class="btn btn-white btn-sm" onclick="loadUsers()"><i class="ti ti-refresh"></i> Refresh</button>
   </div>
 
-  <!-- Table -->
   <div class="table-card">
     <div class="table-head">
-      <div class="table-title"><i class="ti ti-users" style="color:var(--indigo)"></i> All Users <span id="visibleCount" style="font-size:11px;color:var(--muted);font-weight:600"></span></div>
+      <div class="table-title"><i class="ti ti-users" style="color:var(--indigo)"></i> All Users
+        <span id="visibleCount" style="font-size:11px;color:var(--muted);font-weight:600"></span>
+      </div>
     </div>
     <div id="tableWrap">
       <div class="loading"><div class="spinner"></div> Loading users…</div>
@@ -194,7 +193,6 @@
 
 </div>
 
-<!-- User Detail Modal -->
 <div class="modal-bg" id="detailModal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <div class="modal-header">
@@ -214,18 +212,17 @@
 import { initializeApp }       from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut, sendPasswordResetEmail }
                                from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-import { getFirestore, collection, getDocs, doc, updateDoc }
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, writeBatch }
                                from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 
 const ADMIN_EMAIL = 'admin@gatebook.app';
-
 const app  = initializeApp({
-  apiKey:            "AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM",
-  authDomain:        "gatebook-17065.firebaseapp.com",
-  projectId:         "gatebook-17065",
-  storageBucket:     "gatebook-17065.firebasestorage.app",
-  messagingSenderId: "732765572762",
-  appId:             "1:732765572762:web:55f1cb897bb5804a831923",
+  apiKey:"AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM",
+  authDomain:"gatebook-17065.firebaseapp.com",
+  projectId:"gatebook-17065",
+  storageBucket:"gatebook-17065.firebasestorage.app",
+  messagingSenderId:"732765572762",
+  appId:"1:732765572762:web:55f1cb897bb5804a831923",
 });
 const auth = getAuth(app);
 const db   = getFirestore(app);
@@ -235,16 +232,14 @@ let allUsers = [];
 onAuthStateChanged(auth, user => {
   if (!user || user.email !== ADMIN_EMAIL) {
     window.location.replace('index.html');
-  } else {
-    loadUsers();
-  }
+  } else { loadUsers(); }
 });
 
 window.loadUsers = async function() {
   document.getElementById('tableWrap').innerHTML =
     '<div class="loading"><div class="spinner"></div> Loading users…</div>';
   try {
-    const snap = await getDocs(collection(db, 'apartments'));
+    const snap = await getDocs(collection(db,'apartments'));
     const userPromises = snap.docs.map(async d => {
       const data = d.data();
       let flatCount = 0;
@@ -252,15 +247,14 @@ window.loadUsers = async function() {
         const fSnap = await getDocs(collection(db,'apartments',d.id,'flats'));
         flatCount = fSnap.size;
       } catch(e) { flatCount = data.totalFlats || 0; }
-      // Normalise key fields across different registration flows
-      const norm = { uid: d.id, flatCount, ...data };
+      const norm = { uid:d.id, flatCount, ...data };
       norm.name       = data.name || data.aptName || data.apartmentName || '';
       norm.adminName  = data.adminName || data.ownerName || data.displayName || '';
       norm.adminEmail = data.adminEmail || data.email || data.ownerEmail || '';
       return norm;
     });
     allUsers = await Promise.all(userPromises);
-    allUsers.sort((a,b) => (b.createdAt||'').localeCompare(a.createdAt||''));
+    allUsers.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
     renderStats();
     renderTable();
   } catch(e) {
@@ -270,19 +264,15 @@ window.loadUsers = async function() {
 };
 
 function getStatus(u) {
+  if (u.status === 'paused') return 'paused';
   if (!u.expiryDate) return 'unknown';
   return new Date(u.expiryDate) > new Date()
-    ? (u.plan === 'paid' ? 'paid' : 'active') : 'expired';
+    ? (u.plan==='paid' ? 'paid' : 'active') : 'expired';
 }
 
 function fmtDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-}
-
-function fmtDateTime(iso) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 
 function daysLeft(iso) {
@@ -291,18 +281,17 @@ function daysLeft(iso) {
 }
 
 function renderStats() {
-  const now   = new Date();
-  const thisM = now.toISOString().slice(0,7);
+  const thisM   = new Date().toISOString().slice(0,7);
   const active  = allUsers.filter(u=>['active','paid'].includes(getStatus(u))).length;
   const expired = allUsers.filter(u=>getStatus(u)==='expired').length;
+  const paused  = allUsers.filter(u=>getStatus(u)==='paused').length;
   const newM    = allUsers.filter(u=>(u.createdAt||'').startsWith(thisM)).length;
-  const totalFlats = allUsers.reduce((s,u)=>s+(u.flatCount||0),0);
   const paid    = allUsers.filter(u=>u.plan==='paid').length;
   document.getElementById('statTotal').textContent     = allUsers.length;
   document.getElementById('statActive').textContent    = active;
   document.getElementById('statExpired').textContent   = expired;
+  document.getElementById('statPaused').textContent    = paused;
   document.getElementById('statThisMonth').textContent = newM;
-  document.getElementById('statFlats').textContent     = totalFlats;
   document.getElementById('statPaid').textContent      = paid;
   document.getElementById('totalBadge').textContent    = `${allUsers.length} users`;
 }
@@ -315,9 +304,10 @@ window.renderTable = function() {
   let rows = allUsers.filter(u => {
     const s = getStatus(u);
     if (fs !== 'all') {
-      if (fs === 'active'  && s !== 'active' && s !== 'paid') return false;
-      if (fs === 'expired' && s !== 'expired') return false;
-      if (fs === 'trial'   && u.plan !== 'trial') return false;
+      if (fs==='active'  && s!=='active' && s!=='paid') return false;
+      if (fs==='expired' && s!=='expired') return false;
+      if (fs==='trial'   && u.plan!=='trial') return false;
+      if (fs==='paused'  && s!=='paused') return false;
     }
     if (fp !== 'all' && (u.plan||'trial') !== fp) return false;
     if (q) {
@@ -329,7 +319,6 @@ window.renderTable = function() {
   });
 
   document.getElementById('visibleCount').textContent = `(${rows.length})`;
-
   if (!rows.length) {
     document.getElementById('tableWrap').innerHTML =
       '<div class="loading"><i class="ti ti-inbox"></i> No users match</div>';
@@ -339,9 +328,10 @@ window.renderTable = function() {
   const statusBadge = u => {
     const s = getStatus(u);
     const days = daysLeft(u.expiryDate);
-    if (s === 'expired') return `<span class="badge badge-red"><i class="ti ti-clock-off"></i> Expired</span>`;
-    if (s === 'paid')    return `<span class="badge badge-green"><i class="ti ti-circle-check"></i> Paid</span>`;
-    if (days !== null && days <= 7) return `<span class="badge badge-amber"><i class="ti ti-clock"></i> ${days}d left</span>`;
+    if (s==='paused')  return `<span class="badge badge-paused"><i class="ti ti-player-pause"></i> Paused</span>`;
+    if (s==='expired') return `<span class="badge badge-red"><i class="ti ti-clock-off"></i> Expired</span>`;
+    if (s==='paid')    return `<span class="badge badge-green"><i class="ti ti-circle-check"></i> Paid</span>`;
+    if (days!==null && days<=7) return `<span class="badge badge-amber"><i class="ti ti-clock"></i> ${days}d left</span>`;
     return `<span class="badge badge-indigo"><i class="ti ti-clock"></i> Trial</span>`;
   };
 
@@ -352,52 +342,69 @@ window.renderTable = function() {
 
   document.getElementById('tableWrap').innerHTML = `
     <div style="overflow-x:auto">
-      <table>
-        <thead><tr>
-          <th>#</th>
-          <th>Apartment</th>
-          <th>Admin / Email</th>
-          <th>Login ID</th>
-          <th>Flats</th>
-          <th>Plan</th>
-          <th>Status</th>
-          <th>Registered</th>
-          <th>Expiry</th>
-          <th></th>
-        </tr></thead>
-        <tbody>
-          ${rows.map((u,i) => {
-            const loginId = (u.adminEmail||'').split('@')[0] || '—';
-            return `<tr>
-              <td style="color:var(--muted);font-size:11px">${i+1}</td>
-              <td>
-                <div style="font-weight:800;font-size:13px;color:var(--text)">${u.name||u.aptName||u.apartmentName||'—'}</div>
-                <div style="font-size:10px;color:var(--muted)">${u.uid.slice(0,8)}…</div>
-              </td>
-              <td>
-                <div style="font-weight:700">${u.adminName||u.ownerName||u.displayName||'—'}</div>
-                <div style="font-size:10px;color:var(--text2)">${u.adminEmail||u.email||u.ownerEmail||'—'}</div>
-              </td>
-              <td>
-                <span style="font-family:monospace;font-size:12px;font-weight:700;
-                  background:var(--indigo-bg);color:var(--indigo);padding:2px 8px;border-radius:6px;">
-                  ${loginId}
-                </span>
-              </td>
-              <td style="font-weight:700;text-align:center">${u.flatCount||0}</td>
-              <td>${planBadge(u)}</td>
-              <td>${statusBadge(u)}</td>
-              <td style="color:var(--text2);font-size:11px">${fmtDate(u.createdAt)}</td>
-              <td style="color:var(--text2);font-size:11px">${fmtDate(u.expiryDate)}</td>
-              <td>
+    <table>
+      <thead><tr>
+        <th>#</th>
+        <th>Apartment</th>
+        <th>Admin / Email</th>
+        <th>Login ID</th>
+        <th>Flats</th>
+        <th>Plan</th>
+        <th>Status</th>
+        <th>Registered</th>
+        <th>Expiry</th>
+        <th>Actions</th>
+      </tr></thead>
+      <tbody>
+        ${rows.map((u,i) => {
+          const loginId = (u.adminEmail||'').split('@')[0] || '—';
+          return `<tr>
+            <td style="color:var(--muted);font-size:11px">${i+1}</td>
+            <td>
+              <div style="font-weight:800;font-size:13px">${u.name||'—'}</div>
+              <div style="font-size:10px;color:var(--muted)">${u.uid.slice(0,8)}…</div>
+            </td>
+            <td>
+              <div style="font-weight:700">${u.adminName||'—'}</div>
+              <div style="font-size:10px;color:var(--text2)">${u.adminEmail||'—'}</div>
+            </td>
+            <td>
+              <span style="font-family:monospace;font-size:12px;font-weight:700;
+                background:var(--indigo-bg);color:var(--indigo);padding:2px 8px;border-radius:6px">
+                ${loginId}
+              </span>
+            </td>
+            <td style="font-weight:700;text-align:center">${u.flatCount||0}</td>
+            <td>${planBadge(u)}</td>
+            <td>${statusBadge(u)}</td>
+            <td style="color:var(--text2);font-size:11px">${fmtDate(u.createdAt)}</td>
+            <td style="color:var(--text2);font-size:11px">${fmtDate(u.expiryDate)}</td>
+            <td>
+              <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
                 <button class="btn btn-white btn-sm" onclick="openUser('${u.uid}')">
                   <i class="ti ti-eye"></i> View
                 </button>
-              </td>
-            </tr>`;
-          }).join('')}
-        </tbody>
-      </table>
+                ${getStatus(u)==='paused'
+                  ? `<button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7"
+                       onclick="togglePause('${u.uid}',false)">
+                       <i class="ti ti-player-play"></i> Activate
+                     </button>`
+                  : `<button class="btn btn-sm" style="background:#FEF3C7;color:#92400E;border:1px solid #FCD34D"
+                       onclick="togglePause('${u.uid}',true)">
+                       <i class="ti ti-player-pause"></i> Pause
+                     </button>`
+                }
+                <button class="btn btn-sm"
+                  style="background:#FEE2E2;color:#991B1B;border:1px solid #FCA5A5"
+                  onclick="deleteApartment('${u.uid}','${(u.name||'').replace(/'/g,'')}')">
+                  <i class="ti ti-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
     </div>`;
 };
 
@@ -408,18 +415,16 @@ window.openUser = function(uid) {
   const days = daysLeft(u.expiryDate);
   const loginId = (u.adminEmail||'').split('@')[0] || '—';
 
-  document.getElementById('modalTitle').textContent = u.name || u.aptName || u.apartmentName || 'Unknown';
-  document.getElementById('modalSub').textContent   = u.adminEmail || u.email || u.ownerEmail || '';
+  document.getElementById('modalTitle').textContent = u.name || '—';
+  document.getElementById('modalSub').textContent   = u.adminEmail || '';
 
   document.getElementById('modalBody').innerHTML = `
-
-    <!-- User Info Grid -->
     <div class="detail-grid">
-      <div class="detail-item"><label>Admin Name</label><div class="val">${u.adminName||u.ownerName||u.displayName||'—'}</div></div>
+      <div class="detail-item"><label>Admin Name</label><div class="val">${u.adminName||'—'}</div></div>
       <div class="detail-item"><label>Login ID</label>
-        <div class="val" style="display:flex;align-items:center;gap:6px;">
-          <span style="font-family:monospace;font-size:13px;background:var(--indigo-bg);color:var(--indigo);padding:2px 8px;border-radius:6px;">${loginId}</span>
-          <button class="copy-btn" onclick="navigator.clipboard.writeText('${u.adminEmail||''}');this.innerHTML='✓ Copied!';setTimeout(()=>this.innerHTML='<i class=\\'ti ti-copy\\'></i>',1500)" title="Copy email"><i class="ti ti-copy"></i></button>
+        <div class="val" style="display:flex;align-items:center;gap:6px">
+          <span style="font-family:monospace;font-size:13px;background:var(--indigo-bg);color:var(--indigo);padding:2px 8px;border-radius:6px">${loginId}</span>
+          <button class="copy-btn" onclick="navigator.clipboard.writeText('${u.adminEmail||''}');this.innerHTML='✓';setTimeout(()=>this.innerHTML='<i class=\'ti ti-copy\'></i>',1500)"><i class="ti ti-copy"></i></button>
         </div>
       </div>
       <div class="detail-item"><label>Email</label><div class="val" style="font-size:12px">${u.adminEmail||'—'}</div></div>
@@ -432,27 +437,29 @@ window.openUser = function(uid) {
         </div>
       </div>
       <div class="detail-item"><label>Status</label>
-        <div class="val">${s==='expired'?'<span style="color:var(--red)">Expired</span>':s==='paid'?'<span style="color:var(--green)">Paid</span>':'<span style="color:var(--indigo)">Active (Trial)</span>'}</div>
+        <div class="val">${
+          s==='paused'  ? '<span style="color:var(--amber)">⏸ Paused</span>' :
+          s==='expired' ? '<span style="color:var(--red)">Expired</span>' :
+          s==='paid'    ? '<span style="color:var(--green)">Paid</span>' :
+                          '<span style="color:var(--indigo)">Active (Trial)</span>'
+        }</div>
       </div>
       <div class="detail-item"><label>Plan</label><div class="val">${(u.plan||'trial').charAt(0).toUpperCase()+(u.plan||'trial').slice(1)}</div></div>
       <div class="detail-item"><label>Blocks</label><div class="val" style="font-size:12px">${(u.blocks||[]).map(b=>b.name||'Block').join(', ')||'—'}</div></div>
     </div>
 
-    <!-- Manage Plan -->
     <div class="section-title"><i class="ti ti-settings" style="color:var(--indigo)"></i> Manage Plan</div>
-    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px;">
-      <div class="plan-row">
-        <label>Plan</label>
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+      <div class="plan-row"><label>Plan</label>
         <select id="editPlan">
           <option value="trial" ${(u.plan||'trial')==='trial'?'selected':''}>Trial</option>
           <option value="paid"  ${u.plan==='paid'?'selected':''}>Paid</option>
         </select>
       </div>
-      <div class="plan-row">
-        <label>Expiry Date</label>
+      <div class="plan-row"><label>Expiry Date</label>
         <input type="date" id="editExpiry" value="${u.expiryDate?u.expiryDate.slice(0,10):''}"/>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
         <button class="btn btn-white btn-sm" onclick="extendTrial('${uid}',30)"><i class="ti ti-calendar-plus"></i> +30 days</button>
         <button class="btn btn-white btn-sm" onclick="extendTrial('${uid}',365)"><i class="ti ti-calendar-plus"></i> +1 year</button>
         <button class="btn btn-indigo btn-sm" onclick="savePlan('${uid}')"><i class="ti ti-device-floppy"></i> Save</button>
@@ -460,12 +467,15 @@ window.openUser = function(uid) {
       <div id="planMsg" style="font-size:11px;margin-top:8px;color:var(--green);display:none">✓ Saved</div>
     </div>
 
-    <!-- Password Reset -->
+    <div class="section-title"><i class="ti ti-shield" style="color:var(--indigo)"></i> Account Access</div>
+    <div id="pauseSection" style="background:var(--surface2);border:1.5px solid var(--border);
+      border-radius:var(--r-md);padding:14px;margin-bottom:14px;
+      display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"></div>
+
     <div class="section-title"><i class="ti ti-lock-open" style="color:var(--amber)"></i> Password Reset</div>
-    <div style="background:var(--amber-bg);border:1.5px solid #FDE68A;border-radius:var(--r-md);padding:14px;margin-bottom:14px;">
-      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;">
+    <div style="background:var(--amber-bg);border:1.5px solid #FDE68A;border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px">
         Send a password reset link to <strong>${u.adminEmail||'this user'}</strong>.
-        They will receive an email to set a new password.
       </div>
       <button class="btn btn-amber btn-sm" onclick="resetPassword('${u.adminEmail||''}')">
         <i class="ti ti-mail"></i> Send Reset Email
@@ -473,17 +483,50 @@ window.openUser = function(uid) {
       <div id="resetMsg" style="font-size:11px;margin-top:8px;color:var(--green);display:none"></div>
     </div>
 
-    <!-- UID -->
+    <div class="section-title"><i class="ti ti-alert-triangle" style="color:var(--red)"></i> Danger Zone</div>
+    <div style="background:#FEF2F2;border:1.5px solid #FECACA;border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+      <div style="font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.6">
+        ⚠️ Permanently deletes <strong>all flats, expenses, issues, vehicles</strong> and society data.
+        <strong>Cannot be undone.</strong> The login account remains active.
+      </div>
+      <button class="btn btn-red btn-sm" onclick="deleteApartment('${uid}','${(u.name||'').replace(/'/g,'')}')">
+        <i class="ti ti-trash"></i> Delete Apartment Data
+      </button>
+    </div>
+
     <div class="section-title"><i class="ti ti-id" style="color:var(--muted)"></i> Technical Info</div>
     <div style="font-size:11px;color:var(--muted);word-break:break-all;padding:8px;
-      background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border);margin-bottom:6px;">
+      background:var(--surface2);border-radius:var(--r-sm);border:1px solid var(--border)">
       <span style="font-weight:700;color:var(--text2)">UID:</span> ${u.uid}
-      <button class="copy-btn" onclick="navigator.clipboard.writeText('${u.uid}');this.textContent='✓';setTimeout(()=>this.innerHTML='<i class=\\'ti ti-copy\\'></i>',1500)"><i class="ti ti-copy"></i></button>
-    </div>
-  `;
+      <button class="copy-btn" onclick="navigator.clipboard.writeText('${u.uid}');this.textContent='✓';setTimeout(()=>this.innerHTML='<i class=\'ti ti-copy\'></i>',1500)"><i class="ti ti-copy"></i></button>
+    </div>`;
 
   document.getElementById('detailModal').classList.add('open');
+  _renderPauseSection(u);
 };
+
+function _renderPauseSection(u) {
+  const el = document.getElementById('pauseSection');
+  if (!el) return;
+  const isPaused = getStatus(u) === 'paused';
+  el.innerHTML = `
+    <div>
+      <div style="font-size:12px;font-weight:700;color:${isPaused?'var(--amber)':'var(--green)'}">
+        ${isPaused ? '⏸ Account is currently PAUSED' : '✅ Account is currently ACTIVE'}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px">
+        ${isPaused ? 'User cannot access the Gatebook app.' : 'User has full access to the Gatebook app.'}
+      </div>
+    </div>
+    <div style="display:flex;gap:6px">
+      ${isPaused
+        ? `<button class="btn btn-sm" style="background:#D1FAE5;color:#065F46;border:1px solid #6EE7B7"
+             onclick="togglePause('${u.uid}',false)"><i class="ti ti-player-play"></i> Activate</button>`
+        : `<button class="btn btn-sm" style="background:#FEF3C7;color:#92400E;border:1px solid #FCD34D"
+             onclick="togglePause('${u.uid}',true)"><i class="ti ti-player-pause"></i> Pause</button>`
+      }
+    </div>`;
+}
 
 window.closeModal = function() {
   document.getElementById('detailModal').classList.remove('open');
@@ -512,15 +555,14 @@ window.savePlan = async function(uid) {
     });
     const u = allUsers.find(x=>x.uid===uid);
     if (u) { u.plan=plan; u.expiryDate=new Date(expiry).toISOString(); }
-    const msg = document.getElementById('planMsg');
-    msg.style.display='block';
-    setTimeout(()=>msg.style.display='none', 2500);
+    document.getElementById('planMsg').style.display='block';
+    setTimeout(()=>document.getElementById('planMsg').style.display='none', 2500);
     renderTable(); renderStats();
   } catch(e) { alert('Save failed: '+e.message); }
 };
 
 window.resetPassword = async function(email) {
-  if (!email) { alert('No email on file for this user.'); return; }
+  if (!email) { alert('No email on file.'); return; }
   const msg = document.getElementById('resetMsg');
   try {
     await sendPasswordResetEmail(auth, email);
@@ -533,6 +575,45 @@ window.resetPassword = async function(email) {
     msg.style.color = 'var(--red)';
     msg.style.display = 'block';
   }
+};
+
+window.togglePause = async function(uid, pause) {
+  if (!confirm(`${pause ? 'Pause' : 'Activate'} this account?
+
+${pause
+    ? 'The user will not be able to access the Gatebook app.'
+    : 'The user will regain full access to the Gatebook app.'}`)) return;
+  try {
+    await updateDoc(doc(db,'apartments',uid), { status: pause ? 'paused' : 'active' });
+    const u = allUsers.find(x=>x.uid===uid);
+    if (u) u.status = pause ? 'paused' : 'active';
+    renderTable(); renderStats();
+    _renderPauseSection(allUsers.find(x=>x.uid===uid));
+    alert(`Account ${pause ? 'paused' : 'activated'} successfully.`);
+  } catch(e) { alert('Failed: '+e.message); }
+};
+
+window.deleteApartment = async function(uid, name) {
+  const confirmText = prompt(
+    `⚠️ DELETE "${name||uid}"?\n\nThis permanently removes:\n• All flats\n• All payment records\n• All expenses\n• All issues\n• All vehicles\n• Society data\n\nThe login account will remain.\n\nType DELETE to confirm:`
+  );
+  if (confirmText !== 'DELETE') { alert('Cancelled — you must type DELETE exactly.'); return; }
+  try {
+    const subCols = ['flats','expenses','issues','vehicles','soc_expenses'];
+    for (const col of subCols) {
+      const snap = await getDocs(collection(db,'apartments',uid,col));
+      if (!snap.empty) {
+        const batch = writeBatch(db);
+        snap.docs.forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
+    }
+    await deleteDoc(doc(db,'apartments',uid));
+    allUsers = allUsers.filter(u=>u.uid!==uid);
+    renderTable(); renderStats();
+    closeModal();
+    alert(`"${name||uid}" deleted successfully.`);
+  } catch(e) { alert('Delete failed: '+e.message); }
 };
 
 window.doSignOut = async function() {
