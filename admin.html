@@ -448,6 +448,41 @@ window.openUser = function(uid) {
       <div class="detail-item"><label>Blocks</label><div class="val" style="font-size:12px">${(u.blocks||[]).map(b=>b.name||'Block').join(', ')||'—'}</div></div>
     </div>
 
+    <div class="section-title"><i class="ti ti-building" style="color:var(--indigo)"></i> Blocks & Flats</div>
+    <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px">
+      <div class="plan-row"><label>Total Flats</label>
+        <input type="number" id="editFlatCount" min="0" value="${u.flatCount||0}" style="width:80px"/>
+      </div>
+      <div class="plan-row" style="align-items:flex-start"><label style="padding-top:6px">Blocks</label>
+        <div style="flex:1">
+          <div id="blocksEditor" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px">
+            ${(u.blocks&&u.blocks.length?u.blocks:[{name:''}]).map((b,i)=>`
+            <div style="display:flex;align-items:center;gap:6px" id="blockRow_${i}">
+              <input type="text" placeholder="Block name e.g. A" value="${b.name||''}"
+                style="flex:1;height:30px;padding:0 8px;border:1.5px solid var(--border2);
+                border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;
+                color:var(--text);background:var(--surface);outline:none"
+                id="blockName_${i}"/>
+              <input type="number" placeholder="Flats" value="${b.flats||''}" min="0"
+                style="width:64px;height:30px;padding:0 8px;border:1.5px solid var(--border2);
+                border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;
+                color:var(--text);background:var(--surface);outline:none"
+                id="blockFlats_${i}"/>
+              <button onclick="removeBlock(${i})" style="background:var(--red-bg);border:1px solid #FECACA;
+                color:var(--red);border-radius:var(--r-sm);padding:3px 7px;cursor:pointer;font-size:12px">
+                <i class="ti ti-x"></i>
+              </button>
+            </div>`).join('')}
+          </div>
+          <button onclick="addBlock()" class="btn btn-white btn-sm"><i class="ti ti-plus"></i> Add Block</button>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button class="btn btn-indigo btn-sm" onclick="saveBlocks('${uid}')"><i class="ti ti-device-floppy"></i> Save</button>
+      </div>
+      <div id="blocksMsg" style="font-size:11px;margin-top:8px;color:var(--green);display:none">✓ Saved</div>
+    </div>
+
     <div class="section-title"><i class="ti ti-settings" style="color:var(--indigo)"></i> Manage Plan</div>
     <div style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-md);padding:14px;margin-bottom:14px">
       <div class="plan-row"><label>Plan</label>
@@ -614,6 +649,56 @@ window.deleteApartment = async function(uid, name) {
     closeModal();
     alert(`"${name||uid}" deleted successfully.`);
   } catch(e) { alert('Delete failed: '+e.message); }
+};
+
+window.addBlock = function() {
+  const editor = document.getElementById('blocksEditor');
+  if (!editor) return;
+  const i = editor.children.length;
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:6px';
+  row.id = `blockRow_${i}`;
+  row.innerHTML = `
+    <input type="text" placeholder="Block name e.g. B"
+      style="flex:1;height:30px;padding:0 8px;border:1.5px solid var(--border2);
+      border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;
+      color:var(--text);background:var(--surface);outline:none" id="blockName_${i}"/>
+    <input type="number" placeholder="Flats" min="0"
+      style="width:64px;height:30px;padding:0 8px;border:1.5px solid var(--border2);
+      border-radius:var(--r-sm);font-family:var(--font);font-size:12px;font-weight:600;
+      color:var(--text);background:var(--surface);outline:none" id="blockFlats_${i}"/>
+    <button onclick="removeBlock(${i})" style="background:var(--red-bg);border:1px solid #FECACA;
+      color:var(--red);border-radius:var(--r-sm);padding:3px 7px;cursor:pointer;font-size:12px">
+      <i class="ti ti-x"></i>
+    </button>`;
+  editor.appendChild(row);
+};
+
+window.removeBlock = function(i) {
+  const row = document.getElementById(`blockRow_${i}`);
+  if (row) row.remove();
+};
+
+window.saveBlocks = async function(uid) {
+  const editor = document.getElementById('blocksEditor');
+  if (!editor) return;
+  const blocks = [];
+  editor.querySelectorAll('[id^="blockName_"]').forEach(input => {
+    const idx = input.id.split('_')[1];
+    const name = input.value.trim();
+    const flats = parseInt(document.getElementById(`blockFlats_${idx}`)?.value||0) || 0;
+    if (name) blocks.push({ name, flats });
+  });
+  const flatCount = parseInt(document.getElementById('editFlatCount')?.value||0) || 0;
+  try {
+    await updateDoc(doc(db,'apartments',uid), { blocks, totalFlats: flatCount });
+    const u = allUsers.find(x=>x.uid===uid);
+    if (u) { u.blocks = blocks; u.flatCount = flatCount; }
+    const msg = document.getElementById('blocksMsg');
+    msg.style.display = 'block';
+    setTimeout(()=>msg.style.display='none', 2500);
+    renderTable();
+  } catch(e) { alert('Save failed: '+e.message); }
 };
 
 window.doSignOut = async function() {
