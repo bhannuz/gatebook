@@ -606,40 +606,47 @@
 </div>
 
 <!-- MONTHLY SUMMARY REPORT MODAL -->
-<div class="mbg" id="monthlySummaryM" style="display:none;align-items:flex-start;padding-top:32px">
-  <div class="modal" style="width:min(780px,96vw);max-height:86vh;display:flex;flex-direction:column">
+<div class="mbg" id="monthlySummaryM" style="display:none;align-items:flex-start;padding-top:24px">
+  <div class="modal" style="width:min(780px,96vw);max-height:90vh;display:flex;flex-direction:column">
     <div class="mhead" style="flex-shrink:0">
       <div style="display:flex;align-items:center;gap:12px">
         <div class="micon pay"><i class="ti ti-file-description"></i></div>
         <div>
           <div class="mtitle">Monthly Summary Report</div>
-          <div class="msub">Per-flat payment status · WhatsApp &amp; Print</div>
+          <div class="msub">Per-flat payment status &amp; print</div>
         </div>
       </div>
       <button class="mclose" onclick="window._cMonthlySummary()"><i class="ti ti-x"></i></button>
     </div>
 
     <!-- Filters -->
-    <div style="display:flex;gap:10px;flex-wrap:wrap;padding:12px 0 14px;border-bottom:1px solid var(--border2);flex-shrink:0">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:12px 0 14px;border-bottom:1px solid var(--border2);flex-shrink:0;align-items:center">
       <select id="msMonth" onchange="window._renderSummary()"
-        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer"></select>
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0"></select>
       <select id="msBlock" onchange="window._renderSummary()"
-        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer"></select>
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0"></select>
       <select id="msStatus" onchange="window._renderSummary()"
-        style="height:34px;font-size:12px;font-weight:600;padding:0 10px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer">
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0">
         <option value="all">All Status</option>
         <option value="paid">✅ Paid</option>
         <option value="partial">⚠️ Partial</option>
         <option value="pending">❌ Pending</option>
       </select>
-      <button class="btn btn-white" onclick="window._printMonthlySummary()"
-        style="margin-left:auto;border:1.5px solid var(--border2)">
-        <i class="ti ti-printer"></i> Print
+      <button onclick="window._printMonthlySummary()"
+        style="height:34px;padding:0 14px;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border:none;border-radius:var(--r-md);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(99,102,241,.35);transition:opacity .15s"
+        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        <i class="ti ti-printer" style="font-size:14px"></i> Print
       </button>
     </div>
+    <style>
+      @media(max-width:500px){
+        #monthlySummaryM .modal>div:nth-child(2){grid-template-columns:1fr 1fr!important}
+        #monthlySummaryM .modal>div:nth-child(2) button{grid-column:1/-1}
+      }
+    </style>
 
     <!-- Summary totals header -->
-    <div id="msSummaryHead" style="flex-shrink:0;padding-top:14px"></div>
+    <div id="msSummaryHead" style="flex-shrink:0;padding-top:12px"></div>
 
     <!-- Flat rows -->
     <div id="msSummaryBody" style="overflow-y:auto;flex:1;border:1.5px solid var(--border2);border-radius:var(--r-lg);margin-top:10px"></div>
