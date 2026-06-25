@@ -4225,25 +4225,40 @@ function _renderSummary() {
   }[s]);
 
   document.getElementById('msSummaryHead').innerHTML = `
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px">
-      <div style="background:var(--surface2);border-radius:10px;padding:12px 14px;border:1.5px solid var(--border2)">
-        <div style="font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Total Due</div>
-        <div style="font-size:18px;font-weight:800;color:var(--text);margin-top:4px">${inr(totDue)}</div>
+    <style>
+      .ms-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
+      .ms-kpi{border-radius:10px;padding:10px 12px;border:1.5px solid}
+      .ms-kpi-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+      .ms-kpi-val{font-size:15px;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+      .ms-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;align-items:center}
+      .ms-chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+      @media(max-width:420px){
+        .ms-kpi-grid{grid-template-columns:1fr 1fr;gap:6px}
+        .ms-kpi-val{font-size:13px}
+        .ms-kpi:last-child{grid-column:1/-1}
+      }
+    </style>
+    <div class="ms-kpi-grid">
+      <div class="ms-kpi" style="background:var(--surface2);border-color:var(--border2)">
+        <div class="ms-kpi-lbl" style="color:var(--muted)">Total Due</div>
+        <div class="ms-kpi-val" style="color:var(--text)">${inr(totDue)}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">${rows.length} flats</div>
       </div>
-      <div style="background:#D1FAE5;border-radius:10px;padding:12px 14px;border:1.5px solid #6EE7B7">
-        <div style="font-size:10px;font-weight:800;color:#065F46;text-transform:uppercase;letter-spacing:.5px">Collected</div>
-        <div style="font-size:18px;font-weight:800;color:#065F46;margin-top:4px">${inr(totPaid)}</div>
+      <div class="ms-kpi" style="background:#D1FAE5;border-color:#6EE7B7">
+        <div class="ms-kpi-lbl" style="color:#065F46">Collected</div>
+        <div class="ms-kpi-val" style="color:#065F46">${inr(totPaid)}</div>
+        <div style="font-size:9px;color:#065F46;margin-top:2px">${totDue>0?Math.round(totPaid/totDue*100):0}% of due</div>
       </div>
-      <div style="background:${totBal>0?'#FEE2E2':'#D1FAE5'};border-radius:10px;padding:12px 14px;border:1.5px solid ${totBal>0?'#FCA5A5':'#6EE7B7'}">
-        <div style="font-size:10px;font-weight:800;color:${totBal>0?'#991B1B':'#065F46'};text-transform:uppercase;letter-spacing:.5px">Balance</div>
-        <div style="font-size:18px;font-weight:800;color:${totBal>0?'#991B1B':'#065F46'};margin-top:4px">${inr(Math.abs(totBal))}</div>
+      <div class="ms-kpi" style="background:${totBal>0?'#FEE2E2':'#D1FAE5'};border-color:${totBal>0?'#FCA5A5':'#6EE7B7'}">
+        <div class="ms-kpi-lbl" style="color:${totBal>0?'#991B1B':'#065F46'}">${totBal>0?'Balance':'Cleared'}</div>
+        <div class="ms-kpi-val" style="color:${totBal>0?'#991B1B':'#065F46'}">${inr(Math.abs(totBal))}</div>
+        <div style="font-size:9px;color:${totBal>0?'#991B1B':'#065F46'};margin-top:2px">${totBal>0?'Pending':'Fully collected'}</div>
       </div>
     </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
-      <span style="font-size:11px;font-weight:700;color:var(--text2)">${rows.length} flats</span>
-      <span style="background:#D1FAE5;color:#065F46;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">✅ ${paidCnt} Paid</span>
-      <span style="background:#FEF3C7;color:#92400E;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">⚠️ ${partCnt} Partial</span>
-      <span style="background:#FEE2E2;color:#991B1B;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:700">❌ ${pendCnt} Pending</span>
+    <div class="ms-chips">
+      <span class="ms-chip" style="background:#D1FAE5;color:#065F46">✅ ${paidCnt} Paid</span>
+      <span class="ms-chip" style="background:#FEF3C7;color:#92400E">⚠️ ${partCnt} Partial</span>
+      <span class="ms-chip" style="background:#FEE2E2;color:#991B1B">❌ ${pendCnt} Pending</span>
     </div>`;
 
   document.getElementById('msSummaryBody').innerHTML = rows.length === 0
