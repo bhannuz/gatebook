@@ -3445,7 +3445,7 @@ function rStructure() {
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${paidCnt===fts.length?'var(--green)':paidCnt>0?'var(--amber)':'var(--red)'};color:#fff;">${paidCnt}/${fts.length}</span>
             <i class="ti ti-chevron-down blk-toggle-icon" style="color:var(--indigo);font-size:13px;transition:transform .2s;"></i>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
             ${fts.map(f => makeChip(f)).join('')}
           </div>
         </div>`
@@ -3453,7 +3453,7 @@ function rStructure() {
 
   } else {
     // All flats in one grid
-    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;">
+    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
       ${rows.map(f => makeChip(f)).join('')}
     </div>`;
   }
@@ -3470,28 +3470,24 @@ function rStructure() {
       if (flat.flatId === f.flatId && flat.block === f.block) { fid = key; break; }
     }
 
-    const barClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#e5e7eb'}[status];
-    const nameIni = isVacant ? '—' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    // Option 4 — Icon chip: status dot + flat ID + type (3-col grid)
+    const dotClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#d1d5db'}[status];
     const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
     const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
+    const borderClr = {paid:'#bbf7d0', partial:'#fde68a', pending:'#fecaca', vacant:'#e5e7eb'}[status];
+    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
 
     return `<button onclick="window.oFlEdit('${fid}')"
-      style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:0;
-        cursor:pointer;font-family:var(--font);text-align:left;overflow:hidden;width:100%;
-        transition:transform .12s,box-shadow .12s,border-color .12s;box-shadow:0 1px 3px rgba(0,0,0,.06);"
-      onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 4px 10px rgba(0,0,0,.1)';this.style.borderColor='${barClr}'"
-      onmouseout="this.style.transform='';this.style.boxShadow='0 1px 3px rgba(0,0,0,.06)';this.style.borderColor='#e5e7eb'">
-      <!-- colour bar at top -->
-      <div style="height:4px;background:${barClr};width:100%;"></div>
-      <!-- chip body -->
-      <div style="padding:6px 8px;display:flex;align-items:center;gap:6px;">
-        <div style="width:22px;height:22px;border-radius:50%;background:${barClr}22;
-          color:${barClr};font-weight:800;font-size:9px;
-          display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.5px;">${nameIni}</div>
-        <div style="flex:1;min-width:0;overflow:hidden;">
-          <div style="font-weight:800;font-size:11px;color:#4f46e5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${f.flatId}</div>
-          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
-        </div>
+      style="background:${bgClr};border:1px solid ${borderClr};border-radius:8px;
+        padding:7px 8px;cursor:pointer;font-family:var(--font);text-align:left;
+        display:flex;align-items:center;gap:7px;width:100%;
+        transition:box-shadow .12s,border-color .12s;box-shadow:0 1px 2px rgba(0,0,0,.04);"
+      onmouseover="this.style.boxShadow='0 3px 8px rgba(0,0,0,.1)';this.style.borderColor='${dotClr}'"
+      onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)';this.style.borderColor='${borderClr}'">
+      <span style="width:8px;height:8px;border-radius:50%;background:${dotClr};flex-shrink:0;display:inline-block;"></span>
+      <div style="min-width:0;overflow:hidden;">
+        <div style="font-size:11px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${f.flatId}</div>
+        <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;white-space:nowrap">${typeLbl}</div>
       </div>
     </button>`;
   }
