@@ -220,22 +220,23 @@
           <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
               <colgroup>
+                <col style="width:17%"/>
+                <col style="width:28%"/>
+                <col style="width:13%"/>
                 <col style="width:18%"/>
-                <col style="width:38%"/>
-                <col style="width:20%"/>
                 <col style="width:24%"/>
               </colgroup>
               <thead style="position:sticky;top:0;z-index:1">
                 <tr style="background:var(--surface3)">
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Flat</th>
-                  <th style="padding:8px 10px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Owner</th>
-                  <th style="padding:8px 10px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Status</th>
-                  <th style="padding:8px 10px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Balance</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">🏍/🚗</th>
+                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Pending</th>
                 </tr>
               </thead>
               <tbody id="anPayTable"></tbody>
             </table>
-          </div>
           </div>
         </div>
 
@@ -681,7 +682,7 @@
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
-<script type="module" src="main.js"></script>
+<script type="module" src="js/main.js"></script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
