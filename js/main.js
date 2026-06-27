@@ -2556,14 +2556,19 @@ function rPresident() {
   }
 
   window._seCache = vis;
-  const TH = 'padding:8px 12px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);background:var(--surface3);white-space:nowrap';
-  document.getElementById('presExpList').innerHTML = `<table style="width:100%;border-collapse:collapse">
+  document.getElementById('presExpList').innerHTML = `<table style="width:100%;border-collapse:collapse;table-layout:fixed">
+    <colgroup>
+      <col style="width:40%"/>
+      <col style="width:25%"/>
+      <col style="width:20%"/>
+      <col style="width:15%"/>
+    </colgroup>
     <thead style="position:sticky;top:0;z-index:1">
-      <tr>
-        <th style="${TH};text-align:left">Title</th>
-        <th style="${TH};text-align:left;width:110px">Category</th>
-        <th style="${TH};text-align:left;width:100px">Date</th>
-        <th style="${TH};text-align:right;width:90px">Amount</th>
+      <tr style="background:var(--surface3)">
+        <th style="padding:9px 10px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)">Title</th>
+        <th style="padding:9px 10px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)">Category</th>
+        <th style="padding:9px 10px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)">Date</th>
+        <th style="padding:9px 10px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)">Amount</th>
       </tr>
     </thead>
     <tbody>
@@ -2575,15 +2580,15 @@ function rPresident() {
           style="border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s"
           onmouseover="this.style.background='var(--indigo-bg)'"
           onmouseout="this.style.background=''">
-          <td style="padding:9px 12px;font-size:12px;font-weight:600;color:var(--text);max-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+          <td style="padding:9px 10px;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
             ${e.title || '—'}
             ${e.paidBy ? `<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">By: ${e.paidBy}</div>` : ''}
           </td>
-          <td style="padding:9px 12px;width:110px">
-            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;background:${clr}18;color:${clr};display:inline-block;white-space:nowrap">${e.cat || '—'}</span>
+          <td style="padding:9px 10px;overflow:hidden">
+            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:5px;background:${clr}18;color:${clr};display:inline-block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">${e.cat || '—'}</span>
           </td>
-          <td style="padding:9px 12px;font-size:11px;color:var(--muted);white-space:nowrap;width:100px">${e.date || '—'}</td>
-          <td style="padding:9px 12px;font-size:12px;font-weight:800;color:var(--text);text-align:right;white-space:nowrap;width:90px">${inr(e.amt)}</td>
+          <td style="padding:9px 10px;font-size:11px;color:var(--muted);white-space:nowrap">${e.date || '—'}</td>
+          <td style="padding:9px 10px;font-size:12px;font-weight:800;color:var(--text);text-align:right;white-space:nowrap">${inr(e.amt)}</td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -4117,9 +4122,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:9px 12px;font-size:10px;font-weight:800;color:var(--text2)" colspan="3">Total (${rows.length} flats)</td>
-    <td style="padding:9px 12px;text-align:center;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">${totTw}🏍·${totFw}🚗</td>
-    <td style="padding:9px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:12px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:9px 10px;font-size:10px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:9px 10px;text-align:center;font-size:10px;font-weight:700;color:var(--text2)">—</td>
+    <td style="padding:9px 10px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:12px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
