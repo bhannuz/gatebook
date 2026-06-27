@@ -4097,13 +4097,13 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:8px 10px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.flatId}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid var(--border);overflow:hidden">
+      <td style="padding:8px 10px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.flatId}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid var(--border);overflow:hidden;max-width:0;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:1px">${typeBadge}</div>
       </td>
-      <td style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:8px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
