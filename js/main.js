@@ -2563,26 +2563,23 @@ function rPresident() {
         <th style="padding:10px;text-align:left;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);">Category</th>
         <th style="padding:10px;text-align:left;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);">Date</th>
         <th style="padding:10px;text-align:right;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);">Amount</th>
-        <th style="padding:10px;text-align:center;font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);">Actions</th>
       </tr>
     </thead>
     <tbody>
       ${vis.map(e => {
         const ci = allCatNames.indexOf(e.cat);
         const clr = catClr(ci >= 0 ? ci : 0);
-        return `<tr id="serow_${e.id}" style="border-bottom:1px solid var(--border2);hover:background:var(--surface2);">
-          <td style="padding:10px;font-size:12px;font-weight:600;color:var(--text);">${e.title || '—'}</td>
+        return `<tr id="serow_${e.id}"
+          onclick="window._openSEModal('${e.id}')"
+          style="border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s;"
+          onmouseover="this.style.background='var(--indigo-bg)'"
+          onmouseout="this.style.background=''">
+          <td style="padding:10px;font-size:12px;font-weight:600;color:var(--text);">${e.title || '—'}<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:2px">${e.paidBy ? 'By: '+e.paidBy : ''}</div></td>
           <td style="padding:8px 10px;font-size:11px;">
             <span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;background:${clr}18;color:${clr};display:inline-block;">${e.cat || '—'}</span>
-            <span style="display:block;font-size:11px;font-weight:800;color:var(--text);margin-top:2px;">${inr(e.amt)}</span>
           </td>
           <td style="padding:8px 10px;font-size:11px;color:var(--muted);">${e.date || '—'}</td>
           <td style="padding:8px 10px;font-size:12px;font-weight:800;color:var(--text);text-align:right;">${inr(e.amt)}</td>
-          <td style="padding:8px 6px;text-align:center;">
-            <button onclick="window._openSEModal('${e.id}')" style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:7px;padding:5px 8px;cursor:pointer;color:var(--text2);display:inline-flex;align-items:center;justify-content:center;">
-              <i class="ti ti-dots-vertical" style="font-size:14px;"></i>
-            </button>
-          </td>
         </tr>`;
       }).join('')}
     </tbody>
@@ -4095,7 +4092,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       : resType === 'tenant'
         ? `<span style="font-size:9px;font-weight:700;color:var(--amber)">🔑 Tenant</span>`
         : `<span style="font-size:9px;font-weight:700;color:var(--indigo)">🏠 Owner</span>`;
-    return `<tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+    return `<tr
+      onclick="window._openPayHistory('${f.flatId}')"
+      style="cursor:pointer;transition:background .12s;"
+      onmouseover="this.style.background='var(--indigo-bg)'"
+      onmouseout="this.style.background=''">
       <td style="padding:10px 14px;font-weight:800;color:var(--indigo);font-size:13px;border-bottom:1px solid var(--border)">${f.flatId}</td>
       <td style="padding:10px 14px;border-bottom:1px solid var(--border);max-width:130px">
         <div style="font-size:13px;font-weight:500;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
@@ -4108,14 +4109,6 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       </td>
       <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border)">${vehCell}</td>
       <td style="padding:10px 14px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border)">${f.due ? inr(Math.abs(bal)) : '—'}</td>
-      <td style="padding:10px 14px;text-align:center;border-bottom:1px solid var(--border)">
-        <button onclick="window._openPayHistory('${f.flatId}')" title="Edit Payment History"
-          style="background:none;border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--indigo);display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s"
-          onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)'"
-          onmouseout="this.style.background='none';this.style.borderColor='var(--border2)'">
-          <i class="ti ti-history" style="font-size:12px"></i>
-        </button>
-      </td>
     </tr>`;
   }).join('');
 
@@ -4127,7 +4120,6 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     <td style="padding:9px 14px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total (${rows.length} flats)</td>
     <td style="padding:9px 14px;text-align:center;font-size:12px;font-weight:700;color:var(--text2)">🏍 ${totTw} · 🚗 ${totFw}</td>
     <td style="padding:9px 14px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px">${inr(Math.abs(totBal))}</td>
-    <td></td>
   </tr>`;
 }
 
