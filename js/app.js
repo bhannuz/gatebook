@@ -1,735 +1,883 @@
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
-import { getFirestore, collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc, onSnapshot, query, where, orderBy, serverTimestamp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
-import { getAuth, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
-import { getAnalytics } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-analytics.js';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gatebook — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
 
-/* ====== MERGED app.js ====== */
+<!-- Loading -->
+<div id="lo">
+  <div class="lo-card">
+    <div class="lo-icon"><i class="ti ti-building-community"></i></div>
+    <div class="lo-title">Gate<span>book</span></div>
+    <div class="lo-sub" style="font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.5px;text-transform:uppercase">Powered by AK Group</div>
+    <div class="lo-sub" id="loSub" style="margin-top:2px">Connecting to your society database…</div>
+    <div class="lo-bar"><div class="lo-fill"></div></div>
+  </div>
+</div>
 
-/* ====== js/firebase.js ====== */
-const firebaseConfig = {
-  apiKey:            "AIzaSyAnUvPo_G_efbacdDApbULQgY5OToghJYM",
-  authDomain:        "gatebook-17065.firebaseapp.com",
-  projectId:         "gatebook-17065",
-  storageBucket:     "gatebook-17065.firebasestorage.app",
-  messagingSenderId: "732765572762",
-  appId:             "1:732765572762:web:55f1cb897bb5804a831923",
-  measurementId:     "G-6YKLV11L0G",
-};
+<!-- ══ IN-APP SETUP WIZARD (shown when user has no flats yet) ══ -->
+<div id="setupWiz" style="display:none;position:fixed;inset:0;z-index:9998;
+  background:linear-gradient(135deg,#EEF2FF 0%,#F0F9FF 50%,#FDF4FF 100%);
+  align-items:center;justify-content:center;padding:1rem">
+  <div style="background:#fff;border-radius:var(--r-2xl);padding:36px 40px;
+    width:min(560px,100%);max-height:92vh;overflow-y:auto;
+    box-shadow:var(--shadow-xl);border:1.5px solid var(--border2)">
 
-const app  = initializeApp(firebaseConfig);
-const db   = getFirestore(app);
-const auth = getAuth(app);
-getAnalytics(app);
-
-
-/* ====== js/payments.js ====== */
-let _dFid=null, _dPage=0, _dQ='', _dCat='all';
-const PAGE_SIZE = 20;
-
-function setAB(v) { AB = v; }
-
-function hasBlocks() {
-  return [...flats.values()].some(f => (f.block || '').trim() !== '');
-}
-
-function getFloors(blockOrAll) {
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const scoped = blockOrAll ? all.filter(f => f.block === blockOrAll) : all;
-  return [...new Set(scoped.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
-}
-
-function updateFloorFilter(block) {
-  const sel = document.getElementById('flf');
-  if (!sel) return;
-  if (!hasBlocks()) { sel.style.display = 'none'; return; }
-  const floors = getFloors(block);
-  if (floors.length > 1) {
-    sel.innerHTML = `<option value="all">All floors</option>` +
-      floors.map(fl => `<option value="${fl}">Floor ${fl}</option>`).join('');
-    sel.style.display = '';
-  } else {
-    sel.style.display = 'none';
-  }
-}
-
-function rBTabs() {
-  const useBlocks = hasBlocks();
-  if (useBlocks) {
-    const bs = bks();
-    if (!bs.includes(AB)) { AB = bs[0] || ''; setAB(AB); }
-    document.getElementById('btabs').innerHTML = bs.map(b => {
-      const bf = [...flats.values()].filter(f => f.block === b && f.month === AM);
-      const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${b === AB ? ' active' : ''}" onclick="window._sB('${b}')">
-        <i class="ti ti-building"></i> Block ${b}
-        <span class="btab-badge">${pc}/${bf.length}</span>
-      </button>`;
-    }).join('');
-    updateFloorFilter(AB);
-  } else {
-    const all = [...flats.values()].filter(f => f.month === AM);
-    const floors = [...new Set(all.map(f => f.floor).filter(x => x != null))].sort((a,b) => a - b);
-    const flNums = floors.map(String);
-    if (!flNums.includes(String(AB))) { AB = String(floors[0] || 1); setAB(AB); }
-    document.getElementById('btabs').innerHTML = floors.map(fl => {
-      const bf = all.filter(f => f.floor === fl);
-      const pc = bf.filter(f => st(f) === 'paid').length;
-      return `<button class="btab${String(fl) === String(AB) ? ' active' : ''}" onclick="window._sB('${fl}')">
-        <i class="ti ti-stairs"></i> Floor ${fl}
-        <span class="btab-badge">${pc}/${bf.length}</span>
-      </button>`;
-    }).join('');
-    document.getElementById('flf').style.display = 'none';
-  }
-}
-
-function rBlock() {
-  const useBlocks = hasBlocks();
-  let bf = [...flats.values()].filter(f => f.month === AM);
-  if (useBlocks) {
-    bf = bf.filter(f => f.block === AB);
-  } else {
-    bf = bf.filter(f => String(f.floor) === String(AB));
-  }
-
-  const vis = bf.filter(f => {
-    if (FS !== 'all' && st(f) !== FS) return false;
-    if (RTF !== 'all') {
-      const vacant = !(f.owner || '').trim();
-      if (RTF === 'vacant' && !vacant) return false;
-      if (RTF === 'owner'  && (vacant || f.resType === 'tenant')) return false;
-      if (RTF === 'tenant' && f.resType !== 'tenant') return false;
-    }
-    if (FLF !== 'all' && useBlocks && String(f.floor) !== String(FLF)) return false;
-    if (SQ && !f.flatId.toLowerCase().includes(SQ) && !(f.owner || '').toLowerCase().includes(SQ)) return false;
-    return true;
-  });
-
-  const pc  = bf.filter(f => st(f) === 'paid').length;
-  const col = bf.reduce((s, f) => s + f.paid, 0);
-  const headLabel = useBlocks ? `Block ${AB}` : `Floor ${AB}`;
-
-  let h = `<div class="bhead">
-    <div class="bhead-left">
-      <div class="bstripe"></div>
-      <div class="btitle">${headLabel}</div>
-      <span class="bbadge">✅ ${pc}/${bf.length} paid</span>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:28px" id="wizDots">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--indigo);width:24px;border-radius:99px;height:8px" id="wd0"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--surface3)" id="wd1"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--surface3)" id="wd2"></div>
     </div>
-    <div class="bcollected">Collected: <strong>${inr(col)}</strong></div>
-  </div><div class="fgrid">`;
 
-  if (!vis.length) {
-    h += `<div class="empty-grid"><i class="ti ti-search-off"></i>No flats match your filter.</div>`;
-  } else {
-    const byFloor = {};
-    vis.forEach(f => { const fl = f.floor ?? '—'; (byFloor[fl] = byFloor[fl] || []).push(f); });
-    const sortedFloors = Object.keys(byFloor).sort((a,b) => Number(a) - Number(b));
-    const multiFloor = useBlocks && sortedFloors.length > 1;
+    <!-- Step 0: Name -->
+    <div id="ws0">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.3)"><i class="ti ti-building-community"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Name your Apartment</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Give your society a name. This will appear across the app.</p>
+      </div>
+      <div class="fg"><label>Apartment / Society Name *</label><input type="text" id="wAptName" placeholder="e.g. Green Valley Residency" maxlength="50"/></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-indigo" onclick="window._wizNext(0)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
 
-    sortedFloors.forEach((fl, idx) => {
-      if (multiFloor) {
-        if (idx > 0) h += `</div>`;
-        h += `<div class="floor-divider"><i class="ti ti-stairs"></i> Floor ${fl}</div><div class="fgrid">`;
-      }
-      byFloor[fl].forEach(f => {
-        const s = st(f), pct = f.due ? Math.round(Math.min(f.paid/f.due*100,100)) : 0;
-        h += `<div class="fcard ${s}" onclick="window._oFl('${f.flatId}')" role="button" tabindex="0"
-          onkeydown="if(event.key==='Enter')window._oFl('${f.flatId}')">
-          <div class="fc-top">
-            <div>
-              <div class="fc-num">${f.flatId}</div>
-              <div class="fc-owner">${f.owner || '(No owner)'}</div>
-              <span class="fc-type ${f.resType || 'owner'}">${f.resType === 'tenant' ? 'Tenant' : 'Owner'}</span>
-            </div>
-            <div class="fc-indicator"><i class="ti ${si(s)}"></i></div>
+    <!-- Step 1: Blocks -->
+    <div id="ws1" style="display:none">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#6366F1,#8B5CF6);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(99,102,241,.3)"><i class="ti ti-building"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Configure Blocks & Floors</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Add one block or multiple. Each block can have a different number of floors and flats per floor.</p>
+      </div>
+      <div id="wBlocks"></div>
+      <button style="display:flex;align-items:center;gap:6px;padding:8px 16px;border:1.5px dashed var(--border3);border-radius:var(--r-md);background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;font-family:var(--font);transition:all .15s;margin-top:4px" onclick="window._wizAddBlock()"><i class="ti ti-plus"></i> Add another block</button>
+      <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;margin-top:12px;font-size:13px;color:var(--text2);font-weight:500;line-height:1.8" id="wPreview"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-white" onclick="window._wizBack(1)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-indigo" onclick="window._wizNext(1)">Next <i class="ti ti-arrow-right"></i></button>
+      </div>
+    </div>
+
+    <!-- Step 2: Confirm -->
+    <div id="ws2" style="display:none">
+      <div style="text-align:center;margin-bottom:28px">
+        <div style="width:64px;height:64px;border-radius:18px;margin:0 auto 14px;background:linear-gradient(135deg,#059669,#10B981);display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;box-shadow:0 8px 24px rgba(5,150,105,.3)"><i class="ti ti-rocket"></i></div>
+        <h2 style="font-size:22px;font-weight:800;color:var(--text);margin-bottom:6px">Ready to Launch!</h2>
+        <p style="font-size:13px;color:var(--text2);font-weight:500">Review your setup. We'll create all your flats automatically.</p>
+      </div>
+      <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;font-size:14px;color:var(--text2);font-weight:500;line-height:1.8" id="wConfirm"></div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:24px;padding-top:18px;border-top:1.5px solid var(--border2)">
+        <button class="btn btn-white" onclick="window._wizBack(2)"><i class="ti ti-arrow-left"></i> Back</button>
+        <button class="btn btn-green" id="wLaunchBtn" onclick="window._wizLaunch()"><i class="ti ti-rocket"></i><span id="wLaunchLbl"> Launch App</span></button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="app" style="display:none">
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <div class="nav-logo"><i class="ti ti-building-community"></i></div>
+    <div class="nav-name-wrap">
+      <span class="nav-name" id="aptNameDisplay">Gate<em>book</em></span>
+      <span class="flat-count-badge" id="flatCountBadge" style="display:none"></span>
+    </div>
+  </div>
+
+  <div class="nav-right">
+    <div class="sync-chip"><span class="sdot" id="sdot"></span><span id="slbl">–</span></div>
+    <button onclick="location.reload()" title="Refresh"
+      style="background:none;border:1px solid var(--border2);border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--text2);display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s,color .15s"
+      onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)';this.style.color='var(--indigo)'"
+      onmouseout="this.style.background='none';this.style.borderColor='var(--border2)';this.style.color='var(--text2)'">
+      <i class="ti ti-refresh" style="font-size:15px"></i>
+    </button>
+    <div class="user-chip" onclick="window._doSignOut()">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <span id="userName">Admin</span>
+      <i class="ti ti-logout" style="font-size:14px;color:var(--muted)"></i>
+    </div>
+  </div>
+</nav>
+
+<!-- APP -->
+<div class="app">
+  <!-- Tab bar now at very top, card-sized, full width -->
+  <div class="tab-bar-wrap" style="margin:0 0 0.5rem;position:static;border:none;padding:0;background:transparent">
+    <div class="view-tabs" id="viewTabs" style="gap:8px;padding:0">
+      <button class="vtab active" data-v="analytics" onclick="switchView('analytics')"><i class="ti ti-credit-card"></i> Payments</button>
+      <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
+      <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-users"></i> Residents</button>
+      <button class="vtab" data-v="issues" onclick="switchView('issues')">
+        <i class="ti ti-alert-circle"></i> Issues
+        <span class="vtab-badge" id="openCnt">0</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
+  <div id="statsRow" style="display:none"></div>
+
+  <!-- ISSUES VIEW -->
+  <div id="iView" style="display:none">
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <select id="issStatusFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="fIss(this.value)">
+        <option value="all">All Issues</option>
+        <option value="open">🔴 Open</option>
+        <option value="in-progress">🟡 In Progress</option>
+        <option value="resolved">🟢 Resolved</option>
+      </select>
+      <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
+    </div>
+    <div class="tab-table-wrap red" id="iList"></div>
+  </div><!-- /#iView -->
+
+  <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
+  <!-- DIRECTORY VIEW — Owners, Tenants & Payment History -->
+
+  <!-- PRESIDENT VIEW -->
+  <div id="presView" style="display:none;padding:0 12px 12px;">
+
+    <!-- Main grid: responsive layout -->
+    <style>@media(max-width:700px){.exp-layout-grid{grid-template-columns:1fr!important}.exp-layout-grid .chart-col{order:2}}</style>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="exp-layout-grid">
+
+      <!-- LEFT: summary cards + expense records -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <!-- Summary row: Cards only -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
+          <div id="fundRow" style="display:contents;"></div>
+        </div>
+
+        <!-- Expense Records -->
+        <div class="exp-records-panel tab-table-wrap">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
+            <i class="ti ti-receipt" style="color:var(--indigo)"></i> Expense Records
           </div>
-          <div class="fc-amount">${inr(f.paid)}</div>
-          <div class="fc-due">of ${inr(f.due)} monthly due</div>
-          <div class="fprog"><div class="fpbar" style="width:${pct}%"></div></div>
-          <div class="spill ${s}"><i class="ti ${si(s)}"></i>${sl(s)}</div>
-        </div>`;
-      });
-    });
-  }
-  document.getElementById('bcon').innerHTML = h + '</div>';
-}
+          <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
+            <div id="presExpList"></div>
+          </div>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT: chart panel -->
+      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
+
+        <!-- Chart panel -->
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
+            <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
+          </div>
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
+            <canvas id="expTabPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
+          </div>
+          <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
+          <div id="expTabLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
+        </div>
+
+      </div><!-- /right col -->
+
+    </div><!-- /main grid -->
+
+    <!-- Mobile Styles -->
 
 
-/* ====== js/issues.js ====== */
-function rIssues() {
-  const fil = IF === 'all' ? [...issues] : issues.filter(i => i.status === IF);
-  const icons = {
-    Plumbing: 'ti-tool', Electrical: 'ti-bolt', Lift: 'ti-elevator',
-    Security: 'ti-shield', Cleaning: 'ti-vacuum-cleaner', Parking: 'ti-car',
-    Noise: 'ti-volume', Internet: 'ti-wifi', Other: 'ti-clipboard'
-  };
+  </div><!-- /#presView -->
 
-  if (!fil.length) {
-    document.getElementById('iList').innerHTML = `<div class="iss-empty">
-      <i class="ti ti-mood-happy"></i>
-      <h3>${IF === 'all' ? 'No issues raised yet' : 'No ' + IF + ' issues found'}</h3>
-      <p>${IF === 'all' ? 'Everything is running smoothly!' : 'All clear in this category.'}</p>
-    </div>`;
-    return;
-  }
+  <!-- ANALYTICS VIEW -->
+  <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-  document.getElementById('iList').innerHTML = fil.map(iss => {
-    const sLabel  = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
-    const pLabel  = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
-    return `<div class="icard" onclick="window._oID('${iss.id}')">
-      <div class="ipbar ${iss.priority}"></div>
+    <!-- Stat chips: always 2-col, above the main grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
+
+    <!-- 2-col grid: left = table, right = chart -->
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
+    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
+
+      <!-- LEFT: payment table -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- placeholder kept for structure -->
+
+        <!-- Payment Records Table -->
+        <div class="exp-records-panel tab-table-wrap">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+            <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
+          </div>
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+              <colgroup>
+                <col style="width:17%"/>
+                <col style="width:28%"/>
+                <col style="width:13%"/>
+                <col style="width:18%"/>
+                <col style="width:24%"/>
+              </colgroup>
+              <thead style="position:sticky;top:0;z-index:1">
+                <tr style="background:var(--surface3)">
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">🏍/🚗</th>
+                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Pending</th>
+                </tr>
+              </thead>
+              <tbody id="anPayTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT: chart -->
+      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
+            <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
+          </div>
+          <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
+          <div id="payLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
+        </div>
+      </div>
+
+    </div><!-- /main grid -->
+
+  </div><!-- /#analyticsView -->
+
+  <!-- STRUCTURE VIEW -->
+  <div id="structureView" style="display:none;padding:8px 14px 14px">
+
+    <!-- President banner (injected by rStructure) -->
+    <div id="presBanner" style="margin-bottom:10px;"></div>
+
+    <!-- Residents toolbar: single row -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button onclick="window._openStructureManager()"
+        style="height:34px;padding:0 12px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border2);border-radius:var(--r-md);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;">
+        <i class="ti ti-settings" style="font-size:13px;color:var(--indigo)"></i>Manage
+      </button>
+      <select id="strBlockFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+        <option value="all">All Blocks</option>
+      </select>
+      <select id="strTypeFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+        <option value="all">All Types</option>
+        <option value="owner">🏠 Owner</option>
+        <option value="tenant">🔑 Tenant</option>
+        <option value="vacant">🚪 Vacant</option>
+      </select>
+      <div style="position:relative;flex:1;min-width:120px;">
+        <i class="ti ti-search" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;"></i>
+        <input type="text" id="strSearch" class="ctrl" placeholder="Search name or flat no."
+          style="height:34px;font-size:12px;padding-left:28px;width:100%;box-sizing:border-box;" oninput="window.rStructure()">
+      </div>
+    </div>
+
+    <!-- Flat list -->
+    <div id="strChips" style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"></div>
+  </div><!-- /#structureView -->
+
+</div><!-- /.app -->
+
+  <!-- RESIDENTS VIEW -->
+
+<!-- FLAT DETAIL BOTTOM DRAWER -->
+<div id="drawerBg" onclick="window._cD()"></div>
+<div id="flatDrawer">
+  <div class="drawer-handle"></div>
+  <div class="drawer-header">
+    <div>
+      <div class="drawer-title" id="dTitle">Flat</div>
+      <div class="drawer-sub" id="dSub"></div>
+    </div>
+    <button class="drawer-close" onclick="window._cD()"><i class="ti ti-x"></i></button>
+  </div>
+  <div class="drawer-body" id="dBody"></div>
+</div>
+
+<!-- FLAT DETAIL MODAL (legacy, hidden) -->
+<div class="mbg" id="flatM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-home"></i></div>
+        <div><div class="mtitle" id="mdT"></div><div class="msub" id="mdS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cD()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="mdC"></div>
+  </div>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="mbg" id="addM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-receipt"></i></div>
+        <div><div class="mtitle">Record Payment / Expense</div><div class="msub">Add a charge or payment for a flat</div></div>
+      </div>
+      <button class="mclose" onclick="window._cA()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="fB"></select></div>
+      <div class="fg"><label>Flat No.</label><select id="fF"></select></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Category</label>
+        <select id="fC" onchange="window._catSelChange('fC','flat')" onfocus="renderCatOpts('fC','flat')"><option>Maintenance</option></select>
+        <div id="fC_new" style="display:none;margin-top:5px">
+          <div style="display:flex;gap:6px">
+            <input type="text" id="fC_input" placeholder="New category…" maxlength="30"
+              style="flex:1;height:34px;padding:0 10px;background:var(--surface2);border:1.5px solid var(--indigo);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;border-radius:var(--r-md);outline:none"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();window._addInlineCat('fC','flat')}"/>
+            <button class="btn btn-indigo btn-sm" style="height:34px;padding:0 10px" onclick="window._addInlineCat('fC','flat')"><i class="ti ti-check"></i></button>
+            <button class="btn btn-white btn-sm"  style="height:34px;padding:0 10px" onclick="window._hideInlineCat('fC')"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="fg"><label>Amount (₹)</label><input type="number" id="fA" placeholder="0" min="1"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Date</label><input type="date" id="fD"/></div>
+      <div class="fg"><label>Payment Status</label>
+        <select id="fS"><option value="paid">✅ Paid</option><option value="partial">⚠️ Partial</option><option value="pending">❌ Pending</option></select>
+      </div>
+    </div>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="fN" placeholder="e.g. UPI transfer, cheque no. 1234…"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cA()">Cancel</button>
+      <button class="btn btn-indigo" id="svBtn" onclick="window._sE()">
+        <i class="ti ti-device-floppy"></i><span id="svLbl">Save Payment</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FLAT MODAL -->
+<div class="mbg" id="flatAddM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon flat"><i class="ti ti-home-plus"></i></div>
+        <div><div class="mtitle">Register New Flat</div><div class="msub">Add a resident flat to the society</div></div>
+      </div>
+      <button class="mclose" onclick="window._cAF()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="nB"></select></div>
+      <div class="fg"><label>Flat No.</label><input type="text" id="nI" placeholder="A-101"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Owner Name</label><input type="text" id="nO" placeholder="Full name"/></div>
+      <div class="fg"><label>Monthly Due (₹)</label><input type="number" id="nD" placeholder="5000" min="1"/></div>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
+      <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
+    </div>
+  </div>
+</div>
+
+<!-- RAISE ISSUE MODAL -->
+<div class="mbg" id="rIM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon issue"><i class="ti ti-urgent"></i></div>
+        <div><div class="mtitle">Raise a Complaint / Issue</div><div class="msub">Report a problem — we'll track it until resolved</div></div>
+      </div>
+      <button class="mclose" onclick="window._cRI()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Issue Title *</label><input type="text" id="iT" placeholder="e.g. Water leakage near lift on 2nd floor"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category *</label>
+        <select id="iCa">
+          <option value="Plumbing">🔧 Plumbing</option><option value="Electrical">⚡ Electrical</option>
+          <option value="Lift">🛗 Lift / Elevator</option><option value="Security">🔒 Security</option>
+          <option value="Cleaning">🧹 Cleaning</option><option value="Parking">🚗 Parking</option>
+          <option value="Noise">🔊 Noise Complaint</option><option value="Internet">📡 Internet / Cable</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Priority *</label>
+        <select id="iP">
+          <option value="high">🔴 High — Urgent fix needed</option>
+          <option value="medium" selected>🟡 Medium — Normal priority</option>
+          <option value="low">🟢 Low — When convenient</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Block</label><select id="iBl"></select></div>
+      <div class="fg"><label>Flat No. (optional)</label><input type="text" id="iFl" placeholder="e.g. A-101 or blank"/></div>
+    </div>
+    <div class="fg"><label>Description *</label><textarea id="iDe" placeholder="Describe the issue clearly — what happened, since when, how severe is it…"></textarea></div>
+    <div class="fg"><label>Your Name / Flat No. *</label><input type="text" id="iRe" placeholder="e.g. Ramesh Kumar / A-101"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cRI()">Cancel</button>
+      <button class="btn btn-indigo" id="issBtn" onclick="window._sI()">
+        <i class="ti ti-send"></i><span id="issBtnL">Submit Complaint</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ISSUE DETAIL MODAL -->
+<div class="mbg" id="idM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon idtl"><i class="ti ti-clipboard-list"></i></div>
+        <div><div class="mtitle" id="idT">Issue Detail</div><div class="msub" id="idS"></div></div>
+      </div>
+      <button class="mclose" onclick="window._cID()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="idC"></div>
+    <div class="iss-timeline" id="idTL"></div>
+  </div>
+</div>
+
+<!-- VEHICLE MODAL -->
+<div class="mbg" id="vehM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon veh"><i class="ti ti-motorbike"></i></div>
+        <div><div class="mtitle">Vehicle Details</div><div class="msub" id="vehMSub">Enter vehicle info for this flat</div></div>
+      </div>
+      <button class="mclose" onclick="window._cVehM()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="vehFid"/>
+    <div class="fg2">
+      <div class="fg"><label>🏍 2-Wheelers (count)</label><input type="number" id="veh2w" min="0" max="10" placeholder="0"/></div>
+      <div class="fg"><label>🚗 4-Wheelers (count)</label><input type="number" id="veh4w" min="0" max="10" placeholder="0"/></div>
+    </div>
+    <div class="fg"><label>Vehicle Numbers (comma separated)</label>
+      <input type="text" id="vehNums" placeholder="e.g. MH12AB1234, KA01CD5678"/>
+    </div>
+    <div class="fg"><label>Parking Slot(s)</label>
+      <input type="text" id="vehSlot" placeholder="e.g. B1, B2"/>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cVehM()">Cancel</button>
+      <button class="btn btn-red btn-sm" id="vehDelBtn" onclick="window._delVeh()" style="display:none"><i class="ti ti-trash"></i> Clear</button>
+      <button class="btn btn-indigo" id="vehSaveBtn" onclick="window._sVeh()">
+        <i class="ti ti-device-floppy"></i><span id="vehSaveLbl">Save Vehicles</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ELECT PRESIDENT MODAL -->
+<div class="mbg" id="presM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pres"><i class="ti ti-crown"></i></div>
+        <div><div class="mtitle">Society President</div><div class="msub">Elect or view history</div></div>
+      </div>
+      <button class="mclose" onclick="window._cPresM()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Sub-tabs -->
+    <div style="display:flex;border-bottom:2px solid var(--border);margin:0 -20px;padding:0 20px;">
+      <button id="presTab1" onclick="window._presSwTab(1)"
+        style="flex:1;padding:9px 0;font-size:13px;font-weight:700;cursor:pointer;background:none;border:none;
+          border-bottom:2px solid var(--indigo);color:var(--indigo);font-family:var(--font);margin-bottom:-2px;">
+        👑 Elect
+      </button>
+      <button id="presTab2" onclick="window._presSwTab(2)"
+        style="flex:1;padding:9px 0;font-size:13px;font-weight:700;cursor:pointer;background:none;border:none;
+          border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font);margin-bottom:-2px;">
+        🕐 History
+      </button>
+    </div>
+
+    <!-- Tab 1: Elect -->
+    <div id="presPanel1" style="display:flex;flex-direction:column;">
+      <div class="fg"><label>Select Flat / Member *</label><select id="presFlat"></select></div>
+      <div class="fg"><label>President Name *</label><input type="text" id="presName" placeholder="Full name"/></div>
+      <div class="fg"><label>Term Start Date</label><input type="date" id="presStart"/></div>
+      <div class="fg"><label>Term End Date (optional)</label><input type="date" id="presEnd"/></div>
+      <div class="fg"><label>Phone</label><input type="text" id="presPhone" placeholder="Contact number"/></div>
+      <div class="mactions">
+        <button class="btn btn-white" onclick="window._cPresM()">Cancel</button>
+        <button class="btn btn-indigo" id="presSaveBtn" onclick="window._sPres()">
+          <i class="ti ti-crown"></i><span id="presSaveLbl">Elect President</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tab 2: History -->
+    <div id="presPanel2" style="display:none;flex-direction:column;max-height:420px;overflow-y:auto;padding-top:12px;">
+      <div id="presHistModalInner">
+        <div style="text-align:center;padding:30px;color:var(--muted);font-size:13px;">
+          <i class="ti ti-history" style="font-size:28px;display:block;margin-bottom:8px;opacity:.4;"></i>
+          No history yet
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SOCIETY EXPENSE MODAL -->
+<div class="mbg" id="presExpM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-receipt"></i></div>
+        <div><div class="mtitle">Society Expense</div><div class="msub">Record an expense from society fund</div></div>
+      </div>
+      <button class="mclose" onclick="window._cPresExp()"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Expense Title *</label><input type="text" id="peTitle" placeholder="e.g. Generator repair"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category *</label>
+        <select id="peCat" onchange="window._catSelChange('peCat','soc')" onfocus="renderCatOpts('peCat','soc')"><option>Maintenance</option></select>
+        <div id="peCat_new" style="display:none;margin-top:5px">
+          <div style="display:flex;gap:6px">
+            <input type="text" id="peCat_input" placeholder="New category…" maxlength="30"
+              style="flex:1;height:34px;padding:0 10px;background:var(--surface2);border:1.5px solid var(--indigo);color:var(--text);font-family:var(--font);font-size:13px;font-weight:500;border-radius:var(--r-md);outline:none"
+              onkeydown="if(event.key==='Enter'){event.preventDefault();window._addInlineCat('peCat','soc')}"/>
+            <button class="btn btn-indigo btn-sm" style="height:34px;padding:0 10px" onclick="window._addInlineCat('peCat','soc')"><i class="ti ti-check"></i></button>
+            <button class="btn btn-white btn-sm"  style="height:34px;padding:0 10px" onclick="window._hideInlineCat('peCat')"><i class="ti ti-x"></i></button>
+          </div>
+        </div>
+      </div>
+      <div class="fg"><label>Amount (₹) *</label><input type="number" id="peAmt" placeholder="0" min="1"/></div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Date *</label><input type="date" id="peDate"/></div>
+      <div class="fg"><label>Paid By</label><input type="text" id="pePaidBy" placeholder="President / Committee"/></div>
+    </div>
+    <div class="fg"><label>Vendor / Payee</label><input type="text" id="peVendor" placeholder="e.g. ABC Electrical Works"/></div>
+    <div class="fg"><label>Notes</label><input type="text" id="peNote" placeholder="Additional details…"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cPresExp()">Cancel</button>
+      <button class="btn btn-indigo" id="peBtn" onclick="window._sPresExp()">
+        <i class="ti ti-device-floppy"></i><span id="peLbl">Save Expense</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- CUSTOM CATEGORIES MODAL -->
+<div class="mbg" id="catM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-tag"></i></div>
+        <div><div class="mtitle">Expense Categories</div>
+          <div class="msub">Add custom categories for payments &amp; society expenses</div></div>
+      </div>
+      <button class="mclose" onclick="window._cCatM()"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <i class="ti ti-building" style="font-size:13px;color:var(--indigo)"></i>Flat Payment Categories
+    </div>
+    <div class="cat-list" id="flatCatList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="flatCatInput" placeholder="New category…" maxlength="30"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();window._addCat('flat')}"/>
+      <button class="btn btn-indigo btn-sm" onclick="window._addCat('flat')"><i class="ti ti-plus"></i> Add</button>
+    </div>
+    <div style="height:1px;background:var(--border2);margin:18px 0"></div>
+    <div style="font-size:11px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;display:flex;align-items:center;gap:6px">
+      <i class="ti ti-crown" style="font-size:13px;color:var(--indigo)"></i>Society Expense Categories
+    </div>
+    <div class="cat-list" id="socCatList"></div>
+    <div class="cat-add-row">
+      <input type="text" id="socCatInput" placeholder="New category…" maxlength="30"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();window._addCat('soc')}"/>
+      <button class="btn btn-indigo btn-sm" onclick="window._addCat('soc')"><i class="ti ti-plus"></i> Add</button>
+    </div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cCatM()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY SUMMARY REPORT MODAL -->
+<div class="mbg" id="monthlySummaryM" style="display:none;align-items:flex-start;padding-top:24px">
+  <div class="modal" style="width:min(780px,96vw);max-height:90vh;display:flex;flex-direction:column">
+    <div class="mhead" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-file-description"></i></div>
+        <div>
+          <div class="mtitle">Monthly Summary Report</div>
+          <div class="msub">Per-flat payment status &amp; print</div>
+        </div>
+      </div>
+      <button class="mclose" onclick="window._cMonthlySummary()"><i class="ti ti-x"></i></button>
+    </div>
+
+    <!-- Filters -->
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;padding:12px 0 14px;border-bottom:1px solid var(--border2);flex-shrink:0;align-items:center">
+      <select id="msMonth" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0"></select>
+      <select id="msBlock" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0"></select>
+      <select id="msStatus" onchange="window._renderSummary()"
+        style="height:34px;font-size:12px;font-weight:600;padding:0 8px;border:1.5px solid var(--border2);border-radius:var(--r-md);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer;width:100%;min-width:0">
+        <option value="all">All Status</option>
+        <option value="paid">✅ Paid</option>
+        <option value="partial">⚠️ Partial</option>
+        <option value="pending">❌ Pending</option>
+      </select>
+      <button onclick="window._printMonthlySummary()"
+        style="height:34px;padding:0 14px;background:linear-gradient(135deg,#4F46E5,#7C3AED);color:#fff;border:none;border-radius:var(--r-md);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;white-space:nowrap;box-shadow:0 2px 8px rgba(99,102,241,.35);transition:opacity .15s"
+        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        <i class="ti ti-printer" style="font-size:14px"></i> Print
+      </button>
+    </div>
+    <style>
+      @media(max-width:500px){
+        #monthlySummaryM .modal>div:nth-child(2){grid-template-columns:1fr 1fr!important}
+        #monthlySummaryM .modal>div:nth-child(2) button{grid-column:1/-1}
+      }
+    </style>
+
+    <!-- Summary totals header -->
+    <div id="msSummaryHead" style="flex-shrink:0;padding-top:12px"></div>
+
+    <!-- Flat rows -->
+    <div id="msSummaryBody" style="overflow-y:auto;flex:1;border:1.5px solid var(--border2);border-radius:var(--r-lg);margin-top:10px"></div>
+  </div>
+</div>
+
+
+<!-- PAYMENT HISTORY EDIT MODAL -->
+<div class="mbg" id="payHistM">
+  <div class="modal" style="width:min(540px,96vw);max-height:82vh;display:flex;flex-direction:column">
+    <div class="mhead" style="flex-shrink:0">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon pay"><i class="ti ti-history"></i></div>
+        <div>
+          <div class="mtitle" id="payHistTitle">Payment History</div>
+          <div class="msub" id="payHistSub"></div>
+        </div>
+      </div>
+      <button class="mclose" onclick="document.getElementById('payHistM').classList.remove('open')"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="payHistBody" style="overflow-y:auto;flex:1;padding:4px 2px 8px"></div>
+  </div>
+</div>
+
+
+<div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
+
+
+<script type="module" src="js/main.js"></script>
+<!-- PENDING FLATS MODAL -->
+<div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1.5px solid var(--border2)">
       <div>
-        <div class="ic-title"><i class="ti ${icons[iss.cat] || 'ti-clipboard'}"></i>${iss.title}</div>
-        <div class="ic-desc">${iss.desc.length > 130 ? iss.desc.slice(0, 130) + '…' : iss.desc}</div>
-        <div class="ic-meta">
-          <span class="itag flat"><i class="ti ti-home"></i>${iss.flat || iss.block}</span>
-          <span class="itag cat">${iss.cat}</span>
-          <span class="itag date"><i class="ti ti-calendar"></i>${fdt(iss.createdAt)}</span>
-          <span style="font-size:11px;color:var(--text2);font-weight:600">By: ${iss.reporter}</span>
+        <div style="font-size:15px;font-weight:800;color:var(--text)"><i class="ti ti-clock" style="color:var(--amber)"></i> Pending Payments</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px" id="pendingSubtitle"></div>
+      </div>
+      <button onclick="window._closePending()" style="background:var(--surface2);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
+    </div>
+    <!-- Summary -->
+    <div id="pendingSummary" style="display:flex;gap:10px;padding:12px 18px;border-bottom:1.5px solid var(--border2)"></div>
+    <!-- List -->
+    <div style="overflow-y:auto;flex:1;padding:8px 0">
+      <table style="width:100%;border-collapse:collapse;font-size:12px">
+        <thead style="position:sticky;top:0;background:var(--surface3);z-index:1">
+          <tr>
+            <th style="padding:8px 18px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+            <th style="padding:8px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Owner</th>
+            <th style="padding:8px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+            <th style="padding:8px 14px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Paid</th>
+            <th style="padding:8px 18px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Balance</th>
+          </tr>
+        </thead>
+        <tbody id="pendingTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV BAR (mobile only) -->
+<nav class="bottom-nav-bar" id="bottomNav" aria-label="Main navigation">
+  <button class="bnav-item active" data-v="analytics" onclick="switchView('analytics')">
+    <i class="ti ti-credit-card"></i>Payments
+  </button>
+  <button class="bnav-item" data-v="president" onclick="switchView('president')">
+    <i class="ti ti-receipt"></i>Expenses
+  </button>
+
+  <button class="bnav-item" data-v="structure" onclick="switchView('structure')">
+    <i class="ti ti-building"></i>Structure
+  </button>
+  <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
+    <i class="ti ti-alert-circle"></i>Issues
+    <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
+  </button>
+</nav>
+
+<!-- STRUCTURE MANAGER MODAL -->
+<div id="structureModal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.5);" onclick="if(event.target===this)window._closeStructureManager()">
+  <div style="position:absolute;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;max-height:92vh;display:flex;flex-direction:column;overflow:hidden;">
+
+    <!-- Handle bar -->
+    <div style="display:flex;justify-content:center;padding:10px 0 0">
+      <div style="width:40px;height:4px;background:var(--border2);border-radius:2px;"></div>
+    </div>
+
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 0;">
+      <div style="font-size:16px;font-weight:800;color:var(--text)">🏢 Manage Buildings</div>
+      <button onclick="window._closeStructureManager()" style="background:var(--surface2);border:none;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;line-height:1">&times;</button>
+    </div>
+
+    <!-- Tabs -->
+    <div style="display:flex;gap:0;padding:12px 18px 0;border-bottom:2px solid var(--border);">
+      <button id="smTab1" onclick="window._smSwitchTab(1)"
+        style="flex:1;padding:8px 0;font-size:13px;font-weight:700;cursor:pointer;background:none;border:none;border-bottom:2px solid var(--indigo);color:var(--indigo);font-family:var(--font);margin-bottom:-2px;">
+        📋 Existing
+      </button>
+      <button id="smTab2" onclick="window._smSwitchTab(2)"
+        style="flex:1;padding:8px 0;font-size:13px;font-weight:700;cursor:pointer;background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);font-family:var(--font);margin-bottom:-2px;">
+        ➕ Add New
+      </button>
+    </div>
+
+    <!-- Tab 1: Existing Blocks -->
+    <div id="smPanel1" style="flex:1;overflow-y:auto;padding:14px 18px 24px;">
+      <div id="structureList" style="display:flex;flex-direction:column;gap:10px;">
+      </div>
+    </div>
+
+    <!-- Tab 2: Add New Block -->
+    <div id="smPanel2" style="display:none;flex:1;overflow-y:auto;padding:14px 18px 24px;">
+      <!-- Block Name -->
+      <div style="margin-bottom:14px;">
+        <label style="font-size:11px;font-weight:700;color:var(--text2);display:block;margin-bottom:5px;">BUILDING NAME</label>
+        <input id="newBlockName" type="text" placeholder="e.g., Block A"
+          style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
+
+      <!-- Flats -->
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+          <label style="font-size:11px;font-weight:700;color:var(--text2);">FLATS</label>
+          <button onclick="window._addNewFlatRow()"
+            style="padding:6px 12px;background:var(--indigo);color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">+ Add Flat</button>
+        </div>
+        <div id="newFlatsContainer" style="display:flex;flex-direction:column;gap:8px;"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex;gap:10px;margin-top:8px;">
+        <button onclick="window._closeStructureManager()"
+          style="flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">Cancel</button>
+        <button onclick="window._saveNewStructure()"
+          style="flex:1;padding:12px;background:var(--green);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">💾 Save</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- EXPENSE ACTION MODAL -->
+<div id="seActionModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);align-items:flex-end;" onclick="if(event.target===this)window._closeSEModal()">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:0 0 32px;max-height:90vh;overflow-y:auto;">
+    <!-- Handle -->
+    <div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:var(--border2);border-radius:2px;"></div></div>
+    <!-- Header -->
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 12px;border-bottom:1px solid var(--border);">
+      <div style="font-size:15px;font-weight:800;color:var(--text);">Edit Expense</div>
+      <button onclick="window._closeSEModal()" style="background:var(--surface2);border:none;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;">&times;</button>
+    </div>
+    <input type="hidden" id="seam_id"/>
+    <!-- Form -->
+    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Title</label>
+        <input id="seam_title" type="text" placeholder="Expense title" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Category</label>
+          <input id="seam_cat" type="text" placeholder="e.g. Maintenance" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+        </div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Amount (₹)</label>
+          <input id="seam_amt" type="number" placeholder="0" min="0" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
         </div>
       </div>
-      <div class="iright">
-        <span class="istatus ${iss.status}">${sLabel}</span>
-        <span class="ipriority ${iss.priority}">${pLabel}</span>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Date</label>
+        <input id="seam_date" type="date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
       </div>
-    </div>`;
-  }).join('');
-}
-
-function fIss(f) {
-  IF = f;
-  document.querySelectorAll('.iff').forEach(b => b.classList.toggle('active', b.dataset.f === f));
-  rIssues();
-}
-
-function oRI(){
-  ['iT','iDe','iFl','iRe'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('iP').value='medium';
-  document.getElementById('iBl').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('')+'<option value="Common">Common Area</option>';
-  const btn=document.getElementById('issBtn');btn.disabled=false;
-  document.getElementById('issBtnL').textContent='Submit Complaint';
-  document.getElementById('rIM').classList.add('open');
-}
-
-function cRI(){
-  document.getElementById('rIM').classList.remove('open');
-  document.getElementById('issBtn').disabled=false;
-  document.getElementById('issBtnL').textContent='Submit Complaint';
-}
-
-async function sI(){
-  const title=document.getElementById('iT').value.trim();
-  const cat=document.getElementById('iCa').value;
-  const priority=document.getElementById('iP').value;
-  const block=document.getElementById('iBl').value;
-  const flat=document.getElementById('iFl').value.trim().toUpperCase();
-  const desc=document.getElementById('iDe').value.trim();
-  const reporter=document.getElementById('iRe').value.trim();
-  if(!title){toast('Enter an issue title.','error');return;}
-  if(!desc){toast('Please describe the issue.','error');return;}
-  if(!reporter){toast('Enter your name.','error');return;}
-  const btn=document.getElementById('issBtn');btn.disabled=true;
-  document.getElementById('issBtnL').textContent='Submitting…';
-  sync('saving');
-  try{
-    const now=new Date().toISOString();
-    await addDoc(issuesColl(),{
-      title,cat,priority,block,flat,desc,reporter,
-      status:'open',month:AM,
-      timeline:[{action:'Issue reported',by:reporter,status:'open',ts:now}],
-      createdAt:serverTimestamp(),
-    });
-    sync('live');cRI();toast('Issue submitted ✓');switchView('issues');
-  }catch(e){
-    console.error(e);sync('error');toast('Failed to submit. Try again.','error');
-    btn.disabled=false;document.getElementById('issBtnL').textContent='Submit Complaint';
-  }
-}
-
-function oID(id){
-  const iss=issues.find(i=>i.id===id);if(!iss)return;
-  const sc={open:'var(--red)',['in-progress']:'var(--amber)',resolved:'var(--green)'}[iss.status];
-  const pc={high:'var(--red)',medium:'var(--amber)',low:'var(--green)'}[iss.priority];
-  document.getElementById('idT').textContent=iss.title;
-  document.getElementById('idS').textContent=`${iss.cat} · Reported by ${iss.reporter}`;
-  const sL=iss.status==='in-progress'?'In Progress':iss.status.charAt(0).toUpperCase()+iss.status.slice(1);
-  document.getElementById('idC').innerHTML=`
-    <div class="dm">
-      <div class="dm-card"><div class="dm-label">Status</div><div class="dm-value" style="font-size:14px;color:${sc}">${sL}</div></div>
-      <div class="dm-card"><div class="dm-label">Priority</div><div class="dm-value" style="font-size:14px;color:${pc}">${iss.priority.charAt(0).toUpperCase()+iss.priority.slice(1)}</div></div>
-      <div class="dm-card"><div class="dm-label">Location</div><div class="dm-value" style="font-size:14px">${iss.flat||iss.block}</div></div>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Note</label>
+        <input id="seam_note" type="text" placeholder="Optional note" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
     </div>
-    <div class="etitle"><i class="ti ti-file-description"></i>Full Description</div>
-    <div style="background:var(--surface2);border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:15px;font-size:13px;color:var(--text2);line-height:1.7;margin-bottom:16px;font-weight:500">${iss.desc}</div>
-    <div style="display:flex;gap:20px;font-size:12px;color:var(--muted);font-weight:600;margin-bottom:20px">
-      <span><i class="ti ti-user" style="vertical-align:-2px;margin-right:4px"></i>${iss.reporter}</span>
-      <span><i class="ti ti-calendar" style="vertical-align:-2px;margin-right:4px"></i>${fdt(iss.createdAt)}</span>
+    <!-- Actions -->
+    <div style="display:flex;gap:10px;padding:0 18px;">
+      <button onclick="window._delSEModal()" style="flex:1;padding:13px;background:#fff;border:1.5px solid var(--red);color:var(--red);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">🗑️ Delete</button>
+      <button onclick="window._saveSEModal()" style="flex:2;padding:13px;background:var(--indigo);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">💾 Save Changes</button>
     </div>
-    ${iss.status!=='resolved'
-      ?`<div style="display:flex;gap:10px;flex-wrap:wrap">
-          ${iss.status==='open'?`<button class="btn btn-white btn-sm" onclick="window._uIS('${id}','in-progress')"><i class="ti ti-progress"></i> Mark In Progress</button>`:''}
-          <button class="btn btn-green btn-sm" onclick="window._uIS('${id}','resolved')"><i class="ti ti-circle-check"></i> Mark as Resolved</button>
-        </div>`
-      :`<div style="display:flex;align-items:center;gap:8px;color:var(--green);font-size:13px;font-weight:800"><i class="ti ti-circle-check" style="font-size:20px"></i>Issue has been resolved</div>`}
-  `;
-  const tl=iss.timeline||[{action:'Issue reported',by:iss.reporter,status:'open',ts:null}];
-  const tlDotColor={open:'var(--red)',created:'var(--indigo)','in-progress':'var(--amber)',resolved:'var(--green)'};
-  document.getElementById('idTL').innerHTML=`
-    <div class="etitle" style="margin-top:18px"><i class="ti ti-timeline"></i>Activity Timeline</div>
-    ${tl.map((t,i)=>`
-      <div class="itl-item">
-        <div class="itl-dot-col">
-          <div class="itl-dot" style="background:${tlDotColor[t.status]||'var(--indigo)'}"></div>
-          ${i<tl.length-1?'<div class="itl-line"></div>':''}
+  </div>
+</div>
+<!-- PRESIDENT HISTORY EDIT MODAL -->
+<div id="presHistEditModal" style="display:none;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,0.5);align-items:flex-end;" onclick="if(event.target===this)window._closePresHistEdit()">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:0 0 28px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:var(--border2);border-radius:2px;"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 10px;border-bottom:1px solid var(--border);">
+      <div style="font-size:15px;font-weight:800;color:var(--text);">✏️ Edit History Record</div>
+      <button onclick="window._closePresHistEdit()" style="background:var(--surface2);border:none;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;">&times;</button>
+    </div>
+    <input type="hidden" id="phEdit_id"/>
+    <input type="hidden" id="phEdit_idx"/>
+    <div style="padding:14px 18px;display:flex;flex-direction:column;gap:11px;">
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Name</label>
+        <input id="phEdit_name" type="text" placeholder="President name" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Flat</label>
+        <input id="phEdit_flat" type="text" placeholder="e.g. A-101" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Term Start</label>
+          <input id="phEdit_start" type="date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;box-sizing:border-box;"/>
         </div>
-        <div class="itl-body">
-          <div class="itl-action">${t.action}</div>
-          <div class="itl-by">By ${t.by||'System'} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
+        <div>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Term End</label>
+          <input id="phEdit_end" type="date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:13px;box-sizing:border-box;"/>
         </div>
-      </div>`).join('')}
-  `;
-  document.getElementById('idM').classList.add('open');
-}
-
-function cID(){document.getElementById('idM').classList.remove('open');}
-
-async function uIS(id,ns){
-  const iss=issues.find(i=>i.id===id);if(!iss)return;
-  sync('saving');
-  const actionLabel={open:'Issue opened','in-progress':'Marked as In Progress',resolved:'Marked as Resolved'}[ns]||ns;
-  const updatedTimeline=[...(iss.timeline||[]),{action:actionLabel,by:'Admin',status:ns,ts:new Date().toISOString()}];
-  try{
-    await updateDoc(issueRef(id),{status:ns,timeline:updatedTimeline});
-    sync('live');cID();toast(ns==='resolved'?'Marked as resolved ✓':'Status updated ✓');
-  }catch(e){console.error(e);sync('error');toast('Update failed.','error');}
-}
-
-
-/* ====== js/residents.js ====== */
-function tenure(moveIn, moveOut) {
-  if (!moveIn) return '—';
-  const start = new Date(moveIn);
-  const end   = moveOut ? new Date(moveOut) : new Date();
-  const days  = Math.floor((end - start) / 86400000);
-  if (days < 0) return '—';
-  const yrs = Math.floor(days / 365);
-  const mos = Math.floor((days % 365) / 30);
-  const parts = [];
-  if (yrs) parts.push(`${yrs}y`);
-  if (mos) parts.push(`${mos}m`);
-  if (!parts.length) parts.push(`${days}d`);
-  return parts.join(' ');
-}
-
-function fmtDate(d) {
-  return d ? new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
-}
-
-function fMem(t) {
-  MF = t;
-  document.querySelectorAll('.mff').forEach(b => b.classList.toggle('active', b.dataset.t === t));
-  rMembers();
-}
-
-function rMembers() {
-  const q = (document.getElementById('memQ')?.value || '').trim().toLowerCase();
-  let rows = [...flats.values()].filter(f => {
-    if (MF === 'owner'  && (f.resType || 'owner') !== 'owner') return false;
-    if (MF === 'tenant' && f.resType !== 'tenant')             return false;
-    if (MF === 'vacant' && (f.owner || '').trim())             return false;
-    if (q && !f.flatId?.toLowerCase().includes(q)
-          && !(f.owner || '').toLowerCase().includes(q)
-          && !(f.ownerName || '').toLowerCase().includes(q)) return false;
-    return true;
-  }).sort((a, b) => (a.flatId || '').localeCompare(b.flatId || ''));
-
-  if (!rows.length) {
-    document.getElementById('memList').innerHTML = `<div class="mem-empty"><i class="ti ti-users-off"></i>No members found.</div>`;
-    return;
-  }
-
-  const tRows = rows.map(f => {
-    const isVacant   = !(f.owner || '').trim();
-    const rType      = isVacant ? 'vacant' : (f.resType || 'owner');
-    const isTenant   = rType === 'tenant';
-    const typeLabel  = isVacant ? 'Vacant' : isTenant ? '🔑 Tenant' : '🏠 Owner';
-    const tenureStr  = isVacant ? '—' : tenure(f.moveIn, f.moveOut);
-    const movedIn    = fmtDate(f.moveIn);
-    const movedOut   = fmtDate(f.moveOut);
-    const allEx      = fex(f.flatId);
-    const totalPaid  = allEx.reduce((s, e) => s + e.amt, 0);
-    const balance    = (f.due || 0) - (f.paid || 0);
-    const payMonths  = [...new Set(allEx.map(e => e.month || e.date?.slice(0, 7)))].filter(Boolean);
-    const statusColor = balance > 0 ? 'var(--red)' : balance === 0 && f.due > 0 ? 'var(--green)' : 'var(--muted)';
-
-    const residentCell = isVacant ? `<span style="color:var(--muted);font-style:italic">Vacant</span>` : `<div class="mem-name">${f.owner}</div>`;
-    const ownerCell = isTenant ? (f.ownerName ? `<div style="font-size:12px;font-weight:700;color:var(--text)">${f.ownerName}</div><div style="font-size:10px;color:var(--text2)">${f.ownerPhone || ''}</div>` : `<span style="color:var(--muted);font-size:11px">Not set</span>`) : `<span style="font-size:11px;color:var(--muted)">—</span>`;
-
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
-      <td><span class="mem-flat">${f.flatId}</span>${f.block ? `<br><span style="font-size:10px;color:var(--muted)">Block ${f.block}</span>` : ''}</td>
-      <td><span class="mem-type ${rType}">${typeLabel}</span></td>
-      <td>${residentCell}</td>
-      <td>${ownerCell}</td>
-      <td>
-        ${movedIn !== '—' ? `<div style="font-size:11px">In: <strong>${movedIn}</strong></div>` : ''}
-        ${movedOut !== '—' ? `<div style="font-size:11px">Out: <strong>${movedOut}</strong></div>` : ''}
-      </td>
-      <td><span class="mem-tenure"><strong>${tenureStr}</strong></span></td>
-      <td><span class="mem-paid">${totalPaid ? inr(totalPaid) : '—'}</span></td>
-      <td><span style="font-size:12px;font-weight:700;color:${statusColor}">${f.due ? inr(Math.abs(balance)) : '—'}</span></td>
-      <td>
-        <div style="display:flex;flex-wrap:wrap;gap:2px;max-width:140px">
-          ${payMonths.slice(-4).map(m => `<span class="hist-chip">${m}</span>`).join('')}
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-
-  document.getElementById('memList').innerHTML = `<table class="mem-table"><thead><tr><th>Flat</th><th>Type</th><th>Resident</th><th>Owner (if tenant)</th><th>Move In/Out</th><th>Tenure</th><th>Total Paid</th><th>Balance</th><th>Payment Months</th></tr></thead><tbody>${tRows}</tbody></table>`;
-}
-
-function rVehicles() {
-  const q  = (document.getElementById('vehQ')?.value || '').toLowerCase().trim();
-  const bf = document.getElementById('vehBF')?.value || 'all';
-  const tf = document.getElementById('vehTF')?.value || 'all';
-  const all = [...flats.values()].filter(f => f.month === AM);
-
-  const bs = bks();
-  const bfSel = document.getElementById('vehBF');
-  if (bfSel && bfSel.options.length <= 1) {
-    bs.forEach(b => {
-      const o = document.createElement('option');
-      o.value = b; o.textContent = 'Block ' + b;
-      bfSel.appendChild(o);
-    });
-  }
-
-  const totTw   = [...vehicles.values()].reduce((s, v) => s + (parseInt(v.tw) || 0), 0);
-  const totFw   = [...vehicles.values()].reduce((s, v) => s + (parseInt(v.fw) || 0), 0);
-  const withVeh = [...flats.values()].filter(f => {
-    const v = vehicles.get(f.flatId) || {};
-    return (parseInt(v.tw) || 0) + (parseInt(v.fw) || 0) > 0;
-  }).length;
-
-  document.getElementById('vehSum').innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw + totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>`;
-
-  const rows = all.filter(f => {
-    if (bf !== 'all' && f.block !== bf) return false;
-    if (q && !f.flatId.toLowerCase().includes(q) && !(f.owner || '').toLowerCase().includes(q)) return false;
-    const v = vehicles.get(f.flatId) || {};
-    const tw = parseInt(v.tw) || 0, fw = parseInt(v.fw) || 0;
-    if (tf === '2w'   && tw === 0) return false;
-    if (tf === '4w'   && fw === 0) return false;
-    if (tf === 'both' && (tw === 0 || fw === 0)) return false;
-    if (tf === 'none' && (tw + fw) > 0) return false;
-    return true;
-  });
-
-  if (!rows.length) {
-    document.getElementById('vehBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:3rem;color:var(--muted)">No records match filter.</td></tr>`;
-    return;
-  }
-
-  document.getElementById('vehBody').innerHTML = rows.map(f => {
-    const v = vehicles.get(f.flatId) || { tw: 0, fw: 0, nums: '', slot: '' };
-    const tw = parseInt(v.tw) || 0, fw = parseInt(v.fw) || 0;
-    return `<tr><td><strong>${f.flatId}</strong></td><td>${f.owner || '(No owner)'}</td><td>${tw}</td><td>${fw}</td><td>${v.nums || '—'}</td><td>${v.slot || '—'}</td><td><button class="btn btn-white btn-sm" onclick="window._oVehFor('${f.flatId}')">Edit</button></td></tr>`;
-  }).join('');
-}
-
-function oVehM() {
-  const first = [...flats.values()].find(f => f.month === AM);
-  if (first) oVehFor(first.flatId);
-  else toast('No flats found.', 'error');
-}
-
-function oVehFor(fid) {
-  const f = flats.get(fid);
-  const v = vehicles.get(fid) || { tw: 0, fw: 0, nums: '', slot: '' };
-  document.getElementById('vehFid').value         = fid;
-  document.getElementById('vehMSub').textContent  = fid + (f && f.owner ? ' — ' + f.owner : '');
-  document.getElementById('veh2w').value           = v.tw || 0;
-  document.getElementById('veh4w').value           = v.fw || 0;
-  document.getElementById('vehNums').value         = v.nums || '';
-  document.getElementById('vehSlot').value         = v.slot || '';
-  document.getElementById('vehDelBtn').style.display = vehicles.has(fid) ? '' : 'none';
-  document.getElementById('vehM').classList.add('open');
-}
-
-function cVehM() { document.getElementById('vehM').classList.remove('open'); }
-
-async function sVeh() {
-  const fid  = document.getElementById('vehFid').value;
-  const tw   = parseInt(document.getElementById('veh2w').value)   || 0;
-  const fw   = parseInt(document.getElementById('veh4w').value)   || 0;
-  const nums = document.getElementById('vehNums').value.trim();
-  const slot = document.getElementById('vehSlot').value.trim();
-  sync('saving');
-  try {
-    await setDoc(vehRef(fid), { flatId: fid, tw, fw, nums, slot, updatedAt: serverTimestamp() });
-    sync('live'); cVehM(); toast('Vehicles saved ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
-}
-
-async function delVeh() {
-  const fid = document.getElementById('vehFid').value;
-  if (!confirm('Clear vehicle data?')) return;
-  sync('saving');
-  try {
-    await deleteDoc(vehRef(fid));
-    sync('live'); cVehM(); toast('Vehicle data cleared ✓');
-  } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
-}
-
-function rResidents() {
-  const all = [...flats.values()].filter(f => f.month === AM);
-  const totTw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
-  const totFw   = [...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
-  const withVeh = all.filter(f=>{const v=vehicles.get(f.flatId)||{};return (parseInt(v.tw)||0)+(parseInt(v.fw)||0)>0;}).length;
-  const vs = document.getElementById('vehSum');
-  if(vs) vs.innerHTML = `
-    <div class="vscard"><div class="vscard-icon tw"><i class="ti ti-motorbike"></i></div><div><div class="vscard-label">2-Wheelers</div><div class="vscard-val">${totTw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fw"><i class="ti ti-car"></i></div><div><div class="vscard-label">4-Wheelers</div><div class="vscard-val">${totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon tot"><i class="ti ti-parking"></i></div><div><div class="vscard-label">Total Vehicles</div><div class="vscard-val">${totTw+totFw}</div></div></div>
-    <div class="vscard"><div class="vscard-icon fl"><i class="ti ti-home-check"></i></div><div><div class="vscard-label">Flats w/ Vehicles</div><div class="vscard-val">${withVeh}/${all.length}</div></div></div>`;
-
-  const q = (document.getElementById('memQ')?.value||'').trim().toLowerCase();
-  const tf = document.getElementById('resTF')?.value||'all';
-  let rows = all.filter(f=>{
-    if(MF==='owner'  && (f.resType||'owner')!=='owner') return false;
-    if(MF==='tenant' && f.resType!=='tenant')            return false;
-    if(MF==='vacant' && (f.owner||'').trim())            return false;
-    if(q && !f.flatId?.toLowerCase().includes(q) && !(f.owner||'').toLowerCase().includes(q)) return false;
-    const v=vehicles.get(f.flatId)||{};
-    const tw=parseInt(v.tw)||0,fw=parseInt(v.fw)||0;
-    if(tf==='2w'   && tw===0)     return false;
-    if(tf==='4w'   && fw===0)     return false;
-    return true;
-  }).sort((a,b)=>(a.flatId||'').localeCompare(b.flatId||''));
-
-  if(!rows.length){
-    document.getElementById('resBody').innerHTML=`<tr><td colspan="12" style="text-align:center;padding:3rem">No residents match filter.</td></tr>`;
-    return;
-  }
-
-  document.getElementById('resBody').innerHTML = rows.map(f=>{
-    const isVacant=(!(f.owner||'').trim());
-    const v=vehicles.get(f.flatId)||{tw:0,fw:0,nums:'',slot:''};
-    const bal=(f.due||0)-(f.paid||0);
-    return `<tr onclick="window._oFl('${f.flatId}')" style="cursor:pointer">
-      <td><strong>${f.flatId}</strong></td>
-      <td>${isVacant?'Vacant':'Resident'}</td>
-      <td>${f.owner||'—'}</td>
-      <td>${f.ownerName||'—'}</td>
-      <td>${fmtDate(f.moveIn)}</td>
-      <td>${tenure(f.moveIn,f.moveOut)}</td>
-      <td>${v.tw}</td><td>${v.fw}</td><td>${v.nums||'—'}</td><td>${v.slot||'—'}</td><td>${inr(bal)}</td>
-      <td><button class="btn btn-white btn-xs" onclick="window._oVehFor('${f.flatId}')">⚙</button></td></tr>`;
-  }).join('');
-}
-
-
-/* ====== js/president.js ====== */
-const CAT_ICONS = { Maintenance:'ti-tool', Water:'ti-droplet', Electricity:'ti-bolt', Security:'ti-shield', Cleaning:'ti-vacuum-cleaner', Lift:'ti-elevator', Gardening:'ti-plant', Painting:'ti-paint', Other:'ti-clipboard' };
-const CAT_BG = { Maintenance:'var(--indigo-bg)', Water:'var(--sky-bg)', Electricity:'var(--amber-bg)', Security:'var(--red-bg)', Cleaning:'var(--green-bg)', Lift:'var(--purple-bg)', Gardening:'var(--green-bg)', Painting:'var(--amber-bg)', Other:'var(--surface3)' };
-const CAT_CLR = { Maintenance:'var(--indigo)', Water:'var(--sky)', Electricity:'var(--amber)', Security:'var(--red)', Cleaning:'var(--green)', Lift:'var(--purple)', Gardening:'var(--green)', Painting:'var(--amber)', Other:'var(--text2)' };
-
-function rPresident() {
-  const pres = president;
-  if (!pres || !pres.name) {
-    document.getElementById('presBanner').innerHTML = `<div class="pres-empty"><button class="btn btn-indigo btn-sm" onclick="window._oPresM()">Elect President</button></div>`;
-  } else {
-    document.getElementById('presBanner').innerHTML = `<div class="pres-chip"><div class="pres-chip-name">${pres.name}</div></div>`;
-  }
-
-  const totalExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
-  const approved      = socExps.filter(e=>e.status==='approved').reduce((s,e)=>s+(e.amt||0),0);
-  const pending       = socExps.filter(e=>e.status==='pending').reduce((s,e)=>s+(e.amt||0),0);
-  const thisMonthExp  = socExps.filter(e=>e.month===AM).reduce((s,e)=>s+(e.amt||0),0);
-
-  const fundRow = document.getElementById('fundRow');
-  if(fundRow) {
-    fundRow.innerHTML = `<div class="fcard2">Total Expenses: ${inr(totalExp)}</div><div class="fcard2">Approved: ${inr(approved)}</div>`;
-  }
-}
-
-function oPresM() {
-  document.getElementById('presFlat').innerHTML = [...flats.values()].filter(f => f.month === AM && (f.owner || '').trim()).map(f => `<option value="${f.flatId}">${f.flatId}</option>`).join('');
-  document.getElementById('presM').classList.add('open');
-}
-function cPresM() { document.getElementById('presM').classList.remove('open'); }
-
-async function sPres() {
-  const flatId    = document.getElementById('presFlat').value;
-  const name      = document.getElementById('presName').value.trim();
-  try {
-    await setDoc(doc(db,'apartments',UID), { president:{flatId,name,updatedAt:new Date().toISOString()} }, {merge:true});
-    president = {flatId,name};
-    sync('live'); cPresM(); rPresident();
-  } catch(e) { console.error(e); }
-}
-
-function oPresExp() { document.getElementById('presExpM').classList.add('open'); }
-function cPresExp() { document.getElementById('presExpM').classList.remove('open'); }
-
-async function sPresExp() {
-  const title  = document.getElementById('peTitle').value.trim();
-  const amt    = parseInt(document.getElementById('peAmt').value) || 0;
-  try {
-    await addDoc(sexpColl(), { title, amt, month:AM, status:'pending', createdAt:serverTimestamp() });
-    sync('live'); cPresExp(); toast('Society expense recorded ✓');
-  } catch(e) { console.error(e); }
-}
-
-async function updSEStatus(id, status) {
-  try { await updateDoc(sexpRef(id), {status}); sync('live'); } catch(e) { console.error(e); }
-}
-
-async function delSE(id) {
-  try { await deleteDoc(sexpRef(id)); sync('live'); } catch(e) { console.error(e); }
-}
-
-
-/* ====== js/categories.js ====== */
-function getCats(type){ return [...new Set([...(type==='flat'?DEFAULT_FLAT_CATS:DEFAULT_SOC_CATS),...(type==='flat'?customCats.flat:customCats.soc)])]; }
-
-function renderCatOpts(selId, type){
-  const sel=document.getElementById(selId); if(!sel)return;
-  sel.innerHTML=getCats(type).map(c=>`<option value="${c}">${c}</option>`).join('');
-}
-
-async function saveCats(){ try{ await setDoc(doc(db,'apartments',UID,'config','categories'), customCats); }catch(e){console.error(e);}}
-async function loadCats(){
-  try{
-    const snap=await getDoc(doc(db,'apartments',UID,'config','categories'));
-    if(snap.exists()){const d=snap.data();customCats.flat=d.flat||[];customCats.soc=d.soc||[];}
-  } catch(e){ console.error(e); }
-}
-
-/* ====== js/core.js ====== */
-/* --- --- AUTH GUARD --- */
-let UID = null;
-
-function refreshAPP() {
-  // Safe base no-op context target
-}
-
-onAuthStateChanged(auth, user => {
-  if (!user) { window.location.replace('index.html'); return; }
-  UID = user.uid;
-  boot();
-});
-
-const flatsColl   = () => collection(db, 'apartments', UID, 'flats');
-const expColl      = () => collection(db, 'apartments', UID, 'expenses');
-const issuesColl  = () => collection(db, 'apartments', UID, 'issues');
-const aptDocRef   = () => doc(db, 'apartments', UID);
-const flatRef      = id => doc(db, 'apartments', UID, 'flats', id);
-const issueRef    = id => doc(db, 'apartments', UID, 'issues', id);
-const vehColl      = () => collection(db, 'apartments', UID, 'vehicles');
-const vehRef       = id => doc(db, 'apartments', UID, 'vehicles', id);
-const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
-const sexpRef      = id => doc(db, 'apartments', UID, 'soc_expenses', id);
-
-const flats  = new Map();
-const exps   = new Map();
-const issues = [];
-
-let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='payments', IF='all';
-let eu=null, iu=null, vu=null, pu=null;
-const vehicles = new Map();
-const socExps  = [];
-let president  = null;
-let customCats = { flat: [], soc: [] };
-const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
-const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
-let APT_NAME = 'Gatebook';
-
-const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
-const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
-const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
-const inr = n => '₹'+Number(n||0).toLocaleString('en-IN');
-const fd  = s => new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
-const fdt = ts => {
-  if(!ts)return'–';
-  const d=ts.toDate?ts.toDate():new Date(ts);
-  return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
-};
-const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
-const bfl = b => [...flats.values()].filter(f=>f.block===b&&f.month===AM);
-const fex = id => exps.get(id)||[];
-
-function applyAptName(name) {
-  APT_NAME = name||'Gatebook';
-  document.getElementById('aptNameDisplay').innerHTML = `${APT_NAME}`;
-}
-
-function sync(s) { console.log("Sync Status:", s); }
-function toast(msg) { console.log("Toast:", msg); }
-
-function rStats() {
-  const all=([...flats.values()]).filter(f=>f.month===AM);
-  const due=all.reduce((s,f)=>s+f.due,0);
-  const paid=all.reduce((s,f)=>s+f.paid,0);
-  const oi=issues.filter(i=>i.status==='open').length;
-
-  const openCnt = document.getElementById('openCnt');
-  if(openCnt) openCnt.textContent = oi;
-}
-
-function listenFlats(){
-  let _firstLoad = true;
-  onSnapshot(flatsColl(), snap => {
-    snap.docChanges().forEach(ch => {
-      const d = {flatId:ch.doc.id,...ch.doc.data()};
-      ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
-    });
-    if (_firstLoad) {
-      _firstLoad = false;
-      const lo = document.getElementById('lo'); if(lo) lo.style.display = 'none';
-      const appEl = document.getElementById('app'); if(appEl) appEl.style.display = '';
-    }
-    rAll();
-  });
-}
-
-function listenExp(){
-  if(eu)eu();
-  eu=onSnapshot(query(expColl(),where('month','==',AM)),snap=>{
-    exps.clear();
-    snap.forEach(d=>{const e={expId:d.id,...d.data()};const a=exps.get(e.flatId)||[];a.push(e);exps.set(e.flatId,a);});
-    rAll();
-  });
-}
-
-function listenIssues(){
-  if(iu)iu();
-  iu=onSnapshot(issuesColl(),snap=>{issues.length=0;snap.forEach(d=>issues.push({id:d.id,...d.data()}));rAll();});
-}
-
-function listenVehicles(){ if(vu)vu(); vu=onSnapshot(vehColl(),snap=>{ vehicles.clear(); snap.forEach(d=>vehicles.set(d.id,{...d.data()})); rStats(); }); }
-function listenSocExp(){ if(pu)pu(); pu=onSnapshot(sexpColl(),snap=>{ socExps.length=0; snap.forEach(d=>socExps.push({id:d.id,...d.data()})); rPresident(); }); }
-
-function switchView(v) { 
-  AV = v; 
-  if(v==='residents') rResidents();
-  if(v==='president') rPresident();
-}
-
-function rAll(){ rStats(); rBTabs(); rBlock(); rIssues(); }
-
-async function boot(){
-  try{
-    const aptDoc = await getDoc(aptDocRef());
-    if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
-    await loadCats();
-    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
-  }catch(err){ console.error(err); }
-}
-
-window._sB = b => { AB=b; rBTabs(); rBlock(); };
-window.switchView = switchView;
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Phone</label>
+        <input id="phEdit_phone" type="text" placeholder="Contact number" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;padding:0 18px;">
+      <button onclick="window._closePresHistEdit()" style="flex:1;padding:12px;background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">Cancel</button>
+      <button onclick="window._savePresHistEdit()" style="flex:2;padding:12px;background:var(--indigo);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">💾 Save</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>
