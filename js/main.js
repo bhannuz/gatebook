@@ -2556,33 +2556,34 @@ function rPresident() {
   }
 
   window._seCache = vis;
-  document.getElementById('presExpList').innerHTML = `
-    <div style="display:table;width:100%;border-collapse:collapse">
-      <div style="display:table-row;background:var(--surface3)">
-        <div style="display:table-cell;padding:8px 12px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);width:40%">Title</div>
-        <div style="display:table-cell;padding:8px 12px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);width:28%">Category</div>
-        <div style="display:table-cell;padding:8px 12px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);width:20%">Date</div>
-        <div style="display:table-cell;padding:8px 12px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);width:12%;text-align:right">₹</div>
-      </div>
-      ${vis.map(e => {
-        const ci = allCatNames.indexOf(e.cat);
-        const clr = catClr(ci >= 0 ? ci : 0);
-        return `<div id="serow_${e.id}"
-          onclick="window._openSEModal('${e.id}')"
-          style="display:table-row;cursor:pointer;transition:background .12s"
-          onmouseover="this.style.background='var(--indigo-bg)'"
-          onmouseout="this.style.background=''">
-          <div style="display:table-cell;padding:9px 12px;font-size:12px;font-weight:600;color:var(--text);border-bottom:1px solid var(--border2);vertical-align:middle;overflow:hidden;max-width:0;white-space:nowrap;text-overflow:ellipsis">
-            ${e.title||'—'}${e.paidBy?`<div style="font-size:10px;color:var(--muted);font-weight:400">${e.paidBy}</div>`:''}
-          </div>
-          <div style="display:table-cell;padding:9px 12px;border-bottom:1px solid var(--border2);vertical-align:middle">
-            <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${clr}20;color:${clr};white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis">${e.cat||'—'}</span>
-          </div>
-          <div style="display:table-cell;padding:9px 12px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border2);vertical-align:middle;white-space:nowrap">${e.date||'—'}</div>
-          <div style="display:table-cell;padding:9px 12px;font-size:12px;font-weight:800;color:var(--text);text-align:right;border-bottom:1px solid var(--border2);vertical-align:middle;white-space:nowrap">${inr(e.amt)}</div>
-        </div>`;
-      }).join('')}
-    </div>`;
+  document.getElementById('presExpList').innerHTML = (function(){
+    var TH = 'padding:8px 10px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)';
+    var TD = 'padding:8px 10px;font-size:12px;border-bottom:1px solid var(--border2)';
+    var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+      + '<colgroup><col style="width:38%"/><col style="width:26%"/><col style="width:20%"/><col style="width:16%"/></colgroup>'
+      + '<thead><tr style="background:var(--surface3)">'
+      + '<th style="'+TH+';text-align:left">Title</th>'
+      + '<th style="'+TH+';text-align:left">Category</th>'
+      + '<th style="'+TH+';text-align:left">Date</th>'
+      + '<th style="'+TH+';text-align:right">Amount</th>'
+      + '</tr></thead><tbody>';
+    vis.forEach(function(e){
+      var ci = allCatNames.indexOf(e.cat);
+      var clr = catClr(ci >= 0 ? ci : 0);
+      var paidByHtml = e.paidBy ? '<div style="font-size:10px;color:var(--muted);font-weight:400;margin-top:1px">'+e.paidBy+'</div>' : '';
+      html += '<tr id="serow_'+e.id+'" onclick="window._openSEModal(&quot;'+e.id+'&quot;)"'
+        + ' style="border-bottom:1px solid var(--border2);cursor:pointer;transition:background .12s"'
+        + ' onmouseover="this.style.background=\'var(--indigo-bg)\'"'
+        + ' onmouseout="this.style.background=\'\'">'
+        + '<td style="'+TD+';font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.title||'—')+paidByHtml+'</td>'
+        + '<td style="'+TD+';overflow:hidden"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+clr+'20;color:'+clr+';white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis">'+(e.cat||'—')+'</span></td>'
+        + '<td style="'+TD+';font-size:11px;color:var(--muted);white-space:nowrap">'+(e.date||'—')+'</td>'
+        + '<td style="'+TD+';font-weight:800;color:var(--text);text-align:right;white-space:nowrap">'+inr(e.amt)+'</td>'
+        + '</tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  })();
 }
 
 async function rPresHistory() {
@@ -4103,7 +4104,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       </td>
       <td style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">${statusIcon[s]||statusIcon.pending}</td>
       <td style="padding:8px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.due?inr(Math.abs(bal)):'—'}</td>
-    </tr>\`;
+    </tr>`;
   }).join('');
 
   // Totals row
@@ -4114,7 +4115,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     <td style="padding:8px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
     <td style="padding:8px 10px;text-align:center;font-size:10px;color:var(--muted)">—</td>
     <td style="padding:8px 10px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
-  </tr>\`;
+  </tr>`;
 }
 
 /* rStructure is defined inline above */
