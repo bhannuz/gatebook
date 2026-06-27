@@ -4097,14 +4097,14 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="width:16%;max-width:0;padding:8px 8px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle">${f.flatId}</td>
-      <td style="width:28%;max-width:0;padding:8px 8px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:7px 6px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle">${f.flatId}</td>
+      <td style="padding:7px 6px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:1px">${typeBadge}</div>
       </td>
-      <td style="width:14%;padding:8px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="width:18%;padding:8px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${vehCell}</td>
-      <td style="width:24%;max-width:0;padding:8px 8px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:7px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:7px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${vehCell}</td>
+      <td style="padding:7px 6px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4113,10 +4113,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:8px 8px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:8px 8px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:8px 8px;text-align:center;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">${totTw>0?`🏍 ${totTw}`:''}${totTw>0&&totFw>0?' · ':''}${totFw>0?`🚗 ${totFw}`:''}</td>
-    <td style="padding:8px 8px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:7px 6px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:7px 4px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:7px 4px;text-align:center;font-size:11px;font-weight:700;color:var(--text2);white-space:nowrap">${totTw>0||totFw>0?`${totTw>0?`🏍 ${totTw}`:''}${totTw>0&&totFw>0?' · ':''}${totFw>0?`🚗 ${totFw}`:''}`:'-'}</td>
+    <td style="padding:7px 6px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
