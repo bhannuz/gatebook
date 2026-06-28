@@ -204,7 +204,7 @@
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
 
     <!-- 2-col grid: left = table, right = chart -->
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
+    <style>@media(max-width:900px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
     <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
 
       <!-- LEFT: payment table -->
@@ -217,8 +217,8 @@
           <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
             <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
           </div>
-          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
-            <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;">
+            <table style="width:100%;min-width:340px;border-collapse:collapse;table-layout:fixed">
               <colgroup>
                 <col style="width:17%"/>
                 <col style="width:28%"/>
