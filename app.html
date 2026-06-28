@@ -220,10 +220,10 @@
           <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
               <colgroup>
+                <col style="width:16%"/>
+                <col style="width:40%"/>
                 <col style="width:18%"/>
-                <col style="width:38%"/>
-                <col style="width:20%"/>
-                <col style="width:24%"/>
+                <col style="width:26%"/>
               </colgroup>
               <thead style="position:sticky;top:0;z-index:1">
                 <tr style="background:var(--surface3)">
@@ -258,21 +258,23 @@
   </div><!-- /#analyticsView -->
 
   <!-- STRUCTURE VIEW -->
-  <div id="structureView" style="display:none;padding:8px 14px 14px">
+  <div id="structureView" style="display:none;padding:6px 14px 14px">
 
-    <!-- President banner (injected by rStructure) -->
-    <div id="presBanner" style="margin-bottom:10px;"></div>
-
-    <!-- Residents toolbar: single row -->
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <!-- Row 1: President banner + Manage button in same line -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+      <div id="presBanner" style="flex-shrink:0"></div>
       <button onclick="window._openStructureManager()"
-        style="height:34px;padding:0 12px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border2);border-radius:var(--r-md);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;">
-        <i class="ti ti-settings" style="font-size:13px;color:var(--indigo)"></i>Manage
+        style="height:30px;padding:0 10px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border2);border-radius:var(--r-md);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;">
+        <i class="ti ti-settings" style="font-size:12px;color:var(--indigo)"></i>Manage
       </button>
-      <select id="strBlockFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+    </div>
+
+    <!-- Row 2: Filters + search -->
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+      <select id="strBlockFilter" class="ctrl" style="height:32px;font-size:12px;padding:0 8px;flex-shrink:0;" onchange="window.rStructure()">
         <option value="all">All Blocks</option>
       </select>
-      <select id="strTypeFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+      <select id="strTypeFilter" class="ctrl" style="height:32px;font-size:12px;padding:0 8px;flex-shrink:0;" onchange="window.rStructure()">
         <option value="all">All Types</option>
         <option value="owner">🏠 Owner</option>
         <option value="tenant">🔑 Tenant</option>
@@ -281,12 +283,12 @@
       <div style="position:relative;flex:1;min-width:120px;">
         <i class="ti ti-search" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;"></i>
         <input type="text" id="strSearch" class="ctrl" placeholder="Search name or flat no."
-          style="height:34px;font-size:12px;padding-left:28px;width:100%;box-sizing:border-box;" oninput="window.rStructure()">
+          style="height:32px;font-size:12px;padding-left:28px;width:100%;box-sizing:border-box;" oninput="window.rStructure()">
       </div>
     </div>
 
-    <!-- Flat list -->
-    <div id="strChips" style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"></div>
+    <!-- Flat chips -->
+    <div id="strChips" style="display:flex;flex-direction:column;gap:4px;"></div>
   </div><!-- /#structureView -->
 
 </div><!-- /.app -->
@@ -865,9 +867,14 @@
     <!-- Action buttons -->
     <div style="display:flex;gap:8px;padding:4px 20px 20px">
       <button onclick="window._delSEModal()"
-        style="height:42px;padding:0 16px;background:#fff;border:1.5px solid #FCA5A5;color:var(--red);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:6px;transition:background .15s"
+        style="height:42px;padding:0 14px;background:#fff;border:1.5px solid #FCA5A5;color:var(--red);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:background .15s"
         onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='#fff'">
-        <i class="ti ti-trash" style="font-size:14px"></i> Delete
+        <i class="ti ti-trash" style="font-size:13px"></i> Delete
+      </button>
+      <button onclick="window._closeSEModal()"
+        style="height:42px;padding:0 14px;background:#fff;border:1.5px solid var(--border2);color:var(--text2);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:background .15s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='#fff'">
+        <i class="ti ti-x" style="font-size:13px"></i> Cancel
       </button>
       <button onclick="window._saveSEModal()"
         style="flex:1;height:42px;background:linear-gradient(135deg,var(--indigo),#7C3AED);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(99,102,241,.3);transition:opacity .15s"
