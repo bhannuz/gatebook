@@ -362,12 +362,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   text-transform:uppercase;letter-spacing:.6px;
   padding:8px 6px;
   border-bottom:1px solid var(--border2);
+  text-align:unset; /* let inline style on each <th> control alignment */
 }
 .exp-records-panel table td{
   padding:8px 6px;
   font-size:12px;font-weight:500;color:var(--text);
   border-bottom:1px solid var(--border);
   vertical-align:middle;
+  text-align:unset; /* let inline style on each <td> control alignment */
 }
 .exp-records-panel table tr:last-child td{border-bottom:none}
 .exp-records-panel table tr:hover td{background:var(--surface2)}
@@ -836,8 +838,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   /* ── Manage Buildings modal: bottom sheet, handled via inline styles ── */
 
   /* ── Expense records table: compact on mobile ── */
-  .exp-records-panel table th{padding:7px 5px!important;font-size:10px!important;font-weight:800!important;color:var(--muted)!important;text-transform:uppercase!important;letter-spacing:.3px!important}
-  .exp-records-panel table td{padding:7px 5px!important;font-size:11px!important}
+  .exp-records-panel table th{padding:7px 5px!important;font-size:10px!important;font-weight:800!important;color:var(--muted)!important;text-transform:uppercase!important;letter-spacing:.3px!important;text-align:unset!important}
+  .exp-records-panel table td{padding:7px 5px!important;font-size:11px!important;text-align:unset!important}
   /* Make action buttons smaller */
   .exp-records-panel table .act-btn{padding:4px 7px!important;font-size:11px!important}
   /* Toolbar stacks cleanly on mobile */
