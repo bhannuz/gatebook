@@ -620,14 +620,55 @@ function _renderHistPage() {
     <div class="elist">
       ${slice.map(e=>{
         const eid = e.expId||e.id;
-        return `<div class="erow" id="erow_${eid}" onclick="window._openExpEdit('${eid}','${_dFid}')" style="cursor:pointer">
+        return `<div class="erow" id="erow_${eid}">
           <div style="flex:1;min-width:0">
             <div class="ecat"><i class="ti ti-tag"></i>${e.cat}</div>
             <div class="edate">${e.date}${e.note?' · '+e.note:''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
             <div class="eamt">${inr(e.amt)}</div>
-            <i class="ti ti-chevron-right" style="font-size:14px;color:var(--muted)"></i>
+            <button onclick="window._openExpEdit('${eid}','${_dFid}')"
+              style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 7px;cursor:pointer;color:var(--indigo);font-size:11px;display:flex;align-items:center;gap:3px;white-space:nowrap">
+              <i class="ti ti-pencil" style="font-size:11px"></i>
+            </button>
+            <button onclick="window._delExp('${eid}','${_dFid}')"
+              style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:3px 7px;cursor:pointer;color:var(--red);font-size:11px;display:flex;align-items:center;gap:3px">
+              <i class="ti ti-trash" style="font-size:11px"></i>
+            </button>
+          </div>
+        </div>
+        <div id="eedit_${eid}" style="display:none;background:var(--surface2);border-bottom:1.5px solid var(--border2);padding:10px 14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Category</div>
+              <input id="ec_cat_${eid}" type="text" value="${e.cat||''}"
+                style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:700;border-radius:var(--r-md);outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Amount (₹)</div>
+              <input id="ec_amt_${eid}" type="number" value="${e.amt||''}" min="0"
+                style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--indigo);font-family:var(--font);font-size:12px;font-weight:800;border-radius:var(--r-md);outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Date</div>
+              <input id="ec_date_${eid}" type="date" value="${e.rawDate||''}"
+                style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:600;border-radius:var(--r-md);outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+            <div>
+              <div style="font-size:9px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:3px">Note</div>
+              <input id="ec_note_${eid}" type="text" value="${e.note||''}" placeholder="Optional note"
+                style="width:100%;box-sizing:border-box;height:28px;padding:0 7px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:11px;font-weight:500;border-radius:var(--r-md);outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;justify-content:flex-end">
+            <button onclick="window._closeExpEdit('${eid}')"
+              style="background:none;border:1.5px solid var(--border);border-radius:var(--r-md);padding:4px 10px;cursor:pointer;color:var(--text2);font-size:11px;font-family:var(--font);font-weight:600">Cancel</button>
+            <button onclick="window._saveExpEdit('${eid}','${_dFid}')"
+              style="background:var(--indigo);border:none;border-radius:var(--r-md);padding:4px 12px;cursor:pointer;color:#fff;font-size:11px;font-family:var(--font);font-weight:700">Save</button>
           </div>
         </div>`;
       }).join('')}
@@ -756,104 +797,31 @@ function toggleOwnerFields(resType) {
 }
 
 /* inline edit of a payment amount in history */
-function openExpEdit(eid, fid) {
-  // Find the expense record
-  let rec = null;
-  let recFid = fid;
-  if (fid) {
-    rec = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid);
-  }
-  if (!rec) {
-    // Search all flats
-    for (const [f, arr] of exps) {
-      const found = arr.find(e=>(e.expId||e.id)===eid);
-      if (found) { rec = found; recFid = f; break; }
-    }
-  }
-  if (!rec) return;
-
-  const modal = document.getElementById('expEditM');
-  modal.dataset.eid = eid;
-  modal.dataset.fid = recFid;
-
-  const flat = flats.get(recFid);
-  document.getElementById('expEditTitle').textContent = `${recFid} — Payment`;
-  document.getElementById('expEditSub').textContent   = flat?.owner || 'Vacant';
-
-  // Populate view mode
-  const statusColor = (rec.status||'paid')==='paid' ? 'var(--green)' : (rec.status==='partial') ? 'var(--amber)' : 'var(--red)';
-  const statusLabel = (rec.status||'paid')==='paid' ? '✅ Paid' : rec.status==='partial' ? '⚠️ Partial' : '❌ Pending';
-  document.getElementById('expEditAmt').textContent          = inr(rec.amt||0);
-  document.getElementById('expEditCatBadge').textContent     = rec.cat||'–';
-  document.getElementById('expEditStatusBadge').textContent  = statusLabel;
-  document.getElementById('expEditStatusBadge').style.color  = statusColor;
-  document.getElementById('expEditMeta').textContent         = `${rec.date||'–'}${rec.note ? ' · '+rec.note : ''}${rec.month ? ' · '+rec.month : ''}`;
-
-  // Reset to view mode
-  document.getElementById('expEditViewMode').style.display  = 'block';
-  document.getElementById('expEditEditMode').style.display  = 'none';
-
-  modal.classList.add('open');
+function openExpEdit(eid) {
+  document.getElementById('eedit_'+eid).style.display = 'block';
 }
-
-window._expEditSwitchToEdit = function() {
-  const modal = document.getElementById('expEditM');
-  const eid   = modal.dataset.eid;
-  const fid   = modal.dataset.fid;
-  const rec   = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid);
-  if (!rec) return;
-  document.getElementById('expEdit_cat').value    = rec.cat||'';
-  document.getElementById('expEdit_amt').value    = rec.amt||0;
-  document.getElementById('expEdit_date').value   = rec.rawDate||'';
-  document.getElementById('expEdit_status').value = rec.status||'paid';
-  document.getElementById('expEdit_note').value   = rec.note||'';
-  document.getElementById('expEditViewMode').style.display = 'none';
-  document.getElementById('expEditEditMode').style.display = 'block';
-};
-
-window._expEditCancelEdit = function() {
-  document.getElementById('expEditViewMode').style.display = 'block';
-  document.getElementById('expEditEditMode').style.display = 'none';
-};
-
-window._expEditSave = async function() {
-  const modal   = document.getElementById('expEditM');
-  const eid     = modal.dataset.eid;
-  const fid     = modal.dataset.fid;
-  const cat     = document.getElementById('expEdit_cat').value.trim();
-  const amt     = parseInt(document.getElementById('expEdit_amt').value)||0;
-  const rawDate = document.getElementById('expEdit_date').value||'';
-  const status  = document.getElementById('expEdit_status').value||'paid';
-  const note    = document.getElementById('expEdit_note').value.trim();
-  const date    = rawDate ? fd(rawDate) : '';
+function closeExpEdit(eid) {
+  document.getElementById('eedit_'+eid).style.display = 'none';
+}
+async function saveExpEdit(eid, fid) {
+  const cat     = (document.getElementById('ec_cat_'+eid)?.value||'').trim();
+  const amt     = parseInt(document.getElementById('ec_amt_'+eid)?.value)||0;
+  const rawDate = document.getElementById('ec_date_'+eid)?.value||'';
+  const note    = (document.getElementById('ec_note_'+eid)?.value||'').trim();
+  const d       = new Date(rawDate);
+  const date    = isNaN(d) ? rawDate : fd(rawDate);
+  const expDocRef = doc(db,'apartments',UID,'expenses',eid);
   sync('saving');
   try {
-    await updateDoc(doc(db,'apartments',UID,'expenses',eid),{cat,amt,date,rawDate,status,note});
+    // Get the expense's month before updating
     const expMonth = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid)?.month || AM;
-    const allEx    = (exps.get(fid)||[]).filter(e => e.month === expMonth);
-    const totalPaid = allEx.reduce((s,e)=>(e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
+    await updateDoc(expDocRef,{cat,amt,date,rawDate,note});
+    const allEx = (exps.get(fid)||[]).filter(e => e.month === expMonth);
+    const totalPaid = allEx.reduce((s,e)=> (e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
-    sync('live'); toast('Saved ✓');
-    modal.classList.remove('open');
-  } catch(e){ console.error(e); sync('error'); toast('Save failed.','error'); }
-};
-
-window._expEditDelete = async function() {
-  const modal = document.getElementById('expEditM');
-  const eid   = modal.dataset.eid;
-  const fid   = modal.dataset.fid;
-  if (!confirm('Delete this payment record?')) return;
-  sync('saving');
-  try {
-    const expMonth = (exps.get(fid)||[]).find(e=>(e.expId||e.id)===eid)?.month || AM;
-    await deleteDoc(doc(db,'apartments',UID,'expenses',eid));
-    const allEx = (exps.get(fid)||[]).filter(e => e.month === expMonth && (e.expId||e.id)!==eid);
-    const totalPaid = allEx.reduce((s,e)=>s+(e.amt||0),0);
-    await updateDoc(flatRef(fid),{paid:totalPaid});
-    sync('live'); toast('Deleted ✓');
-    modal.classList.remove('open');
-  } catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
-};
+    sync('live'); toast('Saved ✓'); closeExpEdit(eid);
+  } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
+}
 
 /* delete a flat payment record */
 async function delExp(expId, fid) {
@@ -1596,7 +1564,7 @@ window._saveNewStructure = async () => {
   }
 };
 window.autoSaveVeh=autoSaveVeh;
-window._openExpEdit=openExpEdit; window._closeExpEdit=function(){}; window._saveExpEdit=window._expEditSave; window._delExp=delExp;
+window._openExpEdit=openExpEdit; window._closeExpEdit=closeExpEdit; window._saveExpEdit=saveExpEdit; window._delExp=delExp;
 window._oA   =oA;   window._oAFor=oAFor; window._cA=cA; window._sE=sE;
 window._oAF  =oAF;  window._cAF=cAF;    window._sNF=sNF;
 window._oRI  =oRI;  window._cRI=cRI;    window._sI=sI;
@@ -1733,12 +1701,17 @@ window._openSEModal = (id) => {
   if (!e) { console.warn('Expense not found', id); return; }
   const modal = document.getElementById('seActionModal');
   if (!modal) return;
-  document.getElementById('seam_id').value  = id;
+  document.getElementById('seam_id').value    = id;
   document.getElementById('seam_title').value = e.title||'';
   document.getElementById('seam_cat').value   = e.cat||'';
   document.getElementById('seam_amt').value   = e.amt||'';
   document.getElementById('seam_date').value  = e.rawDate||'';
   document.getElementById('seam_note').value  = e.note||'';
+  // Update modal header with expense context
+  const hdr = document.getElementById('seam_header_title');
+  const sub = document.getElementById('seam_header_sub');
+  if (hdr) hdr.textContent = e.title || 'Edit Expense';
+  if (sub) sub.textContent = (e.cat||'') + (e.date ? ' · ' + e.date : '');
   modal.style.display = 'flex';
 };
 window._closeSEModal = () => {
@@ -4110,10 +4083,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const v        = vehicles.get(f.flatId) || {};
     const tw       = parseInt(v.tw) || 0;
     const fw       = parseInt(v.fw) || 0;
-    const vehCell = (tw === 0 && fw === 0)
+    const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10px;font-weight:700;line-height:1.3">
+      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
            ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
+           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
            ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
          </span>`;
     const isVacant = !(f.owner||'').trim();
@@ -4128,14 +4102,13 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:8px 6px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:middle">${f.flatId}</td>
-      <td style="padding:8px 6px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:8px 10px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.flatId}</td>
+      <td style="padding:8px 10px;border-bottom:1px solid var(--border);overflow:hidden">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-        <div style="margin-top:2px">${typeBadge}</div>
+        <div style="margin-top:1px">${typeBadge}</div>
       </td>
-      <td style="padding:8px 2px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:8px 2px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${vehCell}</td>
-      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:8px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4143,13 +4116,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
-  const totVeh = `<span style="display:flex;flex-direction:column;align-items:center;gap:1px;font-size:10px;font-weight:700;line-height:1.3">${totTw>0?`<span style="color:var(--indigo)">🏍 ${totTw}</span>`:''}${totFw>0?`<span style="color:var(--green-txt)">🚗 ${totFw}</span>`:''}</span>`;
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:8px 6px;font-size:11px;font-weight:800;color:var(--text2)">Total</td>
-    <td style="padding:8px 6px;font-size:11px;color:var(--muted)">${rows.length} flats</td>
-    <td style="padding:8px 2px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:8px 2px;text-align:center">${totVeh}</td>
-    <td style="padding:8px 6px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:8px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:8px 10px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:8px 10px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
