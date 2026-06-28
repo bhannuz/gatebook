@@ -360,12 +360,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   background:var(--surface3);
   font-size:10px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.6px;
-  padding:9px 14px;text-align:left;
+  padding:8px 6px;
   border-bottom:1px solid var(--border2);
 }
 .exp-records-panel table td{
-  padding:11px 14px;
-  font-size:13px;font-weight:500;color:var(--text);
+  padding:8px 6px;
+  font-size:12px;font-weight:500;color:var(--text);
   border-bottom:1px solid var(--border);
   vertical-align:middle;
 }
@@ -810,11 +810,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   /* ── Table: horizontal scroll on mobile ── */
   .exp-records-panel{ overflow:hidden!important; border-radius:var(--r-lg)!important; }
   .exp-records-panel > div:last-child{ overflow-x:auto!important; overflow-y:auto!important; max-height:340px!important; }
-  /* Ensure table fits - reduce padding on mobile */
-  #anPayTable th, #anPayTable td{ padding:8px 8px!important; font-size:11px!important; }
-  /* Hide 2W/4W column header + data on mobile */
-  .exp-records-panel thead th:nth-child(4),
-  #anPayTable td:nth-child(4){ display:none!important; }
+  /* Ensure table fits - compact padding on mobile */
+  #anPayTable th, #anPayTable td{ padding:7px 5px!important; font-size:11px!important; }
   /* Analytics view must not clip its children */
   #analyticsView{ overflow:visible!important; }
   .an-layout-grid{ overflow:visible!important; }
@@ -839,16 +836,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   /* ── Manage Buildings modal: bottom sheet, handled via inline styles ── */
 
   /* ── Expense records table: compact on mobile ── */
-  .exp-records-panel table th{padding:7px 8px!important;font-size:11px!important;font-weight:800!important;color:var(--text)!important;text-transform:uppercase!important;letter-spacing:.5px!important}
-  .exp-records-panel table td{padding:7px 8px!important;font-size:11px!important}
-  /* On mobile: hide Title(1) and Amount(4) cols - amount shown inline */
-  #presExpList table th:nth-child(1),
-  #presExpList table td:nth-child(1){display:none!important}
-  #presExpList table th:nth-child(4),
-  #presExpList table td:nth-child(4){display:none!important}
-  /* Hide 2W/4W col (col 4) in payment table only */
-  #anPayTable th:nth-child(4),
-  #anPayTable td:nth-child(4){display:none!important}
+  .exp-records-panel table th{padding:7px 5px!important;font-size:10px!important;font-weight:800!important;color:var(--muted)!important;text-transform:uppercase!important;letter-spacing:.3px!important}
+  .exp-records-panel table td{padding:7px 5px!important;font-size:11px!important}
   /* Make action buttons smaller */
   .exp-records-panel table .act-btn{padding:4px 7px!important;font-size:11px!important}
   /* Toolbar stacks cleanly on mobile */
