@@ -2563,9 +2563,9 @@ function rPresident() {
   window._seCache = vis;
   document.getElementById('presExpList').innerHTML = (function(){
     var TH = 'padding:8px 10px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)';
-    var TD = 'padding:8px 10px;font-size:12px;border-bottom:1px solid var(--border2)';
+    var TD = 'padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle';
     var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
-      + '<colgroup><col style="width:38%"/><col style="width:26%"/><col style="width:20%"/><col style="width:16%"/></colgroup>'
+      + '<colgroup><col style="width:40%"/><col style="width:24%"/><col style="width:20%"/><col style="width:16%"/></colgroup>'
       + '<thead><tr style="background:var(--surface3)">'
       + '<th style="'+TH+';text-align:left">Title</th>'
       + '<th style="'+TH+';text-align:left">Category</th>'
@@ -3273,7 +3273,7 @@ function rStructure() {
         ? new Date(president.termStart).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
         : '';
       presCard.innerHTML = `
-        <div class="pres-chip" style="margin-bottom:0;">
+        <div class="pres-chip" style="margin:0;padding:4px 8px;">
           <div class="pres-chip-av">${ini}</div>
           <div>
             <div class="pres-chip-label">🏆 President</div>
@@ -3287,10 +3287,10 @@ function rStructure() {
     } else {
       presCard.innerHTML = `
         <button onclick="window._oPresM()"
-          style="display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;
-            border:1.5px dashed var(--border3);border-radius:99px;background:transparent;
-            color:var(--text2);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;">
-          <i class="ti ti-crown" style="font-size:13px;color:var(--indigo)"></i> Elect President
+          style="display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 10px;
+            border:1.5px dashed var(--border2);border-radius:99px;background:transparent;
+            color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--font);white-space:nowrap;">
+          <i class="ti ti-crown" style="font-size:11px;color:var(--indigo)"></i> Elect President
         </button>`;
     }
   }
@@ -4102,13 +4102,13 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:8px 10px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.flatId}</td>
-      <td style="padding:8px 10px;border-bottom:1px solid var(--border);overflow:hidden">
+      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle">${f.flatId}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-        <div style="margin-top:1px">${typeBadge}</div>
+        <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:8px 10px;text-align:center;border-bottom:1px solid var(--border)">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:8px 10px;text-align:right;font-weight:800;color:${balColor};font-size:12px;border-bottom:1px solid var(--border);white-space:nowrap">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4117,9 +4117,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:8px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:8px 10px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:8px 10px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
