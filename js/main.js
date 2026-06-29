@@ -2565,11 +2565,11 @@ function rPresident() {
     var TH = 'padding:8px 10px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)';
     var TD = 'padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle';
     var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
-      + '<colgroup><col style="width:40%"/><col style="width:24%"/><col style="width:20%"/><col style="width:16%"/></colgroup>'
+      + '<colgroup><col style="width:44%"/><col style="width:22%"/><col style="width:18%"/><col style="width:16%"/></colgroup>'
       + '<thead><tr style="background:var(--surface3)">'
       + '<th style="'+TH+';text-align:left">Title</th>'
-      + '<th style="'+TH+';text-align:left">Category</th>'
-      + '<th style="'+TH+';text-align:left">Date</th>'
+      + '<th style="'+TH+';text-align:center">Category</th>'
+      + '<th style="'+TH+';text-align:center">Date</th>'
       + '<th style="'+TH+';text-align:right">Amount</th>'
       + '</tr></thead><tbody>';
     vis.forEach(function(e){
@@ -2581,8 +2581,8 @@ function rPresident() {
         + ' onmouseover="this.style.background=\'var(--indigo-bg)\'"'
         + ' onmouseout="this.style.background=\'\'">'
         + '<td style="'+TD+';font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.title||'—')+paidByHtml+'</td>'
-        + '<td style="'+TD+';overflow:hidden"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+clr+'20;color:'+clr+';white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis">'+(e.cat||'—')+'</span></td>'
-        + '<td style="'+TD+';font-size:11px;color:var(--muted);white-space:nowrap">'+(e.date||'—')+'</td>'
+        + '<td style="'+TD+';overflow:hidden;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+clr+'20;color:'+clr+';white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis">'+(e.cat||'—')+'</span></td>'
+        + '<td style="'+TD+';font-size:11px;color:var(--muted);white-space:nowrap;text-align:center">'+(e.date||'—')+'</td>'
         + '<td style="'+TD+';font-weight:800;color:var(--text);text-align:right;white-space:nowrap">'+inr(e.amt)+'</td>'
         + '</tr>';
     });
