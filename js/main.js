@@ -2586,7 +2586,12 @@ function rPresident() {
         + '<td style="'+TD+';font-weight:800;color:var(--text);text-align:right;white-space:nowrap;font-size:12px">'+inr(e.amt)+'</td>'
         + '</tr>';
     });
-    html += '</tbody></table>';
+    var totAmt = vis.reduce(function(s,e){ return s + (e.amt||0); }, 0);
+    html += '</tbody><tfoot><tr style="background:var(--surface3);border-top:2px solid var(--border2)">'
+      + '<td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total — '+vis.length+' record'+(vis.length!==1?'s':'')+'</td>'
+      + '<td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--text);font-size:13px;white-space:nowrap">'+inr(totAmt)+'</td>'
+      + '</tr></tfoot>';
+    html += '</table>';
     return html;
   })();
 }
