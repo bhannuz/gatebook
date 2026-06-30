@@ -129,18 +129,55 @@
   <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
   <div id="statsRow" style="display:none"></div>
 
-  <!-- ISSUES VIEW -->
+  <!-- ISSUES VIEW (with Issues / Contacts sub-tabs) -->
   <div id="iView" style="display:none">
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
-      <select id="issStatusFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="fIss(this.value)">
-        <option value="all">All Issues</option>
-        <option value="open">🔴 Open</option>
-        <option value="in-progress">🟡 In Progress</option>
-        <option value="resolved">🟢 Resolved</option>
-      </select>
-      <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
+
+    <!-- Sub-tabs -->
+    <div style="display:flex;gap:6px;padding:0 12px;margin-bottom:10px">
+      <button id="issSubTabIssues" onclick="window._issSubTab('issues')"
+        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--indigo);background:var(--indigo);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-alert-circle" style="font-size:14px"></i> Issues
+      </button>
+      <button id="issSubTabContacts" onclick="window._issSubTab('contacts')"
+        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-address-book" style="font-size:14px"></i> Contacts
+      </button>
     </div>
-    <div class="tab-table-wrap red" id="iList"></div>
+
+    <!-- ISSUES SUB-PANEL -->
+    <div id="issSubPanelIssues" style="padding:0 12px 12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+        <select id="issStatusFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="fIss(this.value)">
+          <option value="all">All Issues</option>
+          <option value="open">🔴 Open</option>
+          <option value="in-progress">🟡 In Progress</option>
+          <option value="resolved">🟢 Resolved</option>
+        </select>
+        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
+      </div>
+      <div class="tab-table-wrap red" id="iList"></div>
+    </div>
+
+    <!-- CONTACTS SUB-PANEL -->
+    <div id="issSubPanelContacts" style="display:none;padding:0 12px 12px">
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <select id="contactCatFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._rContacts()">
+          <option value="all">All Categories</option>
+          <option value="Plumber">🔧 Plumber</option>
+          <option value="Electrician">⚡ Electrician</option>
+          <option value="Maid">🧹 Maid</option>
+          <option value="Security">🔒 Security</option>
+          <option value="Gardener">🌳 Gardener</option>
+          <option value="Carpenter">🪚 Carpenter</option>
+          <option value="Painter">🎨 Painter</option>
+          <option value="Pest Control">🐜 Pest Control</option>
+          <option value="AC Repair">❄️ AC Repair</option>
+          <option value="Other">📋 Other</option>
+        </select>
+        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oAC()"><i class="ti ti-plus"></i> Add Contact</button>
+      </div>
+      <div id="contactsList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+    </div>
   </div><!-- /#iView -->
 
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
@@ -221,18 +258,16 @@
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
               <colgroup>
                 <col style="width:17%"/>
-                <col style="width:28%"/>
-                <col style="width:13%"/>
-                <col style="width:18%"/>
+                <col style="width:38%"/>
+                <col style="width:21%"/>
                 <col style="width:24%"/>
               </colgroup>
               <thead style="position:sticky;top:0;z-index:1">
                 <tr style="background:var(--surface3)">
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
-                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
-                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">🏍/🚗</th>
-                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Pending</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
+                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Balance</th>
                 </tr>
               </thead>
               <tbody id="anPayTable"></tbody>
@@ -244,9 +279,9 @@
 
       <!-- RIGHT: chart -->
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
+          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
             <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>

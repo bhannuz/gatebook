@@ -4661,7 +4661,7 @@ window._rContacts = function() {
   if (!el) return;
 
   if (!vis.length) {
-    el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
+    el.innerHTML = `<div style="width:100%;padding:40px 20px;text-align:center;color:var(--muted)">
       <i class="ti ti-address-book-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
       <div style="font-size:13px;font-weight:600">No service contacts ${filter!=='all'?'in this category':'yet'}</div>
       <div style="font-size:11px;margin-top:4px">Tap "Add Contact" to save plumber, electrician, maid etc.</div>
@@ -4674,24 +4674,22 @@ window._rContacts = function() {
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
-        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:999px;padding:4px 8px 4px 4px;cursor:pointer;transition:box-shadow .12s,border-color .12s;max-width:100%"
       onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+      <div style="width:22px;height:22px;border-radius:999px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">
         <i class="ti ${icon}"></i>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
-        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
-          <i class="ti ti-phone" style="font-size:12px"></i>
+      <span style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${c.name || 'Unnamed'}</span>
+      <span style="font-size:9px;font-weight:600;color:${color};white-space:nowrap">${c.cat || 'Other'}</span>
+      <div style="display:flex;gap:3px;flex-shrink:0;margin-left:2px" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none">
+          <i class="ti ti-phone" style="font-size:10px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
-          <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:999px;text-decoration:none">
+          <i class="ti ti-brand-whatsapp" style="font-size:11px"></i>
         </a>` : ''}
       </div>
     </div>`;
