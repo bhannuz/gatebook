@@ -2565,7 +2565,7 @@ function rPresident() {
     var TH = 'padding:8px 10px;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2)';
     var TD = 'padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle';
     var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
-      + '<colgroup><col style="width:44%"/><col style="width:22%"/><col style="width:18%"/><col style="width:16%"/></colgroup>'
+      + '<colgroup><col style="width:36%"/><col style="width:24%"/><col style="width:22%"/><col style="width:18%"/></colgroup>'
       + '<thead><tr style="background:var(--surface3)">'
       + '<th style="'+TH+';text-align:left">Title</th>'
       + '<th style="'+TH+';text-align:center">Category</th>'
@@ -2582,8 +2582,8 @@ function rPresident() {
         + ' onmouseout="this.style.background=\'\'">'
         + '<td style="'+TD+';font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+(e.title||'—')+paidByHtml+'</td>'
         + '<td style="'+TD+';overflow:hidden;text-align:center"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:'+clr+'20;color:'+clr+';white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis">'+(e.cat||'—')+'</span></td>'
-        + '<td style="'+TD+';font-size:11px;color:var(--muted);white-space:nowrap;text-align:center">'+(e.date||'—')+'</td>'
-        + '<td style="'+TD+';font-weight:800;color:var(--text);text-align:right;white-space:nowrap">'+inr(e.amt)+'</td>'
+        + '<td style="'+TD+';font-size:10px;color:var(--muted);white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;max-width:0">'+(e.date||'—')+'</td>'
+        + '<td style="'+TD+';font-weight:800;color:var(--text);text-align:right;white-space:nowrap;font-size:12px">'+inr(e.amt)+'</td>'
         + '</tr>';
     });
     html += '</tbody></table>';
@@ -4102,7 +4102,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle">${f.flatId}</td>
+      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
       <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
