@@ -1007,6 +1007,10 @@ function oID(id){
         onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'">${iss.desc||''}</textarea>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)">
+      <button onclick="window._delIssue('${id}')"
+        style="background:none;border:1px solid #FCA5A5;border-radius:6px;padding:6px 14px;cursor:pointer;color:var(--red);font-size:12px;font-weight:600;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;margin-right:auto">
+        <i class="ti ti-trash" style="font-size:12px"></i> Delete
+      </button>
       <button onclick="window._cID()"
         style="background:none;border:1px solid var(--border2);border-radius:6px;padding:6px 16px;cursor:pointer;color:var(--text2);font-size:12px;font-weight:600;font-family:var(--font)">Cancel</button>
       <button onclick="window._saveIss('${id}')"
@@ -1057,6 +1061,17 @@ async function saveIss(id){
   }catch(e){ console.error(e); sync('error'); toast('Update failed.','error'); }
 }
 window._saveIss = saveIss;
+
+async function delIssue(id){
+  const iss = issues.find(i=>i.id===id); if(!iss)return;
+  if(!confirm(`Delete issue "${iss.title}"?\nThis cannot be undone.`)) return;
+  sync('saving');
+  try{
+    await deleteDoc(issueRef(id));
+    sync('live'); cID(); toast('Issue deleted ✓');
+  }catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
+}
+window._delIssue = delIssue;
 
 /* ════════════════════════════════
    FIRESTORE LISTENERS
@@ -2144,16 +2159,21 @@ function rIssues() {
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Priority</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Priority</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Status</th>
         </tr>
       </thead>
       <tbody>
         ${fil.map(iss => {
-          const sLabel = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
           const pLabel = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
-          const pColor = iss.priority === 'high' ? 'red' : iss.priority === 'medium' ? 'amber' : 'green';
-          const sColor = iss.status === 'open' ? 'red' : iss.status === 'in-progress' ? 'amber' : 'green';
+          const sLabel = iss.status === 'in-progress' ? 'In Progress' : iss.status.charAt(0).toUpperCase() + iss.status.slice(1);
+
+          const pColor = iss.priority === 'high' ? '#EF4444' : iss.priority === 'medium' ? '#F59E0B' : '#22C55E';
+          const pIcon  = iss.priority === 'high' ? 'ti-flag-3' : iss.priority === 'medium' ? 'ti-flag-2' : 'ti-flag';
+
+          const sColor = iss.status === 'open' ? '#EF4444' : iss.status === 'in-progress' ? '#F59E0B' : '#22C55E';
+          const sIcon  = iss.status === 'open' ? 'ti-circle-x' : iss.status === 'in-progress' ? 'ti-clock' : 'ti-circle-check';
+
           return `<tr onclick="window._oID('${iss.id}')"
             style="cursor:pointer;transition:background .12s"
             onmouseover="this.style.background='var(--indigo-bg)'" onmouseout="this.style.background=''">
@@ -2174,11 +2194,15 @@ function rIssues() {
               <div>${fdt(iss.createdAt)}</div>
               <div style="font-size:11px;color:var(--muted);margin-top:1px">By ${iss.reporter}</div>
             </td>
-            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-              <span class="tab-chip ${pColor}">${pLabel}</span>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
+              <div title="${pLabel} Priority" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:${pColor}18;color:${pColor}">
+                <i class="ti ${pIcon}" style="font-size:15px"></i>
+              </div>
             </td>
-            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-              <span class="tab-chip ${sColor}">${sLabel}</span>
+            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
+              <div title="${sLabel}" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:${sColor}18;color:${sColor}">
+                <i class="ti ${sIcon}" style="font-size:15px"></i>
+              </div>
             </td>
           </tr>`;
         }).join('')}
