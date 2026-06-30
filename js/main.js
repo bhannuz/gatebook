@@ -1950,7 +1950,10 @@ function listenContacts(){
     contacts.length=0;
     snap.forEach(d=>contacts.push({id:d.id,...d.data()}));
     contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    if(document.getElementById('contactsView')?.style.display!=='none') window._rContacts();
+    const panel = document.getElementById('issSubPanelContacts');
+    if (panel && panel.style.display !== 'none') {
+      try { window._rContacts(); } catch(e) { console.error(e); }
+    }
   },e=>console.error('contacts listener',e));
 }
 
@@ -2142,7 +2145,6 @@ function rIssues() {
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Priority</th>
           <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Status</th>
-          <th style="padding:9px 14px;width:36px;border-bottom:1px solid var(--border2)"></th>
         </tr>
       </thead>
       <tbody>
@@ -2151,7 +2153,9 @@ function rIssues() {
           const pLabel = iss.priority.charAt(0).toUpperCase() + iss.priority.slice(1);
           const pColor = iss.priority === 'high' ? 'red' : iss.priority === 'medium' ? 'amber' : 'green';
           const sColor = iss.status === 'open' ? 'red' : iss.status === 'in-progress' ? 'amber' : 'green';
-          return `<tr onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
+          return `<tr onclick="window._oID('${iss.id}')"
+            style="cursor:pointer;transition:background .12s"
+            onmouseover="this.style.background='var(--indigo-bg)'" onmouseout="this.style.background=''">
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
               <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px">
                 <i class="ti ${icons[iss.cat] || 'ti-clipboard'}" style="font-size:14px;color:var(--indigo);flex-shrink:0"></i>
@@ -2174,14 +2178,6 @@ function rIssues() {
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
               <span class="tab-chip ${sColor}">${sLabel}</span>
-            </td>
-            <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
-              <button onclick="window._oID('${iss.id}')" title="Edit issue"
-                style="background:none;border:1px solid var(--border2);border-radius:6px;width:28px;height:28px;cursor:pointer;color:var(--indigo);display:inline-flex;align-items:center;justify-content:center;transition:background .15s,border-color .15s"
-                onmouseover="this.style.background='var(--indigo-bg)';this.style.borderColor='var(--indigo)'"
-                onmouseout="this.style.background='none';this.style.borderColor='var(--border2)'">
-                <i class="ti ti-pencil" style="font-size:12px"></i>
-              </button>
             </td>
           </tr>`;
         }).join('')}
@@ -4600,30 +4596,25 @@ window._rContacts = function() {
     const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
-    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;padding:14px;transition:box-shadow .15s,border-color .15s"
-      onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
+    return `<div onclick="window._oContact('${c.id}')"
+      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
-        <div style="width:38px;height:38px;border-radius:10px;background:${color}18;color:${color};
-          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
-          <i class="ti ${icon}"></i>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:14px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
-          <div style="font-size:10px;font-weight:700;color:${color};margin-top:1px">${c.cat || 'Other'}</div>
-        </div>
-        <button onclick="window._oContact('${c.id}')" title="Edit"
-          style="background:none;border:1px solid var(--border2);border-radius:6px;width:26px;height:26px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ti-pencil" style="font-size:12px"></i>
-        </button>
+      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+        <i class="ti ${icon}"></i>
       </div>
-      ${c.note ? `<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.4">${c.note}</div>` : ''}
-      <div style="display:flex;gap:8px">
-        <a href="tel:${phone}" style="flex:1;height:34px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--indigo-bg);color:var(--indigo);border-radius:8px;font-size:12px;font-weight:700;text-decoration:none">
-          <i class="ti ti-phone" style="font-size:13px"></i> ${c.phone || '—'}
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
+          <i class="ti ti-phone" style="font-size:12px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:8px;text-decoration:none">
-          <i class="ti ti-brand-whatsapp" style="font-size:15px"></i>
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
+          <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
         </a>` : ''}
       </div>
     </div>`;
