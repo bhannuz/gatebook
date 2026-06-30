@@ -54,6 +54,8 @@ const vehColl     = () => collection(db, 'apartments', UID, 'vehicles');
 const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
 const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
 const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
+const contactsColl= () => collection(db, 'apartments', UID, 'contacts');
+const contactRef  = id => doc(db, 'apartments', UID, 'contacts', id);
 
 /* ════════════════════════════════
    STATE
@@ -61,6 +63,7 @@ const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
 const flats  = new Map();
 const exps   = new Map();
 const issues = [];
+const contacts = [];          // service contacts (plumber, electrician etc)
 
 let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all', STRVIEW='floor';
 // Analytics tab state — declared here to avoid TDZ errors
@@ -1852,7 +1855,7 @@ window._wizLaunch = async function() {
       toast('Society already set up — loading…');
       document.getElementById('setupWiz').style.display = 'none';
       document.getElementById('lo').style.display = '';
-      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts();
       return;
     }
     for(const b of WIZ_BLOCKS) {
@@ -1869,7 +1872,7 @@ window._wizLaunch = async function() {
     [_unsubFlats, eu, iu, vu, pu].forEach(unsub => { try { if(unsub) unsub(); } catch(_){} });
     _unsubFlats = null; eu = null; iu = null; vu = null; pu = null;
     flats.clear(); exps.clear(); issues.length = 0; vehicles.clear(); socExps.length = 0;
-    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp();
+    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
     console.error(e);
@@ -1938,6 +1941,17 @@ function listenSocExp(){
   },()=>{
     pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));if(document.getElementById('presView').style.display!=='none')rPresident();});
   });
+}
+
+let cu=null; // contacts listener unsubscribe handle
+function listenContacts(){
+  if(cu)cu();
+  cu=onSnapshot(contactsColl(),snap=>{
+    contacts.length=0;
+    snap.forEach(d=>contacts.push({id:d.id,...d.data()}));
+    contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+    if(document.getElementById('contactsView')?.style.display!=='none') window._rContacts();
+  },e=>console.error('contacts listener',e));
 }
 
 
@@ -4552,3 +4566,172 @@ function _printMonthlySummary() {
 }
 
 window._printMonthlySummary = _printMonthlySummary;
+
+/* ════════════════════════════════
+   SERVICE CONTACTS
+════════════════════════════════ */
+const CONTACT_ICONS = {
+  Plumber:'ti-droplet', Electrician:'ti-bolt', Maid:'ti-broom', Security:'ti-shield-lock',
+  Gardener:'ti-plant-2', Carpenter:'ti-hammer', Painter:'ti-paint', 'Pest Control':'ti-bug',
+  'AC Repair':'ti-air-conditioning', Other:'ti-tool'
+};
+const CONTACT_COLORS = {
+  Plumber:'#0EA5E9', Electrician:'#F59E0B', Maid:'#EC4899', Security:'#6366F1',
+  Gardener:'#22C55E', Carpenter:'#A16207', Painter:'#A855F7', 'Pest Control':'#EF4444',
+  'AC Repair':'#06B6D4', Other:'#6B7280'
+};
+
+window._rContacts = function() {
+  const filter = document.getElementById('contactCatFilter')?.value || 'all';
+  const vis = filter === 'all' ? contacts : contacts.filter(c => c.cat === filter);
+  const el = document.getElementById('contactsList');
+  if (!el) return;
+
+  if (!vis.length) {
+    el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
+      <i class="ti ti-address-book-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
+      <div style="font-size:13px;font-weight:600">No service contacts ${filter!=='all'?'in this category':'yet'}</div>
+      <div style="font-size:11px;margin-top:4px">Tap "Add Contact" to save plumber, electrician, maid etc.</div>
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = vis.map(c => {
+    const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
+    const color = CONTACT_COLORS[c.cat] || '#6B7280';
+    const phone = (c.phone || '').replace(/\D/g, '');
+    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;padding:14px;transition:box-shadow .15s,border-color .15s"
+      onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
+      onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
+      <div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:10px">
+        <div style="width:38px;height:38px;border-radius:10px;background:${color}18;color:${color};
+          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+          <i class="ti ${icon}"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:800;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+          <div style="font-size:10px;font-weight:700;color:${color};margin-top:1px">${c.cat || 'Other'}</div>
+        </div>
+        <button onclick="window._oContact('${c.id}')" title="Edit"
+          style="background:none;border:1px solid var(--border2);border-radius:6px;width:26px;height:26px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-pencil" style="font-size:12px"></i>
+        </button>
+      </div>
+      ${c.note ? `<div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.4">${c.note}</div>` : ''}
+      <div style="display:flex;gap:8px">
+        <a href="tel:${phone}" style="flex:1;height:34px;display:flex;align-items:center;justify-content:center;gap:6px;background:var(--indigo-bg);color:var(--indigo);border-radius:8px;font-size:12px;font-weight:700;text-decoration:none">
+          <i class="ti ti-phone" style="font-size:13px"></i> ${c.phone || '—'}
+        </a>
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:8px;text-decoration:none">
+          <i class="ti ti-brand-whatsapp" style="font-size:15px"></i>
+        </a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+};
+
+window._oContact = function(id) {
+  const modal = document.getElementById('contactM');
+  if (!modal) return;
+  const isEdit = !!id;
+  document.getElementById('contactMTitle').textContent = isEdit ? 'Edit Service Contact' : 'Add Service Contact';
+  document.getElementById('contactDelBtn').style.display = isEdit ? '' : 'none';
+  document.getElementById('contactSaveLbl').textContent  = isEdit ? 'Update Contact' : 'Save Contact';
+
+  if (isEdit) {
+    const c = contacts.find(x => x.id === id);
+    if (!c) return;
+    document.getElementById('contactId').value     = id;
+    document.getElementById('contactName').value    = c.name || '';
+    document.getElementById('contactCat').value     = c.cat || 'Plumber';
+    document.getElementById('contactPhone').value   = c.phone || '';
+    document.getElementById('contactPhone2').value  = c.phone2 || '';
+    document.getElementById('contactNote').value    = c.note || '';
+  } else {
+    document.getElementById('contactId').value    = '';
+    document.getElementById('contactName').value   = '';
+    document.getElementById('contactCat').value    = 'Plumber';
+    document.getElementById('contactPhone').value  = '';
+    document.getElementById('contactPhone2').value = '';
+    document.getElementById('contactNote').value   = '';
+  }
+  modal.classList.add('open');
+};
+
+window._cContact = function() {
+  document.getElementById('contactM').classList.remove('open');
+};
+
+window._sContact = async function() {
+  const id     = document.getElementById('contactId').value;
+  const name   = (document.getElementById('contactName').value || '').trim();
+  const cat    = document.getElementById('contactCat').value;
+  const phone  = (document.getElementById('contactPhone').value || '').trim();
+  const phone2 = (document.getElementById('contactPhone2').value || '').trim();
+  const note   = (document.getElementById('contactNote').value || '').trim();
+
+  if (!name)  { toast('Enter a name', 'error'); return; }
+  if (!phone) { toast('Enter a phone number', 'error'); return; }
+
+  const btn = document.getElementById('contactSaveBtn');
+  if (btn) btn.disabled = true;
+  sync('saving');
+  try {
+    const payload = { name, cat, phone, phone2, note, updatedAt: serverTimestamp() };
+    if (id) {
+      await updateDoc(contactRef(id), payload);
+    } else {
+      payload.createdAt = serverTimestamp();
+      await addDoc(contactsColl(), payload);
+    }
+    sync('live'); toast(id ? 'Contact updated ✓' : 'Contact added ✓');
+    window._cContact();
+  } catch (e) {
+    console.error(e); sync('error'); toast('Save failed', 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+window._delContact = async function() {
+  const id = document.getElementById('contactId').value;
+  if (!id) return;
+  const c = contacts.find(x => x.id === id);
+  if (!confirm(`Delete contact "${c?.name || 'this contact'}"?`)) return;
+  sync('saving');
+  try {
+    await deleteDoc(contactRef(id));
+    sync('live'); toast('Contact deleted ✓');
+    window._cContact();
+  } catch (e) {
+    console.error(e); sync('error'); toast('Delete failed', 'error');
+  }
+};
+
+/* ════════════════════════════════
+   ISSUES / CONTACTS SUB-TAB TOGGLE
+════════════════════════════════ */
+window._issSubTab = function(which) {
+  const issuesBtn    = document.getElementById('issSubTabIssues');
+  const contactsBtn  = document.getElementById('issSubTabContacts');
+  const issuesPanel  = document.getElementById('issSubPanelIssues');
+  const contactsPanel= document.getElementById('issSubPanelContacts');
+  if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
+
+  const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
+  const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
+
+  if (which === 'issues') {
+    issuesPanel.style.display = '';
+    contactsPanel.style.display = 'none';
+    Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    try { rIssues(); } catch(e) { console.error(e); }
+  } else {
+    issuesPanel.style.display = 'none';
+    contactsPanel.style.display = '';
+    Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    try { window._rContacts(); } catch(e) { console.error(e); }
+  }
+};
