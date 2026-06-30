@@ -1078,3 +1078,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     font-size: 12px;
   }
 }
+
+/* ════ FINAL OVERRIDE: donut chart must never exceed a fixed square ════
+   (placed last so it wins over the conflicting .chart-wrap rules above
+   at every breakpoint — this is the single source of truth for chart size) */
+.chart-wrap{
+  width:100% !important;
+  max-width:200px !important;
+  height:auto !important;
+  aspect-ratio:1/1 !important;
+  padding-bottom:0 !important;
+  position:relative !important;
+  margin:0 auto 20px !important;
+  overflow:hidden !important;
+}
+.chart-wrap canvas{
+  position:absolute !important;
+  inset:0 !important;
+  width:100% !important;
+  height:100% !important;
+}
+.exp-pie-panel,.exp-records-panel{ overflow:hidden !important; }
