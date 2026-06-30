@@ -4212,66 +4212,99 @@ function _renderSummary() {
     pending: '<span style="background:#FEE2E2;color:#991B1B;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:800">❌ Pending</span>',
   }[s]);
 
+  const collPctHead = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
   document.getElementById('msSummaryHead').innerHTML = `
     <style>
-      .ms-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
-      .ms-kpi{border-radius:10px;padding:10px 12px;border:1.5px solid}
-      .ms-kpi-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
-      .ms-kpi-val{font-size:15px;font-weight:800;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-      .ms-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;align-items:center}
-      .ms-chip{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap}
+      .ms-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+      .ms-kpi{border-radius:12px;padding:12px;position:relative;overflow:hidden}
+      .ms-kpi-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;opacity:.85}
+      .ms-kpi-val{font-size:16px;font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
+      .ms-kpi-sub{font-size:9px;margin-top:3px;font-weight:600;opacity:.75}
+      .ms-prog-wrap{padding:10px 14px;background:var(--surface2);border-radius:12px;margin-bottom:10px}
+      .ms-prog-track{height:7px;background:#fff;border-radius:99px;overflow:hidden;margin-top:6px}
+      .ms-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:2px}
+      .ms-chip{font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:4px}
       @media(max-width:420px){
         .ms-kpi-grid{grid-template-columns:1fr 1fr;gap:6px}
-        .ms-kpi-val{font-size:13px}
+        .ms-kpi-val{font-size:14px}
         .ms-kpi:last-child{grid-column:1/-1}
       }
     </style>
     <div class="ms-kpi-grid">
-      <div class="ms-kpi" style="background:var(--surface2);border-color:var(--border2)">
-        <div class="ms-kpi-lbl" style="color:var(--muted)">Total Due</div>
-        <div class="ms-kpi-val" style="color:var(--text)">${inr(totDue)}</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px">${rows.length} flats</div>
+      <div class="ms-kpi" style="background:linear-gradient(135deg,#EEF2FF,#E0E7FF);color:#4338CA">
+        <div class="ms-kpi-lbl">Total Due</div>
+        <div class="ms-kpi-val">${inr(totDue)}</div>
+        <div class="ms-kpi-sub">${rows.length} flats</div>
       </div>
-      <div class="ms-kpi" style="background:#D1FAE5;border-color:#6EE7B7">
-        <div class="ms-kpi-lbl" style="color:#065F46">Collected</div>
-        <div class="ms-kpi-val" style="color:#065F46">${inr(totPaid)}</div>
-        <div style="font-size:9px;color:#065F46;margin-top:2px">${totDue>0?Math.round(totPaid/totDue*100):0}% of due</div>
+      <div class="ms-kpi" style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);color:#047857">
+        <div class="ms-kpi-lbl">Collected</div>
+        <div class="ms-kpi-val">${inr(totPaid)}</div>
+        <div class="ms-kpi-sub">${collPctHead}% of due</div>
       </div>
-      <div class="ms-kpi" style="background:${totBal>0?'#FEE2E2':'#D1FAE5'};border-color:${totBal>0?'#FCA5A5':'#6EE7B7'}">
-        <div class="ms-kpi-lbl" style="color:${totBal>0?'#991B1B':'#065F46'}">${totBal>0?'Balance':'Cleared'}</div>
-        <div class="ms-kpi-val" style="color:${totBal>0?'#991B1B':'#065F46'}">${inr(Math.abs(totBal))}</div>
-        <div style="font-size:9px;color:${totBal>0?'#991B1B':'#065F46'};margin-top:2px">${totBal>0?'Pending':'Fully collected'}</div>
+      <div class="ms-kpi" style="background:${totBal>0?'linear-gradient(135deg,#FEF2F2,#FEE2E2)':'linear-gradient(135deg,#ECFDF5,#D1FAE5)'};color:${totBal>0?'#B91C1C':'#047857'}">
+        <div class="ms-kpi-lbl">${totBal>0?'Balance':'Status'}</div>
+        <div class="ms-kpi-val">${inr(Math.abs(totBal))}</div>
+        <div class="ms-kpi-sub">${totBal>0?'Pending':'Fully collected 🎉'}</div>
+      </div>
+    </div>
+    <div class="ms-prog-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px">Collection Progress</span>
+        <span style="font-size:12px;font-weight:800;color:var(--indigo)">${collPctHead}%</span>
+      </div>
+      <div class="ms-prog-track">
+        <div style="height:100%;width:${collPctHead}%;background:linear-gradient(90deg,#6366F1,#10B981);border-radius:99px;transition:width .4s"></div>
       </div>
     </div>
     <div class="ms-chips">
-      <span class="ms-chip" style="background:#D1FAE5;color:#065F46">✅ ${paidCnt} Paid</span>
-      <span class="ms-chip" style="background:#FEF3C7;color:#92400E">⚠️ ${partCnt} Partial</span>
-      <span class="ms-chip" style="background:#FEE2E2;color:#991B1B">❌ ${pendCnt} Pending</span>
+      <span class="ms-chip" style="background:#D1FAE5;color:#065F46">✓ ${paidCnt} Paid</span>
+      <span class="ms-chip" style="background:#FEF3C7;color:#92400E">◐ ${partCnt} Partial</span>
+      <span class="ms-chip" style="background:#FEE2E2;color:#991B1B">✕ ${pendCnt} Pending</span>
     </div>`;
 
+  const statusDot = s => ({ paid:'#10B981', partial:'#F59E0B', pending:'#EF4444' }[s]);
+  const statusBg   = s => ({ paid:'#ECFDF5', partial:'#FFFBEB', pending:'#FEF2F2' }[s]);
+  const barPct     = f => f._due > 0 ? Math.min(100, Math.round(f._paid / f._due * 100)) : 0;
+  const initials   = n => (n||'?').trim().split(/\s+/).map(w=>w[0]).slice(0,2).join('').toUpperCase();
+
   document.getElementById('msSummaryBody').innerHTML = rows.length === 0
-    ? '<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px"><i class="ti ti-inbox" style="font-size:24px;display:block;margin-bottom:8px"></i>No flats match the selected filters</div>'
-    : rows.map(f => {
+    ? '<div style="padding:40px 20px;text-align:center;color:var(--muted)"><i class="ti ti-inbox" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i><div style="font-size:13px;font-weight:600">No flats match the selected filters</div></div>'
+    : `<div style="display:flex;flex-direction:column;gap:8px;padding:10px">` +
+      rows.map(f => {
+        const pct = barPct(f);
+        return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;padding:12px 14px;transition:box-shadow .15s,border-color .15s"
+          onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,.06)';this.style.borderColor='${statusDot(f._status)}'"
+          onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
 
-
-
-        return `<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-bottom:1px solid var(--border2)">
-          <div style="flex:1;min-width:0">
-            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-              <span style="font-size:13px;font-weight:700;color:var(--text)">${f.flatId}</span>
-              ${f.block ? `<span style="font-size:10px;font-weight:700;color:var(--muted);background:var(--surface3);padding:1px 6px;border-radius:4px">Blk ${f.block}</span>` : ''}
-              ${statusBadge(f._status)}
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div style="width:36px;height:36px;border-radius:10px;background:${statusBg(f._status)};color:${statusDot(f._status)};
+              display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">
+              ${initials(f.owner)}
             </div>
-            <div style="font-size:11px;color:var(--text2);margin-top:2px">${f.owner || '–'}${(f.phone||f.ownerPhone) ? ' · 📱 '+(f.phone||f.ownerPhone) : ''}</div>
-            <div style="display:flex;gap:12px;margin-top:4px">
-              <span style="font-size:11px;color:var(--text2)">Due <strong>${inr(f._due)}</strong></span>
-              <span style="font-size:11px;color:var(--green)">Paid <strong>${inr(f._paid)}</strong></span>
-              <span style="font-size:11px;color:${f._bal>0?'var(--red)':'var(--green)'}">Bal <strong>${inr(Math.abs(f._bal))}</strong></span>
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                <span style="font-size:14px;font-weight:800;color:var(--text)">${f.flatId}</span>
+                ${f.block ? `<span style="font-size:9px;font-weight:700;color:var(--muted);background:var(--surface3);padding:2px 6px;border-radius:5px">Block ${f.block}</span>` : ''}
+              </div>
+              <div style="font-size:11px;color:var(--text2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.owner || 'Vacant'}${(f.phone||f.ownerPhone) ? ' · '+(f.phone||f.ownerPhone) : ''}</div>
             </div>
+            <span style="flex-shrink:0;font-size:9px;font-weight:800;padding:3px 9px;border-radius:20px;
+              background:${statusBg(f._status)};color:${statusDot(f._status)};white-space:nowrap;text-transform:uppercase;letter-spacing:.3px">
+              ${f._status === 'paid' ? '✓ Paid' : f._status === 'partial' ? '◐ Partial' : '✕ Pending'}
+            </span>
           </div>
 
+          <div style="height:5px;background:var(--surface3);border-radius:99px;overflow:hidden;margin-bottom:8px">
+            <div style="height:100%;width:${pct}%;background:${statusDot(f._status)};border-radius:99px;transition:width .3s"></div>
+          </div>
+
+          <div style="display:flex;justify-content:space-between;font-size:11px">
+            <span style="color:var(--muted)">Due <strong style="color:var(--text)">${inr(f._due)}</strong></span>
+            <span style="color:var(--muted)">Paid <strong style="color:#10B981">${inr(f._paid)}</strong></span>
+            <span style="color:var(--muted)">Bal <strong style="color:${f._bal>0?'#EF4444':'#10B981'}">${inr(Math.abs(f._bal))}</strong></span>
+          </div>
         </div>`;
-      }).join('');
+      }).join('') + `</div>`;
 
   // Store print data = all rows for the month (ignores status filter so print is complete)
   window._msSummaryData = { rows: printRows, monthLabel, totDue: printTotDue, totPaid: printTotPaid, totBal: printTotBal };
