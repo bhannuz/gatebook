@@ -1950,11 +1950,12 @@ function listenContacts(){
     contacts.length=0;
     snap.forEach(d=>contacts.push({id:d.id,...d.data()}));
     contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
-    const panel = document.getElementById('issSubPanelContacts');
-    if (panel && panel.style.display !== 'none') {
-      try { window._rContacts(); } catch(e) { console.error(e); }
-    }
-  },e=>console.error('contacts listener',e));
+    // Always attempt re-render — _rContacts() itself checks if #contactsList exists
+    try { window._rContacts(); } catch(e) { console.error('rContacts render error', e); }
+  },e=>{
+    console.error('contacts listener error', e);
+    toast('Could not load contacts — check connection', 'error');
+  });
 }
 
 
@@ -3261,6 +3262,11 @@ async function boot(){
       listenIssues();
       listenVehicles();
       listenSocExp();
+      listenContacts();
+      // Reveal the app UI — this was previously only done in the wizard branch,
+      // causing a permanently blank page on refresh for already-configured societies.
+      document.getElementById('lo').style.display = 'none';
+      document.getElementById('app').style.display = '';
     } else {
       // Brand new society with no config — show in-app setup wizard
       document.getElementById('lo').style.display = 'none';
@@ -3749,6 +3755,53 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 // ════════════════════════════════════════════════════════
 
 function rAnalytics() {
+
+  /* ── 0. Empty state — no flats configured yet ── */
+  if (flats.size === 0) {
+    const phActEl = document.getElementById('phAct');
+    if (phActEl) phActEl.innerHTML = '';
+    const totalsEl = document.getElementById('analyticsTotals');
+    if (totalsEl) totalsEl.innerHTML = '';
+
+    // Render welcome message into the existing grid container (preserve DOM structure)
+    const layoutGrid = document.querySelector('#analyticsView .an-layout-grid');
+    if (layoutGrid) {
+      layoutGrid.style.display = 'none';
+    }
+    let emptyEl = document.getElementById('anEmptyState');
+    if (!emptyEl) {
+      emptyEl = document.createElement('div');
+      emptyEl.id = 'anEmptyState';
+      const anView = document.getElementById('analyticsView');
+      if (anView) anView.appendChild(emptyEl);
+    }
+    emptyEl.style.display = 'flex';
+    emptyEl.innerHTML = `
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;
+        min-height:55vh;text-align:center;padding:40px 24px;width:100%">
+        <div style="width:72px;height:72px;border-radius:20px;background:linear-gradient(135deg,#6366F1,#8B5CF6);
+          display:flex;align-items:center;justify-content:center;font-size:32px;color:#fff;
+          box-shadow:0 12px 32px rgba(99,102,241,.3);margin-bottom:20px">
+          <i class="ti ti-building-community"></i>
+        </div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:6px">
+          Welcome to <span style="color:var(--indigo)">${APT_NAME}</span>
+        </div>
+        <div style="font-size:13px;color:var(--text2);max-width:320px;line-height:1.6;margin-bottom:24px">
+          No flats have been added yet. Set up your blocks and flats to start tracking payments, expenses, and more.
+        </div>
+        <button onclick="switchView('structure')" class="btn btn-indigo" style="padding:11px 22px">
+          <i class="ti ti-plus"></i> Set Up Society Structure
+        </button>
+      </div>`;
+    return;
+  } else {
+    // Flats exist — make sure grid is visible and empty state hidden
+    const layoutGrid = document.querySelector('#analyticsView .an-layout-grid');
+    if (layoutGrid) layoutGrid.style.display = '';
+    const emptyEl = document.getElementById('anEmptyState');
+    if (emptyEl) emptyEl.style.display = 'none';
+  }
 
   /* ── 1. Collect every month/year that appears in real payments ── */
   const monthSet = new Set();
@@ -4677,8 +4730,12 @@ window._sContact = async function() {
     }
     sync('live'); toast(id ? 'Contact updated ✓' : 'Contact added ✓');
     window._cContact();
+    // Force immediate re-render in case the snapshot listener is slow/detached
+    setTimeout(() => { try { window._rContacts(); } catch(e) {} }, 300);
   } catch (e) {
-    console.error(e); sync('error'); toast('Save failed', 'error');
+    console.error('Contact save error:', e);
+    sync('error');
+    toast('Save failed: ' + (e.message || 'unknown error'), 'error');
   } finally {
     if (btn) btn.disabled = false;
   }
