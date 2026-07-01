@@ -256,22 +256,20 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <!-- Main grid: responsive layout — mirrors Expenses tab exactly -->
     <style>
       @media(max-width:700px){
         .an-layout-grid{grid-template-columns:1fr!important}
         .an-layout-grid .chart-col{order:2;margin-top:16px}
       }
     </style>
+
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
-      <!-- LEFT: stat cards + payment table -->
+      <!-- LEFT: stat cards above + payment table below -->
       <div style="display:flex;flex-direction:column;gap:10px;">
 
-        <!-- Collected / Outstanding cards -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
-          <div id="analyticsTotals" style="display:contents;"></div>
-        </div>
+        <!-- Stat cards — 2 cols, left side only -->
+        <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
 
         <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
@@ -303,7 +301,7 @@
 
       </div><!-- /left col -->
 
-      <!-- RIGHT: payment status chart — mirrors Expenses chart panel -->
+      <!-- RIGHT: pie chart -->
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
         <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
