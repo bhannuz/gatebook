@@ -256,40 +256,37 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>
-      @media(max-width:900px){
-        .an-layout-grid{grid-template-columns:1fr!important}
-        .an-layout-grid .chart-col{order:2}
-      }
-    </style>
+    <!-- Main grid: responsive layout — mirrors Expenses tab exactly -->
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;row-gap:16px!important}.an-layout-grid .chart-col{order:2}}</style>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
-    <!-- Stat chips -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
+      <!-- LEFT: stat cards + payment table -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
 
-    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
-
-      <!-- LEFT: payment table -->
-      <div style="display:flex;flex-direction:column;gap:14px">
+        <!-- Collected / Outstanding cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
+          <div id="analyticsTotals" style="display:contents;"></div>
+        </div>
 
         <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
-          <div style="padding:10px 12px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
             <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
           </div>
-          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+          <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
               <colgroup>
-                <col style="width:17%"/>
-                <col style="width:38%"/>
-                <col style="width:21%"/>
-                <col style="width:24%"/>
+                <col style="width:18%"/>
+                <col style="width:36%"/>
+                <col style="width:20%"/>
+                <col style="width:26%"/>
               </colgroup>
-              <thead style="position:sticky;top:0;z-index:1">
+              <thead>
                 <tr style="background:var(--surface3)">
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
-                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
-                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Balance</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">Status</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap">Balance</th>
                 </tr>
               </thead>
               <tbody id="anPayTable"></tbody>
@@ -299,19 +296,19 @@
 
       </div><!-- /left col -->
 
-      <!-- RIGHT: payment status chart -->
-      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
-          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+      <!-- RIGHT: payment status chart — mirrors Expenses chart panel -->
+      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
           </div>
-          <div style="width:200px;height:200px;margin:0 auto 20px;flex-shrink:0;">
-            <canvas id="payPie" style="width:200px!important;height:200px!important;display:block;cursor:pointer;"></canvas>
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
+            <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
           <div id="payLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
         </div>
-      </div>
+      </div><!-- /right col -->
 
     </div><!-- /main grid -->
 
