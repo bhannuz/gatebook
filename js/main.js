@@ -4690,19 +4690,19 @@ window._rContacts = function() {
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+      style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
         background:#fff;border:1.5px solid var(--border2);border-radius:12px;
-        padding:10px 6px;cursor:pointer;transition:box-shadow .12s,border-color .12s;
-        aspect-ratio:1/1;text-align:center;overflow:hidden;"
+        padding:10px 6px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s;
+        text-align:center;min-height:110px;"
       onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.08)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
       <div style="width:32px;height:32px;border-radius:10px;background:${color}18;color:${color};
         display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
         <i class="ti ${icon}"></i>
       </div>
-      <div style="font-size:10px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;text-align:center;padding:0 2px">${c.name || 'Unnamed'}</div>
-      <div style="font-size:9px;font-weight:600;color:${color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center">${c.cat || 'Other'}</div>
-      <div style="display:flex;gap:4px;margin-top:2px;" onclick="event.stopPropagation()">
+      <div style="font-size:10px;font-weight:700;color:var(--text);word-break:break-word;width:100%;text-align:center;padding:0 2px;line-height:1.3">${c.name || 'Unnamed'}</div>
+      <div style="font-size:9px;font-weight:600;color:${color};width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.cat || 'Other'}</div>
+      <div style="display:flex;gap:4px;margin-top:auto;padding-top:4px" onclick="event.stopPropagation()">
         <a href="tel:${phone}" title="Call" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none;">
           <i class="ti ti-phone" style="font-size:10px"></i>
         </a>
