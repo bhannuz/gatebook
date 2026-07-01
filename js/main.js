@@ -1913,6 +1913,7 @@ function switchView(v) {
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
   if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
+  if(v==='issues')    try{ window._issSubTab(window._activeIssSubTab||'issues'); } catch(e){ console.error(e); }
   if(v==='president') {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
@@ -2133,7 +2134,6 @@ function rBlock() {
 ════════════════════════════════ */
 
 function rIssues() {
-  document.getElementById('phAct').innerHTML = '';
   const fil = IF === 'all' ? [...issues] : issues.filter(i => i.status === IF);
   const icons = {
     Plumbing: 'ti-tool', Electrical: 'ti-bolt', Lift: 'ti-elevator',
@@ -4800,6 +4800,7 @@ window._delContact = async function() {
    ISSUES / CONTACTS SUB-TAB TOGGLE
 ════════════════════════════════ */
 window._issSubTab = function(which) {
+  window._activeIssSubTab = which; // remember for when main tab is re-entered
   const issuesBtn    = document.getElementById('issSubTabIssues');
   const contactsBtn  = document.getElementById('issSubTabContacts');
   const reportsBtn   = document.getElementById('issSubTabReports');
