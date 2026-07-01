@@ -120,7 +120,7 @@
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-users"></i> Residents</button>
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
-        <i class="ti ti-alert-circle"></i> Issues
+        <i class="ti ti-alert-circle"></i> Services
         <span class="vtab-badge" id="openCnt">0</span>
       </button>
     </div>
@@ -129,7 +129,7 @@
   <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
   <div id="statsRow" style="display:none"></div>
 
-  <!-- ISSUES VIEW (with Issues / Contacts sub-tabs) -->
+  <!-- SERVICES VIEW (with Issues / Contacts / Reports sub-tabs) -->
   <div id="iView" style="display:none">
 
     <!-- Sub-tabs -->
@@ -141,6 +141,10 @@
       <button id="issSubTabContacts" onclick="window._issSubTab('contacts')"
         style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
         <i class="ti ti-address-book" style="font-size:14px"></i> Contacts
+      </button>
+      <button id="issSubTabReports" onclick="window._issSubTab('reports')"
+        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-file-text" style="font-size:14px"></i> Reports
       </button>
     </div>
 
@@ -174,10 +178,25 @@
           <option value="AC Repair">❄️ AC Repair</option>
           <option value="Other">📋 Other</option>
         </select>
-        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oAC()"><i class="ti ti-plus"></i> Add Contact</button>
+        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oContact()"><i class="ti ti-plus"></i> Add Contact</button>
       </div>
       <div id="contactsList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
+
+    <!-- REPORTS SUB-PANEL -->
+    <div id="issSubPanelReports" style="display:none;padding:0 12px 12px">
+      <div style="background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);padding:28px 20px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:14px;background:var(--indigo-bg);color:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px">
+          <i class="ti ti-file-text"></i>
+        </div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px">Monthly Report</div>
+        <div style="font-size:12px;color:var(--text2);max-width:320px;margin:0 auto 18px;line-height:1.6">
+          Generate a printable summary of payments collected and expenses for any month — ready to share with residents.
+        </div>
+        <button class="btn btn-indigo" onclick="window._oMonthlySummary()"><i class="ti ti-file-text"></i> Generate Monthly Report</button>
+      </div>
+    </div>
+
   </div><!-- /#iView -->
 
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
@@ -214,11 +233,11 @@
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
 
         <!-- Chart panel -->
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
           </div>
-          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
             <canvas id="expTabPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
@@ -237,21 +256,24 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <!-- Stat chips: always 2-col, above the main grid -->
+    <style>
+      @media(max-width:900px){
+        .an-layout-grid{grid-template-columns:1fr!important}
+        .an-layout-grid .chart-col{order:2}
+      }
+    </style>
+
+    <!-- Stat chips -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
 
-    <!-- 2-col grid: left = table, right = chart -->
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
     <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
 
       <!-- LEFT: payment table -->
       <div style="display:flex;flex-direction:column;gap:14px">
 
-        <!-- placeholder kept for structure -->
-
         <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
-          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+          <div style="padding:10px 12px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
             <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
           </div>
           <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
@@ -277,12 +299,14 @@
 
       </div><!-- /left col -->
 
-      <!-- RIGHT: chart -->
+      <!-- RIGHT: payment status chart -->
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
         <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
-          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
-            <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;">
+            <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
+          </div>
+          <div style="width:200px;height:200px;margin:0 auto 20px;flex-shrink:0;">
+            <canvas id="payPie" style="width:200px!important;height:200px!important;display:block;cursor:pointer;"></canvas>
           </div>
           <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
           <div id="payLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
@@ -294,21 +318,23 @@
   </div><!-- /#analyticsView -->
 
   <!-- STRUCTURE VIEW -->
-  <div id="structureView" style="display:none;padding:8px 14px 14px">
+  <div id="structureView" style="display:none;padding:2px 14px 14px">
 
-    <!-- President banner (injected by rStructure) -->
-    <div id="presBanner" style="margin-bottom:10px;"></div>
-
-    <!-- Residents toolbar: single row -->
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <!-- Row 1: President banner + Manage button in same line -->
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;flex-wrap:wrap">
+      <div id="presBanner" style="flex-shrink:0"></div>
       <button onclick="window._openStructureManager()"
-        style="height:34px;padding:0 12px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border2);border-radius:var(--r-md);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;">
-        <i class="ti ti-settings" style="font-size:13px;color:var(--indigo)"></i>Manage
+        style="height:30px;padding:0 10px;background:var(--surface2);color:var(--text);border:1.5px solid var(--border2);border-radius:var(--r-md);font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;white-space:nowrap;flex-shrink:0;">
+        <i class="ti ti-settings" style="font-size:12px;color:var(--indigo)"></i>Manage
       </button>
-      <select id="strBlockFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+    </div>
+
+    <!-- Row 2: Filters + search -->
+    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+      <select id="strBlockFilter" class="ctrl" style="height:32px;font-size:12px;padding:0 8px;flex-shrink:0;" onchange="window.rStructure()">
         <option value="all">All Blocks</option>
       </select>
-      <select id="strTypeFilter" class="ctrl" style="height:34px;font-size:12px;padding:0 10px;flex-shrink:0;" onchange="window.rStructure()">
+      <select id="strTypeFilter" class="ctrl" style="height:32px;font-size:12px;padding:0 8px;flex-shrink:0;" onchange="window.rStructure()">
         <option value="all">All Types</option>
         <option value="owner">🏠 Owner</option>
         <option value="tenant">🔑 Tenant</option>
@@ -317,12 +343,12 @@
       <div style="position:relative;flex:1;min-width:120px;">
         <i class="ti ti-search" style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:12px;pointer-events:none;"></i>
         <input type="text" id="strSearch" class="ctrl" placeholder="Search name or flat no."
-          style="height:34px;font-size:12px;padding-left:28px;width:100%;box-sizing:border-box;" oninput="window.rStructure()">
+          style="height:32px;font-size:12px;padding-left:28px;width:100%;box-sizing:border-box;" oninput="window.rStructure()">
       </div>
     </div>
 
-    <!-- Flat list -->
-    <div id="strChips" style="display:flex;flex-direction:column;gap:6px;padding:4px 0;"></div>
+    <!-- Flat chips -->
+    <div id="strChips" style="display:flex;flex-direction:column;gap:4px;"></div>
   </div><!-- /#structureView -->
 
 </div><!-- /.app -->
@@ -423,6 +449,49 @@
     <div class="mactions">
       <button class="btn btn-white" onclick="window._cAF()">Cancel</button>
       <button class="btn btn-green" onclick="window._sNF()"><i class="ti ti-plus"></i> Register Flat</button>
+    </div>
+  </div>
+</div>
+
+<!-- SERVICE CONTACT MODAL -->
+<div class="mbg" id="contactM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon flat"><i class="ti ti-address-book"></i></div>
+        <div><div class="mtitle" id="contactMTitle">Add Service Contact</div><div class="msub">Save a handy contact for residents to reach</div></div>
+      </div>
+      <button class="mclose" onclick="window._cContact()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="contactId"/>
+    <div class="fg2">
+      <div class="fg"><label>Name *</label><input type="text" id="contactName" placeholder="e.g. Ramesh Plumbing Works"/></div>
+      <div class="fg"><label>Category *</label>
+        <select id="contactCat">
+          <option value="Plumber">🔧 Plumber</option>
+          <option value="Electrician">⚡ Electrician</option>
+          <option value="Maid">🧹 Maid</option>
+          <option value="Security">🔒 Security</option>
+          <option value="Gardener">🌳 Gardener</option>
+          <option value="Carpenter">🪚 Carpenter</option>
+          <option value="Painter">🎨 Painter</option>
+          <option value="Pest Control">🐜 Pest Control</option>
+          <option value="AC Repair">❄️ AC Repair</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Phone Number *</label><input type="tel" id="contactPhone" placeholder="10-digit mobile no."/></div>
+      <div class="fg"><label>Alt. Phone (optional)</label><input type="tel" id="contactPhone2" placeholder="Optional"/></div>
+    </div>
+    <div class="fg"><label>Notes (optional)</label><input type="text" id="contactNote" placeholder="e.g. Available 9am–7pm, charges visit fee"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" onclick="window._cContact()">Cancel</button>
+      <button class="btn btn-red btn-sm" id="contactDelBtn" onclick="window._delContact()" style="display:none"><i class="ti ti-trash"></i> Delete</button>
+      <button class="btn btn-indigo" id="contactSaveBtn" onclick="window._sContact()">
+        <i class="ti ti-device-floppy"></i><span id="contactSaveLbl">Save Contact</span>
+      </button>
     </div>
   </div>
 </div>
@@ -691,7 +760,7 @@
     <div id="msSummaryHead" style="flex-shrink:0;padding-top:12px"></div>
 
     <!-- Flat rows -->
-    <div id="msSummaryBody" style="overflow-y:auto;flex:1;border:1.5px solid var(--border2);border-radius:var(--r-lg);margin-top:10px"></div>
+    <div id="msSummaryBody" style="overflow-y:auto;flex:1;background:var(--surface2);border-radius:var(--r-lg);margin-top:6px"></div>
   </div>
 </div>
 
@@ -762,7 +831,7 @@
     <i class="ti ti-building"></i>Structure
   </button>
   <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
-    <i class="ti ti-alert-circle"></i>Issues
+    <i class="ti ti-alert-circle"></i>Services
     <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
   </button>
 </nav>
@@ -832,46 +901,91 @@
 </div>
 
 <!-- EXPENSE ACTION MODAL -->
-<div id="seActionModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);align-items:flex-end;" onclick="if(event.target===this)window._closeSEModal()">
-  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:0 0 32px;max-height:90vh;overflow-y:auto;">
-    <!-- Handle -->
-    <div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:var(--border2);border-radius:2px;"></div></div>
+<div id="seActionModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:16px;" onclick="if(event.target===this)window._closeSEModal()">
+  <div style="background:#fff;border-radius:20px;width:min(480px,100%);max-height:90vh;overflow-y:auto;box-shadow:0 24px 60px rgba(0,0,0,.18);">
+
     <!-- Header -->
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 18px 12px;border-bottom:1px solid var(--border);">
-      <div style="font-size:15px;font-weight:800;color:var(--text);">Edit Expense</div>
-      <button onclick="window._closeSEModal()" style="background:var(--surface2);border:none;width:30px;height:30px;border-radius:50%;font-size:18px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;">&times;</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1.5px solid var(--border2)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:38px;height:38px;border-radius:10px;background:var(--indigo-bg);display:flex;align-items:center;justify-content:center">
+          <i class="ti ti-receipt" style="color:var(--indigo);font-size:18px"></i>
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:800;color:var(--text)" id="seam_header_title">Edit Expense</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:1px" id="seam_header_sub">Update expense details</div>
+        </div>
+      </div>
+      <button onclick="window._closeSEModal()"
+        style="background:var(--surface2);border:1.5px solid var(--border2);width:32px;height:32px;border-radius:50%;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:15px">
+        <i class="ti ti-x"></i>
+      </button>
     </div>
+
     <input type="hidden" id="seam_id"/>
+
     <!-- Form -->
-    <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+
+      <!-- Title -->
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Title</label>
-        <input id="seam_title" type="text" placeholder="Expense title" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Title</label>
+        <input id="seam_title" type="text" placeholder="e.g. Generator repair"
+          style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text);background:#fff;box-sizing:border-box;outline:none"
+          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+      <!-- Category + Amount -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
         <div>
-          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Category</label>
-          <input id="seam_cat" type="text" placeholder="e.g. Maintenance" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Category</label>
+          <input id="seam_cat" type="text" placeholder="e.g. Maintenance"
+            style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text);background:#fff;box-sizing:border-box;outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
         <div>
-          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Amount (₹)</label>
-          <input id="seam_amt" type="number" placeholder="0" min="0" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+          <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Amount (₹)</label>
+          <input id="seam_amt" type="number" placeholder="0" min="0"
+            style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;font-weight:600;color:var(--text);background:#fff;box-sizing:border-box;outline:none"
+            onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
         </div>
       </div>
+
+      <!-- Date -->
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Date</label>
-        <input id="seam_date" type="date" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Date</label>
+        <input id="seam_date" type="date"
+          style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text);background:#fff;box-sizing:border-box;outline:none"
+          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
       </div>
+
+      <!-- Note -->
       <div>
-        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Note</label>
-        <input id="seam_note" type="text" placeholder="Optional note" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+        <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:5px">Note</label>
+        <input id="seam_note" type="text" placeholder="Optional note"
+          style="width:100%;height:40px;padding:0 12px;border:1.5px solid var(--border2);border-radius:9px;font-family:var(--font);font-size:13px;font-weight:500;color:var(--text);background:#fff;box-sizing:border-box;outline:none"
+          onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
       </div>
     </div>
-    <!-- Actions -->
-    <div style="display:flex;gap:10px;padding:0 18px;">
-      <button onclick="window._delSEModal()" style="flex:1;padding:13px;background:#fff;border:1.5px solid var(--red);color:var(--red);border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">🗑️ Delete</button>
-      <button onclick="window._saveSEModal()" style="flex:2;padding:13px;background:var(--indigo);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);">💾 Save Changes</button>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:8px;padding:4px 20px 20px">
+      <button onclick="window._delSEModal()"
+        style="height:42px;padding:0 14px;background:#fff;border:1.5px solid #FCA5A5;color:var(--red);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:background .15s"
+        onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='#fff'">
+        <i class="ti ti-trash" style="font-size:13px"></i> Delete
+      </button>
+      <button onclick="window._closeSEModal()"
+        style="height:42px;padding:0 14px;background:#fff;border:1.5px solid var(--border2);color:var(--text2);border-radius:10px;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;gap:5px;transition:background .15s"
+        onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='#fff'">
+        <i class="ti ti-x" style="font-size:13px"></i> Cancel
+      </button>
+      <button onclick="window._saveSEModal()"
+        style="flex:1;height:42px;background:linear-gradient(135deg,var(--indigo),#7C3AED);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(99,102,241,.3);transition:opacity .15s"
+        onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">
+        <i class="ti ti-device-floppy" style="font-size:15px"></i> Save Changes
+      </button>
     </div>
+
   </div>
 </div>
 <!-- PRESIDENT HISTORY EDIT MODAL -->
