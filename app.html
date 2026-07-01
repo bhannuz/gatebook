@@ -459,11 +459,11 @@
 
 <!-- SERVICE CONTACT MODAL -->
 <div class="mbg" id="contactM">
-  <div class="modal">
-    <div class="mhead">
-      <div style="display:flex;align-items:center;gap:12px">
-        <div class="micon flat"><i class="ti ti-address-book"></i></div>
-        <div><div class="mtitle" id="contactMTitle">Add Service Contact</div><div class="msub">Save a handy contact for residents to reach</div></div>
+  <div class="modal" style="max-width:380px;padding:16px;">
+    <div class="mhead" style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="micon flat" style="width:32px;height:32px;font-size:14px"><i class="ti ti-address-book"></i></div>
+        <div><div class="mtitle" id="contactMTitle" style="font-size:13px">Add Service Contact</div><div class="msub" style="font-size:10px">Save a handy contact for residents</div></div>
       </div>
       <button class="mclose" onclick="window._cContact()"><i class="ti ti-x"></i></button>
     </div>
@@ -490,11 +490,11 @@
       <div class="fg"><label>Alt. Phone (optional)</label><input type="tel" id="contactPhone2" placeholder="Optional"/></div>
     </div>
     <div class="fg"><label>Notes (optional)</label><input type="text" id="contactNote" placeholder="e.g. Available 9am–7pm, charges visit fee"/></div>
-    <div class="mactions">
-      <button class="btn btn-white" onclick="window._cContact()">Cancel</button>
-      <button class="btn btn-red btn-sm" id="contactDelBtn" onclick="window._delContact()" style="display:none"><i class="ti ti-trash"></i> Delete</button>
-      <button class="btn btn-indigo" id="contactSaveBtn" onclick="window._sContact()">
-        <i class="ti ti-device-floppy"></i><span id="contactSaveLbl">Save Contact</span>
+    <div class="mactions" style="gap:6px;flex-wrap:wrap;">
+      <button class="btn btn-white btn-sm" onclick="window._cContact()" style="padding:6px 12px;font-size:11px">Cancel</button>
+      <button class="btn btn-red btn-sm" id="contactDelBtn" onclick="window._delContact()" style="display:none;padding:6px 10px;font-size:11px"><i class="ti ti-trash" style="font-size:11px"></i> Delete</button>
+      <button class="btn btn-indigo btn-sm" id="contactSaveBtn" onclick="window._sContact()" style="padding:6px 12px;font-size:11px;margin-left:auto">
+        <i class="ti ti-device-floppy" style="font-size:11px"></i><span id="contactSaveLbl">Save</span>
       </button>
     </div>
   </div>
