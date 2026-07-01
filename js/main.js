@@ -2479,7 +2479,6 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
-        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -3561,10 +3560,8 @@ function _getCanvasSize(canvas) {
 function drawPie(canvasId, segments, tooltipId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
-  // Responsive: set canvas pixel size to display size
-  const rect = canvas.getBoundingClientRect();
-  const dpr  = window.devicePixelRatio||1;
-  const W = rect.width||200, H = rect.height||200;
+  const dpr = window.devicePixelRatio || 1;
+  const W = 200, H = 200;
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
@@ -4784,24 +4781,27 @@ window._delContact = async function() {
 window._issSubTab = function(which) {
   const issuesBtn    = document.getElementById('issSubTabIssues');
   const contactsBtn  = document.getElementById('issSubTabContacts');
+  const reportsBtn   = document.getElementById('issSubTabReports');
   const issuesPanel  = document.getElementById('issSubPanelIssues');
   const contactsPanel= document.getElementById('issSubPanelContacts');
+  const reportsPanel = document.getElementById('issSubPanelReports');
   if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
 
-  const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
-  const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
+  const active   = { borderColor:'var(--indigo)', background:'var(--indigo)', color:'#fff' };
+  const inactive = { borderColor:'var(--border2)', background:'#fff', color:'var(--text2)' };
 
-  if (which === 'issues') {
-    issuesPanel.style.display = '';
-    contactsPanel.style.display = 'none';
-    Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    try { rIssues(); } catch(e) { console.error(e); }
-  } else {
-    issuesPanel.style.display = 'none';
-    contactsPanel.style.display = '';
-    Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    try { window._rContacts(); } catch(e) { console.error(e); }
-  }
+  const panels = { issues: issuesPanel, contacts: contactsPanel };
+  const btns   = { issues: issuesBtn,   contacts: contactsBtn   };
+  if (reportsBtn  && reportsPanel) { panels.reports = reportsPanel; btns.reports = reportsBtn; }
+
+  Object.keys(panels).forEach(key => {
+    const isActive = key === which;
+    panels[key].style.display = isActive ? '' : 'none';
+    Object.assign(btns[key].style, isActive ? active : inactive);
+  });
+
+  try {
+    if (which === 'issues')   rIssues();
+    else if (which === 'contacts') window._rContacts();
+  } catch(e) { console.error(e); }
 };
