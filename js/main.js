@@ -2153,14 +2153,14 @@ function rIssues() {
 
   el.innerHTML = `
     <table style="width:100%;border-collapse:collapse">
-      <thead>
+      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)">
         <tr style="background:var(--surface3)">
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Issue</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
-          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Priority</th>
-          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Status</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Issue</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Priority</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -2312,7 +2312,7 @@ function rMembers() {
 
   document.getElementById('memList').innerHTML = `
     <table class="mem-table">
-      <thead><tr>
+      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr>
         <th>Flat</th>
         <th>Owner</th>
         <th>Stays</th>
@@ -2600,7 +2600,7 @@ function rPresident() {
     var TD = 'padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle';
     var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
       + '<colgroup><col style="width:36%"/><col style="width:24%"/><col style="width:22%"/><col style="width:18%"/></colgroup>'
-      + '<thead><tr style="background:var(--surface3)">'
+      + '<thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr style="background:var(--surface3)">'
       + '<th style="'+TH+';text-align:left">Title</th>'
       + '<th style="'+TH+';text-align:center">Category</th>'
       + '<th style="'+TH+';text-align:center">Date</th>'
@@ -2621,7 +2621,7 @@ function rPresident() {
         + '</tr>';
     });
     var totAmt = vis.reduce(function(s,e){ return s + (e.amt||0); }, 0);
-    html += '</tbody><tfoot><tr style="background:var(--surface3);border-top:2px solid var(--border2)">'
+    html += '</tbody><tfoot style="position:sticky;bottom:0;z-index:2"><tr style="background:var(--surface3);border-top:2px solid var(--border2)">'
       + '<td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total — '+vis.length+' record'+(vis.length!==1?'s':'')+'</td>'
       + '<td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--text);font-size:13px;white-space:nowrap">'+inr(totAmt)+'</td>'
       + '</tr></tfoot>';
@@ -3560,8 +3560,9 @@ function _getCanvasSize(canvas) {
 function drawPie(canvasId, segments, tooltipId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
-  const dpr = window.devicePixelRatio || 1;
-  const W = 200, H = 200;
+  const rect = canvas.getBoundingClientRect();
+  const dpr  = window.devicePixelRatio||1;
+  const W = rect.width||200, H = rect.height||200;
   canvas.width  = W * dpr;
   canvas.height = H * dpr;
   const ctx = canvas.getContext('2d');
@@ -4205,7 +4206,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
-  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+  tbody.innerHTML += `<tr style="position:sticky;bottom:0;z-index:2;background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
     <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
     <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
@@ -4568,7 +4569,7 @@ function _printMonthlySummary() {
   <div class="tbl-card">
     <div class="tbl-card-head">💰 Payments by Block</div>
     <table>
-      <thead><tr><th>Block</th><th class="r">Due</th><th class="r">Collected</th><th class="r">Pending</th></tr></thead>
+      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr><th>Block</th><th class="r">Due</th><th class="r">Collected</th><th class="r">Pending</th></tr></thead>
       <tbody>
         ${(() => {
           const blks = [...new Set(rows.map(f => f.block || '–'))].sort();
@@ -4583,7 +4584,7 @@ function _printMonthlySummary() {
               <td class="r" style="color:#059669">₹${Number(bPaid).toLocaleString('en-IN')}</td>
               <td class="r" style="color:${bBal>0?'#DC2626':'#059669'}">₹${Number(bBal).toLocaleString('en-IN')}</td>
             </tr>`;
-          }).join('') + `<tr class="tfoot-row">
+          }).join('') + `<tr class="tfoot-row" style="position:sticky;bottom:0;z-index:2">
             <td>Total</td>
             <td class="r">₹${Number(totDue).toLocaleString('en-IN')}</td>
             <td class="r" style="color:#059669">₹${Number(totPaid).toLocaleString('en-IN')}</td>
@@ -4600,7 +4601,7 @@ function _printMonthlySummary() {
     ${monthExps.length === 0
       ? `<div style="padding:24px;text-align:center;color:#94a3b8;font-size:11px">No expenses recorded for ${monthLabel}</div>`
       : `<table>
-          <thead><tr><th>Category</th><th>Description</th><th class="r">Amount</th></tr></thead>
+          <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr><th>Category</th><th>Description</th><th class="r">Amount</th></tr></thead>
           <tbody>
             ${monthExps.sort((a,b)=>(b.amt||0)-(a.amt||0)).map(e => `<tr>
               <td style="font-size:10px;font-weight:700;color:#6366F1">${e.cat||'Other'}</td>
@@ -4608,7 +4609,7 @@ function _printMonthlySummary() {
               <td class="r" style="color:#DC2626">₹${Number(e.amt||0).toLocaleString('en-IN')}</td>
             </tr>`).join('')}
           </tbody>
-          <tfoot><tr class="tfoot-row">
+          <tfoot style="position:sticky;bottom:0;z-index:2"><tr class="tfoot-row">
             <td colspan="2">Total Expenses</td>
             <td class="r" style="color:#DC2626">₹${Number(totSocExp).toLocaleString('en-IN')}</td>
           </tr></tfoot>

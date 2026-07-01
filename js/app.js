@@ -285,7 +285,7 @@
                 <col style="width:20%"/>
                 <col style="width:26%"/>
               </colgroup>
-              <thead>
+              <thead style="position:sticky;top:0;z-index:2;">
                 <tr style="background:var(--surface3)">
                   <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
                   <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
