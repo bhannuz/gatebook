@@ -269,7 +269,7 @@
 
         <!-- Collected / Outstanding cards -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
-          <div id="analyticsTotals" style="display:contents;"></div>
+          <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
         </div>
 
         <!-- Payment Records Table -->
