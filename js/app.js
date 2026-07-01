@@ -256,7 +256,12 @@
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
     <!-- Main grid: mirrors Expenses tab exactly -->
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;row-gap:16px!important}.an-layout-grid .chart-col{order:2}}</style>
+    <style>
+      @media(max-width:700px){
+        .an-layout-grid{grid-template-columns:1fr!important}
+        .an-layout-grid .chart-col{order:2;margin-top:16px}
+      }
+    </style>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
       <!-- LEFT: stat cards + payment table -->
