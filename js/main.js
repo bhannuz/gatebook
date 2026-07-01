@@ -4192,13 +4192,21 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:8px 6px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
+      <td style="padding:8px 6px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">
+        ${tw===0&&fw===0
+          ? `<span style="font-size:11px;color:var(--muted)">—</span>`
+          : `<span style="font-size:11px;font-weight:700;display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2">
+               ${tw>0?`<span style="color:var(--indigo)">🏍${tw}</span>`:''}
+               ${fw>0?`<span style="color:var(--green-txt)">🚗${fw}</span>`:''}
+             </span>`}
+      </td>
+      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4207,9 +4215,15 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="position:sticky;bottom:0;z-index:2;background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:8px 6px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:8px 4px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700">
+      ${totTw>0||totFw>0?`<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2">
+        ${totTw>0?`<span style="color:var(--indigo)">🏍${totTw}</span>`:''}
+        ${totFw>0?`<span style="color:var(--green-txt)">🚗${totFw}</span>`:''}
+      </span>`:'—'}
+    </td>
+    <td style="padding:8px 6px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
@@ -4667,26 +4681,32 @@ window._rContacts = function() {
     return;
   }
 
+  el.style.display = 'grid';
+  el.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
+  el.style.gap = '8px';
+
   el.innerHTML = vis.map(c => {
     const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1.5px solid var(--border2);
-        border-radius:999px;padding:4px 8px 4px 4px;cursor:pointer;transition:box-shadow .12s,border-color .12s;max-width:100%"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
+      style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+        background:#fff;border:1.5px solid var(--border2);border-radius:12px;
+        padding:10px 6px;cursor:pointer;transition:box-shadow .12s,border-color .12s;
+        aspect-ratio:1/1;text-align:center;overflow:hidden;"
+      onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.08)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:22px;height:22px;border-radius:999px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0">
+      <div style="width:32px;height:32px;border-radius:10px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
         <i class="ti ${icon}"></i>
       </div>
-      <span style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px">${c.name || 'Unnamed'}</span>
-      <span style="font-size:9px;font-weight:600;color:${color};white-space:nowrap">${c.cat || 'Other'}</span>
-      <div style="display:flex;gap:3px;flex-shrink:0;margin-left:2px" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none">
+      <div style="font-size:10px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:100%;text-align:center;padding:0 2px">${c.name || 'Unnamed'}</div>
+      <div style="font-size:9px;font-weight:600;color:${color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;text-align:center">${c.cat || 'Other'}</div>
+      <div style="display:flex;gap:4px;margin-top:2px;" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none;">
           <i class="ti ti-phone" style="font-size:10px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:20px;height:20px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:999px;text-decoration:none">
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:999px;text-decoration:none;">
           <i class="ti ti-brand-whatsapp" style="font-size:11px"></i>
         </a>` : ''}
       </div>
