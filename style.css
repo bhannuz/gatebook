@@ -755,15 +755,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .user-chip span{display:none}
   .vtab{min-height:60px;font-size:11px;padding:10px 6px}
   .vtab i{font-size:17px}
-  /* Stack both layout grids to single column */
+  /* Stack expense layout grid to single column on tablet/mobile */
   .exp-layout-grid{grid-template-columns:1fr!important}
-  .an-layout-grid{grid-template-columns:1fr!important}
   .exp-layout-grid #fundRow{grid-template-columns:1fr 1fr}
   .exp-records-panel{max-height:none!important}
-  /* Chart column comes FIRST on tablet/mobile */
-  .chart-col { order:-1; }
-  /* Reduce canvas height on tablet */
-  .chart-wrap{height:260px!important}
+  /* Chart column comes FIRST on tablet/mobile for expenses */
+  .exp-layout-grid .chart-col { order:-1; }
+  /* Reduce canvas height on tablet for expenses only */
+  .exp-layout-grid .chart-wrap{height:260px!important}
 }
 @media(min-width:601px){
   .bottom-nav-bar{display:none!important}
