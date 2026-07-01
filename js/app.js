@@ -120,7 +120,7 @@
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-users"></i> Residents</button>
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
-        <i class="ti ti-alert-circle"></i> Issues
+        <i class="ti ti-alert-circle"></i> Services
         <span class="vtab-badge" id="openCnt">0</span>
       </button>
     </div>
@@ -129,7 +129,7 @@
   <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
   <div id="statsRow" style="display:none"></div>
 
-  <!-- ISSUES VIEW (with Issues / Contacts sub-tabs) -->
+  <!-- SERVICES VIEW (with Issues / Contacts / Reports sub-tabs) -->
   <div id="iView" style="display:none">
 
     <!-- Sub-tabs -->
@@ -141,6 +141,10 @@
       <button id="issSubTabContacts" onclick="window._issSubTab('contacts')"
         style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
         <i class="ti ti-address-book" style="font-size:14px"></i> Contacts
+      </button>
+      <button id="issSubTabReports" onclick="window._issSubTab('reports')"
+        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
+        <i class="ti ti-file-text" style="font-size:14px"></i> Reports
       </button>
     </div>
 
@@ -178,6 +182,20 @@
       </div>
       <div id="contactsList" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
+
+    <!-- REPORTS SUB-PANEL -->
+    <div id="issSubPanelReports" style="display:none;padding:0 12px 12px">
+      <div style="background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);padding:28px 20px;text-align:center">
+        <div style="width:52px;height:52px;border-radius:14px;background:var(--indigo-bg);color:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px">
+          <i class="ti ti-file-text"></i>
+        </div>
+        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px">Monthly Report</div>
+        <div style="font-size:12px;color:var(--text2);max-width:320px;margin:0 auto 18px;line-height:1.6">
+          Generate a printable summary of payments collected and expenses for any month — ready to share with residents.
+        </div>
+        <button class="btn btn-indigo" onclick="window._oMonthlySummary()"><i class="ti ti-file-text"></i> Generate Monthly Report</button>
+      </div>
+    </div>
   </div><!-- /#iView -->
 
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
@@ -214,11 +232,11 @@
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
 
         <!-- Chart panel -->
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
           </div>
-          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
+          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
             <canvas id="expTabPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
@@ -237,37 +255,37 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <!-- Stat chips: always 2-col, above the main grid -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
+    <!-- Main grid: mirrors Expenses tab exactly -->
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;row-gap:16px!important}.an-layout-grid .chart-col{order:2}}</style>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
-    <!-- 2-col grid: left = table, right = chart -->
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
-    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
+      <!-- LEFT: stat cards + payment table -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
 
-      <!-- LEFT: payment table -->
-      <div style="display:flex;flex-direction:column;gap:14px">
-
-        <!-- placeholder kept for structure -->
+        <!-- Collected / Outstanding cards -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
+          <div id="analyticsTotals" style="display:contents;"></div>
+        </div>
 
         <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
-          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
             <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
           </div>
-          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+          <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
             <table style="width:100%;border-collapse:collapse;table-layout:fixed">
               <colgroup>
-                <col style="width:17%"/>
-                <col style="width:38%"/>
-                <col style="width:21%"/>
-                <col style="width:24%"/>
+                <col style="width:18%"/>
+                <col style="width:36%"/>
+                <col style="width:20%"/>
+                <col style="width:26%"/>
               </colgroup>
-              <thead style="position:sticky;top:0;z-index:1">
+              <thead>
                 <tr style="background:var(--surface3)">
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
-                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
-                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
-                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Balance</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">Status</th>
+                  <th style="padding:8px 10px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap">Balance</th>
                 </tr>
               </thead>
               <tbody id="anPayTable"></tbody>
@@ -277,17 +295,19 @@
 
       </div><!-- /left col -->
 
-      <!-- RIGHT: chart -->
-      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
-          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
-          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
+      <!-- RIGHT: payment status chart — mirrors Expenses chart panel -->
+      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
+            <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
+          </div>
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
             <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
           <div id="payLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
         </div>
-      </div>
+      </div><!-- /right col -->
 
     </div><!-- /main grid -->
 
@@ -762,7 +782,7 @@
     <i class="ti ti-building"></i>Structure
   </button>
   <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
-    <i class="ti ti-alert-circle"></i>Issues
+    <i class="ti ti-alert-circle"></i>Services
     <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
   </button>
 </nav>
