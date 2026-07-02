@@ -3518,7 +3518,6 @@ function rStructure() {
     }
 
     const barClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#e5e7eb'}[status];
-    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
     const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
     const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
     const ini     = isVacant ? '?' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -3532,10 +3531,10 @@ function rStructure() {
         box-shadow:0 1px 3px rgba(0,0,0,.05);"
       onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.08)';this.style.borderColor='${barClr}'"
       onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.borderColor='#f0f0f0'">
-      <!-- colour status bar -->
+      <!-- colour status bar at top only -->
       <div style="height:3px;background:${barClr};width:100%"></div>
-      <!-- card body -->
-      <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:${bgClr}">
+      <!-- card body — plain white, no tint -->
+      <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:#fff">
         <!-- avatar -->
         <div style="width:26px;height:26px;border-radius:7px;background:${iniTxt};color:${iniClr};
           font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
