@@ -164,16 +164,20 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
   <!-- ── LOGIN FORM ── -->
   <div id="loginForm">
     <div class="card-title">Welcome back</div>
-    <div class="card-sub">Sign in to your <strong>Gatebook</strong> society dashboard.</div>
+    <div class="card-sub">Sign in with your mobile number or email.</div>
 
     <div class="alert" id="loginAlert"><i class="ti ti-alert-circle"></i><span id="loginAlertMsg"></span></div>
 
     <div class="fg">
-      <label>Email Address</label>
-      <input type="email" id="loginEmail" placeholder="you@example.com" autocomplete="email"/>
+      <label>Mobile number or Email</label>
+      <input type="text" id="loginId" placeholder="9876543210 or you@example.com" autocomplete="username"/>
     </div>
     <div class="fg">
-      <label>Password</label>
+      <label style="display:flex;justify-content:space-between;align-items:center;">
+        Password
+        <a href="#" onclick="showForgot();return false;"
+          style="font-size:11px;font-weight:600;color:var(--indigo);text-decoration:none;">Forgot password?</a>
+      </label>
       <div class="pw-wrap">
         <input type="password" id="loginPassword" placeholder="Your password" autocomplete="current-password"/>
         <button class="pw-toggle" type="button" onclick="togglePw('loginPassword',this)"><i class="ti ti-eye"></i></button>
@@ -190,10 +194,34 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
     </div>
   </div>
 
-  <!-- ── SIGNUP FORM (quick account creation for existing apartment members) ── -->
+  <!-- ── FORGOT PASSWORD ── -->
+  <div id="forgotForm" style="display:none">
+    <div class="card-title">Reset Password</div>
+    <div class="card-sub">Enter your mobile number or email to receive a reset link.</div>
+
+    <div class="alert" id="forgotAlert"><i class="ti ti-alert-circle"></i><span id="forgotAlertMsg"></span></div>
+
+    <div class="fg">
+      <label>Mobile number or Email</label>
+      <input type="text" id="forgotId" placeholder="9876543210 or you@example.com"/>
+    </div>
+
+    <button class="btn-primary" id="forgotBtn" onclick="doForgot()">
+      <i class="ti ti-send"></i><span id="forgotBtnLbl">Send Reset Link</span>
+    </button>
+
+    <div style="margin-top:14px;text-align:center;">
+      <a href="#" onclick="showTab('login');return false;"
+        style="font-size:12px;font-weight:600;color:var(--indigo);text-decoration:none;">
+        ← Back to Sign In
+      </a>
+    </div>
+  </div>
+
+  <!-- ── SIGNUP FORM ── -->
   <div id="signupForm" style="display:none">
     <div class="card-title">Create an account</div>
-    <div class="card-sub">Sign up to access your society's dashboard.</div>
+    <div class="card-sub">Sign up with your mobile number or email.</div>
 
     <div class="alert" id="signupAlert"><i class="ti ti-alert-circle"></i><span id="signupAlertMsg"></span></div>
 
@@ -202,8 +230,8 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
       <input type="text" id="signupName" placeholder="Your full name"/>
     </div>
     <div class="fg">
-      <label>Email Address</label>
-      <input type="email" id="signupEmail" placeholder="you@example.com" autocomplete="email"/>
+      <label>Mobile number or Email</label>
+      <input type="text" id="signupId" placeholder="9876543210 or you@example.com" autocomplete="username"/>
     </div>
     <div class="fg">
       <label>Password</label>
@@ -226,10 +254,25 @@ import {
   createUserWithEmailAndPassword,
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 
 /* ── Admin email — change this to your admin email ── */
 const ADMIN_EMAIL = 'admin@gatebook.app';
+
+/* ── Mobile → email helper (resolves mobile or plain email) ── */
+function resolveEmail(input) {
+  const v = (input || '').trim();
+  // If it looks like a 10-digit number, convert to gatebook email
+  if (/^\d{10}$/.test(v)) return v + '@gatebook.app';
+  return v; // already an email
+}
+function validateInput(v) {
+  if (!v) return 'Please enter your mobile number or email.';
+  if (/^\d+$/.test(v) && v.length !== 10) return 'Mobile number must be exactly 10 digits.';
+  if (!v.includes('@') && !/^\d{10}$/.test(v)) return 'Enter a valid mobile number or email address.';
+  return null;
+}
 
 /* ── Auth guard: redirect logged-in users straight to app ── */
 onAuthStateChanged(auth, user => {
@@ -247,11 +290,23 @@ onAuthStateChanged(auth, user => {
 
 /* ── Tab switch ── */
 window.showTab = function(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('loginForm').style.display  = isLogin ? '' : 'none';
-  document.getElementById('signupForm').style.display = isLogin ? 'none' : '';
+  const isLogin  = tab === 'login';
+  const isSignup = tab === 'signup';
+  document.getElementById('loginForm').style.display  = isLogin  ? '' : 'none';
+  document.getElementById('signupForm').style.display = isSignup ? '' : 'none';
+  document.getElementById('forgotForm').style.display = 'none';
   document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
+  document.getElementById('tabSignup').classList.toggle('active', isSignup);
+  clearAlerts();
+};
+
+/* ── Show forgot form ── */
+window.showForgot = function() {
+  document.getElementById('loginForm').style.display  = 'none';
+  document.getElementById('signupForm').style.display = 'none';
+  document.getElementById('forgotForm').style.display = '';
+  document.getElementById('tabLogin').classList.remove('active');
+  document.getElementById('tabSignup').classList.remove('active');
   clearAlerts();
 };
 
@@ -270,8 +325,9 @@ function showAlert(id, msg, type = 'error') {
   el.className = `alert ${type} show`;
 }
 function clearAlerts() {
-  ['loginAlert','signupAlert'].forEach(id => {
-    document.getElementById(id).classList.remove('show');
+  ['loginAlert','signupAlert','forgotAlert'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('show');
   });
 }
 function setLoading(btnId, lblId, loading, defaultLbl) {
@@ -281,46 +337,66 @@ function setLoading(btnId, lblId, loading, defaultLbl) {
 
 /* ── Login ── */
 window.doLogin = async function() {
-  const email    = document.getElementById('loginEmail').value.trim();
+  const raw = document.getElementById('loginId').value.trim();
+  const err = validateInput(raw);
+  if (err) { showAlert('loginAlert', err); return; }
   const password = document.getElementById('loginPassword').value;
-  if (!email || !password) { showAlert('loginAlert','Please fill in all fields.'); return; }
+  if (!password) { showAlert('loginAlert','Please enter your password.'); return; }
   setLoading('loginBtn','loginBtnLbl', true, 'Sign In');
   try {
-    await signInWithEmailAndPassword(auth, email, password);
-    // onAuthStateChanged will redirect
-  } catch (err) {
+    await signInWithEmailAndPassword(auth, resolveEmail(raw), password);
+  } catch (e) {
     const msgs = {
-      'auth/user-not-found':    'No account found with this email.',
+      'auth/user-not-found':    'No account found. Please check your mobile number or email.',
       'auth/wrong-password':    'Incorrect password. Please try again.',
-      'auth/invalid-email':     'Please enter a valid email address.',
-      'auth/invalid-credential':'Incorrect email or password.',
+      'auth/invalid-credential':'Incorrect credentials. Please try again.',
       'auth/too-many-requests': 'Too many attempts. Please try again later.',
     };
-    showAlert('loginAlert', msgs[err.code] || 'Sign in failed. Please try again.');
+    showAlert('loginAlert', msgs[e.code] || 'Sign in failed. Please try again.');
   } finally {
     setLoading('loginBtn','loginBtnLbl', false, 'Sign In');
+  }
+};
+
+/* ── Forgot Password ── */
+window.doForgot = async function() {
+  const raw = document.getElementById('forgotId').value.trim();
+  const err = validateInput(raw);
+  if (err) { showAlert('forgotAlert', err); return; }
+  setLoading('forgotBtn','forgotBtnLbl', true, 'Send Reset Link');
+  try {
+    await sendPasswordResetEmail(auth, resolveEmail(raw));
+    showAlert('forgotAlert', 'Reset link sent! Check your email inbox.', 'success');
+  } catch (e) {
+    const msgs = {
+      'auth/user-not-found':    'No account found. Please check your mobile number or email.',
+      'auth/too-many-requests': 'Too many attempts. Please try again later.',
+    };
+    showAlert('forgotAlert', msgs[e.code] || 'Could not send reset link. Please try again.');
+  } finally {
+    setLoading('forgotBtn','forgotBtnLbl', false, 'Send Reset Link');
   }
 };
 
 /* ── Signup ── */
 window.doSignup = async function() {
   const name     = document.getElementById('signupName').value.trim();
-  const email    = document.getElementById('signupEmail').value.trim();
+  const raw      = document.getElementById('signupId').value.trim();
   const password = document.getElementById('signupPassword').value;
-  if (!name || !email || !password) { showAlert('signupAlert','Please fill in all fields.'); return; }
+  if (!name) { showAlert('signupAlert','Please enter your full name.'); return; }
+  const err = validateInput(raw);
+  if (err) { showAlert('signupAlert', err); return; }
   if (password.length < 6) { showAlert('signupAlert','Password must be at least 6 characters.'); return; }
   setLoading('signupBtn','signupBtnLbl', true, 'Create Account');
   try {
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    const cred = await createUserWithEmailAndPassword(auth, resolveEmail(raw), password);
     await updateProfile(cred.user, { displayName: name });
-    // onAuthStateChanged will redirect
-  } catch (err) {
+  } catch (e) {
     const msgs = {
-      'auth/email-already-in-use':'An account with this email already exists.',
-      'auth/invalid-email':       'Please enter a valid email address.',
+      'auth/email-already-in-use':'An account with this mobile number or email already exists.',
       'auth/weak-password':       'Password is too weak. Use at least 6 characters.',
     };
-    showAlert('signupAlert', msgs[err.code] || 'Sign up failed. Please try again.');
+    showAlert('signupAlert', msgs[e.code] || 'Sign up failed. Please try again.');
   } finally {
     setLoading('signupBtn','signupBtnLbl', false, 'Create Account');
   }
@@ -329,9 +405,9 @@ window.doSignup = async function() {
 /* ── Enter key submit ── */
 document.addEventListener('keydown', e => {
   if (e.key !== 'Enter') return;
-  const loginVisible = document.getElementById('loginForm').style.display !== 'none';
-  if (loginVisible) window.doLogin();
-  else window.doSignup();
+  if (document.getElementById('loginForm').style.display  !== 'none') window.doLogin();
+  else if (document.getElementById('signupForm').style.display !== 'none') window.doSignup();
+  else if (document.getElementById('forgotForm').style.display !== 'none') window.doForgot();
 });
 </script>
 </body>
