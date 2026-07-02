@@ -1395,9 +1395,24 @@ window._renameBlockPrompt = async (oldName) => {
   const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
   sync('saving');
   try {
-    await Promise.all(toUpdate.map(([fid]) => updateDoc(doc(db,'apartments',UID,'flats',fid), {block: nn})));
-    toUpdate.forEach(([fid, f]) => { f.block = nn; flats.set(fid, f); });
-    sync('live'); toast('Block renamed ✓');
+    await Promise.all(toUpdate.map(([fid, f]) => {
+      // Derive new flatId by replacing the block prefix
+      const oldFlatId = f.flatId || '';
+      const newFlatId = oldFlatId.startsWith(oldName + '-')
+        ? nn + '-' + oldFlatId.slice(oldName.length + 1)
+        : oldFlatId; // fallback: keep as-is if pattern doesn't match
+      return updateDoc(doc(db,'apartments',UID,'flats',fid), { block: nn, flatId: newFlatId });
+    }));
+    toUpdate.forEach(([fid, f]) => {
+      const oldFlatId = f.flatId || '';
+      const newFlatId = oldFlatId.startsWith(oldName + '-')
+        ? nn + '-' + oldFlatId.slice(oldName.length + 1)
+        : oldFlatId;
+      f.block  = nn;
+      f.flatId = newFlatId;
+      flats.set(fid, f);
+    });
+    sync('live'); toast('Block renamed — flat names updated ✓');
     window._renderStructureList(); rStructure();
   } catch(e) { sync('error'); toast('Rename failed','error'); }
 };
@@ -1554,7 +1569,7 @@ window._saveNewStructure = async () => {
     for (const f of newFlats) {
       const fid = (blockName + '-' + f.flatNum).replace(/[^a-z0-9-]/gi, '_').toLowerCase();
       const flatDoc = {
-        flatId: f.flatNum,
+        flatId: blockName + '-' + f.flatNum,
         block: blockName,
         floor: f.floor,
         owner: f.resName,
