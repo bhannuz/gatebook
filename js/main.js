@@ -3540,33 +3540,93 @@ function rStructure() {
     const iniClr  = {paid:'#16a34a', partial:'#d97706', pending:'#dc2626', vacant:'#9ca3af'}[status];
     const iniTxt  = {paid:'#dcfce7', partial:'#fef9c3', pending:'#fee2e2', vacant:'#f3f4f6'}[status];
 
-    return `<button onclick="window.oFlEdit('${fid}')"
-      style="background:#fff;border:1.5px solid #f0f0f0;border-radius:10px;padding:0;
-        cursor:pointer;font-family:var(--font);text-align:left;width:100%;
-        overflow:hidden;transition:box-shadow .12s,border-color .12s;
-        box-shadow:0 1px 3px rgba(0,0,0,.05);"
-      onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.08)';this.style.borderColor='${barClr}'"
-      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.borderColor='#f0f0f0'">
-      <!-- colour status bar at top only -->
-      <div style="height:3px;background:${barClr};width:100%"></div>
-      <!-- card body — plain white, no tint -->
-      <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:#fff">
-        <!-- avatar -->
-        <div style="width:26px;height:26px;border-radius:7px;background:${iniTxt};color:${iniClr};
-          font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
-          flex-shrink:0;letter-spacing:-.3px;">${ini}</div>
-        <!-- info -->
-        <div style="flex:1;min-width:0;overflow:hidden;">
-          <div style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;
-            overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${f.flatId}</div>
-          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
+    const veh = vehicles.get(fid) || { tw:0, fw:0 };
+    const tw = parseInt(veh.tw)||0, fw = parseInt(veh.fw)||0;
+    const panelId = 'flatpanel_' + fid;
+
+    return `<div style="position:relative;">
+      <button onclick="window._toggleFlatPanel('${fid}','${panelId}')"
+        style="background:#fff;border:1.5px solid #f0f0f0;border-radius:10px;padding:0;
+          cursor:pointer;font-family:var(--font);text-align:left;width:100%;
+          overflow:hidden;transition:box-shadow .12s,border-color .12s;
+          box-shadow:0 1px 3px rgba(0,0,0,.05);"
+        onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.08)';this.style.borderColor='${barClr}'"
+        onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.borderColor='#f0f0f0'">
+        <div style="height:3px;background:${barClr};width:100%"></div>
+        <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:#fff">
+          <div style="width:26px;height:26px;border-radius:7px;background:${iniTxt};color:${iniClr};
+            font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
+            flex-shrink:0;letter-spacing:-.3px;">${ini}</div>
+          <div style="flex:1;min-width:0;overflow:hidden;">
+            <div style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;
+              overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${f.flatId}</div>
+            <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
+          </div>
+          <i class="ti ti-chevron-down" id="${panelId}_icon"
+            style="font-size:11px;color:#94a3b8;flex-shrink:0;transition:transform .2s;"></i>
+        </div>
+      </button>
+
+      <!-- Inline toggle panel -->
+      <div id="${panelId}" style="display:none;margin-top:4px;background:#fff;border:1.5px solid ${barClr};
+        border-radius:10px;padding:10px;font-family:var(--font);">
+
+        <!-- Quick info row -->
+        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
+          <span style="font-size:10px;font-weight:700;color:#fff;background:${barClr};
+            padding:2px 7px;border-radius:20px;">${typeLbl}</span>
+          ${(tw||fw) ? `<span style="font-size:10px;font-weight:700;color:var(--text2);background:var(--surface3);
+            padding:2px 7px;border-radius:20px;">🏍${tw} 🚗${fw}</span>` : ''}
+          ${f.floor ? `<span style="font-size:10px;font-weight:600;color:var(--muted);background:var(--surface3);
+            padding:2px 7px;border-radius:20px;">Floor ${f.floor}</span>` : ''}
+        </div>
+
+        <!-- Owner info -->
+        ${f.owner ? `<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;">
+          👤 ${f.owner}</div>` : ''}
+        ${f.phone ? `<div style="font-size:11px;color:var(--text2);margin-bottom:2px;">📱 ${f.phone}</div>` : ''}
+        ${f.due ? `<div style="font-size:11px;font-weight:700;color:${paid>=due?'var(--green)':'var(--red)'};margin-bottom:8px;">
+          ₹${paid.toLocaleString('en-IN')} / ₹${due.toLocaleString('en-IN')} paid</div>` : ''}
+
+        <!-- Action buttons -->
+        <div style="display:flex;gap:6px;margin-top:6px;">
+          <button onclick="event.stopPropagation();window.oFlEdit('${fid}')"
+            style="flex:1;height:28px;border-radius:7px;border:1.5px solid var(--indigo);
+              background:var(--indigo);color:#fff;font-size:11px;font-weight:700;
+              cursor:pointer;font-family:var(--font);">
+            <i class="ti ti-edit" style="font-size:11px"></i> Edit
+          </button>
+          <button onclick="event.stopPropagation();window._openPayHistory('${f.flatId}')"
+            style="flex:1;height:28px;border-radius:7px;border:1.5px solid var(--border2);
+              background:#fff;color:var(--text2);font-size:11px;font-weight:700;
+              cursor:pointer;font-family:var(--font);">
+            <i class="ti ti-history" style="font-size:11px"></i> History
+          </button>
         </div>
       </div>
-    </button>`;
+    </div>`;
   }
 }
 
 window.rStructure = rStructure;
+
+window._toggleFlatPanel = function(fid, panelId) {
+  // Close all other open panels first
+  document.querySelectorAll('[id^="flatpanel_"]').forEach(el => {
+    if (el.id !== panelId && el.style.display !== 'none') {
+      el.style.display = 'none';
+      const icon = document.getElementById(el.id + '_icon');
+      if (icon) icon.style.transform = '';
+    }
+  });
+  const panel = document.getElementById(panelId);
+  const icon  = document.getElementById(panelId + '_icon');
+  if (!panel) return;
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : '';
+  if (icon) icon.style.transform = open ? '' : 'rotate(180deg)';
+};
+
 window._setStrView = v => {
   STRVIEW = v;
   document.querySelectorAll('[data-view]').forEach(btn => {
