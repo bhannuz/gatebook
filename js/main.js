@@ -4187,11 +4187,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
-           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
-           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
-           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
-         </span>`;
+      : `<span style="font-size:12px;font-weight:700;color:var(--text)">${tw}/${fw}</span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
     const typeBadge = isVacant
@@ -4219,11 +4215,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
-  const totVeh = (totTw>0||totFw>0)
-    ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700">
-        ${totTw>0?`<span style="color:var(--indigo)">🏍${totTw}</span>`:''}
-        ${totFw>0?`<span style="color:var(--green-txt)">🚗${totFw}</span>`:''}
-      </span>` : '—';
+  const totVeh = (totTw > 0 || totFw > 0)
+    ? `<span style="font-size:12px;font-weight:700;color:var(--text)">${totTw}/${totFw}</span>`
+    : '—';
   tbody.innerHTML += `<tr style="position:sticky;bottom:0;z-index:2;background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:8px 6px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
     <td style="padding:8px 4px;text-align:center">${totVeh}</td>
