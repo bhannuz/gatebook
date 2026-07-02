@@ -1913,7 +1913,6 @@ function switchView(v) {
   document.querySelectorAll('.bnav-item').forEach(p => p.classList.toggle('active', p.dataset.v===v));
   if(v==='analytics') try{ rAnalytics(); } catch(e){ console.error(e); }
   if(v==='structure') try{ rStructure(); } catch(e){ console.error(e); }
-  if(v==='issues')    try{ window._issSubTab(window._activeIssSubTab||'issues'); } catch(e){ console.error(e); }
   if(v==='president') {
     try{ rPresident(); } catch(e){ console.error(e); }
     rPresHistory().catch(e => console.error('rPresHistory', e));
@@ -2134,6 +2133,7 @@ function rBlock() {
 ════════════════════════════════ */
 
 function rIssues() {
+  document.getElementById('phAct').innerHTML = '';
   const fil = IF === 'all' ? [...issues] : issues.filter(i => i.status === IF);
   const icons = {
     Plumbing: 'ti-tool', Electrical: 'ti-bolt', Lift: 'ti-elevator',
@@ -2153,14 +2153,14 @@ function rIssues() {
 
   el.innerHTML = `
     <table style="width:100%;border-collapse:collapse">
-      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)">
+      <thead>
         <tr style="background:var(--surface3)">
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Issue</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
-          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
-          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Priority</th>
-          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Status</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Issue</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Flat</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Category</th>
+          <th style="padding:9px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2)">Reported</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Priority</th>
+          <th style="padding:9px 14px;text-align:center;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid var(--border2);width:60px">Status</th>
         </tr>
       </thead>
       <tbody>
@@ -2312,7 +2312,7 @@ function rMembers() {
 
   document.getElementById('memList').innerHTML = `
     <table class="mem-table">
-      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr>
+      <thead><tr>
         <th>Flat</th>
         <th>Owner</th>
         <th>Stays</th>
@@ -2479,6 +2479,7 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -2600,7 +2601,7 @@ function rPresident() {
     var TD = 'padding:10px 12px;font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle';
     var html = '<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
       + '<colgroup><col style="width:36%"/><col style="width:24%"/><col style="width:22%"/><col style="width:18%"/></colgroup>'
-      + '<thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr style="background:var(--surface3)">'
+      + '<thead><tr style="background:var(--surface3)">'
       + '<th style="'+TH+';text-align:left">Title</th>'
       + '<th style="'+TH+';text-align:center">Category</th>'
       + '<th style="'+TH+';text-align:center">Date</th>'
@@ -2621,7 +2622,7 @@ function rPresident() {
         + '</tr>';
     });
     var totAmt = vis.reduce(function(s,e){ return s + (e.amt||0); }, 0);
-    html += '</tbody><tfoot style="position:sticky;bottom:0;z-index:2"><tr style="background:var(--surface3);border-top:2px solid var(--border2)">'
+    html += '</tbody><tfoot><tr style="background:var(--surface3);border-top:2px solid var(--border2)">'
       + '<td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="3">Total — '+vis.length+' record'+(vis.length!==1?'s':'')+'</td>'
       + '<td style="padding:10px 12px;text-align:right;font-weight:800;color:var(--text);font-size:13px;white-space:nowrap">'+inr(totAmt)+'</td>'
       + '</tr></tfoot>';
@@ -3491,7 +3492,7 @@ function rStructure() {
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${paidCnt===fts.length?'var(--green)':paidCnt>0?'var(--amber)':'var(--red)'};color:#fff;">${paidCnt}/${fts.length}</span>
             <i class="ti ti-chevron-down blk-toggle-icon" style="color:var(--indigo);font-size:13px;transition:transform .2s;"></i>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
             ${fts.map(f => makeChip(f)).join('')}
           </div>
         </div>`
@@ -3499,7 +3500,7 @@ function rStructure() {
 
   } else {
     // All flats in one grid
-    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;">
       ${rows.map(f => makeChip(f)).join('')}
     </div>`;
   }
@@ -3516,24 +3517,35 @@ function rStructure() {
       if (flat.flatId === f.flatId && flat.block === f.block) { fid = key; break; }
     }
 
-    // Option 4 — Icon chip: status dot + flat ID + type (3-col grid)
-    const dotClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#d1d5db'}[status];
+    const barClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#e5e7eb'}[status];
+    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
     const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
     const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
-    const borderClr = {paid:'#bbf7d0', partial:'#fde68a', pending:'#fecaca', vacant:'#e5e7eb'}[status];
-    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
+    const ini     = isVacant ? '?' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const iniClr  = {paid:'#16a34a', partial:'#d97706', pending:'#dc2626', vacant:'#9ca3af'}[status];
+    const iniTxt  = {paid:'#dcfce7', partial:'#fef9c3', pending:'#fee2e2', vacant:'#f3f4f6'}[status];
 
     return `<button onclick="window.oFlEdit('${fid}')"
-      style="background:${bgClr};border:1px solid ${borderClr};border-radius:8px;
-        padding:7px 8px;cursor:pointer;font-family:var(--font);text-align:left;
-        display:flex;align-items:center;gap:7px;width:100%;
-        transition:box-shadow .12s,border-color .12s;box-shadow:0 1px 2px rgba(0,0,0,.04);"
-      onmouseover="this.style.boxShadow='0 3px 8px rgba(0,0,0,.1)';this.style.borderColor='${dotClr}'"
-      onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)';this.style.borderColor='${borderClr}'">
-      <span style="width:8px;height:8px;border-radius:50%;background:${dotClr};flex-shrink:0;display:inline-block;"></span>
-      <div style="min-width:0;overflow:hidden;">
-        <div style="font-size:11px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${f.flatId}</div>
-        <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;white-space:nowrap">${typeLbl}</div>
+      style="background:#fff;border:1.5px solid #f0f0f0;border-radius:10px;padding:0;
+        cursor:pointer;font-family:var(--font);text-align:left;width:100%;
+        overflow:hidden;transition:box-shadow .12s,border-color .12s;
+        box-shadow:0 1px 3px rgba(0,0,0,.05);"
+      onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.08)';this.style.borderColor='${barClr}'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.borderColor='#f0f0f0'">
+      <!-- colour status bar -->
+      <div style="height:3px;background:${barClr};width:100%"></div>
+      <!-- card body -->
+      <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:${bgClr}">
+        <!-- avatar -->
+        <div style="width:26px;height:26px;border-radius:7px;background:${iniTxt};color:${iniClr};
+          font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
+          flex-shrink:0;letter-spacing:-.3px;">${ini}</div>
+        <!-- info -->
+        <div style="flex:1;min-width:0;overflow:hidden;">
+          <div style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;
+            overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${f.flatId}</div>
+          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
+        </div>
       </div>
     </button>`;
   }
@@ -3560,6 +3572,7 @@ function _getCanvasSize(canvas) {
 function drawPie(canvasId, segments, tooltipId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  // Responsive: set canvas pixel size to display size
   const rect = canvas.getBoundingClientRect();
   const dpr  = window.devicePixelRatio||1;
   const W = rect.width||200, H = rect.height||200;
@@ -4192,21 +4205,13 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:8px 6px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
-      <td style="padding:8px 6px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">
-        ${tw===0&&fw===0
-          ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-          : `<span style="font-size:11px;font-weight:700;display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2">
-               ${tw>0?`<span style="color:var(--indigo)">🏍${tw}</span>`:''}
-               ${fw>0?`<span style="color:var(--green-txt)">🚗${fw}</span>`:''}
-             </span>`}
-      </td>
-      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4214,16 +4219,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
-  tbody.innerHTML += `<tr style="position:sticky;bottom:0;z-index:2;background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:8px 6px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:8px 4px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:8px 4px;text-align:center;font-size:11px;font-weight:700">
-      ${totTw>0||totFw>0?`<span style="display:inline-flex;flex-direction:column;align-items:center;gap:1px;line-height:1.2">
-        ${totTw>0?`<span style="color:var(--indigo)">🏍${totTw}</span>`:''}
-        ${totFw>0?`<span style="color:var(--green-txt)">🚗${totFw}</span>`:''}
-      </span>`:'—'}
-    </td>
-    <td style="padding:8px 6px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
@@ -4319,7 +4318,7 @@ function _renderSummary() {
   const collPctHead = totDue > 0 ? Math.round(totPaid / totDue * 100) : 0;
   document.getElementById('msSummaryHead').innerHTML = `
     <style>
-      .ms-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+      .ms-kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}
       .ms-kpi{border-radius:12px;padding:12px;position:relative;overflow:hidden}
       .ms-kpi-lbl{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap;opacity:.85}
       .ms-kpi-val{font-size:16px;font-weight:800;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.3px}
@@ -4583,7 +4582,7 @@ function _printMonthlySummary() {
   <div class="tbl-card">
     <div class="tbl-card-head">💰 Payments by Block</div>
     <table>
-      <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr><th>Block</th><th class="r">Due</th><th class="r">Collected</th><th class="r">Pending</th></tr></thead>
+      <thead><tr><th>Block</th><th class="r">Due</th><th class="r">Collected</th><th class="r">Pending</th></tr></thead>
       <tbody>
         ${(() => {
           const blks = [...new Set(rows.map(f => f.block || '–'))].sort();
@@ -4598,7 +4597,7 @@ function _printMonthlySummary() {
               <td class="r" style="color:#059669">₹${Number(bPaid).toLocaleString('en-IN')}</td>
               <td class="r" style="color:${bBal>0?'#DC2626':'#059669'}">₹${Number(bBal).toLocaleString('en-IN')}</td>
             </tr>`;
-          }).join('') + `<tr class="tfoot-row" style="position:sticky;bottom:0;z-index:2">
+          }).join('') + `<tr class="tfoot-row">
             <td>Total</td>
             <td class="r">₹${Number(totDue).toLocaleString('en-IN')}</td>
             <td class="r" style="color:#059669">₹${Number(totPaid).toLocaleString('en-IN')}</td>
@@ -4615,7 +4614,7 @@ function _printMonthlySummary() {
     ${monthExps.length === 0
       ? `<div style="padding:24px;text-align:center;color:#94a3b8;font-size:11px">No expenses recorded for ${monthLabel}</div>`
       : `<table>
-          <thead style="position:sticky;top:0;z-index:2;background:var(--surface3)"><tr><th>Category</th><th>Description</th><th class="r">Amount</th></tr></thead>
+          <thead><tr><th>Category</th><th>Description</th><th class="r">Amount</th></tr></thead>
           <tbody>
             ${monthExps.sort((a,b)=>(b.amt||0)-(a.amt||0)).map(e => `<tr>
               <td style="font-size:10px;font-weight:700;color:#6366F1">${e.cat||'Other'}</td>
@@ -4623,7 +4622,7 @@ function _printMonthlySummary() {
               <td class="r" style="color:#DC2626">₹${Number(e.amt||0).toLocaleString('en-IN')}</td>
             </tr>`).join('')}
           </tbody>
-          <tfoot style="position:sticky;bottom:0;z-index:2"><tr class="tfoot-row">
+          <tfoot><tr class="tfoot-row">
             <td colspan="2">Total Expenses</td>
             <td class="r" style="color:#DC2626">₹${Number(totSocExp).toLocaleString('en-IN')}</td>
           </tr></tfoot>
@@ -4673,7 +4672,7 @@ window._rContacts = function() {
   if (!el) return;
 
   if (!vis.length) {
-    el.innerHTML = `<div style="width:100%;padding:40px 20px;text-align:center;color:var(--muted)">
+    el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
       <i class="ti ti-address-book-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
       <div style="font-size:13px;font-weight:600">No service contacts ${filter!=='all'?'in this category':'yet'}</div>
       <div style="font-size:11px;margin-top:4px">Tap "Add Contact" to save plumber, electrician, maid etc.</div>
@@ -4681,33 +4680,29 @@ window._rContacts = function() {
     return;
   }
 
-  el.style.display = 'grid';
-  el.style.gridTemplateColumns = 'repeat(auto-fill, minmax(90px, 1fr))';
-  el.style.gap = '8px';
-
   el.innerHTML = vis.map(c => {
     const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:4px;
-        background:#fff;border:1.5px solid var(--border2);border-radius:12px;
-        padding:10px 6px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s;
-        text-align:center;min-height:110px;"
-      onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.08)';this.style.borderColor='${color}'"
+      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:32px;height:32px;border-radius:10px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
         <i class="ti ${icon}"></i>
       </div>
-      <div style="font-size:10px;font-weight:700;color:var(--text);word-break:break-word;width:100%;text-align:center;padding:0 2px;line-height:1.3">${c.name || 'Unnamed'}</div>
-      <div style="font-size:9px;font-weight:600;color:${color};width:100%;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.cat || 'Other'}</div>
-      <div style="display:flex;gap:4px;margin-top:auto;padding-top:4px" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none;">
-          <i class="ti ti-phone" style="font-size:10px"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
+          <i class="ti ti-phone" style="font-size:12px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:22px;height:22px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:999px;text-decoration:none;">
-          <i class="ti ti-brand-whatsapp" style="font-size:11px"></i>
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
+          <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
         </a>` : ''}
       </div>
     </div>`;
@@ -4800,30 +4795,26 @@ window._delContact = async function() {
    ISSUES / CONTACTS SUB-TAB TOGGLE
 ════════════════════════════════ */
 window._issSubTab = function(which) {
-  window._activeIssSubTab = which; // remember for when main tab is re-entered
   const issuesBtn    = document.getElementById('issSubTabIssues');
   const contactsBtn  = document.getElementById('issSubTabContacts');
-  const reportsBtn   = document.getElementById('issSubTabReports');
   const issuesPanel  = document.getElementById('issSubPanelIssues');
   const contactsPanel= document.getElementById('issSubPanelContacts');
-  const reportsPanel = document.getElementById('issSubPanelReports');
   if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
 
-  const active   = { borderColor:'var(--indigo)', background:'var(--indigo)', color:'#fff' };
-  const inactive = { borderColor:'var(--border2)', background:'#fff', color:'var(--text2)' };
+  const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
+  const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
 
-  const panels = { issues: issuesPanel, contacts: contactsPanel };
-  const btns   = { issues: issuesBtn,   contacts: contactsBtn   };
-  if (reportsBtn  && reportsPanel) { panels.reports = reportsPanel; btns.reports = reportsBtn; }
-
-  Object.keys(panels).forEach(key => {
-    const isActive = key === which;
-    panels[key].style.display = isActive ? '' : 'none';
-    Object.assign(btns[key].style, isActive ? active : inactive);
-  });
-
-  try {
-    if (which === 'issues')   rIssues();
-    else if (which === 'contacts') window._rContacts();
-  } catch(e) { console.error(e); }
+  if (which === 'issues') {
+    issuesPanel.style.display = '';
+    contactsPanel.style.display = 'none';
+    Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    try { rIssues(); } catch(e) { console.error(e); }
+  } else {
+    issuesPanel.style.display = 'none';
+    contactsPanel.style.display = '';
+    Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    try { window._rContacts(); } catch(e) { console.error(e); }
+  }
 };
