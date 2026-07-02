@@ -1396,20 +1396,21 @@ window._renameBlockPrompt = async (oldName) => {
   sync('saving');
   try {
     await Promise.all(toUpdate.map(([fid, f]) => {
-      // Derive new flatId by replacing the block prefix
       const oldFlatId = f.flatId || '';
-      const newFlatId = oldFlatId.startsWith(oldName + '-')
-        ? nn + '-' + oldFlatId.slice(oldName.length + 1)
-        : oldFlatId; // fallback: keep as-is if pattern doesn't match
+      // Handle both "A-101" and "101" formats
+      let suffix = oldFlatId;
+      if (oldFlatId.startsWith(oldName + '-')) {
+        suffix = oldFlatId.slice(oldName.length + 1); // e.g. "101"
+      }
+      const newFlatId = nn + '-' + suffix; // always "B-101"
       return updateDoc(doc(db,'apartments',UID,'flats',fid), { block: nn, flatId: newFlatId });
     }));
     toUpdate.forEach(([fid, f]) => {
       const oldFlatId = f.flatId || '';
-      const newFlatId = oldFlatId.startsWith(oldName + '-')
-        ? nn + '-' + oldFlatId.slice(oldName.length + 1)
-        : oldFlatId;
+      let suffix = oldFlatId;
+      if (oldFlatId.startsWith(oldName + '-')) suffix = oldFlatId.slice(oldName.length + 1);
       f.block  = nn;
-      f.flatId = newFlatId;
+      f.flatId = nn + '-' + suffix;
       flats.set(fid, f);
     });
     sync('live'); toast('Block renamed — flat names updated ✓');
