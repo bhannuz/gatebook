@@ -3567,43 +3567,9 @@ function rStructure() {
         </div>
       </button>
 
-      <!-- Inline toggle panel -->
+      <!-- Inline toggle panel — content loaded on open -->
       <div id="${panelId}" style="display:none;margin-top:4px;background:#fff;border:1.5px solid ${barClr};
-        border-radius:10px;padding:10px;font-family:var(--font);">
-
-        <!-- Quick info row -->
-        <div style="display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;">
-          <span style="font-size:10px;font-weight:700;color:#fff;background:${barClr};
-            padding:2px 7px;border-radius:20px;">${typeLbl}</span>
-          ${(tw||fw) ? `<span style="font-size:10px;font-weight:700;color:var(--text2);background:var(--surface3);
-            padding:2px 7px;border-radius:20px;">🏍${tw} 🚗${fw}</span>` : ''}
-          ${f.floor ? `<span style="font-size:10px;font-weight:600;color:var(--muted);background:var(--surface3);
-            padding:2px 7px;border-radius:20px;">Floor ${f.floor}</span>` : ''}
-        </div>
-
-        <!-- Owner info -->
-        ${f.owner ? `<div style="font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;">
-          👤 ${f.owner}</div>` : ''}
-        ${f.phone ? `<div style="font-size:11px;color:var(--text2);margin-bottom:2px;">📱 ${f.phone}</div>` : ''}
-        ${f.due ? `<div style="font-size:11px;font-weight:700;color:${paid>=due?'var(--green)':'var(--red)'};margin-bottom:8px;">
-          ₹${paid.toLocaleString('en-IN')} / ₹${due.toLocaleString('en-IN')} paid</div>` : ''}
-
-        <!-- Action buttons -->
-        <div style="display:flex;gap:6px;margin-top:6px;">
-          <button onclick="event.stopPropagation();window.oFlEdit('${fid}')"
-            style="flex:1;height:28px;border-radius:7px;border:1.5px solid var(--indigo);
-              background:var(--indigo);color:#fff;font-size:11px;font-weight:700;
-              cursor:pointer;font-family:var(--font);">
-            <i class="ti ti-edit" style="font-size:11px"></i> Edit
-          </button>
-          <button onclick="event.stopPropagation();window._openPayHistory('${f.flatId}')"
-            style="flex:1;height:28px;border-radius:7px;border:1.5px solid var(--border2);
-              background:#fff;color:var(--text2);font-size:11px;font-weight:700;
-              cursor:pointer;font-family:var(--font);">
-            <i class="ti ti-history" style="font-size:11px"></i> History
-          </button>
-        </div>
-      </div>
+        border-radius:10px;padding:12px;font-family:var(--font);grid-column:1/-1;"></div>
     </div>`;
   }
 }
@@ -3623,8 +3589,142 @@ window._toggleFlatPanel = function(fid, panelId) {
   const icon  = document.getElementById(panelId + '_icon');
   if (!panel) return;
   const open = panel.style.display !== 'none';
-  panel.style.display = open ? 'none' : '';
-  if (icon) icon.style.transform = open ? '' : 'rotate(180deg)';
+  if (open) {
+    panel.style.display = 'none';
+    if (icon) icon.style.transform = '';
+  } else {
+    panel.style.display = '';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+    // Load the full edit form into the panel
+    window._loadInlineFlatEdit(fid, panelId);
+  }
+};
+
+window._loadInlineFlatEdit = function(fid, panelId) {
+  const f = flats.get(fid); if (!f) return;
+  const isTenant = (f.resType||'owner') === 'tenant';
+  const veh = vehicles.get(fid) || { tw:0, fw:0 };
+  const tw = parseInt(veh.tw)||0, fw = parseInt(veh.fw)||0;
+
+  const _inp = (id,type,val,ph,extra='') => `<input id="${id}" type="${type}" value="${val}" placeholder="${ph}" ${extra}
+    style="width:100%;box-sizing:border-box;height:36px;padding:0 10px;background:#fff;border:1.5px solid var(--border2);
+    color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:8px;outline:none;"
+    onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>`;
+  const _lbl = t => `<div style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;">${t}</div>`;
+  const _fld = (lbl,inp) => `<div>${_lbl(lbl)}${inp}</div>`;
+
+  document.getElementById(panelId).innerHTML = `
+    <div style="padding:4px 0 0;">
+
+      <!-- Resident section -->
+      <div style="font-size:11px;font-weight:800;color:var(--indigo);text-transform:uppercase;letter-spacing:.4px;
+        margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--indigo);">👤 Resident</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        ${_fld('Name', _inp('edOwner','text',(f.owner||'').replace(/"/g,'&quot;'),'Full name'))}
+        ${_fld('Type', `<select id="edType" onchange="window._toggleOwnerFields(this.value)"
+          style="width:100%;height:36px;padding:0 10px;background:#fff;border:1.5px solid var(--border2);
+          color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:8px;outline:none;box-sizing:border-box;">
+          <option value="owner" ${!isTenant?'selected':''}>🏠 Owner</option>
+          <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
+        </select>`)}
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        ${_fld('📱 Mobile Number', _inp('edPhone','tel',(f.phone||f.ownerPhone||'').replace(/"/g,'&quot;'),'10-digit mobile no.'))}
+        ${_fld('WhatsApp', `<div style="display:flex;align-items:center;height:36px;gap:8px;">
+          <input type="checkbox" id="edWA" ${f.waEnabled!==false?'checked':''}
+            style="width:16px;height:16px;accent-color:var(--indigo);cursor:pointer;"/>
+          <label for="edWA" style="font-size:11px;font-weight:600;color:var(--text);cursor:pointer;">WhatsApp enabled</label>
+        </div>`)}
+      </div>
+
+      <div id="ownerSection" style="display:${isTenant?'grid':'none'};grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        ${_fld('Owner Name', _inp('edOwnerName','text',(f.ownerName||'').replace(/"/g,'&quot;'),'Flat owner'))}
+        ${_fld('Owner Phone', _inp('edOwnerPhone','tel',(f.ownerPhone||'').replace(/"/g,'&quot;'),'Contact no.'))}
+      </div>
+
+      <div style="display:flex;gap:6px;margin-bottom:8px;">
+        <button id="activeTab" type="button" onclick="window._setResidentStatus('active')"
+          style="flex:1;height:34px;border:none;background:var(--indigo);color:#fff;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">✅ Active</button>
+        <button id="movedTab" type="button" onclick="window._setResidentStatus('moved')"
+          style="flex:1;height:34px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">🚪 Moved Out</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
+        ${_fld('Move-In Date', _inp('edMoveIn','date',f.moveIn||'',''))}
+        <div id="moveOutSection" style="${f.moveOut?'display:block':'display:none'}">
+          ${_lbl('Move-Out Date')}${_inp('edMoveOut','date',f.moveOut||'','')}
+        </div>
+      </div>
+
+      <!-- Flat details section -->
+      <div style="font-size:11px;font-weight:800;color:var(--purple);text-transform:uppercase;letter-spacing:.4px;
+        margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--purple);">🏢 Flat Details</div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;">
+        ${_fld('Monthly Due (₹)', _inp('edDue','number',f.due||'','e.g. 5000','min="0"'))}
+        ${_fld('Area (sq.ft)', _inp('edSft','number',f.sft||'','e.g. 850','min="0"'))}
+        ${_fld('Vehicles 2W/4W', _inp('edVehicles','text',tw+'/'+fw,'1/1'))}
+      </div>
+
+      <!-- Action buttons -->
+      <div style="display:flex;gap:8px;margin-bottom:10px;">
+        <button onclick="window._toggleFlatPanel('${fid}','${panelId}')"
+          style="padding:0 14px;height:38px;border:1.5px solid var(--border2);border-radius:10px;background:#fff;
+            color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Cancel</button>
+        <button id="edSaveBtn" onclick="window._saveFlat('${fid}')"
+          style="flex:1;height:38px;border:none;border-radius:10px;background:var(--indigo);
+            color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);
+            display:flex;align-items:center;justify-content:center;gap:6px;">
+          <i class="ti ti-device-floppy" style="font-size:13px;"></i> Save
+        </button>
+      </div>
+
+      <!-- History toggle -->
+      <div style="display:flex;gap:6px;background:var(--surface2);padding:5px;border-radius:8px;margin-bottom:10px">
+        <button id="payHistToggle" data-history="payment" onclick="window._toggleHistory('payment')"
+          style="flex:1;padding:7px 10px;border:none;background:var(--indigo);color:#fff;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">
+          <i class="ti ti-receipt" style="margin-right:4px;font-size:11px"></i>Payment History
+        </button>
+        <button id="stayHistToggle" data-history="staying" onclick="window._toggleHistory('staying')"
+          style="flex:1;padding:7px 10px;border:none;background:transparent;color:var(--text2);border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;font-family:var(--font);">
+          <i class="ti ti-calendar" style="margin-right:4px;font-size:11px"></i>Staying History
+        </button>
+      </div>
+
+      <!-- Payment history -->
+      <div id="paymentHistSection" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;margin-bottom:10px;display:block">
+        <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:6px">
+          <div style="display:flex;align-items:center;gap:6px"><i class="ti ti-receipt" style="color:var(--amber);font-size:12px"></i> Payment History</div>
+          <button type="button" onclick="window._togglePaymentEdit()" style="padding:3px 7px;background:transparent;border:1.5px solid var(--border);color:var(--text2);font-size:10px;font-weight:700;border-radius:4px;cursor:pointer;font-family:var(--font);"><i class="ti ti-edit" style="font-size:10px;margin-right:2px"></i>Edit</button>
+        </div>
+        <div id="paymentHistoryList" style="max-height:220px;overflow-y:auto;border-radius:8px"></div>
+        <div id="paymentEditSection" style="display:none;margin-top:8px;padding-top:8px;border-top:1.5px solid var(--border)">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+            <input id="newPaymentDate" type="date" style="padding:7px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font);font-size:11px"/>
+            <input id="newPaymentAmt" type="number" placeholder="Amount" style="padding:7px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font);font-size:11px"/>
+          </div>
+          <button id="paymentBtn" type="button" onclick="window._addPayment('${fid}')" style="width:100%;padding:7px;background:var(--indigo);color:#fff;border:none;border-radius:6px;font-weight:700;font-size:11px;cursor:pointer;font-family:var(--font);">+ Add Payment</button>
+        </div>
+      </div>
+
+      <!-- Staying history -->
+      <div id="stayingHistSection" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:12px;margin-bottom:10px;display:none">
+        <div style="font-size:11px;font-weight:800;color:var(--text);margin-bottom:10px;display:flex;align-items:center;gap:6px">
+          <i class="ti ti-calendar" style="color:var(--green);font-size:12px"></i> Staying History
+        </div>
+        <div id="stayingHistoryContent"></div>
+      </div>
+
+    </div>`;
+
+  // Set active state properly
+  _dFid = fid;
+  window._setResidentStatus(isTenant ? 'active' : (f.moveOut ? 'moved' : 'active'));
+
+  // Load payment history
+  try { window._renderPaymentHistory(fid); } catch(e) {}
 };
 
 window._setStrView = v => {
