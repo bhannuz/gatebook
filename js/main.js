@@ -54,8 +54,12 @@ const vehColl     = () => collection(db, 'apartments', UID, 'vehicles');
 const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
 const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
 const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
-const contactsColl= () => collection(db, 'apartments', UID, 'contacts');
-const contactRef  = id => doc(db, 'apartments', UID, 'contacts', id);
+const contactsColl   = () => collection(db, 'apartments', UID, 'contacts');
+const contactRef     = id => doc(db, 'apartments', UID, 'contacts', id);
+const staffColl      = () => collection(db, 'apartments', UID, 'staff');
+const staffRef       = id => doc(db, 'apartments', UID, 'staff', id);
+const attColl        = () => collection(db, 'apartments', UID, 'attendance');
+const attRef         = id => doc(db, 'apartments', UID, 'attendance', id);
 
 /* ════════════════════════════════
    STATE
@@ -63,7 +67,9 @@ const contactRef  = id => doc(db, 'apartments', UID, 'contacts', id);
 const flats  = new Map();
 const exps   = new Map();
 const issues = [];
-const contacts = [];          // service contacts (plumber, electrician etc)
+const contacts   = [];        // service contacts (plumber, electrician etc)
+const staffList  = [];        // security / watchman staff
+const attCache   = {};        // attCache[YYYY-MM][staffId] = 'present'|'absent'|'half'
 
 let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all', STRVIEW='floor';
 // Analytics tab state — declared here to avoid TDZ errors
@@ -1083,7 +1089,11 @@ function listenFlats(){
   let _firstLoad = true;
   _unsubFlats = onSnapshot(flatsColl(), snap => {
     snap.docChanges().forEach(ch => {
-      const d = {flatId:ch.doc.id,...ch.doc.data()};
+      // flatId is ALWAYS the Firestore doc ID — spread data() first, then force
+      // flatId last, so any stray/legacy 'flatId' field in old documents can
+      // never override the real identifier (this was the root cause of flats
+      // silently failing to match for payments, and showing lowercase codes).
+      const d = {...ch.doc.data(), flatId:ch.doc.id};
       ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
     });
     if (_firstLoad) {
@@ -1395,25 +1405,9 @@ window._renameBlockPrompt = async (oldName) => {
   const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
   sync('saving');
   try {
-    await Promise.all(toUpdate.map(([fid, f]) => {
-      const oldFlatId = f.flatId || '';
-      // Handle both "A-101" and "101" formats
-      let suffix = oldFlatId;
-      if (oldFlatId.startsWith(oldName + '-')) {
-        suffix = oldFlatId.slice(oldName.length + 1); // e.g. "101"
-      }
-      const newFlatId = nn + '-' + suffix; // always "B-101"
-      return updateDoc(doc(db,'apartments',UID,'flats',fid), { block: nn, flatId: newFlatId });
-    }));
-    toUpdate.forEach(([fid, f]) => {
-      const oldFlatId = f.flatId || '';
-      let suffix = oldFlatId;
-      if (oldFlatId.startsWith(oldName + '-')) suffix = oldFlatId.slice(oldName.length + 1);
-      f.block  = nn;
-      f.flatId = nn + '-' + suffix;
-      flats.set(fid, f);
-    });
-    sync('live'); toast('Block renamed — flat names updated ✓');
+    await Promise.all(toUpdate.map(([fid]) => updateDoc(doc(db,'apartments',UID,'flats',fid), {block: nn})));
+    toUpdate.forEach(([fid, f]) => { f.block = nn; flats.set(fid, f); });
+    sync('live'); toast('Block renamed ✓');
     window._renderStructureList(); rStructure();
   } catch(e) { sync('error'); toast('Rename failed','error'); }
 };
@@ -1477,7 +1471,8 @@ window._addNewFlatRow = () => {
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px;">FLAT #</label>
           <input class="newFlatNum" type="text" placeholder="e.g. 101"
-            style="width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;box-sizing:border-box;"/>
+            oninput="this.value=this.value.toUpperCase()"
+            style="width:100%;padding:9px 10px;border:1.5px solid var(--border);border-radius:7px;font-family:var(--font);font-size:13px;box-sizing:border-box;text-transform:uppercase"/>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--text2);display:block;margin-bottom:3px;">FLOOR</label>
@@ -1567,22 +1562,29 @@ window._saveNewStructure = async () => {
   
   sync('saving');
   try {
+    const blockU = blockName.toUpperCase();
     for (const f of newFlats) {
-      const fid = (blockName + '-' + f.flatNum).replace(/[^a-z0-9-]/gi, '_').toLowerCase();
+      const flatNumU = f.flatNum.toUpperCase();
+      // Doc ID must be uppercase and MUST NOT be duplicated as a 'flatId' field in
+      // the document data — listenFlats() derives flatId from the doc ID itself.
+      // Storing a separate flatId field here previously overwrote the correct
+      // value on load, breaking payments and showing lowercase flat codes.
+      const fid = (blockU + '-' + flatNumU).replace(/[^A-Z0-9-]/gi, '_');
       const flatDoc = {
-        flatId: blockName + '-' + f.flatNum,
-        block: blockName,
+        block: blockU,
         floor: f.floor,
         owner: f.resName,
         resType: 'owner',
         due: f.due,
+        paid: 0,
+        month: AM,
         moveIn: new Date().toISOString().slice(0,10),
         moveOut: '',
         createdAt: serverTimestamp()
       };
       await setDoc(flatRef(fid), flatDoc);
-      await setDoc(vehRef(fid), { flatId: fid, tw: 0, fw: 0, updatedAt: serverTimestamp() }, { merge: true });
-      flats.set(fid, flatDoc);
+      await setDoc(vehRef(fid), { tw: 0, fw: 0, updatedAt: serverTimestamp() }, { merge: true });
+      flats.set(fid, { flatId: fid, ...flatDoc });
       vehicles.set(fid, { tw: 0, fw: 0 });
     }
     
@@ -1886,7 +1888,7 @@ window._wizLaunch = async function() {
       toast('Society already set up — loading…');
       document.getElementById('setupWiz').style.display = 'none';
       document.getElementById('lo').style.display = '';
-      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts();
+      listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts(); listenStaff();
       return;
     }
     for(const b of WIZ_BLOCKS) {
@@ -1903,7 +1905,7 @@ window._wizLaunch = async function() {
     [_unsubFlats, eu, iu, vu, pu].forEach(unsub => { try { if(unsub) unsub(); } catch(_){} });
     _unsubFlats = null; eu = null; iu = null; vu = null; pu = null;
     flats.clear(); exps.clear(); issues.length = 0; vehicles.clear(); socExps.length = 0;
-    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts();
+    listenFlats(); listenExp(); listenIssues(); listenVehicles(); listenSocExp(); listenContacts(); listenStaff();
     toast(`${APT_NAME} launched ✓`);
   } catch(e) {
     console.error(e);
@@ -3534,6 +3536,7 @@ function rStructure() {
     }
 
     const barClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#e5e7eb'}[status];
+    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
     const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
     const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
     const ini     = isVacant ? '?' : (f.owner||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -3541,21 +3544,25 @@ function rStructure() {
     const iniTxt  = {paid:'#dcfce7', partial:'#fef9c3', pending:'#fee2e2', vacant:'#f3f4f6'}[status];
 
     return `<button onclick="window.oFlEdit('${fid}')"
-      style="background:#fff;border:1.5px solid #f0f0f0;border-radius:10px;padding:0;
+      style="background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;padding:0;
         cursor:pointer;font-family:var(--font);text-align:left;width:100%;
         overflow:hidden;transition:box-shadow .12s,border-color .12s;
-        box-shadow:0 1px 3px rgba(0,0,0,.05);"
-      onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.08)';this.style.borderColor='${barClr}'"
-      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.05)';this.style.borderColor='#f0f0f0'">
-      <div style="height:3px;background:${barClr};width:100%"></div>
-      <div style="padding:7px 8px;display:flex;align-items:center;gap:7px;background:#fff">
-        <div style="width:26px;height:26px;border-radius:7px;background:${iniTxt};color:${iniClr};
+        box-shadow:0 1px 3px rgba(0,0,0,.06);"
+      onmouseover="this.style.boxShadow='0 4px 10px rgba(0,0,0,.1)';this.style.borderColor='${barClr}'"
+      onmouseout="this.style.boxShadow='0 1px 3px rgba(0,0,0,.06)';this.style.borderColor='#e5e7eb'">
+      <!-- colour bar top -->
+      <div style="height:4px;background:${barClr};width:100%"></div>
+      <!-- card body — white, no tint -->
+      <div style="padding:8px 8px 7px;display:flex;align-items:center;gap:7px">
+        <!-- avatar -->
+        <div style="width:26px;height:26px;border-radius:7px;background:${barClr}18;color:${iniClr};
           font-size:9px;font-weight:800;display:flex;align-items:center;justify-content:center;
           flex-shrink:0;letter-spacing:-.3px;">${ini}</div>
+        <!-- info -->
         <div style="flex:1;min-width:0;overflow:hidden;">
           <div style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;
             overflow:hidden;text-overflow:ellipsis;line-height:1.3;">${f.flatId}</div>
-          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;">${typeLbl}</div>
+          <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;white-space:nowrap">${typeLbl}</div>
         </div>
       </div>
     </button>`;
@@ -3563,7 +3570,6 @@ function rStructure() {
 }
 
 window.rStructure = rStructure;
-
 window._setStrView = v => {
   STRVIEW = v;
   document.querySelectorAll('[data-view]').forEach(btn => {
@@ -4200,7 +4206,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="font-size:12px;font-weight:700;color:var(--text)">${tw}/${fw}</span>`;
+      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
+           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
+           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
+           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
+         </span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
     const typeBadge = isVacant
@@ -4213,29 +4223,24 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:8px 6px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
-      <td style="padding:8px 6px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${vehCell}</td>
-      <td style="padding:8px 6px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
-      <td style="padding:8px 4px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
-  // Totals row (5 columns)
+  // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
-  const totVeh = (totTw > 0 || totFw > 0)
-    ? `<span style="font-size:12px;font-weight:700;color:var(--text)">${totTw}/${totFw}</span>`
-    : '—';
-  tbody.innerHTML += `<tr style="position:sticky;bottom:0;z-index:2;background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:8px 6px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:8px 4px;text-align:center">${totVeh}</td>
-    <td style="padding:8px 6px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
-    <td style="padding:8px 4px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
@@ -4684,17 +4689,11 @@ window._rContacts = function() {
   const el = document.getElementById('contactsList');
   if (!el) return;
 
-  // Ensure grid layout
-  el.style.display = 'grid';
-  el.style.gridTemplateColumns = 'repeat(auto-fill,minmax(88px,1fr))';
-  el.style.gap = '8px';
-
   if (!vis.length) {
-    el.style.display = 'block';
-    el.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">
+    el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
       <i class="ti ti-address-book-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
-      <div style="font-size:13px;font-weight:600">No contacts ${filter!=='all'?'in this category':'yet'}</div>
-      <div style="font-size:11px;margin-top:4px">Tap "Add Contact" to save plumber, electrician etc.</div>
+      <div style="font-size:13px;font-weight:600">No service contacts ${filter!=='all'?'in this category':'yet'}</div>
+      <div style="font-size:11px;margin-top:4px">Tap "Add Contact" to save plumber, electrician, maid etc.</div>
     </div>`;
     return;
   }
@@ -4704,29 +4703,24 @@ window._rContacts = function() {
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="background:#fff;border:1.5px solid var(--border2);border-top:3px solid ${color};
-        border-radius:10px;padding:10px 6px 8px;cursor:pointer;
-        display:flex;flex-direction:column;align-items:center;gap:4px;
-        min-height:100px;text-align:center;
-        transition:box-shadow .12s,border-color .12s;"
-      onmouseover="this.style.boxShadow='0 3px 10px rgba(0,0,0,.08)';this.style.borderColor='${color}'"
+      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:34px;height:34px;border-radius:10px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">
+      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
         <i class="ti ${icon}"></i>
       </div>
-      <div style="font-size:10px;font-weight:700;color:var(--text);word-break:break-word;width:100%;line-height:1.3">${c.name || 'Unnamed'}</div>
-      <div style="font-size:9px;font-weight:600;color:${color};width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.cat || 'Other'}</div>
-      <div style="display:flex;gap:4px;margin-top:auto;padding-top:2px" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call"
-          style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;
-            background:var(--indigo-bg);color:var(--indigo);border-radius:999px;text-decoration:none;">
-          <i class="ti ti-phone" style="font-size:11px"></i>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
+          <i class="ti ti-phone" style="font-size:12px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp"
-          style="width:24px;height:24px;display:flex;align-items:center;justify-content:center;
-            background:#D1FAE5;color:#065F46;border-radius:999px;text-decoration:none;">
-          <i class="ti ti-brand-whatsapp" style="font-size:12px"></i>
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
+          <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
         </a>` : ''}
       </div>
     </div>`;
@@ -4819,26 +4813,260 @@ window._delContact = async function() {
    ISSUES / CONTACTS SUB-TAB TOGGLE
 ════════════════════════════════ */
 window._issSubTab = function(which) {
-  const issuesBtn    = document.getElementById('issSubTabIssues');
-  const contactsBtn  = document.getElementById('issSubTabContacts');
-  const issuesPanel  = document.getElementById('issSubPanelIssues');
-  const contactsPanel= document.getElementById('issSubPanelContacts');
-  if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
+  const tabs   = ['issues','contacts','attendance'];
+  const panels = { issues:'issSubPanelIssues', contacts:'issSubPanelContacts', attendance:'issSubPanelAttendance' };
+  const btns   = { issues:'issSubTabIssues',   contacts:'issSubTabContacts',   attendance:'issSubTabAttendance'   };
+  tabs.forEach(t => {
+    const panel = document.getElementById(panels[t]);
+    const btn   = document.getElementById(btns[t]);
+    if (!panel || !btn) return;
+    const isActive = t === which;
+    panel.style.display = isActive ? '' : 'none';
+    btn.style.background   = isActive ? 'var(--indigo)' : '#fff';
+    btn.style.color        = isActive ? '#fff' : 'var(--text2)';
+    btn.style.borderColor  = isActive ? 'var(--indigo)' : 'var(--border2)';
+  });
+  if (which === 'issues')     try { rIssues(); }              catch(e) { console.error(e); }
+  if (which === 'contacts')   try { window._rContacts(); }    catch(e) { console.error(e); }
+  if (which === 'attendance') try { window._rAttendance(); }  catch(e) { console.error(e); }
+};
 
-  const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
-  const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
+/* ════════════════════════════════
+   STAFF & ATTENDANCE
+════════════════════════════════ */
 
-  if (which === 'issues') {
-    issuesPanel.style.display = '';
-    contactsPanel.style.display = 'none';
-    Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    try { rIssues(); } catch(e) { console.error(e); }
+// ── Firestore listeners ──────────────────────────────────────────────────────
+let su = null;
+function listenStaff() {
+  if (su) su();
+  su = onSnapshot(staffColl(), snap => {
+    staffList.length = 0;
+    snap.forEach(d => staffList.push({ id: d.id, ...d.data() }));
+    staffList.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+    const panel = document.getElementById('issSubPanelAttendance');
+    if (panel && panel.style.display !== 'none') {
+      try { window._rAttendance(); } catch(e) { console.error(e); }
+    }
+  }, e => console.error('staff listener', e));
+}
+
+// ── Populate month dropdown ──────────────────────────────────────────────────
+function _initAttMonths() {
+  const sel = document.getElementById('attMonth');
+  if (!sel) return;
+  const months = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const val = d.toISOString().slice(0, 7);
+    const lbl = d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    months.push({ val, lbl });
+  }
+  sel.innerHTML = months.map(m =>
+    `<option value="${m.val}"${m.val === AM ? ' selected' : ''}>${m.lbl}</option>`
+  ).join('');
+}
+
+// ── Render attendance grid ───────────────────────────────────────────────────
+window._rAttendance = async function() {
+  _initAttMonths();
+  const month = document.getElementById('attMonth')?.value || AM;
+  const panel = document.getElementById('attendancePanel');
+  if (!panel) return;
+
+  if (!staffList.length) {
+    panel.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">
+      <i class="ti ti-user-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
+      <div style="font-size:13px;font-weight:600">No staff added yet</div>
+      <div style="font-size:11px;margin-top:4px">Tap "Add Staff" to add watchman, maid etc.</div>
+    </div>`;
+    return;
+  }
+
+  // Load attendance data for this month
+  let monthAtt = attCache[month];
+  if (!monthAtt) {
+    try {
+      const snap = await getDocs(attColl());
+      snap.forEach(d => {
+        const data = d.data();
+        if (!attCache[data.month]) attCache[data.month] = {};
+        attCache[data.month][data.staffId] = data.days || {};
+      });
+      monthAtt = attCache[month] || {};
+    } catch(e) {
+      console.error(e);
+      monthAtt = {};
+    }
+  }
+
+  // Days in month
+  const [yr, mo] = month.split('-').map(Number);
+  const daysInMonth = new Date(yr, mo, 0).getDate();
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const ICONS = { present: '✅', absent: '❌', half: '🌓', '': '⬜' };
+  const STATUS_CLR = { present: '#22c55e', absent: '#ef4444', half: '#f59e0b', '': '#e5e7eb' };
+
+  const ROLE_ICON = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
+
+  panel.innerHTML = staffList.map(s => {
+    const sAtt = (monthAtt && monthAtt[s.id]) ? monthAtt[s.id] : {};
+    const presentDays = Object.values(sAtt).filter(v => v === 'present').length;
+    const halfDays    = Object.values(sAtt).filter(v => v === 'half').length;
+    const absentDays  = Object.values(sAtt).filter(v => v === 'absent').length;
+    const salary      = s.salary || 0;
+    const perDay      = salary > 0 ? (salary / daysInMonth) : 0;
+    const earned      = Math.round(perDay * (presentDays + halfDays * 0.5));
+
+    const dayBtns = Array.from({ length: daysInMonth }, (_, i) => {
+      const day     = String(i + 1).padStart(2, '0');
+      const dateStr = `${month}-${day}`;
+      const status  = sAtt[day] || '';
+      const isFuture = dateStr > todayStr;
+      return `<button
+        onclick="${isFuture ? '' : `window._toggleAtt('${s.id}','${month}','${day}')`}"
+        title="${dateStr}"
+        style="width:28px;height:28px;border-radius:6px;border:1.5px solid ${STATUS_CLR[status]};
+          background:${status ? STATUS_CLR[status]+'18' : '#f8fafc'};
+          font-size:11px;cursor:${isFuture ? 'default' : 'pointer'};
+          display:inline-flex;align-items:center;justify-content:center;
+          opacity:${isFuture ? '.35' : '1'};transition:all .12s;font-family:var(--font)"
+        onmouseover="${isFuture ? '' : `this.style.opacity='.8'`}"
+        onmouseout="${isFuture ? '' : `this.style.opacity='1'`}">
+        <span style="font-size:9px;font-weight:700;color:${STATUS_CLR[status] || '#94a3b8'}">${i + 1}</span>
+      </button>`;
+    }).join('');
+
+    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;
+      margin-bottom:10px;overflow:hidden">
+      <!-- Staff header -->
+      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+        border-bottom:1px solid var(--border2);background:var(--surface2)">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--indigo-bg);
+          color:var(--indigo);display:flex;align-items:center;justify-content:center;
+          font-size:16px;flex-shrink:0">${ROLE_ICON[s.role] || '👤'}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:800;color:var(--text)">${s.name}</div>
+          <div style="font-size:10px;color:var(--muted)">${s.role || 'Staff'} · ${s.shift || 'Full Day'}${s.phone ? ' · '+s.phone : ''}</div>
+        </div>
+        <button onclick="window._oStaff('${s.id}')"
+          style="background:none;border:1px solid var(--border2);border-radius:6px;width:26px;height:26px;
+            cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center">
+          <i class="ti ti-pencil" style="font-size:11px"></i>
+        </button>
+      </div>
+      <!-- Summary chips -->
+      <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap">
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">✅ ${presentDays} Present</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#854D0E">🌓 ${halfDays} Half</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#991B1B">❌ ${absentDays} Absent</span>
+        ${salary > 0 ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--indigo-bg);color:var(--indigo);margin-left:auto">₹${earned.toLocaleString('en-IN')} earned</span>` : ''}
+      </div>
+      <!-- Day buttons grid -->
+      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px">${dayBtns}</div>
+    </div>`;
+  }).join('');
+};
+
+// ── Toggle attendance day ────────────────────────────────────────────────────
+window._toggleAtt = async function(staffId, month, day) {
+  const cycle = ['', 'present', 'half', 'absent'];
+  if (!attCache[month])           attCache[month] = {};
+  if (!attCache[month][staffId])  attCache[month][staffId] = {};
+  const cur = attCache[month][staffId][day] || '';
+  const next = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+  attCache[month][staffId][day] = next;
+
+  // Save to Firestore — doc ID = staffId_month
+  const docId = `${staffId}_${month}`;
+  sync('saving');
+  try {
+    await setDoc(attRef(docId), {
+      staffId, month,
+      days: attCache[month][staffId],
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    sync('live');
+    window._rAttendance();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Save failed', 'error');
+  }
+};
+
+// ── Staff CRUD ───────────────────────────────────────────────────────────────
+window._oStaff = function(id) {
+  const isEdit = !!id;
+  document.getElementById('staffMTitle').textContent = isEdit ? 'Edit Staff' : 'Add Staff';
+  document.getElementById('staffDelBtn').style.display = isEdit ? '' : 'none';
+  document.getElementById('staffSaveLbl').textContent  = isEdit ? 'Update' : 'Save Staff';
+
+  if (isEdit) {
+    const s = staffList.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('staffId').value     = id;
+    document.getElementById('staffName').value    = s.name || '';
+    document.getElementById('staffRole').value    = s.role || 'Watchman';
+    document.getElementById('staffShift').value   = s.shift || 'Full Day';
+    document.getElementById('staffPhone').value   = s.phone || '';
+    document.getElementById('staffSalary').value  = s.salary || '';
   } else {
-    issuesPanel.style.display = 'none';
-    contactsPanel.style.display = '';
-    Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    try { window._rContacts(); } catch(e) { console.error(e); }
+    document.getElementById('staffId').value    = '';
+    document.getElementById('staffName').value   = '';
+    document.getElementById('staffRole').value   = 'Watchman';
+    document.getElementById('staffShift').value  = 'Full Day';
+    document.getElementById('staffPhone').value  = '';
+    document.getElementById('staffSalary').value = '';
+  }
+  document.getElementById('staffM').classList.add('open');
+};
+
+window._cStaff = function() {
+  document.getElementById('staffM').classList.remove('open');
+};
+
+window._sStaff = async function() {
+  const id     = document.getElementById('staffId').value;
+  const name   = (document.getElementById('staffName').value || '').trim();
+  const role   = document.getElementById('staffRole').value;
+  const shift  = document.getElementById('staffShift').value;
+  const phone  = (document.getElementById('staffPhone').value || '').trim();
+  const salary = parseInt(document.getElementById('staffSalary').value) || 0;
+
+  if (!name) { toast('Enter staff name', 'error'); return; }
+
+  const btn = document.getElementById('staffSaveBtn');
+  if (btn) btn.disabled = true;
+  sync('saving');
+  try {
+    const payload = { name, role, shift, phone, salary, updatedAt: serverTimestamp() };
+    if (id) {
+      await updateDoc(staffRef(id), payload);
+    } else {
+      payload.createdAt = serverTimestamp();
+      await addDoc(staffColl(), payload);
+    }
+    sync('live'); toast(id ? 'Staff updated ✓' : 'Staff added ✓');
+    window._cStaff();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Save failed: ' + (e.message || ''), 'error');
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+};
+
+window._delStaff = async function() {
+  const id = document.getElementById('staffId').value;
+  if (!id) return;
+  const s = staffList.find(x => x.id === id);
+  if (!confirm(`Delete "${s?.name}"? Their attendance records will remain.`)) return;
+  sync('saving');
+  try {
+    await deleteDoc(staffRef(id));
+    sync('live'); toast('Staff deleted ✓');
+    window._cStaff();
+  } catch(e) {
+    console.error(e); sync('error'); toast('Delete failed', 'error');
   }
 };
