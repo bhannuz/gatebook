@@ -98,7 +98,8 @@ const fdt = ts => {
   return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 };
 const bks = () => [...new Set([...flats.values()].map(f=>f.block))].sort();
-const bfl = b => [...flats.values()].filter(f=>f.block===b);
+const bfl = b => [...flats.values()].filter(f=>f.block===b)
+  .sort((x,y)=>(x.flatId||'').localeCompare(y.flatId||'', undefined, {numeric:true, sensitivity:'base'}));
 const fex = id => exps.get(id)||[];
 const paidAM = (fid, month) => {
   const m = month || AM;
@@ -3796,7 +3797,7 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
     rec._status = isVacant ? 'vacant' : (rec.paid >= rec.due && rec.due > 0 ? 'paid' : rec.paid > 0 ? 'partial' : 'pending');
     result.push(rec);
   });
-  return result.sort((a,b) => (a.flatId||'').localeCompare(b.flatId||''));
+  return result.sort((a,b) => (a.flatId||'').localeCompare(b.flatId||'', undefined, {numeric:true, sensitivity:'base'}));
 }
 // ════════════════════════════════════════════════════════
 //  ANALYTICS TAB — FIXED rAnalytics()
@@ -4228,8 +4229,8 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 20px 10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
@@ -4239,8 +4240,8 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:10px 8px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 20px 10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
