@@ -3306,6 +3306,7 @@ async function boot(){
       listenVehicles();
       listenSocExp();
       listenContacts();
+      listenStaff();
       // Reveal the app UI — this was previously only done in the wizard branch,
       // causing a permanently blank page on refresh for already-configured societies.
       document.getElementById('lo').style.display = 'none';
@@ -4877,10 +4878,28 @@ function _initAttMonths() {
   ).join('');
 }
 
+// ── Move the visible month forward/back using the hidden select as state ─────
+window._attShiftMonth = function(delta) {
+  const sel = document.getElementById('attMonth');
+  if (!sel || !sel.options.length) return;
+  const idx = sel.selectedIndex;
+  const newIdx = Math.min(Math.max(idx + delta, 0), sel.options.length - 1);
+  sel.selectedIndex = newIdx;
+  window._rAttendance();
+};
+
 // ── Render attendance as a real monthly calendar grid ────────────────────────
 window._rAttendance = async function() {
   _initAttMonths();
   const month = document.getElementById('attMonth')?.value || AM;
+
+  // Keep the visible "Viewing: Month Year" label in sync
+  const lbl = document.getElementById('attMonthLabel');
+  if (lbl) {
+    const [yy, mm] = month.split('-').map(Number);
+    lbl.textContent = new Date(yy, mm - 1, 1).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  }
+
   const panel = document.getElementById('attendancePanel');
   if (!panel) return;
 
