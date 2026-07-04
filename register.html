@@ -191,8 +191,8 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
       <input type="text" id="adminName" placeholder="Your full name"/>
     </div>
     <div class="fg">
-      <label>Email Address</label>
-      <input type="email" id="adminEmail" placeholder="admin@example.com" autocomplete="email"/>
+      <label>Mobile Number or Email</label>
+      <input type="text" id="adminId" placeholder="9876543210 or admin@example.com" autocomplete="username"/>
     </div>
     <div class="fg">
       <label>Password</label>
@@ -327,9 +327,11 @@ window.goNext = function(from) {
   if (from === 0) {
     clearAlert('s0Alert');
     const name = document.getElementById('adminName').value.trim();
-    const email = document.getElementById('adminEmail').value.trim();
-    const pw = document.getElementById('adminPassword').value;
-    if (!name||!email||!pw) { showAlert('s0Alert','Please fill in all fields.'); return; }
+    const raw  = document.getElementById('adminId').value.trim();
+    const pw   = document.getElementById('adminPassword').value;
+    if (!name || !raw || !pw) { showAlert('s0Alert','Please fill in all fields.'); return; }
+    if (/^\d+$/.test(raw) && raw.length !== 10) { showAlert('s0Alert','Mobile number must be exactly 10 digits.'); return; }
+    if (!raw.includes('@') && !/^\d{10}$/.test(raw)) { showAlert('s0Alert','Enter a valid mobile number or email address.'); return; }
     if (pw.length < 6) { showAlert('s0Alert','Password must be at least 6 characters.'); return; }
     setStep(1);
   } else if (from === 1) {
@@ -392,10 +394,10 @@ window.updatePreview = function() {
 };
 
 function buildConfirm() {
-  const aptName = document.getElementById('aptName').value.trim();
+  const aptName   = document.getElementById('aptName').value.trim();
   const adminName = document.getElementById('adminName').value.trim();
-  const adminEmail = document.getElementById('adminEmail').value.trim();
-  let html = `<strong>${aptName}</strong><br>Admin: ${adminName} (${adminEmail})<br><br>`;
+  const adminId   = document.getElementById('adminId').value.trim();
+  let html = `<strong>${aptName}</strong><br>Admin: ${adminName} (${adminId})<br><br>`;
   blocks.forEach(b=>{
     const cnt = b.floors*b.flatsPerFloor;
     const label = b.name.trim() ? `Block ${b.name}` : 'Building';
@@ -419,22 +421,26 @@ window.doLaunch = async function() {
   btn.disabled = true;
   document.getElementById('launchLbl').textContent = ' Setting up…';
 
-  const aptName = document.getElementById('aptName').value.trim();
+  const aptName    = document.getElementById('aptName').value.trim();
   const adminName  = document.getElementById('adminName').value.trim();
-  const adminEmail = document.getElementById('adminEmail').value.trim();
+  const rawId      = document.getElementById('adminId').value.trim();
   const adminPw    = document.getElementById('adminPassword').value;
+
+  // Resolve email from mobile or email input
+  const isPhone   = /^\d{10}$/.test(rawId);
+  const adminEmail = isPhone ? rawId + '@gatebook.app' : rawId;
+  const adminPhone = isPhone ? rawId : '';
 
   try {
     // 1. Create Firebase Auth account
-    window._registering = true; // prevent onAuthStateChanged from redirecting mid-setup
+    window._registering = true;
     const cred = await createUserWithEmailAndPassword(auth, adminEmail, adminPw);
     await updateProfile(cred.user, { displayName: adminName });
 
-    // 2. Write apartment config to Firestore (keyed by uid)
+    // 2. Write apartment config to Firestore
     const uid = cred.user.uid;
     const now = new Date();
     const expiry = new Date(now); expiry.setDate(expiry.getDate() + 30);
-    // Calculate total flats
     const totalFlats = blocks.reduce((s,b)=>s+(b.floors*b.flatsPerFloor),0);
     await setDoc(doc(db,'apartments',uid), {
       name: aptName,
@@ -442,6 +448,7 @@ window.doLaunch = async function() {
       adminUid: uid,
       adminName,
       adminEmail,
+      adminPhone,
       createdAt: now.toISOString(),
       activatedAt: now.toISOString(),
       expiryDate: expiry.toISOString(),
@@ -469,9 +476,9 @@ window.doLaunch = async function() {
   } catch(err) {
     console.error('Launch error:', err);
     const msgs = {
-      'auth/email-already-in-use': 'An account with this email already exists. Try signing in.',
+      'auth/email-already-in-use': 'An account with this mobile number or email already exists. Try signing in.',
       'auth/weak-password': 'Password is too weak. Use at least 6 characters.',
-      'auth/invalid-email': 'Invalid email address.',
+      'auth/invalid-email': 'Invalid mobile number or email address.',
       'auth/operation-not-allowed': 'Email/password sign-in is not enabled. Please enable it in Firebase Console → Authentication → Sign-in method.',
       'auth/network-request-failed': 'Network error. Check your internet connection and try again.',
       'auth/too-many-requests': 'Too many attempts. Please wait a moment and try again.',
