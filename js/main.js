@@ -4226,11 +4226,15 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       onmouseout="this.style.background=''">
       <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
       <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
-        <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
-        <div style="margin-top:2px">${typeBadge}</div>
+        ${isVacant
+          ? `<span style="font-size:12px;font-weight:600;color:var(--muted);font-style:italic">Vacant</span>`
+          : `<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner}</div>
+             <div style="margin-top:2px">${typeBadge}</div>`
+        }
       </td>
       <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:10px 20px 10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="border-bottom:1px solid var(--border)"></td>
     </tr>`;
   }).join('');
 
@@ -4241,7 +4245,8 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
     <td style="padding:10px 8px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:10px 20px 10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td></td>
   </tr>`;
 }
 
@@ -4851,13 +4856,17 @@ function listenStaff() {
   }, e => console.error('staff listener', e));
 }
 
-// ── Populate month dropdown ──────────────────────────────────────────────────
+// ── Populate month dropdown (only build options once; never reset selection) ──
 function _initAttMonths() {
   const sel = document.getElementById('attMonth');
   if (!sel) return;
+  if (sel.dataset.built === '1') return; // already built — don't wipe user's selection
+  sel.dataset.built = '1';
+
   const months = [];
   const now = new Date();
-  for (let i = 5; i >= 0; i--) {
+  // 12 months back, 2 months forward — covers backdated corrections and advance planning
+  for (let i = 12; i >= -2; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const val = d.toISOString().slice(0, 7);
     const lbl = d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
@@ -4868,7 +4877,7 @@ function _initAttMonths() {
   ).join('');
 }
 
-// ── Render attendance grid ───────────────────────────────────────────────────
+// ── Render attendance as a real monthly calendar grid ────────────────────────
 window._rAttendance = async function() {
   _initAttMonths();
   const month = document.getElementById('attMonth')?.value || AM;
@@ -4884,7 +4893,7 @@ window._rAttendance = async function() {
     return;
   }
 
-  // Load attendance data for this month
+  // Load attendance data for this month (cached after first fetch)
   let monthAtt = attCache[month];
   if (!monthAtt) {
     try {
@@ -4895,22 +4904,21 @@ window._rAttendance = async function() {
         attCache[data.month][data.staffId] = data.days || {};
       });
       monthAtt = attCache[month] || {};
+      attCache[month] = monthAtt; // ensure future toggles have a target object
     } catch(e) {
       console.error(e);
       monthAtt = {};
     }
   }
 
-  // Days in month
-  const [yr, mo] = month.split('-').map(Number);
+  const [yr, mo]  = month.split('-').map(Number);
   const daysInMonth = new Date(yr, mo, 0).getDate();
-  const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const firstDow  = new Date(yr, mo - 1, 1).getDay(); // 0=Sun..6=Sat
+  const todayStr  = new Date().toISOString().slice(0, 10);
+  const WEEKDAYS  = ['S','M','T','W','T','F','S'];
 
-  const ICONS = { present: '✅', absent: '❌', half: '🌓', '': '⬜' };
-  const STATUS_CLR = { present: '#22c55e', absent: '#ef4444', half: '#f59e0b', '': '#e5e7eb' };
-
-  const ROLE_ICON = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
+  const STATUS_CLR = { present:'#22c55e', absent:'#ef4444', half:'#f59e0b', '':'#e2e8f0' };
+  const ROLE_ICON  = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
 
   panel.innerHTML = staffList.map(s => {
     const sAtt = (monthAtt && monthAtt[s.id]) ? monthAtt[s.id] : {};
@@ -4921,22 +4929,34 @@ window._rAttendance = async function() {
     const perDay      = salary > 0 ? (salary / daysInMonth) : 0;
     const earned      = Math.round(perDay * (presentDays + halfDays * 0.5));
 
-    const dayBtns = Array.from({ length: daysInMonth }, (_, i) => {
+    // Weekday header row
+    const headerCells = WEEKDAYS.map(w =>
+      `<div style="width:32px;height:18px;display:flex;align-items:center;justify-content:center;
+        font-size:9px;font-weight:700;color:var(--muted)">${w}</div>`
+    ).join('');
+
+    // Leading blanks so day 1 lands on the correct weekday column
+    const leadingBlanks = Array.from({ length: firstDow }, () =>
+      `<div style="width:32px;height:32px"></div>`
+    ).join('');
+
+    // Day cells — clickable for ANY date, past or future (no restriction)
+    const dayCells = Array.from({ length: daysInMonth }, (_, i) => {
       const day     = String(i + 1).padStart(2, '0');
       const dateStr = `${month}-${day}`;
       const status  = sAtt[day] || '';
-      const isFuture = dateStr > todayStr;
+      const isToday = dateStr === todayStr;
       return `<button
-        onclick="${isFuture ? '' : `window._toggleAtt('${s.id}','${month}','${day}')`}"
-        title="${dateStr}"
-        style="width:28px;height:28px;border-radius:6px;border:1.5px solid ${STATUS_CLR[status]};
-          background:${status ? STATUS_CLR[status]+'18' : '#f8fafc'};
-          font-size:11px;cursor:${isFuture ? 'default' : 'pointer'};
-          display:inline-flex;align-items:center;justify-content:center;
-          opacity:${isFuture ? '.35' : '1'};transition:all .12s;font-family:var(--font)"
-        onmouseover="${isFuture ? '' : `this.style.opacity='.8'`}"
-        onmouseout="${isFuture ? '' : `this.style.opacity='1'`}">
-        <span style="font-size:9px;font-weight:700;color:${STATUS_CLR[status] || '#94a3b8'}">${i + 1}</span>
+        onclick="window._toggleAtt('${s.id}','${month}','${day}')"
+        title="${dateStr}${status ? ' — ' + status : ''}"
+        style="width:32px;height:32px;border-radius:8px;
+          border:1.5px solid ${isToday ? 'var(--indigo)' : STATUS_CLR[status]};
+          background:${status ? STATUS_CLR[status]+'20' : '#fff'};
+          font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+          transition:transform .1s;font-family:var(--font);position:relative"
+        onmouseover="this.style.transform='scale(1.08)'"
+        onmouseout="this.style.transform='scale(1)'">
+        <span style="font-size:10px;font-weight:${isToday?'800':'600'};color:${status ? STATUS_CLR[status] : (isToday ? 'var(--indigo)' : 'var(--text2)')}">${i + 1}</span>
       </button>`;
     }).join('');
 
@@ -4958,20 +4978,29 @@ window._rAttendance = async function() {
           <i class="ti ti-pencil" style="font-size:11px"></i>
         </button>
       </div>
+
       <!-- Summary chips -->
       <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">✅ ${presentDays} Present</span>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#854D0E">🌓 ${halfDays} Half</span>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#991B1B">❌ ${absentDays} Absent</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">✓ ${presentDays} Present</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#854D0E">◐ ${halfDays} Half</span>
+        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#991B1B">✕ ${absentDays} Absent</span>
         ${salary > 0 ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--indigo-bg);color:var(--indigo);margin-left:auto">₹${earned.toLocaleString('en-IN')} earned</span>` : ''}
       </div>
-      <!-- Day buttons grid -->
-      <div style="padding:10px 14px;display:flex;flex-wrap:wrap;gap:4px">${dayBtns}</div>
+
+      <!-- Calendar grid -->
+      <div style="padding:12px 14px">
+        <div style="display:flex;gap:2px;margin-bottom:4px">${headerCells}</div>
+        <div style="display:flex;flex-wrap:wrap;gap:2px">${leadingBlanks}${dayCells}</div>
+      </div>
+
+      <!-- Legend -->
+      <div style="display:flex;gap:12px;padding:8px 14px 12px;font-size:10px;color:var(--muted);flex-wrap:wrap">
+        <span>Tap a date to cycle: blank → ✓ Present → ◐ Half → ✕ Absent → blank</span>
+      </div>
     </div>`;
   }).join('');
 };
 
-// ── Toggle attendance day ────────────────────────────────────────────────────
 window._toggleAtt = async function(staffId, month, day) {
   const cycle = ['', 'present', 'half', 'absent'];
   if (!attCache[month])           attCache[month] = {};
