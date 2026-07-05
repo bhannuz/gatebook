@@ -1403,19 +1403,69 @@ window._renameBlockPrompt = async (oldName) => {
   const newName = prompt('Rename block:', oldName);
   if (!newName || newName.trim() === oldName) return;
   const nn = newName.trim().toUpperCase();
-  const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
+  const toRename = [...flats.entries()].filter(([,f]) => f.block === oldName);
+  if (!toRename.length) { toast('No flats in this block', 'error'); return; }
+
+  if (!confirm(
+    `Rename Block ${oldName} → ${nn}?\n\n` +
+    `This updates ${toRename.length} flat ID${toRename.length!==1?'s':''} (e.g. ` +
+    `${toRename[0][1].flatId} → will change to match the new block letter), ` +
+    `along with their linked payment and vehicle records.\n\nThis cannot be undone.`
+  )) return;
+
   sync('saving');
+  const failed = [];
   try {
-    // Update every flat's block field in Firestore
-    await Promise.all(toUpdate.map(([fid]) => updateDoc(doc(db,'apartments',UID,'flats',fid), {block: nn})));
-    // Also rename the vehicle records so vehicle lookups stay keyed correctly
-    // (vehicles are keyed by flatId, not block, so no change needed there —
-    // but the flats Map must reflect the new block immediately)
-    toUpdate.forEach(([fid, f]) => { f.block = nn; flats.set(fid, f); });
+    for (const [oldFid, f] of toRename) {
+      try {
+        // Derive the flat's own suffix (everything after the first "-")
+        // rather than trusting the old block name to be an exact prefix —
+        // this correctly repairs flats whose ID was left stale by an
+        // earlier rename that only updated the `block` field, not the ID
+        // (e.g. block shows "D" but the flat still shows "c-101").
+        const dashIdx = oldFid.indexOf('-');
+        const suffix  = dashIdx >= 0 ? oldFid.slice(dashIdx + 1) : oldFid;
+        const newFid  = `${nn}-${suffix}`;
+        if (newFid === oldFid) continue;
+
+        // 1. Create the new flat document (strip any stray flatId field)
+        const { flatId, ...flatData } = f;
+        await setDoc(flatRef(newFid), { ...flatData, block: nn });
+
+        // 2. Migrate the vehicle record, if one exists
+        const vehData = vehicles.get(oldFid);
+        if (vehData) {
+          await setDoc(vehRef(newFid), vehData);
+          try { await deleteDoc(vehRef(oldFid)); } catch(_) {}
+          vehicles.delete(oldFid);
+          vehicles.set(newFid, vehData);
+        }
+
+        // 3. Repoint every linked expense/payment record's flatId field
+        const flatExps = exps.get(oldFid) || [];
+        for (const e of flatExps) {
+          const expId = e.expId || e.id;
+          if (expId) await updateDoc(doc(db,'apartments',UID,'expenses',expId), { flatId: newFid });
+        }
+        if (flatExps.length) {
+          exps.delete(oldFid);
+          exps.set(newFid, flatExps.map(e => ({ ...e, flatId: newFid })));
+        }
+
+        // 4. Delete the old flat document
+        await deleteDoc(flatRef(oldFid));
+
+        // 5. Update in-memory state
+        flats.delete(oldFid);
+        flats.set(newFid, { ...flatData, flatId: newFid, block: nn });
+      } catch(inner) {
+        console.error('Failed to migrate flat', oldFid, inner);
+        failed.push(oldFid);
+      }
+    }
 
     // Reset any UI filter state that was pointing at the OLD block name —
-    // otherwise Payments/Structure/Expenses tabs silently show zero rows
-    // because they're still filtering by a block name that no longer exists.
+    // otherwise Payments/Structure/Expenses tabs silently show zero rows.
     if (_anBlock === oldName) _anBlock = 'all';
     if (AB === oldName) AB = '';
     if (typeof FLF !== 'undefined' && FLF === oldName) FLF = 'all';
@@ -1424,15 +1474,19 @@ window._renameBlockPrompt = async (oldName) => {
     const strBlockSel = document.getElementById('strBlockFilter');
     if (strBlockSel && strBlockSel.value === oldName) strBlockSel.value = 'all';
 
-    sync('live'); toast(`Block ${oldName} renamed to ${nn} ✓`);
+    sync('live');
+    if (failed.length) {
+      toast(`Renamed ${toRename.length - failed.length}/${toRename.length} flats — ${failed.length} failed, check console`, 'error');
+    } else {
+      toast(`Block ${oldName} renamed to ${nn} — ${toRename.length} flat ID${toRename.length!==1?'s':''} updated ✓`);
+    }
 
-    // Refresh every tab that reads block data, so the rename shows up
-    // immediately without needing to switch tabs away and back.
+    // Refresh every tab that reads block/flat data immediately.
     window._renderStructureList();
     try { rStructure(); } catch(e) { console.error(e); }
     try { rAnalytics(); } catch(e) { console.error(e); }
     try { rBTabs(); rBlock(); } catch(e) { /* legacy payments-by-block view, optional */ }
-  } catch(e) { console.error(e); sync('error'); toast('Rename failed','error'); }
+  } catch(e) { console.error(e); sync('error'); toast('Rename failed: ' + e.message, 'error'); }
 };
 window._closeStructureManager = () => {
   document.getElementById('structureModal').style.display = 'none';
