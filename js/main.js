@@ -4905,6 +4905,8 @@ window._rAttendance = async function() {
   if (!panel) return;
 
   if (!staffList.length) {
+    const summaryEl0 = document.getElementById('attSummary');
+    if (summaryEl0) summaryEl0.innerHTML = '';
     panel.innerHTML = `<div style="padding:40px 20px;text-align:center;color:var(--muted)">
       <i class="ti ti-user-off" style="font-size:28px;display:block;margin-bottom:10px;opacity:.5"></i>
       <div style="font-size:13px;font-weight:600">No staff added yet</div>
@@ -4939,6 +4941,67 @@ window._rAttendance = async function() {
 
   const STATUS_CLR = { present:'#22c55e', absent:'#ef4444', half:'#f59e0b', '':'#e2e8f0' };
   const ROLE_ICON  = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
+
+  // ── Summary — every staff member's totals for the month, at a glance ──────
+  const summaryEl = document.getElementById('attSummary');
+  if (summaryEl) {
+    const rows = staffList.map(s => {
+      const sAtt = (monthAtt && monthAtt[s.id]) ? monthAtt[s.id] : {};
+      const p = Object.values(sAtt).filter(v => v === 'present').length;
+      const h = Object.values(sAtt).filter(v => v === 'half').length;
+      const a = Object.values(sAtt).filter(v => v === 'absent').length;
+      const marked = p + h + a;
+      const salary = s.salary || 0;
+      const perDay = salary > 0 ? (salary / daysInMonth) : 0;
+      const earned = Math.round(perDay * (p + h * 0.5));
+      return { s, p, h, a, marked, earned };
+    });
+    const totP = rows.reduce((s,r)=>s+r.p,0);
+    const totH = rows.reduce((s,r)=>s+r.h,0);
+    const totA = rows.reduce((s,r)=>s+r.a,0);
+    const totEarned = rows.reduce((s,r)=>s+r.earned,0);
+
+    summaryEl.innerHTML = `
+      <div style="background:#fff;border:1.5px solid var(--border2);border-radius:10px;overflow:hidden">
+        <div style="padding:8px 12px;border-bottom:1px solid var(--border2);background:var(--surface2);
+          font-size:10px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+          <i class="ti ti-calendar-check" style="color:var(--indigo)"></i> Monthly Summary — ${rows.length} staff
+        </div>
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:11px">
+            <thead>
+              <tr style="background:var(--surface3)">
+                <th style="padding:6px 10px;text-align:left;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase">Staff</th>
+                <th style="padding:6px 6px;text-align:center;font-size:9px;font-weight:800;color:#16a34a">✓</th>
+                <th style="padding:6px 6px;text-align:center;font-size:9px;font-weight:800;color:#d97706">◐</th>
+                <th style="padding:6px 6px;text-align:center;font-size:9px;font-weight:800;color:#dc2626">✕</th>
+                <th style="padding:6px 10px;text-align:right;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase">Earned</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows.map(r => `<tr style="border-top:1px solid var(--border2)">
+                <td style="padding:6px 10px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:0">
+                  ${ROLE_ICON[r.s.role]||'👤'} ${r.s.name}
+                </td>
+                <td style="padding:6px 6px;text-align:center;font-weight:700;color:#16a34a">${r.p}</td>
+                <td style="padding:6px 6px;text-align:center;font-weight:700;color:#d97706">${r.h}</td>
+                <td style="padding:6px 6px;text-align:center;font-weight:700;color:#dc2626">${r.a}</td>
+                <td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--text)">${r.s.salary ? '₹'+r.earned.toLocaleString('en-IN') : '—'}</td>
+              </tr>`).join('')}
+            </tbody>
+            <tfoot>
+              <tr style="border-top:2px solid var(--border2);background:var(--surface2)">
+                <td style="padding:6px 10px;font-weight:800;color:var(--text2)">Total</td>
+                <td style="padding:6px 6px;text-align:center;font-weight:800;color:#16a34a">${totP}</td>
+                <td style="padding:6px 6px;text-align:center;font-weight:800;color:#d97706">${totH}</td>
+                <td style="padding:6px 6px;text-align:center;font-weight:800;color:#dc2626">${totA}</td>
+                <td style="padding:6px 10px;text-align:right;font-weight:800;color:var(--indigo)">₹${totEarned.toLocaleString('en-IN')}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>`;
+  }
 
   panel.innerHTML = staffList.map(s => {
     const sAtt = (monthAtt && monthAtt[s.id]) ? monthAtt[s.id] : {};
