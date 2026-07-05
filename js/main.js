@@ -1402,15 +1402,37 @@ window._openStructureManager = () => {
 window._renameBlockPrompt = async (oldName) => {
   const newName = prompt('Rename block:', oldName);
   if (!newName || newName.trim() === oldName) return;
-  const nn = newName.trim();
+  const nn = newName.trim().toUpperCase();
   const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
   sync('saving');
   try {
+    // Update every flat's block field in Firestore
     await Promise.all(toUpdate.map(([fid]) => updateDoc(doc(db,'apartments',UID,'flats',fid), {block: nn})));
+    // Also rename the vehicle records so vehicle lookups stay keyed correctly
+    // (vehicles are keyed by flatId, not block, so no change needed there —
+    // but the flats Map must reflect the new block immediately)
     toUpdate.forEach(([fid, f]) => { f.block = nn; flats.set(fid, f); });
-    sync('live'); toast('Block renamed ✓');
-    window._renderStructureList(); rStructure();
-  } catch(e) { sync('error'); toast('Rename failed','error'); }
+
+    // Reset any UI filter state that was pointing at the OLD block name —
+    // otherwise Payments/Structure/Expenses tabs silently show zero rows
+    // because they're still filtering by a block name that no longer exists.
+    if (_anBlock === oldName) _anBlock = 'all';
+    if (AB === oldName) AB = '';
+    if (typeof FLF !== 'undefined' && FLF === oldName) FLF = 'all';
+    const payBlockSel = document.getElementById('payFilterBlock');
+    if (payBlockSel) payBlockSel.value = _anBlock;
+    const strBlockSel = document.getElementById('strBlockFilter');
+    if (strBlockSel && strBlockSel.value === oldName) strBlockSel.value = 'all';
+
+    sync('live'); toast(`Block ${oldName} renamed to ${nn} ✓`);
+
+    // Refresh every tab that reads block data, so the rename shows up
+    // immediately without needing to switch tabs away and back.
+    window._renderStructureList();
+    try { rStructure(); } catch(e) { console.error(e); }
+    try { rAnalytics(); } catch(e) { console.error(e); }
+    try { rBTabs(); rBlock(); } catch(e) { /* legacy payments-by-block view, optional */ }
+  } catch(e) { console.error(e); sync('error'); toast('Rename failed','error'); }
 };
 window._closeStructureManager = () => {
   document.getElementById('structureModal').style.display = 'none';
@@ -1505,6 +1527,14 @@ window._deleteBlock = async (blockName) => {
       flats.delete(fid);
       vehicles.delete(fid);
     }
+    // Reset any filter still pointing at the now-deleted block
+    if (_anBlock === blockName) _anBlock = 'all';
+    if (AB === blockName) AB = '';
+    const payBlockSel = document.getElementById('payFilterBlock');
+    if (payBlockSel) payBlockSel.value = _anBlock;
+    const strBlockSel = document.getElementById('strBlockFilter');
+    if (strBlockSel && strBlockSel.value === blockName) strBlockSel.value = 'all';
+
     toast('Block & flats deleted ✓');
     window._renderStructureList();
     rAll();
