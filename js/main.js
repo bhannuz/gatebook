@@ -4208,10 +4208,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
-           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
-           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
-           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
+      : `<span style="display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;white-space:nowrap">
+           ${tw > 0 ? `<span style="color:var(--indigo)">🏍${tw}</span>` : ''}
+           ${fw > 0 ? `<span style="color:#059669">🚗${fw}</span>` : ''}
          </span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
@@ -4225,16 +4224,17 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td style="padding:10px 10px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
+      <td style="padding:10px 10px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         ${isVacant
           ? `<span style="font-size:12px;font-weight:600;color:var(--muted);font-style:italic">Vacant</span>`
           : `<div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner}</div>
              <div style="margin-top:2px">${typeBadge}</div>`
         }
       </td>
-      <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
-      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 6px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${vehCell}</td>
+      <td style="padding:10px 10px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
       <td style="border-bottom:1px solid var(--border)"></td>
     </tr>`;
   }).join('');
@@ -4244,9 +4244,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 8px;text-align:center;font-size:10px;color:var(--muted)">—</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:10px 10px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:10px 6px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 8px;text-align:center;font-size:10px;font-weight:700;color:var(--text2);white-space:nowrap">🏍${totTw} 🚗${totFw}</td>
+    <td style="padding:10px 10px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
     <td></td>
   </tr>`;
 }
@@ -4948,15 +4949,15 @@ window._rAttendance = async function() {
     const perDay      = salary > 0 ? (salary / daysInMonth) : 0;
     const earned      = Math.round(perDay * (presentDays + halfDays * 0.5));
 
-    // Weekday header row
+    // Weekday header row — compact 24px cells
     const headerCells = WEEKDAYS.map(w =>
-      `<div style="width:32px;height:18px;display:flex;align-items:center;justify-content:center;
-        font-size:9px;font-weight:700;color:var(--muted)">${w}</div>`
+      `<div style="width:24px;height:14px;display:flex;align-items:center;justify-content:center;
+        font-size:8px;font-weight:700;color:var(--muted)">${w}</div>`
     ).join('');
 
     // Leading blanks so day 1 lands on the correct weekday column
     const leadingBlanks = Array.from({ length: firstDow }, () =>
-      `<div style="width:32px;height:32px"></div>`
+      `<div style="width:24px;height:24px"></div>`
     ).join('');
 
     // Day cells — clickable for ANY date, past or future (no restriction)
@@ -4968,53 +4969,46 @@ window._rAttendance = async function() {
       return `<button
         onclick="window._toggleAtt('${s.id}','${month}','${day}')"
         title="${dateStr}${status ? ' — ' + status : ''}"
-        style="width:32px;height:32px;border-radius:8px;
-          border:1.5px solid ${isToday ? 'var(--indigo)' : STATUS_CLR[status]};
+        style="width:24px;height:24px;border-radius:6px;
+          border:1px solid ${isToday ? 'var(--indigo)' : STATUS_CLR[status]};
           background:${status ? STATUS_CLR[status]+'20' : '#fff'};
-          font-size:11px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
-          transition:transform .1s;font-family:var(--font);position:relative"
-        onmouseover="this.style.transform='scale(1.08)'"
+          cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+          transition:transform .1s;font-family:var(--font);padding:0"
+        onmouseover="this.style.transform='scale(1.1)'"
         onmouseout="this.style.transform='scale(1)'">
-        <span style="font-size:10px;font-weight:${isToday?'800':'600'};color:${status ? STATUS_CLR[status] : (isToday ? 'var(--indigo)' : 'var(--text2)')}">${i + 1}</span>
+        <span style="font-size:9px;font-weight:${isToday?'800':'600'};color:${status ? STATUS_CLR[status] : (isToday ? 'var(--indigo)' : 'var(--text2)')}">${i + 1}</span>
       </button>`;
     }).join('');
 
-    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;
-      margin-bottom:10px;overflow:hidden">
-      <!-- Staff header -->
-      <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;
+    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:10px;
+      margin-bottom:8px;overflow:hidden">
+      <!-- Staff header + summary in one compact row -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;
         border-bottom:1px solid var(--border2);background:var(--surface2)">
-        <div style="width:36px;height:36px;border-radius:10px;background:var(--indigo-bg);
+        <div style="width:28px;height:28px;border-radius:8px;background:var(--indigo-bg);
           color:var(--indigo);display:flex;align-items:center;justify-content:center;
-          font-size:16px;flex-shrink:0">${ROLE_ICON[s.role] || '👤'}</div>
+          font-size:13px;flex-shrink:0">${ROLE_ICON[s.role] || '👤'}</div>
         <div style="flex:1;min-width:0">
-          <div style="font-size:13px;font-weight:800;color:var(--text)">${s.name}</div>
-          <div style="font-size:10px;color:var(--muted)">${s.role || 'Staff'} · ${s.shift || 'Full Day'}${s.phone ? ' · '+s.phone : ''}</div>
+          <div style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
+          <div style="font-size:9px;color:var(--muted)">${s.role || 'Staff'} · ${s.shift || 'Full Day'}</div>
         </div>
+        <div style="display:flex;gap:4px;flex-shrink:0;font-size:9px;font-weight:700;white-space:nowrap">
+          <span style="color:#16a34a">✓${presentDays}</span>
+          <span style="color:#d97706">◐${halfDays}</span>
+          <span style="color:#dc2626">✕${absentDays}</span>
+        </div>
+        ${salary > 0 ? `<span style="font-size:10px;font-weight:800;color:var(--indigo);flex-shrink:0">₹${earned.toLocaleString('en-IN')}</span>` : ''}
         <button onclick="window._oStaff('${s.id}')"
-          style="background:none;border:1px solid var(--border2);border-radius:6px;width:26px;height:26px;
-            cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center">
-          <i class="ti ti-pencil" style="font-size:11px"></i>
+          style="background:none;border:1px solid var(--border2);border-radius:6px;width:22px;height:22px;
+            cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <i class="ti ti-pencil" style="font-size:10px"></i>
         </button>
       </div>
 
-      <!-- Summary chips -->
-      <div style="display:flex;gap:8px;padding:10px 14px;border-bottom:1px solid var(--border2);flex-wrap:wrap">
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#DCFCE7;color:#166534">✓ ${presentDays} Present</span>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEF9C3;color:#854D0E">◐ ${halfDays} Half</span>
-        <span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#FEE2E2;color:#991B1B">✕ ${absentDays} Absent</span>
-        ${salary > 0 ? `<span style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:var(--indigo-bg);color:var(--indigo);margin-left:auto">₹${earned.toLocaleString('en-IN')} earned</span>` : ''}
-      </div>
-
-      <!-- Calendar grid -->
-      <div style="padding:12px 14px">
-        <div style="display:flex;gap:2px;margin-bottom:4px">${headerCells}</div>
+      <!-- Compact calendar grid -->
+      <div style="padding:8px 10px">
+        <div style="display:flex;gap:2px;margin-bottom:3px">${headerCells}</div>
         <div style="display:flex;flex-wrap:wrap;gap:2px">${leadingBlanks}${dayCells}</div>
-      </div>
-
-      <!-- Legend -->
-      <div style="display:flex;gap:12px;padding:8px 14px 12px;font-size:10px;color:var(--muted);flex-wrap:wrap">
-        <span>Tap a date to cycle: blank → ✓ Present → ◐ Half → ✕ Absent → blank</span>
       </div>
     </div>`;
   }).join('');
