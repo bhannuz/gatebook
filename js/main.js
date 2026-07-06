@@ -1090,11 +1090,13 @@ function listenFlats(){
   let _firstLoad = true;
   _unsubFlats = onSnapshot(flatsColl(), snap => {
     snap.docChanges().forEach(ch => {
-      // flatId is ALWAYS the Firestore doc ID — spread data() first, then force
-      // flatId last, so any stray/legacy 'flatId' field in old documents can
-      // never override the real identifier (this was the root cause of flats
-      // silently failing to match for payments, and showing lowercase codes).
-      const d = {...ch.doc.data(), flatId:ch.doc.id};
+      // flatId defaults to the Firestore doc ID, but a stored 'flatId' FIELD
+      // (set intentionally by block-rename) takes precedence when present —
+      // this lets a flat's displayed ID change (e.g. C-101 -> D-101) without
+      // ever deleting/recreating the underlying document. New flats created
+      // via _saveNewStructure() deliberately omit this field, so for them
+      // flatId still falls back cleanly to the doc ID.
+      const d = {flatId:ch.doc.id, ...ch.doc.data()};
       ch.type==='removed' ? flats.delete(ch.doc.id) : flats.set(ch.doc.id,d);
     });
     if (_firstLoad) {
@@ -1403,69 +1405,74 @@ window._renameBlockPrompt = async (oldName) => {
   const newName = prompt('Rename block:', oldName);
   if (!newName || newName.trim() === oldName) return;
   const nn = newName.trim().toUpperCase();
-  const toRename = [...flats.entries()].filter(([,f]) => f.block === oldName);
-  if (!toRename.length) { toast('No flats in this block', 'error'); return; }
+  const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
+  if (!toUpdate.length) { toast('No flats in this block', 'error'); return; }
 
-  if (!confirm(
-    `Rename Block ${oldName} → ${nn}?\n\n` +
-    `This updates ${toRename.length} flat ID${toRename.length!==1?'s':''} (e.g. ` +
-    `${toRename[0][1].flatId} → will change to match the new block letter), ` +
-    `along with their linked payment and vehicle records.\n\nThis cannot be undone.`
-  )) return;
+  if (!confirm(`Rename Block ${oldName} → ${nn}?\n\nThis updates ${toUpdate.length} flat ID${toUpdate.length!==1?'s':''} and their linked payments, vehicles, and issues.`)) return;
 
   sync('saving');
-  const failed = [];
   try {
-    for (const [oldFid, f] of toRename) {
-      try {
-        // Derive the flat's own suffix (everything after the first "-")
-        // rather than trusting the old block name to be an exact prefix —
-        // this correctly repairs flats whose ID was left stale by an
-        // earlier rename that only updated the `block` field, not the ID
-        // (e.g. block shows "D" but the flat still shows "c-101").
-        const dashIdx = oldFid.indexOf('-');
-        const suffix  = dashIdx >= 0 ? oldFid.slice(dashIdx + 1) : oldFid;
-        const newFid  = `${nn}-${suffix}`;
-        if (newFid === oldFid) continue;
+    // Build old→new flatId map (derive suffix from the flat's own ID,
+    // not from oldName, so it self-heals any previously mismatched flats)
+    const flatIdMap = {};
+    toUpdate.forEach(([fid, f]) => {
+      const oldFlatId = f.flatId || fid || '';
+      const dashIdx = oldFlatId.indexOf('-');
+      const suffix  = dashIdx >= 0 ? oldFlatId.slice(dashIdx + 1) : oldFlatId;
+      flatIdMap[oldFlatId] = nn + '-' + suffix;
+    });
 
-        // 1. Create the new flat document (strip any stray flatId field)
-        const { flatId, ...flatData } = f;
-        await setDoc(flatRef(newFid), { ...flatData, block: nn });
+    const writes = [];
 
-        // 2. Migrate the vehicle record, if one exists
-        const vehData = vehicles.get(oldFid);
-        if (vehData) {
-          await setDoc(vehRef(newFid), vehData);
-          try { await deleteDoc(vehRef(oldFid)); } catch(_) {}
-          vehicles.delete(oldFid);
-          vehicles.set(newFid, vehData);
-        }
+    // 1. Update flats — same doc ID, only the block + flatId FIELDS change
+    toUpdate.forEach(([fid, f]) => {
+      const newFlatId = flatIdMap[f.flatId || ''] || (nn + '-' + (f.flatId || ''));
+      writes.push(updateDoc(doc(db,'apartments',UID,'flats',fid), { block: nn, flatId: newFlatId }));
+    });
 
-        // 3. Repoint every linked expense/payment record's flatId field
-        const flatExps = exps.get(oldFid) || [];
-        for (const e of flatExps) {
-          const expId = e.expId || e.id;
-          if (expId) await updateDoc(doc(db,'apartments',UID,'expenses',expId), { flatId: newFid });
-        }
-        if (flatExps.length) {
-          exps.delete(oldFid);
-          exps.set(newFid, flatExps.map(e => ({ ...e, flatId: newFid })));
-        }
+    // 2. Update vehicles (keyed by flatId field, not necessarily doc id)
+    const vehSnap = await getDocs(collection(db,'apartments',UID,'vehicles'));
+    vehSnap.forEach(d => {
+      const oldFid = d.data().flatId;
+      if (flatIdMap[oldFid]) writes.push(updateDoc(d.ref, { flatId: flatIdMap[oldFid] }));
+    });
 
-        // 4. Delete the old flat document
-        await deleteDoc(flatRef(oldFid));
+    // 3. Update expenses/payments
+    const expSnap = await getDocs(expColl());
+    expSnap.forEach(d => {
+      const oldFid = d.data().flatId;
+      if (flatIdMap[oldFid]) writes.push(updateDoc(d.ref, { flatId: flatIdMap[oldFid], block: nn }));
+    });
 
-        // 5. Update in-memory state
-        flats.delete(oldFid);
-        flats.set(newFid, { ...flatData, flatId: newFid, block: nn });
-      } catch(inner) {
-        console.error('Failed to migrate flat', oldFid, inner);
-        failed.push(oldFid);
+    // 4. Update issues
+    const issSnap = await getDocs(issuesColl());
+    issSnap.forEach(d => {
+      const oldFid = d.data().flatId;
+      if (flatIdMap[oldFid]) writes.push(updateDoc(d.ref, { flatId: flatIdMap[oldFid] }));
+    });
+
+    await Promise.all(writes);
+
+    // Update in-memory maps
+    toUpdate.forEach(([fid, f]) => {
+      const newFlatId = flatIdMap[f.flatId || ''] || f.flatId;
+      f.block  = nn;
+      f.flatId = newFlatId;
+      flats.set(fid, f);
+    });
+    // Re-key vehicles map
+    [...vehicles.entries()].forEach(([k, v]) => {
+      if (flatIdMap[k]) { vehicles.set(flatIdMap[k], v); vehicles.delete(k); }
+    });
+    // Re-key expenses map
+    [...exps.entries()].forEach(([k, v]) => {
+      if (flatIdMap[k]) {
+        exps.set(flatIdMap[k], v.map(e => ({ ...e, flatId: flatIdMap[k] })));
+        exps.delete(k);
       }
-    }
+    });
 
-    // Reset any UI filter state that was pointing at the OLD block name —
-    // otherwise Payments/Structure/Expenses tabs silently show zero rows.
+    // Reset any UI filter state that was pointing at the OLD block name
     if (_anBlock === oldName) _anBlock = 'all';
     if (AB === oldName) AB = '';
     if (typeof FLF !== 'undefined' && FLF === oldName) FLF = 'all';
@@ -1475,18 +1482,15 @@ window._renameBlockPrompt = async (oldName) => {
     if (strBlockSel && strBlockSel.value === oldName) strBlockSel.value = 'all';
 
     sync('live');
-    if (failed.length) {
-      toast(`Renamed ${toRename.length - failed.length}/${toRename.length} flats — ${failed.length} failed, check console`, 'error');
-    } else {
-      toast(`Block ${oldName} renamed to ${nn} — ${toRename.length} flat ID${toRename.length!==1?'s':''} updated ✓`);
-    }
-
-    // Refresh every tab that reads block/flat data immediately.
+    toast('Block renamed — all records updated ✓');
+    rAll();
     window._renderStructureList();
     try { rStructure(); } catch(e) { console.error(e); }
     try { rAnalytics(); } catch(e) { console.error(e); }
     try { rBTabs(); rBlock(); } catch(e) { /* legacy payments-by-block view, optional */ }
-  } catch(e) { console.error(e); sync('error'); toast('Rename failed: ' + e.message, 'error'); }
+  } catch(e) {
+    console.error(e); sync('error'); toast('Rename failed: ' + e.message, 'error');
+  }
 };
 window._closeStructureManager = () => {
   document.getElementById('structureModal').style.display = 'none';
@@ -1650,10 +1654,10 @@ window._saveNewStructure = async () => {
     const blockU = blockName.toUpperCase();
     for (const f of newFlats) {
       const flatNumU = f.flatNum.toUpperCase();
-      // Doc ID must be uppercase and MUST NOT be duplicated as a 'flatId' field in
-      // the document data — listenFlats() derives flatId from the doc ID itself.
-      // Storing a separate flatId field here previously overwrote the correct
-      // value on load, breaking payments and showing lowercase flat codes.
+      // Doc ID is uppercase and this document deliberately has NO 'flatId'
+      // field — listenFlats() falls back to the doc ID when the field is
+      // absent, and only trusts a stored 'flatId' field when block-rename
+      // has explicitly set one (see window._renameBlockPrompt).
       const fid = (blockU + '-' + flatNumU).replace(/[^A-Z0-9-]/gi, '_');
       const flatDoc = {
         block: blockU,
