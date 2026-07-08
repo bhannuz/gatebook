@@ -2602,7 +2602,6 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
-        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -4965,37 +4964,28 @@ window._delContact = async function() {
 window._issSubTab = function(which) {
   window._activeIssSubTab = which;
 
-  const issuesBtn      = document.getElementById('issSubTabIssues');
-  const contactsBtn    = document.getElementById('issSubTabContacts');
-  const reportsBtn     = document.getElementById('issSubTabReports');
-  const attendanceBtn  = document.getElementById('issSubTabAttendance');
-  const issuesPanel    = document.getElementById('issSubPanelIssues');
-  const contactsPanel  = document.getElementById('issSubPanelContacts');
-  const reportsPanel   = document.getElementById('issSubPanelReports');
-  const attendancePanel= document.getElementById('issSubPanelAttendance');
-
-  if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
+  const tabs   = { issues:'issSubTabIssues', contacts:'issSubTabContacts', attendance:'issSubTabAttendance', reports:'issSubTabReports' };
+  const panels = { issues:'issSubPanelIssues', contacts:'issSubPanelContacts', attendance:'issSubPanelAttendance', reports:'issSubPanelReports' };
 
   // Clear phAct so filters from other tabs don't bleed in
   const phAct = document.getElementById('phAct');
   if (phAct) phAct.innerHTML = '';
 
-  const active   = { borderColor:'var(--indigo)', background:'var(--indigo)', color:'#fff' };
-  const inactive = { borderColor:'var(--border2)', background:'#fff', color:'var(--text2)' };
-
-  const allBtns   = { issues:issuesBtn, contacts:contactsBtn, reports:reportsBtn, attendance:attendanceBtn };
-  const allPanels = { issues:issuesPanel, contacts:contactsPanel, reports:reportsPanel, attendance:attendancePanel };
-
-  Object.keys(allPanels).forEach(k => {
-    if (allPanels[k]) allPanels[k].style.display = k === which ? '' : 'none';
-    if (allBtns[k])   Object.assign(allBtns[k].style, k === which ? active : inactive);
+  // Toggle panels + tab active state
+  Object.keys(panels).forEach(k => {
+    const panel = document.getElementById(panels[k]);
+    const btn   = document.getElementById(tabs[k]);
+    const isActive = k === which;
+    if (panel) panel.style.display = isActive ? '' : 'none';
+    if (btn)   btn.style.opacity   = isActive ? '1' : '0.45';
   });
 
+  // Render content
   try {
-    if (which === 'issues')     rIssues();
+    if (which === 'issues')          rIssues();
     else if (which === 'contacts')   window._rContacts();
     else if (which === 'attendance') window._rAttendance();
-    // reports panel is static
+    // reports is static
   } catch(e) { console.error(e); }
 };
 
