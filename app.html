@@ -189,42 +189,39 @@
   <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
   <div id="statsRow" style="display:none"></div>
 
-  <!-- SERVICES VIEW (with Issues / Contacts / Attendance / Monthly Report sub-tabs) -->
+  <!-- SERVICES VIEW -->
   <div id="iView" style="display:none">
 
-    <!-- Sub-tabs: coloured top bar style -->
-    <div style="display:flex;gap:0;padding:0 12px;margin-bottom:12px;border-bottom:2px solid var(--border2);">
+    <!-- Sub-tabs: chip style -->
+    <div style="display:flex;gap:8px;padding:0 12px;margin-bottom:14px;flex-wrap:wrap;">
 
       <button id="issSubTabIssues" onclick="window._issSubTab('issues')"
-        style="flex:1;padding:0;padding-top:3px;border:none;background:transparent;cursor:pointer;font-family:var(--font);
-          position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:10px;">
-        <div style="position:absolute;top:0;left:4px;right:4px;height:3px;border-radius:0 0 3px 3px;background:#ef4444;"></div>
-        <i class="ti ti-alert-circle" style="font-size:15px;color:#ef4444;margin-top:6px;"></i>
-        <span style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;">Issues</span>
+        style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+          border:2px solid #ef4444;background:#ef4444;color:#fff;
+          font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);
+          box-shadow:0 2px 8px rgba(239,68,68,.25);transition:all .15s;">
+        <i class="ti ti-alert-circle" style="font-size:13px;"></i> Issues
       </button>
 
       <button id="issSubTabContacts" onclick="window._issSubTab('contacts')"
-        style="flex:1;padding:0;padding-top:3px;border:none;background:transparent;cursor:pointer;font-family:var(--font);
-          position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:10px;opacity:0.45;">
-        <div style="position:absolute;top:0;left:4px;right:4px;height:3px;border-radius:0 0 3px 3px;background:#6366f1;"></div>
-        <i class="ti ti-address-book" style="font-size:15px;color:#6366f1;margin-top:6px;"></i>
-        <span style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;">Contacts</span>
+        style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+          border:2px solid var(--border2);background:#fff;color:#475569;
+          font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;">
+        <i class="ti ti-address-book" style="font-size:13px;"></i> Contacts
       </button>
 
       <button id="issSubTabAttendance" onclick="window._issSubTab('attendance')"
-        style="flex:1;padding:0;padding-top:3px;border:none;background:transparent;cursor:pointer;font-family:var(--font);
-          position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:10px;opacity:0.45;">
-        <div style="position:absolute;top:0;left:4px;right:4px;height:3px;border-radius:0 0 3px 3px;background:#f59e0b;"></div>
-        <i class="ti ti-calendar-check" style="font-size:15px;color:#f59e0b;margin-top:6px;"></i>
-        <span style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;">Attendance</span>
+        style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+          border:2px solid var(--border2);background:#fff;color:#475569;
+          font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;">
+        <i class="ti ti-calendar-check" style="font-size:13px;"></i> Attendance
       </button>
 
       <button id="issSubTabReports" onclick="window._issSubTab('reports')"
-        style="flex:1;padding:0;padding-top:3px;border:none;background:transparent;cursor:pointer;font-family:var(--font);
-          position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;padding-bottom:10px;opacity:0.45;">
-        <div style="position:absolute;top:0;left:4px;right:4px;height:3px;border-radius:0 0 3px 3px;background:#8b5cf6;"></div>
-        <i class="ti ti-file-text" style="font-size:15px;color:#8b5cf6;margin-top:6px;"></i>
-        <span style="font-size:11px;font-weight:800;color:#1e293b;white-space:nowrap;">Monthly Report</span>
+        style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;
+          border:2px solid var(--border2);background:#fff;color:#475569;
+          font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);transition:all .15s;">
+        <i class="ti ti-file-text" style="font-size:13px;"></i> Monthly Report
       </button>
 
     </div>
