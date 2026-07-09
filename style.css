@@ -921,11 +921,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ════ RESPONSIVE LAYOUTS ════ */
 /* ════ RESPONSIVE LAYOUTS ════ */
 @media (max-width: 1024px) {
-  .exp-layout-grid, .an-layout-grid {
+  .exp-layout-grid {
     grid-template-columns: 1fr !important;
   }
   .chart-col {
     order: 2;
+  }
+}
+@media (max-width: 700px) {
+  .an-layout-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 
