@@ -357,15 +357,20 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <!-- Stat cards — full width above grid -->
-    <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"></div>
+    <style>
+      .pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;}
+      @media(max-width:680px){.pay-grid{grid-template-columns:1fr!important}}
+    </style>
 
-    <!-- Main grid: same as Expenses tab -->
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
+    <div class="pay-grid">
 
-      <!-- LEFT: payment records table -->
+      <!-- LEFT: stat chips + table -->
       <div style="display:flex;flex-direction:column;gap:10px;">
+
+        <!-- Stat chips above table -->
+        <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+
+        <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
           <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
             <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
@@ -392,11 +397,12 @@
             </table>
           </div>
         </div>
+
       </div><!-- /left col -->
 
-      <!-- RIGHT: pie chart — same as Expenses -->
-      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+      <!-- RIGHT: pie chart (starts from same level as table) -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div style="background:var(--surface2);border-radius:8px;padding:14px;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
           </div>
@@ -408,7 +414,7 @@
         </div>
       </div><!-- /right col -->
 
-    </div><!-- /main grid -->
+    </div><!-- /pay-grid -->
 
   </div><!-- /#analyticsView -->
 
