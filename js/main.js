@@ -4964,28 +4964,43 @@ window._delContact = async function() {
 window._issSubTab = function(which) {
   window._activeIssSubTab = which;
 
+  const TAB_COLORS = {
+    issues:     { bg:'#ef4444', border:'#ef4444', shadow:'rgba(239,68,68,.25)' },
+    contacts:   { bg:'#6366f1', border:'#6366f1', shadow:'rgba(99,102,241,.25)' },
+    attendance: { bg:'#f59e0b', border:'#f59e0b', shadow:'rgba(245,158,11,.25)' },
+    reports:    { bg:'#8b5cf6', border:'#8b5cf6', shadow:'rgba(139,92,246,.25)' },
+  };
   const tabs   = { issues:'issSubTabIssues', contacts:'issSubTabContacts', attendance:'issSubTabAttendance', reports:'issSubTabReports' };
   const panels = { issues:'issSubPanelIssues', contacts:'issSubPanelContacts', attendance:'issSubPanelAttendance', reports:'issSubPanelReports' };
 
-  // Clear phAct so filters from other tabs don't bleed in
   const phAct = document.getElementById('phAct');
   if (phAct) phAct.innerHTML = '';
 
-  // Toggle panels + tab active state
   Object.keys(panels).forEach(k => {
-    const panel = document.getElementById(panels[k]);
-    const btn   = document.getElementById(tabs[k]);
-    const isActive = k === which;
-    if (panel) panel.style.display = isActive ? '' : 'none';
-    if (btn)   btn.style.opacity   = isActive ? '1' : '0.45';
+    const panel  = document.getElementById(panels[k]);
+    const btn    = document.getElementById(tabs[k]);
+    const active = k === which;
+    if (panel) panel.style.display = active ? '' : 'none';
+    if (btn) {
+      if (active) {
+        const c = TAB_COLORS[k];
+        btn.style.background  = c.bg;
+        btn.style.borderColor = c.border;
+        btn.style.color       = '#fff';
+        btn.style.boxShadow   = `0 2px 8px ${c.shadow}`;
+      } else {
+        btn.style.background  = '#fff';
+        btn.style.borderColor = 'var(--border2)';
+        btn.style.color       = '#475569';
+        btn.style.boxShadow   = 'none';
+      }
+    }
   });
 
-  // Render content
   try {
     if (which === 'issues')          rIssues();
     else if (which === 'contacts')   window._rContacts();
     else if (which === 'attendance') window._rAttendance();
-    // reports is static
   } catch(e) { console.error(e); }
 };
 
@@ -5066,59 +5081,89 @@ window._rAttendance = async function() {
   }
   const [yr, mo] = month.split('-').map(Number);
   const daysInMonth = new Date(yr, mo, 0).getDate();
-  const firstDow = new Date(yr, mo - 1, 1).getDay();
-  const todayStr = new Date().toISOString().slice(0, 10);
-  const WEEKDAYS = ['S','M','T','W','T','F','S'];
-  const STATUS_CLR = { present:'#22c55e', absent:'#ef4444', half:'#f59e0b', '':'#e2e8f0' };
-  const ROLE_ICON = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
+  const firstDow    = new Date(yr, mo - 1, 1).getDay();
+  const todayStr    = new Date().toISOString().slice(0, 10);
+  const WEEKDAYS    = ['S','M','T','W','T','F','S'];
+  const STATUS_CLR  = { present:'#22c55e', absent:'#ef4444', half:'#f59e0b', '':'#e2e8f0' };
+  const STATUS_ICON = { present:'✓', absent:'✕', half:'◐', '':'' };
+  const ROLE_ICON   = { Watchman:'🛡️', Security:'🔒', Maid:'🧹', Gardener:'🌳', Sweeper:'🧺', Other:'👤' };
+
   panel.innerHTML = staffList.map(s => {
     const sAtt = (monthAtt && monthAtt[s.id]) ? monthAtt[s.id] : {};
     const presentDays = Object.values(sAtt).filter(v => v === 'present').length;
     const halfDays    = Object.values(sAtt).filter(v => v === 'half').length;
     const absentDays  = Object.values(sAtt).filter(v => v === 'absent').length;
-    const salary = s.salary || 0;
-    const perDay = salary > 0 ? (salary / daysInMonth) : 0;
-    const earned = Math.round(perDay * (presentDays + halfDays * 0.5));
+    const salary      = s.salary || 0;
+    const perDay      = salary > 0 ? (salary / daysInMonth) : 0;
+    const earned      = Math.round(perDay * (presentDays + halfDays * 0.5));
+    const calId       = `attcal_${s.id}`;
+
     const headerCells = WEEKDAYS.map(w =>
-      `<div style="width:24px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--muted)">${w}</div>`
+      `<div style="width:28px;height:14px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:var(--muted)">${w}</div>`
     ).join('');
     const leadingBlanks = Array.from({ length: firstDow }, () =>
-      `<div style="width:24px;height:24px"></div>`
+      `<div style="width:28px;height:28px"></div>`
     ).join('');
     const dayCells = Array.from({ length: daysInMonth }, (_, i) => {
-      const day = String(i + 1).padStart(2, '0');
-      const dateStr = `${month}-${day}`;
+      const day    = String(i + 1).padStart(2, '0');
+      const dateStr= `${month}-${day}`;
       const status = sAtt[day] || '';
-      const isToday = dateStr === todayStr;
+      const isToday= dateStr === todayStr;
+      const clr    = STATUS_CLR[status];
       return `<button onclick="window._toggleAtt('${s.id}','${month}','${day}')"
-        title="${dateStr}${status ? ' — ' + status : ''}"
-        style="width:24px;height:24px;border-radius:6px;border:1px solid ${isToday ? 'var(--indigo)' : STATUS_CLR[status]};
-          background:${status ? STATUS_CLR[status]+'20' : '#fff'};cursor:pointer;
-          display:inline-flex;align-items:center;justify-content:center;transition:transform .1s;font-family:var(--font);padding:0"
-        onmouseover="this.style.transform='scale(1.1)'"
+        title="${dateStr}"
+        style="width:28px;height:28px;border-radius:7px;
+          border:2px solid ${isToday ? 'var(--indigo)' : (status ? clr : '#e2e8f0')};
+          background:${status ? clr+'22' : '#fff'};
+          cursor:pointer;display:inline-flex;align-items:center;justify-content:center;
+          transition:transform .1s;font-family:var(--font);padding:0;flex-shrink:0;"
+        onmouseover="this.style.transform='scale(1.15)'"
         onmouseout="this.style.transform='scale(1)'">
-        <span style="font-size:9px;font-weight:${isToday?'800':'600'};color:${status ? STATUS_CLR[status] : (isToday ? 'var(--indigo)' : 'var(--text2)')}">${i + 1}</span>
+        <span style="font-size:${status?'11px':'9px'};font-weight:800;
+          color:${status ? clr : (isToday ? 'var(--indigo)' : '#94a3b8')}">
+          ${status ? STATUS_ICON[status] : (i + 1)}
+        </span>
       </button>`;
     }).join('');
-    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:10px;margin-bottom:8px;overflow:hidden">
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border2);background:var(--surface2)">
-        <div style="width:28px;height:28px;border-radius:8px;background:var(--indigo-bg);color:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0">${ROLE_ICON[s.role] || '👤'}</div>
+
+    return `<div style="background:#fff;border:1.5px solid var(--border2);border-radius:12px;margin-bottom:8px;overflow:hidden;">
+
+      <!-- Header — click to toggle calendar -->
+      <div onclick="(function(el){const cal=document.getElementById('${calId}');const ic=el.querySelector('.attChev');const open=cal.style.display!=='none';cal.style.display=open?'none':'';ic.style.transform=open?'':'rotate(180deg)'})(this)"
+        style="display:flex;align-items:center;gap:10px;padding:10px 12px;cursor:pointer;background:var(--surface2);transition:background .12s;"
+        onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='var(--surface2)'">
+
+        <div style="width:34px;height:34px;border-radius:10px;background:var(--indigo-bg);color:var(--indigo);
+          display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">${ROLE_ICON[s.role] || '👤'}</div>
+
         <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${s.name}</div>
-          <div style="font-size:9px;color:var(--muted)">${s.role || 'Staff'} · ${s.shift || 'Full Day'}</div>
+          <div style="font-size:13px;font-weight:800;color:var(--text)">${s.name}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:1px">${s.role || 'Staff'} · ${s.shift || 'Full Day'}</div>
         </div>
-        <div style="display:flex;gap:4px;flex-shrink:0;font-size:9px;font-weight:700;white-space:nowrap">
-          <span style="color:#16a34a">✓${presentDays}</span>
-          <span style="color:#d97706">◐${halfDays}</span>
-          <span style="color:#dc2626">✕${absentDays}</span>
+
+        <!-- Summary chips -->
+        <div style="display:flex;gap:5px;align-items:center;flex-shrink:0">
+          <span style="padding:3px 8px;background:#dcfce7;color:#16a34a;border-radius:999px;font-size:10px;font-weight:700">✓ ${presentDays}</span>
+          <span style="padding:3px 8px;background:#fef9c3;color:#a16207;border-radius:999px;font-size:10px;font-weight:700">◐ ${halfDays}</span>
+          <span style="padding:3px 8px;background:#fee2e2;color:#dc2626;border-radius:999px;font-size:10px;font-weight:700">✕ ${absentDays}</span>
+          ${salary > 0 ? `<span style="padding:3px 8px;background:var(--indigo-bg);color:var(--indigo);border-radius:999px;font-size:10px;font-weight:800">₹${earned.toLocaleString('en-IN')}</span>` : ''}
         </div>
-        ${salary > 0 ? `<span style="font-size:10px;font-weight:800;color:var(--indigo);flex-shrink:0">₹${earned.toLocaleString('en-IN')}</span>` : ''}
-        <button onclick="window._oStaff('${s.id}')"
-          style="background:none;border:1px solid var(--border2);border-radius:6px;width:22px;height:22px;cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <i class="ti ti-pencil" style="font-size:10px"></i>
-        </button>
+
+        <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+          <button onclick="event.stopPropagation();window._oStaff('${s.id}')"
+            style="width:26px;height:26px;border-radius:7px;border:1px solid var(--border2);background:#fff;
+              cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)">
+            <i class="ti ti-pencil" style="font-size:11px"></i>
+          </button>
+          <i class="ti ti-chevron-down attChev" style="font-size:14px;color:var(--muted);transition:transform .2s;"></i>
+        </div>
       </div>
-      <div style="padding:8px 10px">
+
+      <!-- Calendar — collapsed by default -->
+      <div id="${calId}" style="display:none;padding:10px 12px 12px;">
+        <div style="font-size:9px;color:var(--muted);font-weight:700;margin-bottom:6px;text-align:center">
+          Tap a date to cycle: <span style="color:#22c55e">✓ Present</span> → <span style="color:#f59e0b">◐ Half Day</span> → <span style="color:#ef4444">✕ Absent</span> → Clear
+        </div>
         <div style="display:flex;gap:2px;margin-bottom:3px">${headerCells}</div>
         <div style="display:flex;flex-wrap:wrap;gap:2px">${leadingBlanks}${dayCells}</div>
       </div>
