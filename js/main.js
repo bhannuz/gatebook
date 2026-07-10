@@ -3858,52 +3858,63 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
   const matchM = m => filterType==='month' ? m===selMonth : (m||'').startsWith(selYear);
   const matchB = b => !selBlock || selBlock === 'all' || b === selBlock;
 
-  // Aggregate all payment transactions for the period from the expenses collection
+  // Build reverse lookup: flatId → flat data
+  const flatByFlatId = new Map();
+  flats.forEach((f, fid) => {
+    const key = f.flatId || fid;
+    flatByFlatId.set(key, { ...f, _fid: fid });
+  });
+
+  // Aggregate all payment transactions keyed by flatId
   const byFlat = new Map();
-  exps.forEach((records, fid) => {
+  exps.forEach((records, flatId) => {
     records.forEach(e => {
-      if (!matchM(e.month)) return;
-      const f = flats.get(fid);
+      if (!matchM(e.month || (e.rawDate||'').slice(0,7))) return;
+      const f = flatByFlatId.get(flatId) || flatByFlatId.get(e.flatId);
       if (!matchB(f?.block || e.block || '')) return;
-      if (!byFlat.has(fid)) byFlat.set(fid, { flatId:fid, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
-      const rec = byFlat.get(fid);
+      if (!byFlat.has(flatId)) {
+        byFlat.set(flatId, {
+          flatId, paid:0, due: f?.due||0,
+          owner: f?.owner||'', resType: f?.resType||'owner',
+          block: f?.block||e.block||'', exps:[]
+        });
+      }
+      const rec = byFlat.get(flatId);
       rec.paid += (e.amt || 0);
       rec.exps.push(e);
     });
   });
 
-  // Cross-reference with current flat records for owner/due/resType
-  byFlat.forEach((rec, fid) => {
-    const f = flats.get(fid);
-    if (f) {
-      rec.owner   = f.owner   || rec.owner;
-      rec.due     = f.due     || rec.due;
-      rec.resType = f.resType || rec.resType;
-      rec.block   = f.block   || rec.block;
-    } else {
-      const s = rec.exps[0];
-      rec.owner = s?.owner || s?.block || '';
-      rec.block = s?.block || '';
-    }
-  });
-
-  // Include all flats with no payments for the period (truly pending/not paid)
+  // Include all flats with no payments (pending/vacant) for month view
   if (filterType === 'month') {
-    flats.forEach((f, fid) => {
+    flatByFlatId.forEach((f, flatId) => {
       if (!matchB(f.block || '')) return;
-      if (!byFlat.has(fid)) {
-        byFlat.set(fid, { flatId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
+      if (!byFlat.has(flatId)) {
+        byFlat.set(flatId, {
+          flatId, paid:0, due:f.due||0,
+          owner:f.owner||'', resType:f.resType||'owner',
+          block:f.block||'', exps:[]
+        });
       }
     });
   }
 
   const result = [];
   byFlat.forEach(rec => {
+    const f = flatByFlatId.get(rec.flatId);
+    if (f) {
+      rec.owner   = f.owner   || rec.owner;
+      rec.due     = f.due     || rec.due;
+      rec.resType = f.resType || rec.resType;
+      rec.block   = f.block   || rec.block;
+    }
     const isVacant = !(rec.owner||'').trim();
-    rec._status = isVacant ? 'vacant' : (rec.paid >= rec.due && rec.due > 0 ? 'paid' : rec.paid > 0 ? 'partial' : 'pending');
+    rec._status = isVacant
+      ? (rec.due > 0 ? 'pending' : 'vacant')  // vacant with due = still pending
+      : (rec.paid >= rec.due && rec.due > 0 ? 'paid' : rec.paid > 0 ? 'partial' : 'pending');
     result.push(rec);
   });
-  return result.sort((a,b) => (a.flatId||'').localeCompare(b.flatId||''));
+  return result.sort((a,b) => (a.flatId||'').localeCompare(b.flatId||'', undefined, {numeric:true}));
 }
 // ════════════════════════════════════════════════════════
 //  ANALYTICS TAB — FIXED rAnalytics()
@@ -4112,38 +4123,44 @@ function _anRender() {
   flats.forEach((f, fid) => {
     if (selBlock && f.block !== selBlock) return;
     const isVacant = !(f.owner || '').trim();
-    if (isVacant) { vacant++; return; }
+    const due = f.due || 0;
 
-    // Due: for a month filter use f.due; for year/all multiply
-    let due = f.due || 0;
+    // Vacant with no due = truly vacant, skip for financial calcs
+    if (isVacant && due === 0) { vacant++; return; }
+
+    // Use flatId (not Firestore doc id) to look up payments
+    const flatKey = f.flatId || fid;
+
+    // Due for the period
+    let periodDue = due;
     if (selectedYear && !selectedMonth) {
-      // count months in the year that appear in data for this flat
       const flatMonths = new Set(
-        (exps.get(fid) || [])
+        (exps.get(flatKey) || [])
           .map(e => e.month || (e.rawDate || '').slice(0, 7))
           .filter(m => m.startsWith(selectedYear))
       );
-      due = due * (flatMonths.size || 1);
+      periodDue = due * (flatMonths.size || 1);
     } else if (!selectedMonth && !selectedYear) {
       const flatMonths = new Set(
-        (exps.get(fid) || [])
+        (exps.get(flatKey) || [])
           .map(e => e.month || (e.rawDate || '').slice(0, 7))
           .filter(Boolean)
       );
-      due = due * (flatMonths.size || 1);
+      periodDue = due * (flatMonths.size || 1);
     }
 
-    // Collected: sum matching expense records
-    const collected = (exps.get(fid) || [])
+    // Collected: sum matching payment records
+    const collected = (exps.get(flatKey) || [])
       .filter(inPeriod)
       .reduce((s, e) => s + (e.amt || 0), 0);
 
-    totalDue       += due;
+    totalDue       += periodDue;
     totalCollected += collected;
 
-    if      (collected >= due && due > 0) paid++;
-    else if (collected > 0)               partial++;
-    else                                  pending++;
+    if (isVacant)                              vacant++;
+    else if (collected >= periodDue && periodDue > 0) paid++;
+    else if (collected > 0)                    partial++;
+    else                                       pending++;
   });
 
   const outstanding = Math.max(0, totalDue - totalCollected);
