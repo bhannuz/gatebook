@@ -934,7 +934,13 @@ async function sE(){
     let np=f.paid;
     if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(flatRef(fid),{paid:np});
+    // Update in-memory immediately so UI reflects without waiting for listener
+    f.paid = np;
+    flats.set(fid, f);
+    // Add to exps cache immediately
+    exps.set('_tmp_'+Date.now(), {flatId:flatIdVal,block,cat,amt,status:s,month:payMonth,rawDate:dv||new Date().toISOString().split('T')[0]});
     sync('live');cA();toast('Payment saved ✓');
+    rAll(); // Refresh all views immediately
   }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
@@ -3559,10 +3565,10 @@ function rStructure() {
             background:rgba(255,255,255,.22);color:#fff;letter-spacing:.2px;">
             ${blockPaid}/${allFlats.length}
           </span>
-          <i class="ti ti-chevron-down blk-toggle-icon" style="color:rgba(255,255,255,.8);font-size:15px;transition:transform .2s;"></i>
+          <i class="ti ti-chevron-down blk-toggle-icon" style="color:rgba(255,255,255,.8);font-size:15px;transition:transform .2s;transform:rotate(-90deg);"></i>
         </div>
-        <!-- Floors stacked (collapsible) -->
-        <div style="display:flex;flex-direction:column;gap:8px;">
+        <!-- Floors stacked (collapsible — collapsed by default) -->
+        <div style="display:none;flex-direction:column;gap:8px;">
         ${floors.map(([floor, fts]) => {
           const paidCnt = fts.filter(f => paidAM(f.flatId, AM) >= (f.due||0)).length;
           return `<div>
