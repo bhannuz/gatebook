@@ -4814,12 +4814,28 @@ function _printMonthlySummary() {
   </div>
 </div>
 
-<script>window.onload = () => { window.print(); }<\/script>
+<script>
+  window.onload = function() {
+    window.print();
+  };
+  window.onafterprint = function() {
+    window.close();
+  };
+  // Fallback for mobile browsers that don't fire onafterprint
+  window.matchMedia('print').addListener(function(mql) {
+    if (!mql.matches) {
+      setTimeout(function() { window.close(); }, 500);
+    }
+  });
+<\/script>
 </body></html>`;
 
   const w = window.open('', '_blank');
+  if (!w) { toast('Please allow popups to print the report', 'error'); return; }
   w.document.write(html);
   w.document.close();
+  // Close the summary modal so user returns to clean app
+  window._cMonthlySummary();
 }
 
 window._printMonthlySummary = _printMonthlySummary;
