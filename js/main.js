@@ -418,13 +418,8 @@ function oFlEdit(fid) {
             <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
           </select>`)}
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:10px;">
           ${_fld('📱 Mobile Number', _inp('edPhone','tel',(f.phone||f.ownerPhone||'').replace(/"/g,'&quot;'),'10-digit mobile no.'))}
-          ${_fld('WhatsApp', `<div style="display:flex;align-items:center;height:38px;gap:8px;">
-            <input type="checkbox" id="edWA" ${f.waEnabled!==false?'checked':''}
-              style="width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;"/>
-            <label for="edWA" style="font-size:12px;font-weight:600;color:var(--text);cursor:pointer;">WhatsApp enabled</label>
-          </div>`)}
         </div>
         <div id="ownerSection" style="display:${isTenant?'grid':'none'};grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
           ${_fld('Owner Name', _inp('edOwnerName','text',(f.ownerName||'').replace(/"/g,'&quot;'),'Flat owner'))}
@@ -464,17 +459,17 @@ function oFlEdit(fid) {
     </div>
 
     <!-- ── SAVE / CANCEL ── -->
-    <div style="display:flex;gap:10px;margin-bottom:14px;">
+    <div style="display:flex;gap:8px;margin-bottom:14px;">
       <button onclick="window._cD()"
-        style="padding:0 20px;height:44px;border:1.5px solid var(--border2);border-radius:10px;background:#fff;
-          color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;">
+        style="padding:0 14px;height:36px;border:1.5px solid var(--border2);border-radius:8px;background:#fff;
+          color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);white-space:nowrap;">
         Cancel
       </button>
       <button id="edSaveBtn" onclick="window._saveFlat('${fid}')"
-        style="flex:1;height:44px;border:none;border-radius:10px;background:var(--indigo);
-          color:#fff;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--font);
-          display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;">
-        <i class="ti ti-device-floppy" style="font-size:15px;"></i> Save
+        style="padding:0 20px;height:36px;border:none;border-radius:8px;background:var(--indigo);
+          color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);
+          display:inline-flex;align-items:center;gap:6px;white-space:nowrap;">
+        <i class="ti ti-device-floppy" style="font-size:13px;"></i> Save
       </button>
     </div>
 
@@ -778,7 +773,6 @@ async function saveFlat(fid) {
   const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
   const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
   const phone      = (document.getElementById('edPhone')?.value||'').trim();
-  const waEnabled  = document.getElementById('edWA')?.checked !== false;
   
   // Handle block - preserve existing block/floor if fields not present in drawer
   const existingFlat = flats.get(fid) || {};
@@ -807,7 +801,7 @@ async function saveFlat(fid) {
   sync('saving');
   try {
     // Build update payload — always include block/floor to ensure they're preserved
-    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone, waEnabled };
+    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
     // Only write block/floor if they have valid values (prevent wiping with empty string)
     if (block !== undefined && block !== null) updatePayload.block = block;
     if (floor !== undefined) updatePayload.floor = floor;
