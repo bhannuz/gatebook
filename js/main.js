@@ -1,5 +1,5 @@
 import { auth, db } from './firebase.js';
-import { onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { onAuthStateChanged, signOut, EmailAuthProvider, reauthenticateWithCredential, updatePassword, updateEmail } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import {
   collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
   onSnapshot, query, where, orderBy, serverTimestamp,
@@ -466,11 +466,17 @@ function oFlEdit(fid) {
         <i class="ti ti-chevron-down sec-ic" style="color:var(--muted);font-size:14px;transition:transform .2s;transform:rotate(-90deg);"></i>
       </div>
       <div class="sec-body" style="display:none;padding:0 12px 14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
-          ${_fld('Monthly Due (₹)', _inp('edDue','number',f.due||'','e.g. 5000','min="0"'))}
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+          ${_fld('Monthly Due (₹)', _inp('edDue','number',f.due !== undefined ? f.due : 0,'0','min="0"'))}
+          ${_fld('Corpus Fund (₹)', _inp('edCorpus','number',f.corpusDue||0,'e.g. 10000','min="0"'))}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${_fld('Area (sq.ft)', _inp('edSft','number',f.sft||'','e.g. 850','min="0"'))}
           ${_fld('Vehicles 2W/4W', _inp('edVehicles','text',tw+'/'+fw,'1/1'))}
         </div>
+        ${f.corpusDue > 0 ? `<div style="margin-top:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:11px;color:#166534;">
+          <i class="ti ti-coin" style="color:#16a34a"></i> Corpus Fund: ${inr(f.corpusDue||0)} — Collected: ${inr(f.corpusPaid||0)} — Pending: ${inr((f.corpusDue||0)-(f.corpusPaid||0))}
+        </div>` : ''}
       </div>
     </div>
 
@@ -783,6 +789,7 @@ async function saveFlat(fid) {
   const owner      = (document.getElementById('edOwner')?.value||'').trim();
   const resType    = document.getElementById('edType')?.value||'owner';
   const due        = parseInt(document.getElementById('edDue')?.value)||0;
+  const corpusDue  = parseInt(document.getElementById('edCorpus')?.value)||0;
   const sft        = parseInt(document.getElementById('edSft')?.value)||0;
   const moveIn     = document.getElementById('edMoveIn')?.value||'';
   const moveOut    = document.getElementById('edMoveOut')?.value||'';
@@ -817,7 +824,7 @@ async function saveFlat(fid) {
   sync('saving');
   try {
     // Build update payload — always include block/floor to ensure they're preserved
-    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
+    const updatePayload = { owner, resType, due, corpusDue, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
     // Only write block/floor if they have valid values (prevent wiping with empty string)
     if (block !== undefined && block !== null) updatePayload.block = block;
     if (floor !== undefined) updatePayload.floor = floor;
@@ -1692,7 +1699,9 @@ window._saveNewStructure = async () => {
         floor: f.floor,
         owner: f.resName,
         resType: 'owner',
-        due: f.due,
+        due: f.due || 0,
+        corpusDue: 0,
+        corpusPaid: 0,
         moveIn: new Date().toISOString().slice(0,10),
         moveOut: '',
         createdAt: serverTimestamp()
@@ -4191,7 +4200,12 @@ function _anRender() {
     buildLegend('payLegend', segments.map(s => ({ ...s, count: s.value })), totalFlats);
   });
 
-  /* ── Summary cards ── */
+  /* ── Summary cards (with corpus fund) ── */
+  const totalCorpusDue  = [...flats.values()].reduce((s,f) => s + (f.corpusDue||0), 0);
+  const totalCorpusPaid = [...flats.values()].reduce((s,f) => s + (f.corpusPaid||0), 0);
+  const corpusOutstanding = Math.max(0, totalCorpusDue - totalCorpusPaid);
+  const grandOutstanding  = outstanding + corpusOutstanding;
+
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
@@ -4207,8 +4221,9 @@ function _anRender() {
       <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
       <div>
         <div class="vscard-label">Outstanding</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(grandOutstanding)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
+        ${corpusOutstanding > 0 ? `<div style="font-size:10px;font-weight:700;color:var(--amber);margin-top:2px">+${inr(corpusOutstanding)} corpus</div>` : ''}
         <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
       </div>
     </div>`;
