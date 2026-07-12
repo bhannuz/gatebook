@@ -120,7 +120,11 @@
           </div>
           <div id="profilePhone" style="font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;">
             <i class="ti ti-phone" style="color:var(--indigo);font-size:13px;flex-shrink:0;"></i>
-            <span id="profilePhoneVal">—</span>
+            <span id="profilePhoneVal" style="flex:1;">—</span>
+            <button onclick="event.stopPropagation();document.getElementById('userMenu').style.display='none';window._openUpdateMobile()"
+              style="padding:2px 8px;border:1px solid var(--indigo);border-radius:6px;background:var(--indigo-bg);color:var(--indigo);font-size:10px;font-weight:700;cursor:pointer;font-family:var(--font);">
+              Edit
+            </button>
           </div>
         </div>
 
@@ -181,6 +185,72 @@
       <button id="cpSaveBtn" onclick="window._saveNewPassword()"
         style="flex:1;height:40px;border:none;border-radius:8px;background:var(--indigo);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
         <i class="ti ti-lock"></i> Update Password
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Corpus Fund Modal -->
+<div class="mbg" id="corpusM" style="display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:340px;padding:20px;">
+    <div class="mhead" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="micon flat" style="background:#f0fdf4;color:#16a34a"><i class="ti ti-coin"></i></div>
+        <div><div class="mtitle">Corpus Fund</div><div class="msub">Society's reserve fund balance</div></div>
+      </div>
+      <button class="mclose" onclick="window._closeCorpusFund()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="corpusAlert" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;color:#dc2626;background:#fff1f2;margin-bottom:12px;"></div>
+    <div class="fg" style="margin-bottom:16px;">
+      <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:6px;">Corpus Fund Amount (₹)</label>
+      <input type="number" id="corpusInput" placeholder="e.g. 500000" min="0"
+        style="width:100%;box-sizing:border-box;height:42px;padding:0 14px;border:1.5px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:16px;font-weight:700;outline:none;"/>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px;">This amount will be added to the Outstanding balance shown in the Payments tab.</div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="window._closeCorpusFund()"
+        style="padding:0 16px;height:40px;border:1.5px solid var(--border2);border-radius:8px;background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Cancel</button>
+      <button id="corpusSaveBtn" onclick="window._saveCorpusFund()"
+        style="flex:1;height:40px;border:none;border-radius:8px;background:#16a34a;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        <i class="ti ti-device-floppy"></i> Save
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Update Mobile Modal -->
+<div class="mbg" id="updateMobileM" style="display:none;align-items:center;justify-content:center;">
+  <div class="modal" style="max-width:360px;padding:20px;">
+    <div class="mhead" style="margin-bottom:16px;">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="micon flat" style="background:var(--indigo-bg);color:var(--indigo)"><i class="ti ti-phone"></i></div>
+        <div><div class="mtitle">Update Mobile Number</div><div class="msub">This will update your login number</div></div>
+      </div>
+      <button class="mclose" onclick="window._closeUpdateMobile()"><i class="ti ti-x"></i></button>
+    </div>
+    <div id="updateMobileAlert" style="display:none;padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div>
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">New Mobile Number</label>
+        <input type="tel" id="umNewPhone" placeholder="10-digit mobile number" maxlength="10"
+          oninput="this.value=this.value.replace(/\D/g,'').slice(0,10)"
+          style="width:100%;box-sizing:border-box;height:38px;padding:0 12px;border:1.5px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:13px;outline:none;"/>
+      </div>
+      <div>
+        <label style="font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;display:block;margin-bottom:4px;">Current Password</label>
+        <div style="position:relative;">
+          <input type="password" id="umPassword" placeholder="Required to confirm change"
+            style="width:100%;box-sizing:border-box;height:38px;padding:0 36px 0 12px;border:1.5px solid var(--border2);border-radius:8px;font-family:var(--font);font-size:13px;outline:none;"/>
+          <button type="button" onclick="togglePw('umPassword',this)" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted)"><i class="ti ti-eye"></i></button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button onclick="window._closeUpdateMobile()"
+        style="padding:0 16px;height:40px;border:1.5px solid var(--border2);border-radius:8px;background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">Cancel</button>
+      <button id="umSaveBtn" onclick="window._saveNewMobile()"
+        style="flex:1;height:40px;border:none;border-radius:8px;background:var(--indigo);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);">
+        <i class="ti ti-device-floppy"></i> Update Number
       </button>
     </div>
   </div>
