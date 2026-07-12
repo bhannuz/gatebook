@@ -23,10 +23,26 @@ onAuthStateChanged(auth, user => {
     window.location.replace('admin.html');
     return;
   }
-  // Show user info in nav (always update)
+  // Show user info in nav
   const initials = (user.displayName||user.email||'A').charAt(0).toUpperCase();
   document.getElementById('userAvatar').textContent = initials;
   document.getElementById('userName').textContent   = user.displayName || user.email.split('@')[0];
+
+  // Populate profile info in user menu
+  const em = user.email || '';
+  const isPhoneLogin = em.endsWith('@gatebook.app');
+  const emailEl = document.getElementById('profileEmailVal');
+  const phoneRow = document.getElementById('profilePhone');
+  const phoneEl  = document.getElementById('profilePhoneVal');
+  if (emailEl) emailEl.textContent = isPhoneLogin ? 'Mobile login' : em;
+  if (phoneRow && phoneEl) {
+    if (isPhoneLogin) {
+      phoneEl.textContent = '+91 ' + em.replace('@gatebook.app','');
+      phoneRow.style.display = 'flex';
+    } else {
+      phoneRow.style.display = 'none';
+    }
+  }
 
   // Only boot once — onAuthStateChanged can fire multiple times
   if (_booted) return;
