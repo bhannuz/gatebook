@@ -48,12 +48,45 @@ onAuthStateChanged(auth, user => {
   if (_booted) return;
   _booted = true;
   UID = user.uid;
+  // Load corpus fund from apartment doc
+  getDoc(doc(db,'apartments',UID)).then(d => {
+    window._aptCorpusFund = d.data()?.corpusFund || 0;
+  }).catch(()=>{});
   boot();
 });
 
 window._doSignOut = async function() {
   await signOut(auth);
   window.location.replace('index.html');
+};
+
+// ── Corpus Fund (society level) ──
+window._aptCorpusFund = 0;
+
+window._openCorpusFund = function() {
+  document.getElementById('corpusInput').value = window._aptCorpusFund || '';
+  const al = document.getElementById('corpusAlert'); if(al) al.style.display='none';
+  document.getElementById('corpusM').style.display = 'flex';
+};
+window._closeCorpusFund = function() {
+  document.getElementById('corpusM').style.display = 'none';
+};
+window._saveCorpusFund = async function() {
+  const val = parseInt(document.getElementById('corpusInput').value) || 0;
+  const al  = document.getElementById('corpusAlert');
+  const btn = document.getElementById('corpusSaveBtn');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await updateDoc(doc(db,'apartments',UID), { corpusFund: val });
+    window._aptCorpusFund = val;
+    window._closeCorpusFund();
+    toast('Corpus fund updated ✓');
+    rAll();
+  } catch(e) {
+    if(al){ al.textContent='Save failed. Please try again.'; al.style.display='block'; }
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save';
+  }
 };
 
 // Close user menu on outside click
@@ -466,17 +499,11 @@ function oFlEdit(fid) {
         <i class="ti ti-chevron-down sec-ic" style="color:var(--muted);font-size:14px;transition:transform .2s;transform:rotate(-90deg);"></i>
       </div>
       <div class="sec-body" style="display:none;padding:0 12px 14px;">
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
           ${_fld('Monthly Due (₹)', _inp('edDue','number',f.due !== undefined ? f.due : 0,'0','min="0"'))}
-          ${_fld('Corpus Fund (₹)', _inp('edCorpus','number',f.corpusDue||0,'e.g. 10000','min="0"'))}
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
           ${_fld('Area (sq.ft)', _inp('edSft','number',f.sft||'','e.g. 850','min="0"'))}
           ${_fld('Vehicles 2W/4W', _inp('edVehicles','text',tw+'/'+fw,'1/1'))}
         </div>
-        ${f.corpusDue > 0 ? `<div style="margin-top:8px;padding:8px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:11px;color:#166534;">
-          <i class="ti ti-coin" style="color:#16a34a"></i> Corpus Fund: ${inr(f.corpusDue||0)} — Collected: ${inr(f.corpusPaid||0)} — Pending: ${inr((f.corpusDue||0)-(f.corpusPaid||0))}
-        </div>` : ''}
       </div>
     </div>
 
@@ -789,7 +816,6 @@ async function saveFlat(fid) {
   const owner      = (document.getElementById('edOwner')?.value||'').trim();
   const resType    = document.getElementById('edType')?.value||'owner';
   const due        = parseInt(document.getElementById('edDue')?.value)||0;
-  const corpusDue  = parseInt(document.getElementById('edCorpus')?.value)||0;
   const sft        = parseInt(document.getElementById('edSft')?.value)||0;
   const moveIn     = document.getElementById('edMoveIn')?.value||'';
   const moveOut    = document.getElementById('edMoveOut')?.value||'';
@@ -824,7 +850,7 @@ async function saveFlat(fid) {
   sync('saving');
   try {
     // Build update payload — always include block/floor to ensure they're preserved
-    const updatePayload = { owner, resType, due, corpusDue, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
+    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
     // Only write block/floor if they have valid values (prevent wiping with empty string)
     if (block !== undefined && block !== null) updatePayload.block = block;
     if (floor !== undefined) updatePayload.floor = floor;
@@ -4200,11 +4226,10 @@ function _anRender() {
     buildLegend('payLegend', segments.map(s => ({ ...s, count: s.value })), totalFlats);
   });
 
-  /* ── Summary cards (with corpus fund) ── */
-  const totalCorpusDue  = [...flats.values()].reduce((s,f) => s + (f.corpusDue||0), 0);
-  const totalCorpusPaid = [...flats.values()].reduce((s,f) => s + (f.corpusPaid||0), 0);
-  const corpusOutstanding = Math.max(0, totalCorpusDue - totalCorpusPaid);
-  const grandOutstanding  = outstanding + corpusOutstanding;
+  /* ── Summary cards (with society-level corpus fund) ── */
+  // Read corpus fund from apartment document
+  const aptCorpus   = window._aptCorpusFund || 0;
+  const grandOutstanding = outstanding + aptCorpus;
 
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) cardsDiv.innerHTML = `
@@ -4217,13 +4242,18 @@ function _anRender() {
         <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}</div>
       </div>
     </div>
-    <div class="vscard red">
+    <div class="vscard red" style="position:relative;">
       <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
-      <div>
-        <div class="vscard-label">Outstanding</div>
+      <div style="flex:1;min-width:0;">
+        <div class="vscard-label" style="display:flex;align-items:center;gap:6px;">Outstanding
+          <button onclick="window._openCorpusFund()" title="Set Corpus Fund"
+            style="padding:1px 6px;font-size:9px;font-weight:700;border:1px solid var(--border2);border-radius:4px;background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);">
+            <i class="ti ti-coin" style="font-size:9px"></i> Corpus
+          </button>
+        </div>
         <div class="vscard-val" style="color:var(--red)">${inr(grandOutstanding)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
-        ${corpusOutstanding > 0 ? `<div style="font-size:10px;font-weight:700;color:var(--amber);margin-top:2px">+${inr(corpusOutstanding)} corpus</div>` : ''}
+        ${aptCorpus > 0 ? `<div style="font-size:10px;font-weight:700;color:var(--amber);margin-top:2px">incl. ${inr(aptCorpus)} corpus fund</div>` : ''}
         <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
       </div>
     </div>`;
