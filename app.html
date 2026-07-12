@@ -109,15 +109,30 @@
         <span id="userName">Admin</span>
         <i class="ti ti-chevron-down" style="font-size:12px;color:var(--muted)"></i>
       </div>
-      <div id="userMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1.5px solid var(--border2);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:180px;z-index:999;overflow:hidden;">
+      <div id="userMenu" style="display:none;position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1.5px solid var(--border2);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);min-width:240px;z-index:999;overflow:hidden;">
+
+        <!-- Profile info section -->
+        <div style="padding:14px 16px;border-bottom:1px solid var(--border2);background:var(--surface2);">
+          <div style="font-size:11px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px;">Account</div>
+          <div id="profileEmail" style="font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+            <i class="ti ti-mail" style="color:var(--indigo);font-size:13px;flex-shrink:0;"></i>
+            <span id="profileEmailVal">—</span>
+          </div>
+          <div id="profilePhone" style="font-size:12px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:6px;">
+            <i class="ti ti-phone" style="color:var(--indigo);font-size:13px;flex-shrink:0;"></i>
+            <span id="profilePhoneVal">—</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
         <button onclick="document.getElementById('userMenu').style.display='none';window._openChangePw()"
-          style="width:100%;padding:11px 14px;border:none;background:#fff;text-align:left;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:background .12s"
+          style="width:100%;padding:11px 16px;border:none;background:#fff;text-align:left;font-size:12px;font-weight:600;color:var(--text);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:background .12s"
           onmouseover="this.style.background='var(--surface3)'" onmouseout="this.style.background='#fff'">
           <i class="ti ti-lock" style="color:var(--indigo);font-size:14px"></i> Change Password
         </button>
-        <div style="height:1px;background:var(--border2);margin:0 10px"></div>
+        <div style="height:1px;background:var(--border2);margin:0 12px"></div>
         <button onclick="document.getElementById('userMenu').style.display='none';window._doSignOut()"
-          style="width:100%;padding:11px 14px;border:none;background:#fff;text-align:left;font-size:12px;font-weight:600;color:var(--red);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:background .12s"
+          style="width:100%;padding:11px 16px;border:none;background:#fff;text-align:left;font-size:12px;font-weight:600;color:var(--red);cursor:pointer;font-family:var(--font);display:flex;align-items:center;gap:8px;transition:background .12s"
           onmouseover="this.style.background='#fff5f5'" onmouseout="this.style.background='#fff'">
           <i class="ti ti-logout" style="font-size:14px"></i> Sign Out
         </button>

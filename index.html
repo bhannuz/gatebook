@@ -197,13 +197,13 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
   <!-- ── FORGOT PASSWORD ── -->
   <div id="forgotForm" style="display:none">
     <div class="card-title">Reset Password</div>
-    <div class="card-sub">Enter your mobile number or email to receive a reset link.</div>
+    <div class="card-sub">Enter your registered email address to receive a password reset link.</div>
 
     <div class="alert" id="forgotAlert"><i class="ti ti-alert-circle"></i><span id="forgotAlertMsg"></span></div>
 
     <div class="fg">
-      <label>Mobile number or Email</label>
-      <input type="text" id="forgotId" placeholder="9876543210 or you@example.com"/>
+      <label>Email Address</label>
+      <input type="email" id="forgotId" placeholder="you@example.com" autocomplete="email"/>
     </div>
 
     <button class="btn-primary" id="forgotBtn" onclick="doForgot()">
@@ -360,16 +360,16 @@ window.doLogin = async function() {
 
 /* ── Forgot Password ── */
 window.doForgot = async function() {
-  const raw = document.getElementById('forgotId').value.trim();
-  const err = validateInput(raw);
-  if (err) { showAlert('forgotAlert', err); return; }
+  const email = document.getElementById('forgotId').value.trim();
+  if (!email || !email.includes('@')) { showAlert('forgotAlert', 'Please enter a valid email address.'); return; }
   setLoading('forgotBtn','forgotBtnLbl', true, 'Send Reset Link');
   try {
-    await sendPasswordResetEmail(auth, resolveEmail(raw));
+    await sendPasswordResetEmail(auth, email);
     showAlert('forgotAlert', 'Reset link sent! Check your email inbox.', 'success');
   } catch (e) {
     const msgs = {
-      'auth/user-not-found':    'No account found. Please check your mobile number or email.',
+      'auth/user-not-found':    'No account found with this email.',
+      'auth/invalid-email':     'Please enter a valid email address.',
       'auth/too-many-requests': 'Too many attempts. Please try again later.',
     };
     showAlert('forgotAlert', msgs[e.code] || 'Could not send reset link. Please try again.');
