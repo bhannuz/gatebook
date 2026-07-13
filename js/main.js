@@ -4281,7 +4281,6 @@ function _anRender() {
     </div>`;
   }
   }
-  }
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
