@@ -202,7 +202,14 @@ let APT_NAME = 'Gatebook';
 const st  = f => f.paid>=f.due?'paid':f.paid>0?'partial':'pending';
 const sl  = s => ({paid:'Paid in full',partial:'Partial payment',pending:'Not paid'}[s]);
 const si  = s => ({paid:'ti-circle-check',partial:'ti-clock',pending:'ti-alert-circle'}[s]);
-const inr = n => '₹'+Number(n||0).toLocaleString('en-IN');
+const inr     = n => '₹'+Number(n||0).toLocaleString('en-IN');
+const inrShort = n => {
+  const v = Number(n||0);
+  if (v >= 10000000) return '₹'+(v/10000000).toFixed(1).replace(/\.0$/,'')+'Cr';
+  if (v >= 100000)   return '₹'+(v/100000).toFixed(1).replace(/\.0$/,'')+'L';
+  if (v >= 1000)     return '₹'+(v/1000).toFixed(1).replace(/\.0$/,'')+'K';
+  return '₹'+v;
+};
 const fd  = s => new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
 const fdt = ts => {
   if(!ts)return'–';
@@ -4253,7 +4260,7 @@ function _anRender() {
     <div class="vscard">
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inr(totalCollected)} <span style="font-size:11px;font-weight:600;color:var(--muted)">/ ${inr(totalDue)}</span></div>
+        <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:600;color:var(--muted)">/ ${inrShort(totalDue)}</span></div>
       </div>
     </div>
     <div class="vscard" style="position:relative;">
@@ -4264,26 +4271,28 @@ function _anRender() {
             <i class="ti ti-coin" style="font-size:9px"></i> Corpus
           </button>
         </div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(grandOutstanding)}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inrShort(grandOutstanding)}</div>
       </div>
     </div>
     <div class="vscard">
       <div>
         <div class="vscard-label">This Month Expenses</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(curMonthExpenses)}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inrShort(curMonthExpenses)}</div>
       </div>
     </div>
     <div class="vscard">
       <div>
         <div class="vscard-label">This Month Pending</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(curMonthPending)}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inrShort(curMonthPending)}</div>
       </div>
     </div>`;
+  }
   }
   }
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+}
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
