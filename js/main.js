@@ -4231,19 +4231,34 @@ function _anRender() {
   const aptCorpus   = window._aptCorpusFund || 0;
   const grandOutstanding = outstanding + aptCorpus;
 
+  // Current month expense total (from society expenses)
+  const curMonth = AM; // always current calendar month
+  const curMonthExpenses = socExps
+    .filter(e => (e.month || (e.date||'').slice(0,7)) === curMonth)
+    .reduce((s,e) => s + (e.amt||0), 0);
+
+  // Current month payment collected and pending
+  const curMonthCollected = [...exps.values()]
+    .flat()
+    .filter(e => (e.month || (e.rawDate||'').slice(0,7)) === curMonth)
+    .reduce((s,e) => s + (e.amt||0), 0);
+  const curMonthDue     = [...flats.values()].reduce((s,f) => s + (f.due||0), 0);
+  const curMonthPending = Math.max(0, curMonthDue - curMonthCollected);
+  const curMonthLabel   = new Date(curMonth + '-01').toLocaleDateString('en-IN', { month:'short', year:'numeric' });
+
   const cardsDiv = document.getElementById('analyticsTotals');
-  if (cardsDiv) cardsDiv.innerHTML = `
-    <div class="vscard green">
-      <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
+  if (cardsDiv) {
+    cardsDiv.style.gridTemplateColumns = 'repeat(auto-fill,minmax(160px,1fr))';
+    cardsDiv.innerHTML = `
+    <div class="vscard">
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(totalCollected)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}</div>
+        <div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:1px">${periodLabel}</div>
       </div>
     </div>
-    <div class="vscard red" style="position:relative;">
-      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
+    <div class="vscard" style="position:relative;">
       <div style="flex:1;min-width:0;">
         <div class="vscard-label" style="display:flex;align-items:center;gap:6px;">Outstanding
           <button onclick="window._openCorpusFund()" title="Set Corpus Fund"
@@ -4251,12 +4266,34 @@ function _anRender() {
             <i class="ti ti-coin" style="font-size:9px"></i> Corpus
           </button>
         </div>
-        <div class="vscard-val" style="color:var(--red)">${inr(grandOutstanding)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
-        ${aptCorpus > 0 ? `<div style="font-size:10px;font-weight:700;color:var(--amber);margin-top:2px">incl. ${inr(aptCorpus)} corpus fund</div>` : ''}
-        <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(grandOutstanding)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} flats</div>
+        ${aptCorpus > 0 ? `<div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:2px">incl. ${inr(aptCorpus)} corpus</div>` : ''}
+        <div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:1px">${periodLabel}</div>
+      </div>
+    </div>
+    <div class="vscard">
+      <div>
+        <div class="vscard-label">This Month Expenses</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(curMonthExpenses)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">Society expenses</div>
+        <div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:1px">${curMonthLabel}</div>
+      </div>
+    </div>
+    <div class="vscard">
+      <div>
+        <div class="vscard-label">This Month</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(curMonthCollected)}</div>
+        <div style="font-size:10px;margin-top:2px">
+          <span style="color:var(--indigo);font-weight:700">Paid ${inr(curMonthCollected)}</span>
+          <span style="color:var(--muted)"> · </span>
+          <span style="color:var(--indigo);font-weight:700">Pending ${inr(curMonthPending)}</span>
+        </div>
+        <div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:1px">${curMonthLabel}</div>
       </div>
     </div>`;
+  }
+  }
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
