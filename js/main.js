@@ -4284,7 +4284,6 @@ function _anRender() {
   }
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
-}
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
