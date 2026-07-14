@@ -4259,13 +4259,13 @@ function _anRender() {
     cardsDiv.innerHTML = `
     <div class="vscard">
       <div>
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;">Collected</div>
+        <div class="vscard-label" style="color:#1e293b;font-weight:800;">Payments</div>
         <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:600;color:var(--muted)">/ ${inrShort(totalDue)}</span></div>
       </div>
     </div>
     <div class="vscard" style="position:relative;">
       <div style="flex:1;min-width:0;">
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;display:flex;align-items:center;gap:6px;">Pending
+        <div class="vscard-label" style="color:#1e293b;font-weight:800;display:flex;align-items:center;gap:6px;">Outstanding Bal.
           <button onclick="window._openCorpusFund()" title="Set Corpus Fund"
             style="padding:1px 6px;font-size:9px;font-weight:700;border:1px solid var(--border2);border-radius:4px;background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);">
             <i class="ti ti-coin" style="font-size:9px"></i> Corpus
