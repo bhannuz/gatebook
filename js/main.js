@@ -2750,8 +2750,8 @@ function rPresident() {
   }
 
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
-    <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>`;
+    <div class="fcard2 red"><div class="fcard2-label" style="color:#1e293b;font-weight:800;">All Time</div><div class="fcard2-val" style="color:var(--indigo)">${inrShort ? inrShort(totalAllExp) : inr(totalAllExp)}</div></div>
+    <div class="fcard2 indigo"><div class="fcard2-label" style="color:#1e293b;font-weight:800;">${periodLabel}</div><div class="fcard2-val" style="color:var(--indigo)">${inrShort ? inrShort(totalFilteredExp) : inr(totalFilteredExp)}</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -4238,20 +4238,14 @@ function _anRender() {
   const aptCorpus   = window._aptCorpusFund || 0;
   const grandOutstanding = outstanding + aptCorpus;
 
-  // Current month expense total (from society expenses)
-  const curMonth = AM; // always current calendar month
-  const curMonthExpenses = socExps
-    .filter(e => (e.month || (e.date||'').slice(0,7)) === curMonth)
-    .reduce((s,e) => s + (e.amt||0), 0);
-
-  // Current month payment collected and pending
+  // Pending chip uses the selected filter month so it matches filters
+  const curMonth = SM || AM;
   const curMonthCollected = [...exps.values()]
     .flat()
     .filter(e => (e.month || (e.rawDate||'').slice(0,7)) === curMonth)
     .reduce((s,e) => s + (e.amt||0), 0);
   const curMonthDue     = [...flats.values()].reduce((s,f) => s + (f.due||0), 0);
   const curMonthPending = Math.max(0, curMonthDue - curMonthCollected);
-  const curMonthLabel   = new Date(curMonth + '-01').toLocaleDateString('en-IN', { month:'short', year:'numeric' });
 
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) {
@@ -4260,7 +4254,7 @@ function _anRender() {
     <div class="vscard">
       <div>
         <div class="vscard-label" style="color:#1e293b;font-weight:800;">Payments</div>
-        <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:600;color:var(--muted)">/ ${inrShort(totalDue)}</span></div>
+        <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:700;color:#1e293b">/ ${inrShort(totalDue)}</span></div>
       </div>
     </div>
     <div class="vscard" style="position:relative;">
@@ -4276,7 +4270,7 @@ function _anRender() {
     </div>
     <div class="vscard">
       <div>
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;">This Month Pending</div>
+        <div class="vscard-label" style="color:#1e293b;font-weight:800;">Pending</div>
         <div class="vscard-val" style="color:var(--indigo)">${inrShort(curMonthPending)}</div>
       </div>
     </div>`;
