@@ -3980,17 +3980,14 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 function rAnalytics() {
 
   /* ── 0. Empty state — no flats configured yet ── */
+  const layoutGrid = document.querySelector('#analyticsView .pay-grid') ||
+                     document.querySelector('#analyticsView .an-layout-grid');
   if (flats.size === 0) {
     const phActEl = document.getElementById('phAct');
     if (phActEl) phActEl.innerHTML = '';
     const totalsEl = document.getElementById('analyticsTotals');
     if (totalsEl) totalsEl.innerHTML = '';
-
-    // Render welcome message into the existing grid container (preserve DOM structure)
-    const layoutGrid = document.querySelector('#analyticsView .an-layout-grid');
-    if (layoutGrid) {
-      layoutGrid.style.display = 'none';
-    }
+    if (layoutGrid) layoutGrid.style.display = 'none';
     let emptyEl = document.getElementById('anEmptyState');
     if (!emptyEl) {
       emptyEl = document.createElement('div');
@@ -4019,8 +4016,6 @@ function rAnalytics() {
       </div>`;
     return;
   } else {
-    // Flats exist — make sure grid is visible and empty state hidden
-    const layoutGrid = document.querySelector('#analyticsView .an-layout-grid');
     if (layoutGrid) layoutGrid.style.display = '';
     const emptyEl = document.getElementById('anEmptyState');
     if (emptyEl) emptyEl.style.display = 'none';
@@ -4034,16 +4029,15 @@ function rAnalytics() {
   const yearSet = new Set(sortedMonths.map(m => m.slice(0, 4)));
   const sortedYears = [...yearSet].sort().reverse();
 
-  /* ── 2. Build / update filter bar inside #phAct ── */
-  // Don't overwrite phAct if Services tab is active
+  /* ── 2. Build / update filter bar inside #phAct (only when Payments tab is active) ── */
   const iView = document.getElementById('iView');
-  if (iView && iView.style.display !== 'none') return;
+  const servicesActive = iView && iView.style.display !== 'none';
 
-  // Preserve previous selections across re-renders
-  const prevYear  = document.getElementById('payFilterYear')?.value  || sortedYears[0]  || '';
-  const prevMonth = document.getElementById('payFilterMonth')?.value || AM;
+  if (!servicesActive) {
+    const prevYear  = document.getElementById('payFilterYear')?.value  || sortedYears[0]  || '';
+    const prevMonth = document.getElementById('payFilterMonth')?.value || AM;
 
-  document.getElementById('phAct').innerHTML = `
+    document.getElementById('phAct').innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:12px;flex-wrap:wrap;">
       <div style="display:flex;gap:8px;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
@@ -4100,8 +4094,9 @@ function rAnalytics() {
   const monthsForYear = sortedMonths.filter(m =>
     !ySel.value || m.startsWith(ySel.value));
   if (monthsForYear.includes(prevMonth)) mSel.value = prevMonth;
+  } // end if (!servicesActive)
 
-  /* ── 5. Compute stats from real exps data ── */
+  /* ── Always render chips and table ── */
   _anRender();
 }
 
