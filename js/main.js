@@ -4264,7 +4264,14 @@ function _anRender() {
   }
 
   /* ── Payment records table ── */
-  renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+  if (flats.size === 0 || exps.size === 0) {
+    console.warn('⚠️  No payment data loaded yet. flats:', flats.size, 'exps:', exps.size);
+    const tbody = document.getElementById('anPayTable');
+    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--muted)">Loading payment data...</td></tr>';
+  } else {
+    renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+  }
+}
 
 window.rAnalytics = rAnalytics;
 
@@ -4376,10 +4383,20 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const sy = _anSelYear    || new Date().getFullYear().toString();
   const sb = _anBlock      || 'all';
 
+  const tbody   = document.getElementById('anPayTable');
+  if (!tbody) return;
+  
+  // Debug: log filter parameters
+  console.log('🔍 renderAnPayTable:', { filterType: ft, month: sm, year: sy, block: sb, flatsSize: flats.size, expsSize: exps.size });
+
   let rows = _buildFlatSummary(ft, sm, sy, sb);
+  console.log('📊 Built flat summary rows:', rows.length);
+  
   // Apply status filter
   const statusFilter = document.getElementById('payStatusFilter')?.value || _anStatus || 'all';
   if (statusFilter !== 'all') rows = rows.filter(f => f._status === statusFilter);
+  console.log('📋 After status filter:', rows.length, '(filter:', statusFilter, ')');
+  
   // Sort by block then flat number
   rows.sort((a, b) => {
     const blockA = (a.block || a.flatId || '').toUpperCase();
@@ -4389,7 +4406,6 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     return (a.flatId||'').localeCompare(b.flatId||'', undefined, {numeric:true});
   });
 
-  const tbody   = document.getElementById('anPayTable');
   const empty   = document.getElementById('anPayEmpty');
   const counter = document.getElementById('anPayCount');
   if (!tbody) return;
