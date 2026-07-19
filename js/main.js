@@ -4246,27 +4246,30 @@ function _anRender() {
   if (cardsDiv) {
     cardsDiv.style.gridTemplateColumns = 'repeat(auto-fill,minmax(150px,1fr))';
     cardsDiv.innerHTML = `
-    <div class="vscard">
+    <div class="vscard" style="border-top-color:#6366f1">
+      <div class="vscard-icon tot"><i class="ti ti-credit-card"></i></div>
       <div>
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;">Payments</div>
-        <div class="vscard-val" style="color:var(--indigo);font-size:15px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:700;color:#1e293b">/ ${inrShort(totalDue)}</span></div>
+        <div class="vscard-label">Payments</div>
+        <div class="vscard-val" style="color:var(--indigo);font-size:18px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inrShort(totalDue)}</span></div>
       </div>
     </div>
-    <div class="vscard" style="position:relative;">
+    <div class="vscard" style="border-top-color:#8b5cf6;position:relative;">
+      <div class="vscard-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="ti ti-alert-circle"></i></div>
       <div style="flex:1;min-width:0;">
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;display:flex;align-items:center;gap:6px;">Outstanding Bal.
+        <div class="vscard-label" style="display:flex;align-items:center;gap:6px;">Outstanding Bal.
           <button onclick="window._openCorpusFund()" title="Set Corpus Fund"
-            style="padding:1px 6px;font-size:9px;font-weight:700;border:1px solid var(--border2);border-radius:4px;background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);">
-            <i class="ti ti-coin" style="font-size:9px"></i> Corpus
+            style="padding:2px 6px;font-size:8px;font-weight:600;border:1px solid var(--border2);border-radius:3px;background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);margin-left:auto;white-space:nowrap;">
+            <i class="ti ti-coin" style="font-size:8px"></i> Corpus
           </button>
         </div>
-        <div class="vscard-val" style="color:var(--indigo)">${inrShort(grandOutstanding)}</div>
+        <div class="vscard-val" style="color:var(--purple);font-size:18px">${inrShort(grandOutstanding)}</div>
       </div>
     </div>
-    <div class="vscard">
+    <div class="vscard" style="border-top-color:#f59e0b">
+      <div class="vscard-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-hourglass-high"></i></div>
       <div>
-        <div class="vscard-label" style="color:#1e293b;font-weight:800;">Pending</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inrShort(curMonthPending)}</div>
+        <div class="vscard-label">Pending Amount</div>
+        <div class="vscard-val" style="color:var(--amber);font-size:18px">${inrShort(curMonthPending)}</div>
       </div>
     </div>`;
   }
