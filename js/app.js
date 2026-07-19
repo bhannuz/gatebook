@@ -263,7 +263,7 @@
     </style>
 
     <!-- Stat cards — full width above grid -->
-    <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;"></div>
+    <div id="analyticsTotals" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px;"></div>
 
     <!-- 50/50 grid -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
@@ -766,6 +766,28 @@
         </thead>
         <tbody id="pendingTableBody"></tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- CORPUS FUND MODAL -->
+<div id="corpusM" style="display:none;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closeCorpusFund()">
+  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:90vh;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-size:16px;font-weight:800;color:var(--text)"><i class="ti ti-coin" style="color:var(--indigo)"></i> Corpus Fund</div>
+      <button onclick="window._closeCorpusFund()" style="background:var(--surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
+    </div>
+    <div style="font-size:13px;color:var(--text2);line-height:1.5">
+      Set the society's corpus fund amount. This will be added to the outstanding balance.
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Amount (₹)</label>
+      <input type="number" id="corpusInput" placeholder="Enter amount" style="padding:10px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:var(--font);outline:none;background:var(--surface2)" />
+    </div>
+    <div id="corpusAlert" style="display:none;padding:10px 12px;background:var(--red-bg);color:var(--red);border-radius:6px;font-size:12px;font-weight:600"></div>
+    <div style="display:flex;gap:10px">
+      <button id="corpusSaveBtn" onclick="window._saveCorpusFund()" style="flex:1;padding:10px;background:var(--indigo);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Save</button>
+      <button onclick="window._closeCorpusFund()" style="flex:1;padding:10px;background:var(--surface2);color:var(--text);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Cancel</button>
     </div>
   </div>
 </div>
