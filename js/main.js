@@ -4243,34 +4243,23 @@ function _anRender() {
   const curMonthPending = Math.max(0, curMonthDue - curMonthCollected);
 
   const cardsDiv = document.getElementById('analyticsTotals');
-  if (cardsDiv) {
-    cardsDiv.style.gridTemplateColumns = 'repeat(auto-fill,minmax(150px,1fr))';
-    cardsDiv.innerHTML = `
-    <div class="vscard" style="border-top-color:#6366f1">
-      <div class="vscard-icon tot"><i class="ti ti-credit-card"></i></div>
-      <div>
-        <div class="vscard-label">Payments</div>
-        <div class="vscard-val" style="color:var(--indigo);font-size:18px">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inrShort(totalDue)}</span></div>
-      </div>
+  if (cardsDiv) cardsDiv.innerHTML = `
+    <div class="scard green">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div><span class="sc-trend up">${pct}% collected</span></div>
+      <div class="sc-label">Amount Collected</div><div class="sc-value">${inrShort(totalCollected)}</div>
+      <div class="sc-sub">${totalFlats} flats · ${paid} fully paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
     </div>
-    <div class="vscard" style="border-top-color:#8b5cf6;position:relative;">
-      <div class="vscard-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="ti ti-alert-circle"></i></div>
-      <div style="flex:1;min-width:0;">
-        <div class="vscard-label" style="display:flex;align-items:center;gap:6px;">Outstanding Bal.
-          <button onclick="window._openCorpusFund()" title="Set Corpus Fund"
-            style="padding:2px 6px;font-size:8px;font-weight:600;border:1px solid var(--border2);border-radius:3px;background:#fff;color:var(--text2);cursor:pointer;font-family:var(--font);margin-left:auto;white-space:nowrap;">
-            <i class="ti ti-coin" style="font-size:8px"></i> Corpus
-          </button>
-        </div>
-        <div class="vscard-val" style="color:var(--purple);font-size:18px">${inrShort(grandOutstanding)}</div>
-      </div>
+    <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pending + partial} pending</span></div>
+      <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inrShort(outstanding)}</div>
+      <div class="sc-sub">${partial} partial · ${pending} not paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${outstanding && totalDue ? Math.round(outstanding/totalDue*100) : 0}%"></div></div>
     </div>
-    <div class="vscard" style="border-top-color:#f59e0b">
-      <div class="vscard-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="ti ti-hourglass-high"></i></div>
-      <div>
-        <div class="vscard-label">Pending Amount</div>
-        <div class="vscard-val" style="color:var(--amber);font-size:18px">${inrShort(curMonthPending)}</div>
-      </div>
+    <div class="scard indigo">
+      <div class="sc-top"><div class="sc-icon"><i class="ti ti-coin"></i></div><span class="sc-trend up">+ Corpus</span></div>
+      <div class="sc-label">With Corpus Fund</div><div class="sc-value">${inrShort(grandOutstanding)}</div>
+      <div class="sc-sub">Overall outstanding · <button onclick="window._openCorpusFund()" style="background:none;border:none;color:var(--indigo);cursor:pointer;font-weight:700;padding:0;font-size:10px">Edit</button></div>
     </div>`;
   }
 
