@@ -4271,8 +4271,6 @@ function _anRender() {
   } else {
     renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
   }
-}
-
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
