@@ -3745,7 +3745,7 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 
   // Cross-reference with current flat records for owner/due/resType
   byFlat.forEach((rec, fid) => {
-    const f = flats.get(fid);
+    const f = flats.get(rec.docId);
     if (f) {
       rec.owner   = f.owner   || rec.owner;
       rec.due     = f.due     || rec.due;
@@ -3763,7 +3763,7 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
     flats.forEach((f, fid) => {
       if (!matchB(f.block || '')) return;
       if (!byFlat.has(fid)) {
-        byFlat.set(fid, { flatId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
+        byFlat.set(fid, { flatId:f.flatId||fid, docId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
       }
     });
   }
@@ -4026,31 +4026,31 @@ function _anRender() {
   const cardsDiv = document.getElementById('analyticsTotals');
   const aptCorpus = window._aptCorpusFund || 0;
   const grandOutstanding = outstanding + aptCorpus;
+  
+  // For current month data
+  const curMonth = selectedMonth || AM;
+  const curMonthTotal = [...flats.values()].reduce((s,f) => s + (f.due||0), 0);
+  
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
       <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
+        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inr(curMonthTotal)}</span></div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">Current month</div>
       </div>
     </div>
     <div class="vscard red">
-      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
+      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-alert-circle"></i></div>
       <div>
-        <div class="vscard-label">Outstanding</div>
+        <div class="vscard-label">Outstanding Balance</div>
         <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
-        <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
-      </div>
-    </div>
-    <div class="vscard" style="border-top-color:#8B5CF6">
-      <div class="vscard-icon" style="background:#f3e8ff;color:#8B5CF6"><i class="ti ti-coin"></i></div>
-      <div>
-        <div class="vscard-label">+ Corpus Fund</div>
-        <div class="vscard-val" style="color:#8B5CF6">${inr(grandOutstanding)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">Grand total · <button onclick="window._openCorpusFund()" style="background:none;border:none;color:#8B5CF6;cursor:pointer;font-weight:700;padding:0;font-size:10px;text-decoration:underline">Edit</button></div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">+ Corpus: ${inr(aptCorpus)} · Total: ${inr(grandOutstanding)}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span style="font-size:10px;font-weight:700;color:var(--red-txt)">${pending + partial} pending</span>
+          <button onclick="window._openCorpusFund()" style="padding:2px 8px;font-size:9px;font-weight:600;background:#fff;border:1px solid var(--red-border);border-radius:4px;color:var(--red);cursor:pointer;font-family:var(--font)"><i class="ti ti-coin" style="font-size:9px"></i> Edit Corpus</button>
+        </div>
       </div>
     </div>`;
 
@@ -4223,8 +4223,8 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
 
   // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
-  const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
-  const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
+  const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).tw)||0),0);
+  const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
     <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
