@@ -4264,13 +4264,9 @@ function _anRender() {
   }
 
   /* ── Payment records table ── */
-  if (flats.size === 0 || exps.size === 0) {
-    console.warn('⚠️  No payment data loaded yet. flats:', flats.size, 'exps:', exps.size);
-    const tbody = document.getElementById('anPayTable');
-    if (tbody) tbody.innerHTML = '<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--muted)">Loading payment data...</td></tr>';
-  } else {
-    renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
-  }
+  renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+}
+
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
