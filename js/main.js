@@ -3724,13 +3724,20 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 
   // Aggregate all payment transactions for the period from the expenses collection
   const byFlat = new Map();
-  exps.forEach((records, fid) => {
+  exps.forEach((records, flatIdKey) => {
     records.forEach(e => {
       if (!matchM(e.month)) return;
-      const f = flats.get(fid);
+      // Find the document ID for this flatId
+      let docId = flatIdKey; // fallback
+      flats.forEach((f, fid) => {
+        if (f.flatId === flatIdKey) {
+          docId = fid;
+        }
+      });
+      const f = flats.get(docId);
       if (!matchB(f?.block || e.block || '')) return;
-      if (!byFlat.has(fid)) byFlat.set(fid, { flatId:fid, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
-      const rec = byFlat.get(fid);
+      if (!byFlat.has(flatIdKey)) byFlat.set(flatIdKey, { flatId:flatIdKey, docId, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
+      const rec = byFlat.get(flatIdKey);
       rec.paid += (e.amt || 0);
       rec.exps.push(e);
     });
@@ -4017,6 +4024,8 @@ function _anRender() {
 
   /* ── Summary cards ── */
   const cardsDiv = document.getElementById('analyticsTotals');
+  const aptCorpus = window._aptCorpusFund || 0;
+  const grandOutstanding = outstanding + aptCorpus;
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
       <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
@@ -4034,6 +4043,14 @@ function _anRender() {
         <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
         <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
+      </div>
+    </div>
+    <div class="vscard" style="border-top-color:#8B5CF6">
+      <div class="vscard-icon" style="background:#f3e8ff;color:#8B5CF6"><i class="ti ti-coin"></i></div>
+      <div>
+        <div class="vscard-label">+ Corpus Fund</div>
+        <div class="vscard-val" style="color:#8B5CF6">${inr(grandOutstanding)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">Grand total · <button onclick="window._openCorpusFund()" style="background:none;border:none;color:#8B5CF6;cursor:pointer;font-weight:700;padding:0;font-size:10px;text-decoration:underline">Edit</button></div>
       </div>
     </div>`;
 
@@ -4172,7 +4189,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const s        = f._status || 'pending';
     const bal      = (f.due||0) - (f.paid||0);
     const balColor = bal > 0 ? 'var(--red)' : 'var(--green)';
-    const v        = vehicles.get(f.flatId) || {};
+    const v        = vehicles.get(f.docId) || {};
     const tw       = parseInt(v.tw) || 0;
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
