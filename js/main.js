@@ -4234,7 +4234,7 @@ function _anRender() {
   const grandOutstanding = outstanding + aptCorpus;
 
   // Pending chip uses the selected filter month so it matches filters
-  const curMonth = SM || AM;
+  const curMonth = selectedMonth || AM;
   const curMonthCollected = [...exps.values()]
     .flat()
     .filter(e => (e.month || (e.rawDate||'').slice(0,7)) === curMonth)
@@ -4265,6 +4265,8 @@ function _anRender() {
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+}
+
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
