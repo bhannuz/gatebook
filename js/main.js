@@ -4246,7 +4246,7 @@ function _anRender() {
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="scard green">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-circle-check"></i></div><span class="sc-trend up">${pct}% collected</span></div>
-      <div class="sc-label">Amount Collected</div><div class="sc-value">${inrShort(totalCollected)}</div>
+      <div class="sc-label">Amount Collected</div><div class="sc-value">${inrShort(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inrShort(totalDue)}</span></div>
       <div class="sc-sub">${totalFlats} flats · ${paid} fully paid</div>
       <div class="sc-bar"><div class="sc-fill" style="width:${pct}%"></div></div>
     </div>
@@ -4265,6 +4265,8 @@ function _anRender() {
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+}
+
 window.rAnalytics = rAnalytics;
 
 let _resizeTimer;
