@@ -4009,6 +4009,19 @@ function _anRender() {
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
 
+  /* ── Calculate GRAND TOTAL outstanding (all months, all flats) ── */
+  let grandTotalDue = 0, grandTotalCollected = 0;
+  flats.forEach((f, fid) => {
+    if (!(f.owner || '').trim()) return; // skip vacant
+    // Sum ALL dues (from all months)
+    const allExps = exps.get(f.flatId || fid) || [];
+    const totalDueAllMonths = f.due ? (f.due * Math.max(1, allExps.length || 1)) : 0;
+    const totalPaidAllMonths = allExps.reduce((s, e) => s + (e.amt || 0), 0);
+    grandTotalDue += totalDueAllMonths;
+    grandTotalCollected += totalPaidAllMonths;
+  });
+  const grandOutstandingBalance = Math.max(0, grandTotalDue - grandTotalCollected);
+
   /* ── Pie chart segments ── */
   const segments = [
     { label:'Paid',    value:paid,    color:'#22c55e', displayValue:`${paid} flats`    },
@@ -4046,7 +4059,8 @@ function _anRender() {
     <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
       <div style="flex:1">
         <div class="vscard-label">Outstanding Bal.</div>
-        <div class="vscard-val" style="color:var(--red);margin:0">${inr(outstanding)}</div>
+        <div class="vscard-val" style="color:var(--red);margin:0">${inr(grandOutstandingBalance)}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">All months · All flats</div>
         ${aptCorpus > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">+ Corpus Fund: <span style="color:#8B5CF6;font-weight:700">${inr(aptCorpus)}</span></div>` : ''}
       </div>
       <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
