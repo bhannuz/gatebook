@@ -3268,6 +3268,7 @@ async function boot(){
 
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
+    if(aptDoc.exists() && aptDoc.data().corpusFund) window._aptCorpusFund = aptDoc.data().corpusFund;
     await loadCats();
 
     // Check if society is already configured (registered via register.html)
@@ -4043,9 +4044,10 @@ function _anRender() {
       </div>
     </div>
     <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
-      <div>
+      <div style="flex:1">
         <div class="vscard-label">Outstanding Bal.</div>
         <div class="vscard-val" style="color:var(--red);margin:0">${inr(outstanding)}</div>
+        ${aptCorpus > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">+ Corpus Fund: <span style="color:#8B5CF6;font-weight:700">${inr(aptCorpus)}</span></div>` : ''}
       </div>
       <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
     </div>`;
