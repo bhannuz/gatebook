@@ -4050,6 +4050,16 @@ function _anRender() {
   /* ── Summary cards ── */
   const cardsDiv = document.getElementById('analyticsTotals');
   const aptCorpus = window._aptCorpusFund || 0;
+  
+  // Format month from "2026-07" to "July-26"
+  const formatMonthName = (monthStr) => {
+    if (!monthStr || monthStr.length < 7) return monthStr;
+    const [year, month] = monthStr.split('-');
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthIndex = parseInt(month) - 1;
+    const yearShort = year ? year.slice(-2) : '';
+    return `${monthNames[monthIndex]}-${yearShort}`;
+  };
   const grandOutstanding = outstanding + aptCorpus;
   
   // For current month data
@@ -4063,17 +4073,15 @@ function _anRender() {
         <div class="vscard-label">Collected</div>
         <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inr(curMonthTotal)}</span></div>
         <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:4px">
-          ${selectedMonth ? `${selectedMonth}` : (selectedYear ? selectedYear : 'All time')}
+          ${selectedMonth ? formatMonthName(selectedMonth) : (selectedYear ? selectedYear : 'All time')}
           ${selBlock && selBlock !== 'all' ? ` · Block ${selBlock}` : ''}
         </div>
       </div>
     </div>
     <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
       <div style="flex:1">
-        <div class="vscard-label">Outstanding Bal.</div>
+        <div class="vscard-label">Outstanding Bal</div>
         <div class="vscard-val" style="color:var(--red);margin:0">${inr(totalOutstanding)}</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px">Total Due: ${inr(totalAllDues)} − Collected: ${inr(totalAllPayments)}</div>
-        ${aptCorpus > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">+ Corpus Fund: <span style="color:#8B5CF6;font-weight:700">${inr(aptCorpus)}</span></div>` : ''}
       </div>
       <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
     </div>`;
