@@ -4044,9 +4044,10 @@ function _anRender() {
     </div>
     <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
       <div>
+        <div class="vscard-label">Pending</div>
         <div class="vscard-val" style="color:var(--red);margin:0">${inr(outstanding)}</div>
       </div>
-      <button onclick="window._openCorpusFund()" title="Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:32px;padding:0;margin-right:8px"><i class="ti ti-coin"></i></button>
+      <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
     </div>`;
 
   /* ── Payment records table ── */
