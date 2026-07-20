@@ -3762,8 +3762,9 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
   if (filterType === 'month') {
     flats.forEach((f, fid) => {
       if (!matchB(f.block || '')) return;
-      if (!byFlat.has(fid)) {
-        byFlat.set(fid, { flatId:f.flatId||fid, docId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
+      const flatId = f.flatId || fid;
+      if (!byFlat.has(flatId)) {
+        byFlat.set(flatId, { flatId, docId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
       }
     });
   }
@@ -4041,17 +4042,11 @@ function _anRender() {
         <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">Current month</div>
       </div>
     </div>
-    <div class="vscard red">
-      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-alert-circle"></i></div>
+    <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
       <div>
-        <div class="vscard-label">Outstanding Balance</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">+ Corpus: ${inr(aptCorpus)} · Total: ${inr(grandOutstanding)}</div>
-        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
-          <span style="font-size:10px;font-weight:700;color:var(--red-txt)">${pending + partial} pending</span>
-          <button onclick="window._openCorpusFund()" style="padding:2px 8px;font-size:9px;font-weight:600;background:#fff;border:1px solid var(--red-border);border-radius:4px;color:var(--red);cursor:pointer;font-family:var(--font)"><i class="ti ti-coin" style="font-size:9px"></i> Edit Corpus</button>
-        </div>
+        <div class="vscard-val" style="color:var(--red);margin:0">${inr(outstanding)}</div>
       </div>
+      <button onclick="window._openCorpusFund()" title="Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:32px;padding:0;margin-right:8px"><i class="ti ti-coin"></i></button>
     </div>`;
 
   /* ── Payment records table ── */
@@ -4130,6 +4125,41 @@ function closePending() {
 }
 window._showPending  = showPending;
 window._closePending = closePending;
+
+/* Corpus Fund Modal */
+window._openCorpusFund = function() {
+  const input = document.getElementById('corpusInput');
+  const modal = document.getElementById('corpusM');
+  const alert = document.getElementById('corpusAlert');
+  if (input) input.value = window._aptCorpusFund || '';
+  if (alert) alert.style.display = 'none';
+  if (modal) modal.style.display = 'flex';
+};
+window._closeCorpusFund = function() {
+  const modal = document.getElementById('corpusM');
+  if (modal) modal.style.display = 'none';
+};
+window._saveCorpusFund = async function() {
+  const val = parseInt(document.getElementById('corpusInput')?.value) || 0;
+  const alert = document.getElementById('corpusAlert');
+  const btn = document.getElementById('corpusSaveBtn');
+  if (!btn) return;
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await updateDoc(doc(db,'apartments',UID), { corpusFund: val });
+    window._aptCorpusFund = val;
+    window._closeCorpusFund();
+    toast('Corpus fund updated ✓');
+    rAll();
+  } catch(e) {
+    if(alert){ alert.textContent='Save failed. Check console.'; alert.style.display='block'; }
+    console.error('Corpus save error:', e);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+};
 
 function anSetStatus(s) {
   _anStatus = s;
