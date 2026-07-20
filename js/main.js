@@ -4131,9 +4131,15 @@ window._openCorpusFund = function() {
   const input = document.getElementById('corpusInput');
   const modal = document.getElementById('corpusM');
   const alert = document.getElementById('corpusAlert');
+  console.log('Opening corpus fund modal. Modal found:', !!modal);
   if (input) input.value = window._aptCorpusFund || '';
   if (alert) alert.style.display = 'none';
-  if (modal) modal.style.display = 'flex';
+  if (modal) {
+    modal.style.display = 'flex';
+    console.log('Modal display set to flex');
+  } else {
+    console.error('Corpus modal not found with id corpusM');
+  }
 };
 window._closeCorpusFund = function() {
   const modal = document.getElementById('corpusM');
@@ -4224,11 +4230,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
-           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
-           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
-           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
-         </span>`;
+      : `<span style="font-size:12px;font-weight:700;color:var(--text)">${tw}/${fw}</span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
     const typeBadge = isVacant
