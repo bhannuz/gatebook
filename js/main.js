@@ -4009,18 +4009,28 @@ function _anRender() {
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
 
-  /* ── Calculate GRAND TOTAL outstanding (all months, all flats) ── */
-  let grandTotalDue = 0, grandTotalCollected = 0;
+  /* ── Calculate TOTAL outstanding (all dues - all payments) ── */
+  let totalAllDues = 0;
+  let totalAllPayments = 0;
+  
   flats.forEach((f, fid) => {
     if (!(f.owner || '').trim()) return; // skip vacant
-    // Sum ALL dues (from all months)
-    const allExps = exps.get(f.flatId || fid) || [];
-    const totalDueAllMonths = f.due ? (f.due * Math.max(1, allExps.length || 1)) : 0;
-    const totalPaidAllMonths = allExps.reduce((s, e) => s + (e.amt || 0), 0);
-    grandTotalDue += totalDueAllMonths;
-    grandTotalCollected += totalPaidAllMonths;
+    const flatId = f.flatId || fid;
+    // Get all expenses/payments for this flat
+    const allFlatsExps = exps.get(flatId) || [];
+    // Count active months with data
+    const monthsWithData = new Set(allFlatsExps.map(e => (e.month || (e.rawDate || '').slice(0, 7)))).size;
+    const monthsCount = Math.max(1, monthsWithData);
+    // Total due = monthly amount × number of months
+    const dueTillNow = (f.due || 0) * monthsCount;
+    // Total paid = sum of all payments
+    const paidTillNow = allFlatsExps.reduce((sum, e) => sum + (e.amt || 0), 0);
+    
+    totalAllDues += dueTillNow;
+    totalAllPayments += paidTillNow;
   });
-  const grandOutstandingBalance = Math.max(0, grandTotalDue - grandTotalCollected);
+  
+  const totalOutstanding = Math.max(0, totalAllDues - totalAllPayments);
 
   /* ── Pie chart segments ── */
   const segments = [
@@ -4053,14 +4063,17 @@ function _anRender() {
         <div class="vscard-label">Collected</div>
         <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inr(curMonthTotal)}</span></div>
         <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">Current month</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">
+          ${selectedMonth ? `${selectedMonth}${selectedYear ? ' ' + selectedYear : ''}` : (selectedYear ? selectedYear : 'All time')}
+          ${selBlock && selBlock !== 'all' ? ` · Block ${selBlock}` : ''}
+        </div>
       </div>
     </div>
     <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
       <div style="flex:1">
         <div class="vscard-label">Outstanding Bal.</div>
-        <div class="vscard-val" style="color:var(--red);margin:0">${inr(grandOutstandingBalance)}</div>
-        <div style="font-size:9px;color:var(--muted);margin-top:2px">All months · All flats</div>
+        <div class="vscard-val" style="color:var(--red);margin:0">${inr(totalOutstanding)}</div>
+        <div style="font-size:9px;color:var(--muted);margin-top:2px">Total Due: ${inr(totalAllDues)} − Collected: ${inr(totalAllPayments)}</div>
         ${aptCorpus > 0 ? `<div style="font-size:10px;color:var(--muted);margin-top:4px">+ Corpus Fund: <span style="color:#8B5CF6;font-weight:700">${inr(aptCorpus)}</span></div>` : ''}
       </div>
       <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
