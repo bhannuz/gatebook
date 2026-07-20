@@ -4062,9 +4062,8 @@ function _anRender() {
       <div>
         <div class="vscard-label">Collected</div>
         <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inr(curMonthTotal)}</span></div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">
-          ${selectedMonth ? `${selectedMonth}${selectedYear ? ' ' + selectedYear : ''}` : (selectedYear ? selectedYear : 'All time')}
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:4px">
+          ${selectedMonth ? `${selectedMonth}` : (selectedYear ? selectedYear : 'All time')}
           ${selBlock && selBlock !== 'all' ? ` · Block ${selBlock}` : ''}
         </div>
       </div>
