@@ -4078,52 +4078,66 @@ function _anRender() {
         </div>
       </div>
     </div>
-    <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
-      <div style="flex:1">
-        <div class="vscard-label">Outstanding Bal</div>
-        <div class="vscard-val" style="color:var(--red);margin:0">${inr((outstanding || 0) + (aptCorpus || 0))}</div>
-        <!-- Previous months outstanding -->
-        <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.2)">
-          <div style="font-size:9px;color:var(--muted);margin-bottom:4px;font-weight:700">PREVIOUS MONTHS</div>
-          <div style="display:flex;flex-direction:column;gap:3px;max-height:80px;overflow-y:auto">
-            ${(() => {
-              const monthOutstandings = [];
-              const allMonths = new Set();
+    <div class="vscard red">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <div class="vscard-label">Outstanding Bal</div>
+          <div class="vscard-val" style="color:var(--red);margin:0">${inr((outstanding || 0) + (aptCorpus || 0))}</div>
+        </div>
+        <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
+      </div>
+      
+      <!-- All months breakdown -->
+      <div style="padding-top:8px;border-top:1px solid rgba(239,68,68,0.2)">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:6px;font-weight:700">BY MONTH</div>
+        <div style="display:flex;flex-direction:column;gap:4px;max-height:100px;overflow-y:auto;font-size:9px">
+          ${(() => {
+            const monthOutstandings = new Map();
+            const allMonths = new Set();
+            
+            // Collect all months
+            exps.forEach((records) => {
+              records.forEach(e => {
+                const m = e.month || (e.rawDate || '').slice(0, 7);
+                if (m) allMonths.add(m);
+              });
+            });
+            
+            // Calculate outstanding for each month
+            Array.from(allMonths).sort().reverse().forEach(month => {
+              let mDue = 0, mPaid = 0;
+              
+              // Get payments for this month
               exps.forEach((records) => {
                 records.forEach(e => {
-                  const m = e.month || (e.rawDate || '').slice(0, 7);
-                  if (m) allMonths.add(m);
+                  if ((e.month || (e.rawDate || '').slice(0, 7)) !== month) return;
+                  mPaid += e.amt || 0;
                 });
               });
               
-              // Get last 5 months excluding current
-              const sortedMonths = Array.from(allMonths).sort().reverse();
-              const prevMonths = sortedMonths.filter(m => m !== selectedMonth).slice(0, 5);
+              // Get dues for this month
+              flats.forEach((f) => {
+                if (!(f.owner || '').trim()) return;
+                if (selBlock && selBlock !== 'all' && f.block !== selBlock) return;
+                mDue += f.due || 0;
+              });
               
-              return prevMonths.map(month => {
-                const matchM = m => m === month;
-                let mDue = 0, mPaid = 0;
-                exps.forEach((records, flatId) => {
-                  records.forEach(e => {
-                    if (!matchM(e.month || (e.rawDate || '').slice(0, 7))) return;
-                    const f = flats.get(e.flatId || flatId);
-                    if (f && !matchM(f.block || '')) return;
-                    mPaid += e.amt || 0;
-                  });
-                });
-                flats.forEach((f) => {
-                  if (!matchM(f.block || '') && selBlock && selBlock !== 'all') return;
-                  mDue += f.due || 0;
-                });
-                const mOutstanding = Math.max(0, mDue - mPaid);
+              monthOutstandings.set(month, Math.max(0, mDue - mPaid));
+            });
+            
+            // Display all months
+            return Array.from(monthOutstandings.entries())
+              .map(([month, bal]) => {
                 const monthName = month ? new Date(month + '-01').toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }).replace(' ', '-') : 'N/A';
-                return `<div style="display:flex;justify-content:space-between;font-size:9px;color:var(--text2)">${monthName}: <span style="font-weight:700;color:var(--red)">${inr(mOutstanding)}</span></div>`;
+                const isSelected = month === selectedMonth;
+                return `<div style="display:flex;justify-content:space-between;padding:4px 6px;border-radius:4px;background:${isSelected ? 'rgba(239,68,68,0.1)' : 'transparent'};color:${isSelected ? 'var(--red)' : 'var(--text2)'};font-weight:${isSelected ? '700' : '500'}">
+                  <span>${monthName}</span>
+                  <span>${inr(bal)}</span>
+                </div>`;
               }).join('');
-            })()}
-          </div>
+          })()}
         </div>
       </div>
-      <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
     </div>`;
 
   /* ── Payment records table ── */
