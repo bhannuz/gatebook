@@ -2558,7 +2558,7 @@ function rPresident() {
   const totalAllExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
 
   // Build period label for the chip
-  let periodLabel = 'All Time';
+  let periodLabel = 'Current Month';
   if (yf !== 'all' && mf !== 'all') {
     periodLabel = new Date(mf+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   } else if (yf !== 'all') {
@@ -2570,7 +2570,7 @@ function rPresident() {
   }
 
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
+    <div class="fcard2 red"><div class="fcard2-label">Total Expenses</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
     <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
