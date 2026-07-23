@@ -1098,3 +1098,48 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   height:100% !important;
 }
 .exp-pie-panel,.exp-records-panel{ overflow:hidden !important; }
+
+/* Force 2-column layout for Payments/Analytics tab on desktop */
+.an-layout-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 12px !important;
+  align-items: start !important;
+  width: 100% !important;
+}
+
+.an-layout-grid .chart-col {
+  display: block !important;
+  width: 100% !important;
+  order: 2 !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.an-layout-grid .exp-records-panel {
+  order: 1 !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  flex: 1 !important;
+}
+
+.an-layout-grid .exp-pie-panel {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+@media (max-width: 700px) {
+  .an-layout-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .an-layout-grid .chart-col {
+    order: 2;
+    margin-top: 16px;
+  }
+}
+
+/* Ensure table doesn't exceed grid container */
+.an-layout-grid .exp-records-panel > div:last-child {
+  max-height: 500px !important;
+  overflow-y: auto !important;
+}
