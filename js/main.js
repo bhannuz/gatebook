@@ -4083,7 +4083,7 @@ function _anRender() {
         <div class="vscard-label">Outstanding Bal</div>
         <div class="vscard-val" style="color:var(--red);margin:0">${inr((outstanding || 0) + (aptCorpus || 0))}</div>
       </div>
-      <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:28px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-coin"></i></button>
+      <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:24px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-wallet"></i></button>
     </div>`;
 
   /* ── Payment records table ── */
@@ -4173,7 +4173,7 @@ window._openCorpusFund = function() {
     const modalHTML = `<div id="corpusM" style="display:flex;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closeCorpusFund()">
       <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:90vh;overflow-y:auto">
         <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:16px;font-weight:800;color:var(--text)"><i class="ti ti-coin" style="color:var(--indigo)"></i> Corpus Fund</div>
+          <div style="font-size:16px;font-weight:800;color:var(--text)"><i class="ti ti-wallet" style="color:var(--indigo);font-size:18px"></i> Corpus Fund</div>
           <button onclick="window._closeCorpusFund()" style="background:var(--surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
         </div>
         <div style="font-size:13px;color:var(--text2);line-height:1.5">
