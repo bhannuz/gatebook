@@ -296,7 +296,8 @@
             <tbody id="anPayTable"></tbody>
           </table>
         </div>
-      </div><!-- /left col -->
+      </div><!-- /payment records table -->
+      </div><!-- /left column flex container -->
 
       <!-- RIGHT: payment status chart -->
       <div class="chart-col">
