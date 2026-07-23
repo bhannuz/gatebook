@@ -1106,26 +1106,27 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   gap: 12px !important;
   align-items: start !important;
   width: 100% !important;
+  margin-top: 12px !important;
 }
 
 .an-layout-grid .chart-col {
-  display: block !important;
+  display: flex !important;
+  flex-direction: column !important;
   width: 100% !important;
   order: 2 !important;
   min-width: 0 !important;
-  flex: 1 !important;
 }
 
 .an-layout-grid .exp-records-panel {
   order: 1 !important;
   width: 100% !important;
   min-width: 0 !important;
-  flex: 1 !important;
 }
 
 .an-layout-grid .exp-pie-panel {
   width: 100% !important;
   min-width: 0 !important;
+  flex-grow: 1 !important;
 }
 
 @media (max-width: 700px) {
