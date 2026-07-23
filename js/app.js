@@ -262,14 +262,16 @@
       }
     </style>
 
-    <!-- Stat cards — full width above grid -->
-    <div id="analyticsTotals" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px;"></div>
-
     <!-- 50/50 grid -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
-      <!-- LEFT: payment records table -->
-      <div class="exp-records-panel tab-table-wrap">
+      <!-- LEFT COLUMN: Summary cards + payment records table -->
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <!-- Summary cards — only above payment table -->
+        <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+
+        <!-- Payment Records -->
+        <div class="exp-records-panel tab-table-wrap">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
           <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
         </div>
