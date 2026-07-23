@@ -1108,40 +1108,45 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   width: 100% !important;
 }
 
-/* Left column - contains cards + table */
+/* Left column - flex container for cards + table */
 .an-layout-grid > div:first-child {
   display: flex !important;
   flex-direction: column !important;
   gap: 10px !important;
   width: 100% !important;
+  grid-column: 1 !important;
 }
 
-/* Summary cards - only above table in left column */
+/* Summary cards - constrained to left column only */
 #analyticsTotals {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
   gap: 10px !important;
   width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  order: 1 !important;
 }
 
-.an-layout-grid .chart-col {
+/* Payment records panel in left column */
+.an-layout-grid .exp-records-panel {
+  width: 100% !important;
+  order: 2 !important;
+}
+
+/* Right column - chart only */
+.an-layout-grid > .chart-col {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
   order: 2 !important;
   min-width: 0 !important;
-}
-
-.an-layout-grid .exp-records-panel {
-  order: 1 !important;
-  width: 100% !important;
-  min-width: 0 !important;
+  grid-column: 2 !important;
 }
 
 .an-layout-grid .exp-pie-panel {
   width: 100% !important;
   min-width: 0 !important;
-  flex-grow: 1 !important;
 }
 
 @media (max-width: 700px) {
