@@ -2479,7 +2479,6 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
-        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
