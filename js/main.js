@@ -4786,23 +4786,25 @@ window._rContacts = function() {
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
-        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      style="display:flex;flex-direction:column;gap:8px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:10px;padding:9px 10px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
       onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
-        <i class="ti ${icon}"></i>
+      <div style="display:flex;align-items:center;gap:8px;min-width:0">
+        <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
+          display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+          <i class="ti ${icon}"></i>
+        </div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+          <div style="font-size:9px;font-weight:600;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
+        </div>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
-        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
+      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
           <i class="ti ti-phone" style="font-size:12px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
           <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
         </a>` : ''}
       </div>
