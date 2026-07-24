@@ -1151,11 +1151,34 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 @media (max-width: 700px) {
   .an-layout-grid {
+    display: grid !important;
     grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    width: 100% !important;
   }
+  
+  /* Left column - full width on mobile */
+  .an-layout-grid > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    order: 1 !important;
+  }
+  
+  /* Summary cards stack on mobile */
+  #analyticsTotals {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+  
+  /* Chart stacks below table on mobile */
   .an-layout-grid .chart-col {
-    order: 2;
-    margin-top: 16px;
+    order: 2 !important;
+    margin-top: 16px !important;
+    width: 100% !important;
   }
 }
 
