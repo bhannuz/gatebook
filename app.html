@@ -198,6 +198,47 @@
     </div>
   </div><!-- /#iView -->
 
+<!-- ADD/EDIT SERVICE CONTACT MODAL -->
+<div class="mbg" id="contactM">
+  <div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-address-book"></i></div>
+        <div><div class="mtitle" id="contactMTitle">Add Service Contact</div><div class="msub">Save a plumber, electrician, maid etc.</div></div>
+      </div>
+      <button class="mclose" onclick="window._cContact()"><i class="ti ti-x"></i></button>
+    </div>
+    <input type="hidden" id="contactId" value="">
+    <div class="fg"><label>Name</label><input type="text" id="contactName" placeholder="e.g. Ramesh Plumbing"/></div>
+    <div class="fg2">
+      <div class="fg"><label>Category</label>
+        <select id="contactCat">
+          <option value="Plumber">🔧 Plumber</option>
+          <option value="Electrician">⚡ Electrician</option>
+          <option value="Maid">🧹 Maid</option>
+          <option value="Security">🔒 Security</option>
+          <option value="Gardener">🌳 Gardener</option>
+          <option value="Carpenter">🪚 Carpenter</option>
+          <option value="Painter">🎨 Painter</option>
+          <option value="Pest Control">🐜 Pest Control</option>
+          <option value="AC Repair">❄️ AC Repair</option>
+          <option value="Other">📋 Other</option>
+        </select>
+      </div>
+      <div class="fg"><label>Phone</label><input type="tel" id="contactPhone" placeholder="10-digit number"/></div>
+    </div>
+    <div class="fg"><label>Alternate Phone (optional)</label><input type="tel" id="contactPhone2" placeholder="Optional second number"/></div>
+    <div class="fg"><label>Note (optional)</label><input type="text" id="contactNote" placeholder="e.g. Available 9am-6pm, ask for Ramesh"/></div>
+    <div class="mactions">
+      <button class="btn btn-white" id="contactDelBtn" style="margin-right:auto;color:#EF4444;border-color:#FCA5A5" onclick="window._delContact()"><i class="ti ti-trash"></i> Delete</button>
+      <button class="btn btn-white" onclick="window._cContact()">Cancel</button>
+      <button class="btn btn-indigo" id="contactSaveBtn" onclick="window._sContact()">
+        <i class="ti ti-device-floppy"></i><span id="contactSaveLbl">Save Contact</span>
+      </button>
+    </div>
+  </div>
+</div>
+
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
   <!-- DIRECTORY VIEW — Owners, Tenants & Payment History -->
 
