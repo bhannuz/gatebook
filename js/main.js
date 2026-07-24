@@ -2018,9 +2018,10 @@ function listenSocExp(){
   pu=onSnapshot(q,snap=>{
     socExps.length=0;
     snap.forEach(d=>socExps.push({id:d.id,...d.data()}));
+    rStats();
     if(document.getElementById('presView').style.display!=='none')rPresident();
   },()=>{
-    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));if(document.getElementById('presView').style.display!=='none')rPresident();});
+    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));rStats();if(document.getElementById('presView').style.display!=='none')rPresident();});
   });
 }
 
