@@ -10,13 +10,10 @@ import {
    AUTH GUARD
 ════════════════════════════════ */
 let UID = null;
-let AUTH_UID = null;
-let ROLE = 'admin';
-let IS_ADMIN = true;
 let _booted = false; // prevent duplicate boot on auth token refresh
 
 const ADMIN_EMAIL = 'admin@gatebook.app';
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, user => {
   if (!user) {
     window.location.replace('index.html');
     return;
@@ -34,63 +31,9 @@ onAuthStateChanged(auth, async user => {
   // Only boot once — onAuthStateChanged can fire multiple times
   if (_booted) return;
   _booted = true;
-  AUTH_UID = user.uid;
-
-  // Resolve role (Apartment Admin vs Flat Owner) + which apartment's data to load.
-  // users/{authUid} is written at signup time (index.html). Accounts created
-  // before this feature existed won't have this doc — treat them as admins
-  // over their own apartment, same as legacy behaviour.
-  try {
-    const uDoc = await getDoc(doc(db, 'users', user.uid));
-    if (uDoc.exists() && uDoc.data().apartmentId) {
-      ROLE = uDoc.data().role === 'owner' ? 'owner' : 'admin';
-      UID  = uDoc.data().apartmentId;
-    } else {
-      ROLE = 'admin';
-      UID  = user.uid;
-    }
-  } catch (e) {
-    console.error('Role lookup failed — defaulting to admin scope', e);
-    ROLE = 'admin';
-    UID  = user.uid;
-  }
-  IS_ADMIN = ROLE === 'admin';
-
+  UID = user.uid;
   boot();
 });
-
-/* ════════════════════════════════
-   PERMISSIONS — Flat Owners can view but not add/edit/delete
-   payments or expenses. Apartment Admin has full access.
-════════════════════════════════ */
-function requireAdmin(action) {
-  if (IS_ADMIN) return true;
-  toast(`Only the Apartment Admin can ${action || 'do this'}.`, 'error');
-  return false;
-}
-// Hide any add/edit/delete controls for payments & expenses when not admin.
-// Runs after every render via a MutationObserver, so it stays correct no
-// matter which function last redrew the DOM.
-const _restrictedSelectors = [
-  'button[onclick*="_oA("]', 'button[onclick*="_oAFor("]',
-  'button[onclick*="_oPresExp("]', 'button[onclick*="_deletePayment("]',
-  'button[onclick*="_delExp("]', 'button[onclick*="_delSE("]',
-  'button[onclick*="_delSEModal("]',
-  'button[onclick*="_openExpEdit("]', 'button[onclick*="_openSEEdit("]',
-];
-function applyRolePermissions() {
-  if (IS_ADMIN) return;
-  document.querySelectorAll(_restrictedSelectors.join(',')).forEach(el => {
-    el.style.display = 'none';
-  });
-}
-let _rolePermObserver = null;
-function watchRolePermissions() {
-  if (IS_ADMIN || _rolePermObserver) return;
-  applyRolePermissions();
-  _rolePermObserver = new MutationObserver(() => applyRolePermissions());
-  _rolePermObserver.observe(document.body, { childList: true, subtree: true });
-}
 
 window._doSignOut = async function() {
   await signOut(auth);
@@ -209,11 +152,6 @@ function rStats() {
   const all=[...flats.values()];
   const due=all.reduce((s,f)=>s+f.due,0);
   const paid=all.reduce((s,f)=>s+f.paid,0);
-  const totalSocExp = socExps.reduce((s,e)=>s+(e.amt||0),0);
-  // Society expenses are paid out of maintenance collected from flats, so the
-  // balance left over is: money collected minus money spent — not tied to
-  // dues still pending from residents.
-  const outstandingBal = paid - totalSocExp;
   const pc=all.filter(f=>st(f)==='paid').length;
   const pen=all.filter(f=>st(f)==='pending').length;
   const pct=due?Math.round(paid/due*100):0;
@@ -250,9 +188,9 @@ function rStats() {
     </div>
     <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
-      <div class="sc-label">Outstanding Balance</div><div class="sc-value" style="${outstandingBal<0?'color:var(--red)':''}">${outstandingBal<0?'-':''}${inr(Math.abs(outstandingBal))}</div>
-      <div class="sc-sub">${inr(paid)} collected · ${inr(totalSocExp)} spent</div>
-      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round(Math.max(0,due-paid)/due*100):0}%"></div></div>
+      <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
+      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
     </div>
     <div class="scard red">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-tool"></i></div><span class="sc-trend dn">${ip} in progress</span></div>
@@ -863,7 +801,6 @@ function toggleOwnerFields(resType) {
 
 /* inline edit of a payment amount in history */
 function openExpEdit(eid) {
-  if (!requireAdmin('edit payments')) return;
   document.getElementById('eedit_'+eid).style.display = 'block';
 }
 function closeExpEdit(eid) {
@@ -891,7 +828,6 @@ async function saveExpEdit(eid, fid) {
 
 /* delete a flat payment record */
 async function delExp(expId, fid) {
-  if (!requireAdmin('delete payments')) return;
   if (!confirm('Delete this payment record?')) return;
   const expDocRef = doc(db,'apartments',UID,'expenses',expId);
   sync('saving');
@@ -916,13 +852,12 @@ function fFS(){
   const b=document.getElementById('fB').value;
   document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
 }
-function oA(){if(!requireAdmin('add or edit payments'))return;fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
-function oAFor(block,fid){if(!requireAdmin('add or edit payments'))return;fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
 function cA(){document.getElementById('addM').classList.remove('open');}
 document.getElementById('fB').addEventListener('change',fFS);
 
 async function sE(){
-  if(!requireAdmin('add or edit payments'))return;
   const block=document.getElementById('fB').value,fid=document.getElementById('fF').value;
   const cat=document.getElementById('fC').value,amt=parseInt(document.getElementById('fA').value)||0;
   const dv=document.getElementById('fD').value,s=document.getElementById('fS').value;
@@ -1395,7 +1330,6 @@ window._deleteStayPeriod = async (fid, periodIndex) => {
   }
 };
 window._deletePayment = async (fid, docId) => {
-  if (!requireAdmin('delete payments')) return;
   if (!confirm('Delete this payment record?')) return;
   try {
     const docRef = doc(db, 'apartments', UID, 'expenses', docId);
@@ -2018,10 +1952,9 @@ function listenSocExp(){
   pu=onSnapshot(q,snap=>{
     socExps.length=0;
     snap.forEach(d=>socExps.push({id:d.id,...d.data()}));
-    rStats();
     if(document.getElementById('presView').style.display!=='none')rPresident();
   },()=>{
-    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));rStats();if(document.getElementById('presView').style.display!=='none')rPresident();});
+    pu=onSnapshot(sexpColl(),snap=>{socExps.length=0;snap.forEach(d=>socExps.push({id:d.id,...d.data()}));if(document.getElementById('presView').style.display!=='none')rPresident();});
   });
 }
 
@@ -2546,6 +2479,7 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
+        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -2815,7 +2749,6 @@ async function sPres() {
 }
 
 function oPresExp() {
-  if (!requireAdmin('add or edit expenses')) return;
   ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('peDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('peCat').value  = 'Maintenance';
@@ -2827,7 +2760,6 @@ function oPresExp() {
 function cPresExp() { document.getElementById('presExpM').classList.remove('open'); }
 
 async function sPresExp() {
-  if (!requireAdmin('add or edit expenses')) return;
   const title  = document.getElementById('peTitle').value.trim();
   const cat    = document.getElementById('peCat').value;
   const amt    = parseInt(document.getElementById('peAmt').value) || 0;
@@ -2852,7 +2784,6 @@ async function sPresExp() {
 
 
 async function delSE(id) {
-  if (!requireAdmin('delete expenses')) return;
   if (!confirm('Delete this expense?')) return;
   sync('saving');
   try {
@@ -2863,7 +2794,6 @@ async function delSE(id) {
 }
 
 function openSEEdit(id) {
-  if (!requireAdmin('edit expenses')) return;
   document.querySelectorAll('[id^="seedit_"]').forEach(el => el.style.display = 'none');
   const editEl = document.getElementById('seedit_'+id);
   if (editEl) editEl.style.display = 'block';
@@ -3304,7 +3234,6 @@ window._phDelete = async function(eid, fid) {
 
 async function boot(){
   refreshAPP();
-  watchRolePermissions();
   // buildMonthSelect() — month dropdown removed from UI, AM defaults to current month
   try{
     // Load apartment config
@@ -4064,9 +3993,10 @@ function _anRender() {
       due = due * (flatMonths.size || 1);
     }
 
-    // Collected: sum matching expense records
+    // Collected: sum matching payment records (only positive amounts = payments)
     const collected = (exps.get(fid) || [])
       .filter(inPeriod)
+      .filter(e => (e.amt || 0) > 0)  // Only count payments, not expenses
       .reduce((s, e) => s + (e.amt || 0), 0);
 
     totalDue       += due;
@@ -4858,25 +4788,23 @@ window._rContacts = function() {
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const phone = (c.phone || '').replace(/\D/g, '');
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;flex-direction:column;gap:8px;background:#fff;border:1.5px solid var(--border2);
-        border-radius:10px;padding:9px 10px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
+        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
       onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="display:flex;align-items:center;gap:8px;min-width:0">
-        <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
-          display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
-          <i class="ti ${icon}"></i>
-        </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
-          <div style="font-size:9px;font-weight:600;color:${color};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
-        </div>
+      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
+        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
+        <i class="ti ${icon}"></i>
       </div>
-      <div style="display:flex;gap:6px" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
+        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
           <i class="ti ti-phone" style="font-size:12px"></i>
         </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="flex:1;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
+        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
           <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
         </a>` : ''}
       </div>
@@ -4981,20 +4909,29 @@ window._issSubTab = function(which) {
   const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
   const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
 
-  const panels = { issues: issuesPanel, contacts: contactsPanel, reports: reportsPanel };
-  const btns   = { issues: issuesBtn, contacts: contactsBtn, reports: reportsBtn };
-
-  Object.keys(panels).forEach(key => {
-    panels[key].style.display = (key === which) ? '' : 'none';
-    Object.assign(btns[key].style, key === which
-      ? { borderColor: active.border, background: active.bg, color: active.color }
-      : { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-  });
-
   if (which === 'issues') {
+    issuesPanel.style.display = '';
+    contactsPanel.style.display = 'none';
+    reportsPanel.style.display = 'none';
+    Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    Object.assign(reportsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { rIssues(); } catch(e) { console.error(e); }
   } else if (which === 'contacts') {
+    issuesPanel.style.display = 'none';
+    contactsPanel.style.display = '';
+    reportsPanel.style.display = 'none';
+    Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    Object.assign(reportsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { window._rContacts(); } catch(e) { console.error(e); }
+  } else if (which === 'reports') {
+    issuesPanel.style.display = 'none';
+    contactsPanel.style.display = 'none';
+    reportsPanel.style.display = '';
+    Object.assign(reportsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+    try { if (typeof rReports === 'function') rReports(); } catch(e) { console.error(e); }
   }
-  // 'reports' panel is static content, nothing to render
 };
