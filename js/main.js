@@ -10,10 +10,13 @@ import {
    AUTH GUARD
 ════════════════════════════════ */
 let UID = null;
+let AUTH_UID = null;
+let ROLE = 'admin';
+let IS_ADMIN = true;
 let _booted = false; // prevent duplicate boot on auth token refresh
 
 const ADMIN_EMAIL = 'admin@gatebook.app';
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if (!user) {
     window.location.replace('index.html');
     return;
@@ -31,9 +34,63 @@ onAuthStateChanged(auth, user => {
   // Only boot once — onAuthStateChanged can fire multiple times
   if (_booted) return;
   _booted = true;
-  UID = user.uid;
+  AUTH_UID = user.uid;
+
+  // Resolve role (Apartment Admin vs Flat Owner) + which apartment's data to load.
+  // users/{authUid} is written at signup time (index.html). Accounts created
+  // before this feature existed won't have this doc — treat them as admins
+  // over their own apartment, same as legacy behaviour.
+  try {
+    const uDoc = await getDoc(doc(db, 'users', user.uid));
+    if (uDoc.exists() && uDoc.data().apartmentId) {
+      ROLE = uDoc.data().role === 'owner' ? 'owner' : 'admin';
+      UID  = uDoc.data().apartmentId;
+    } else {
+      ROLE = 'admin';
+      UID  = user.uid;
+    }
+  } catch (e) {
+    console.error('Role lookup failed — defaulting to admin scope', e);
+    ROLE = 'admin';
+    UID  = user.uid;
+  }
+  IS_ADMIN = ROLE === 'admin';
+
   boot();
 });
+
+/* ════════════════════════════════
+   PERMISSIONS — Flat Owners can view but not add/edit/delete
+   payments or expenses. Apartment Admin has full access.
+════════════════════════════════ */
+function requireAdmin(action) {
+  if (IS_ADMIN) return true;
+  toast(`Only the Apartment Admin can ${action || 'do this'}.`, 'error');
+  return false;
+}
+// Hide any add/edit/delete controls for payments & expenses when not admin.
+// Runs after every render via a MutationObserver, so it stays correct no
+// matter which function last redrew the DOM.
+const _restrictedSelectors = [
+  'button[onclick*="_oA("]', 'button[onclick*="_oAFor("]',
+  'button[onclick*="_oPresExp("]', 'button[onclick*="_deletePayment("]',
+  'button[onclick*="_delExp("]', 'button[onclick*="_delSE("]',
+  'button[onclick*="_delSEModal("]',
+  'button[onclick*="_openExpEdit("]', 'button[onclick*="_openSEEdit("]',
+];
+function applyRolePermissions() {
+  if (IS_ADMIN) return;
+  document.querySelectorAll(_restrictedSelectors.join(',')).forEach(el => {
+    el.style.display = 'none';
+  });
+}
+let _rolePermObserver = null;
+function watchRolePermissions() {
+  if (IS_ADMIN || _rolePermObserver) return;
+  applyRolePermissions();
+  _rolePermObserver = new MutationObserver(() => applyRolePermissions());
+  _rolePermObserver.observe(document.body, { childList: true, subtree: true });
+}
 
 window._doSignOut = async function() {
   await signOut(auth);
@@ -152,6 +209,11 @@ function rStats() {
   const all=[...flats.values()];
   const due=all.reduce((s,f)=>s+f.due,0);
   const paid=all.reduce((s,f)=>s+f.paid,0);
+  const totalSocExp = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  // Society expenses are paid out of maintenance collected from flats, so the
+  // balance left over is: money collected minus money spent — not tied to
+  // dues still pending from residents.
+  const outstandingBal = paid - totalSocExp;
   const pc=all.filter(f=>st(f)==='paid').length;
   const pen=all.filter(f=>st(f)==='pending').length;
   const pct=due?Math.round(paid/due*100):0;
@@ -188,9 +250,9 @@ function rStats() {
     </div>
     <div class="scard amber" onclick="window._showPending()" style="cursor:pointer">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-clock"></i></div><span class="sc-trend dn">${pen} pending</span></div>
-      <div class="sc-label">Outstanding Balance</div><div class="sc-value">${inr(due-paid)}</div>
-      <div class="sc-sub">${all.filter(f=>st(f)==='partial').length} partial · ${pen} not paid</div>
-      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round((due-paid)/due*100):0}%"></div></div>
+      <div class="sc-label">Outstanding Balance</div><div class="sc-value" style="${outstandingBal<0?'color:var(--red)':''}">${outstandingBal<0?'-':''}${inr(Math.abs(outstandingBal))}</div>
+      <div class="sc-sub">${inr(paid)} collected · ${inr(totalSocExp)} spent</div>
+      <div class="sc-bar"><div class="sc-fill" style="width:${due?Math.round(Math.max(0,due-paid)/due*100):0}%"></div></div>
     </div>
     <div class="scard red">
       <div class="sc-top"><div class="sc-icon"><i class="ti ti-tool"></i></div><span class="sc-trend dn">${ip} in progress</span></div>
@@ -801,6 +863,7 @@ function toggleOwnerFields(resType) {
 
 /* inline edit of a payment amount in history */
 function openExpEdit(eid) {
+  if (!requireAdmin('edit payments')) return;
   document.getElementById('eedit_'+eid).style.display = 'block';
 }
 function closeExpEdit(eid) {
@@ -828,6 +891,7 @@ async function saveExpEdit(eid, fid) {
 
 /* delete a flat payment record */
 async function delExp(expId, fid) {
+  if (!requireAdmin('delete payments')) return;
   if (!confirm('Delete this payment record?')) return;
   const expDocRef = doc(db,'apartments',UID,'expenses',expId);
   sync('saving');
@@ -852,12 +916,13 @@ function fFS(){
   const b=document.getElementById('fB').value;
   document.getElementById('fF').innerHTML=bfl(b).map(f=>`<option value="${f.flatId}">${f.flatId} — ${f.owner||'(No owner)'}</option>`).join('');
 }
-function oA(){fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
-function oAFor(block,fid){fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oA(){if(!requireAdmin('add or edit payments'))return;fBS();fFS();document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
+function oAFor(block,fid){if(!requireAdmin('add or edit payments'))return;fBS();document.getElementById('fB').value=block;fFS();setTimeout(()=>document.getElementById('fF').value=fid,10);document.getElementById('fD').value=new Date().toISOString().split('T')[0];document.getElementById('fA').value='';document.getElementById('fN').value='';document.getElementById('fS').value='paid';renderCatOpts('fC','flat');document.getElementById('addM').classList.add('open')}
 function cA(){document.getElementById('addM').classList.remove('open');}
 document.getElementById('fB').addEventListener('change',fFS);
 
 async function sE(){
+  if(!requireAdmin('add or edit payments'))return;
   const block=document.getElementById('fB').value,fid=document.getElementById('fF').value;
   const cat=document.getElementById('fC').value,amt=parseInt(document.getElementById('fA').value)||0;
   const dv=document.getElementById('fD').value,s=document.getElementById('fS').value;
@@ -1330,6 +1395,7 @@ window._deleteStayPeriod = async (fid, periodIndex) => {
   }
 };
 window._deletePayment = async (fid, docId) => {
+  if (!requireAdmin('delete payments')) return;
   if (!confirm('Delete this payment record?')) return;
   try {
     const docRef = doc(db, 'apartments', UID, 'expenses', docId);
@@ -2748,6 +2814,7 @@ async function sPres() {
 }
 
 function oPresExp() {
+  if (!requireAdmin('add or edit expenses')) return;
   ['peTitle','peAmt','pePaidBy','peVendor','peNote'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('peDate').value = new Date().toISOString().split('T')[0];
   document.getElementById('peCat').value  = 'Maintenance';
@@ -2759,6 +2826,7 @@ function oPresExp() {
 function cPresExp() { document.getElementById('presExpM').classList.remove('open'); }
 
 async function sPresExp() {
+  if (!requireAdmin('add or edit expenses')) return;
   const title  = document.getElementById('peTitle').value.trim();
   const cat    = document.getElementById('peCat').value;
   const amt    = parseInt(document.getElementById('peAmt').value) || 0;
@@ -2783,6 +2851,7 @@ async function sPresExp() {
 
 
 async function delSE(id) {
+  if (!requireAdmin('delete expenses')) return;
   if (!confirm('Delete this expense?')) return;
   sync('saving');
   try {
@@ -2793,6 +2862,7 @@ async function delSE(id) {
 }
 
 function openSEEdit(id) {
+  if (!requireAdmin('edit expenses')) return;
   document.querySelectorAll('[id^="seedit_"]').forEach(el => el.style.display = 'none');
   const editEl = document.getElementById('seedit_'+id);
   if (editEl) editEl.style.display = 'block';
@@ -3233,6 +3303,7 @@ window._phDelete = async function(eid, fid) {
 
 async function boot(){
   refreshAPP();
+  watchRolePermissions();
   // buildMonthSelect() — month dropdown removed from UI, AM defaults to current month
   try{
     // Load apartment config
