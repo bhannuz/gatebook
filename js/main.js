@@ -4321,11 +4321,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).fw)||0),0);
-  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted);font-weight:700">🏍 ${totTw} · 🚗 ${totFw}</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2);font-weight:700">
+    <td style="padding:12px 12px;font-size:12px;font-weight:800;color:var(--text)" colspan="2">Total (${rows.length} ${rows.length===1?'flat':'flats'})</td>
+    <td style="padding:12px 12px;text-align:center;font-size:11px;color:var(--muted);font-weight:700">🏍 ${totTw} · 🚗 ${totFw}</td>
+    <td style="padding:12px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:14px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:12px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
   </tr>`;
 }
 
