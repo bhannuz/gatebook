@@ -255,27 +255,22 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>
-      @media(max-width:700px){
-        .an-layout-grid{grid-template-columns:1fr!important}
-        .an-layout-grid .chart-col{order:2;margin-top:16px}
-      }
-    </style>
-
-    <!-- 50/50 grid -->
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
       <!-- LEFT COLUMN: Summary cards + payment records table -->
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <!-- Summary cards — only above payment table -->
-        <div id="analyticsTotals" style="display:grid;grid-template-columns:1fr 1fr;gap:10px;"></div>
+        <!-- Summary row: Cards only -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
+          <div id="analyticsTotals" style="display:contents;"></div>
+        </div>
 
         <!-- Payment Records -->
         <div class="exp-records-panel tab-table-wrap">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
           <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
         </div>
-        <div style="max-height:460px;overflow-x:auto;overflow-y:auto;">
+        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
           <table style="width:100%;border-collapse:collapse;table-layout:fixed">
             <colgroup>
               <col style="width:14%"/>
