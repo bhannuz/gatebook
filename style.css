@@ -430,6 +430,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   display:flex;align-items:center;gap:12px;
   position:relative;overflow:hidden;
 }
+
+/* Red top border for Outstanding card */
+.vscard.red {
+  border-top-color: var(--red) !important;
+}
+
+/* Green top border for Collected card */
+.vscard.green {
+  border-top-color: var(--green) !important;
+}
 .vscard-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .vscard-icon.tw {background:var(--indigo-bg);color:var(--indigo)}
 .vscard-icon.fw {background:var(--green-bg); color:var(--green)}
@@ -1098,6 +1108,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .exp-pie-panel,.exp-records-panel{ overflow:hidden !important; }
 
+/* Summary cards - use display:contents to avoid nested grid */
+#analyticsTotals {
+  display: contents !important;
+}
+
 /* Force 2-column layout for Payments/Analytics tab on desktop */
 .an-layout-grid {
   display: grid !important;
@@ -1115,21 +1130,17 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   width: 100% !important;
 }
 
-/* Summary cards - use display:contents to avoid nested grid */
-#analyticsTotals {
-  display: contents !important;
-}
-
-/* Payment records panel in left column */
+/* Payment records panel full width in left column */
 .an-layout-grid .exp-records-panel {
   width: 100% !important;
 }
 
-/* Right column - chart only */
+/* Right column - chart starts from top */
 .an-layout-grid > .chart-col {
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
+  order: 2 !important;
   min-width: 0 !important;
 }
 
@@ -1139,47 +1150,36 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 
 @media (max-width: 700px) {
+  /* Stack to 1 column on mobile */
   .an-layout-grid {
     display: grid !important;
     grid-template-columns: 1fr !important;
     gap: 12px !important;
   }
   
-  /* Left column full width on mobile */
+  /* Left column full width */
   .an-layout-grid > div:first-child {
     display: flex !important;
     flex-direction: column !important;
     gap: 10px !important;
     width: 100% !important;
-    order: 1 !important;
   }
   
-  /* Summary cards stay 2-column on mobile */
-  .an-layout-grid > div:first-child > div:first-child {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-  }
-  
-  /* Chart stacks below table on mobile */
+  /* Chart stacks below on mobile */
   .an-layout-grid .chart-col {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
     order: 2 !important;
-    margin-top: 12px !important;
+    width: 100% !important;
+    margin-top: 0 !important;
   }
-}
-
-/* Ensure table doesn't exceed grid container */
-.an-layout-grid .exp-records-panel > div:last-child {
-  max-height: 420px !important;
-  overflow-y: auto !important;
-}
-
-/* Smaller table height on mobile */
-@media (max-width: 700px) {
+  
+  /* Reduce table height on mobile */
   .an-layout-grid .exp-records-panel > div:last-child {
     max-height: 300px !important;
   }
+}
+
+/* Table height on desktop */
+.an-layout-grid .exp-records-panel > div:last-child {
+  max-height: 420px !important;
+  overflow-y: auto !important;
 }
