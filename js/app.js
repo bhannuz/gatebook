@@ -255,54 +255,52 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>
-      @media(max-width:700px){
-        .an-layout-grid{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
-        .an-layout-grid>div:first-child{display:flex!important;flex-direction:column!important;width:100%!important}
-        .an-layout-grid .chart-col{display:flex!important;flex-direction:column!important;width:100%!important;order:2!important;margin-top:12px!important}
-      }
-    </style>
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2;margin-top:12px}}</style>
+    
+    <!-- Main grid: left column (cards+table), right column (chart) -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
-      <!-- LEFT COLUMN: Summary cards + payment records table -->
+      <!-- LEFT COLUMN: Summary cards + Payment Records Table -->
       <div style="display:flex;flex-direction:column;gap:10px;">
-        <!-- Summary row: Cards only -->
+        
+        <!-- Summary cards - 2 column grid above table -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;">
           <div id="analyticsTotals" style="display:contents;"></div>
         </div>
 
-        <!-- Payment Records -->
+        <!-- Payment Records Table -->
         <div class="exp-records-panel tab-table-wrap">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
-          <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
+            <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
+          </div>
+          <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+              <colgroup>
+                <col style="width:14%"/>
+                <col style="width:32%"/>
+                <col style="width:16%"/>
+                <col style="width:22%"/>
+                <col style="width:16%"/>
+              </colgroup>
+              <thead style="position:sticky;top:0;z-index:2;">
+                <tr style="background:var(--surface3)">
+                  <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
+                  <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
+                  <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">🏍/🚗</th>
+                  <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap">Balance</th>
+                  <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">Status</th>
+                </tr>
+              </thead>
+              <tbody id="anPayTable"></tbody>
+            </table>
+          </div>
         </div>
-        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed">
-            <colgroup>
-              <col style="width:14%"/>
-              <col style="width:32%"/>
-              <col style="width:16%"/>
-              <col style="width:22%"/>
-              <col style="width:16%"/>
-            </colgroup>
-            <thead style="position:sticky;top:0;z-index:2;">
-              <tr style="background:var(--surface3)">
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
-                <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">🏍/🚗</th>
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap">Balance</th>
-                <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">Status</th>
-              </tr>
-            </thead>
-            <tbody id="anPayTable"></tbody>
-          </table>
-        </div>
-      </div><!-- /payment records table -->
-      </div><!-- /left column flex container -->
 
-      <!-- RIGHT: payment status chart -->
+      </div><!-- /left column -->
+
+      <!-- RIGHT COLUMN: Payment Status Chart - starts from same row as cards -->
       <div class="chart-col">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
           </div>
@@ -312,16 +310,11 @@
           <div id="payTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
           <div id="payLegend" style="display:flex;flex-direction:column;gap:8px;font-size:11px;max-height:200px;overflow-y:auto;"></div>
         </div>
-      </div><!-- /right col -->
+      </div>
 
     </div><!-- /main grid -->
 
   </div><!-- /#analyticsView -->
-
-  <!-- STRUCTURE VIEW -->
-  <div id="structureView" style="display:none;padding:8px 14px 14px">
-
-    <!-- President banner (injected by rStructure) -->
     <div id="presBanner" style="margin-bottom:10px;"></div>
 
     <!-- Residents toolbar: single row -->
