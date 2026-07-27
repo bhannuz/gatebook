@@ -255,7 +255,13 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
+    <style>
+      @media(max-width:700px){
+        .an-layout-grid{display:grid!important;grid-template-columns:1fr!important;gap:12px!important}
+        .an-layout-grid>div:first-child{display:flex!important;flex-direction:column!important;width:100%!important}
+        .an-layout-grid .chart-col{display:flex!important;flex-direction:column!important;width:100%!important;order:2!important;margin-top:12px!important}
+      }
+    </style>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;" class="an-layout-grid">
 
       <!-- LEFT COLUMN: Summary cards + payment records table -->
