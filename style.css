@@ -777,7 +777,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   #analyticsView,#presView,#structureView,#iView{padding-top:4px!important}
 
   /* ── Stat chips: 2-col on mobile ── */
-  #analyticsTotals{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:8px!important}
   #fundRow{grid-template-columns:1fr 1fr!important}
 
   /* ── Chart panel: full-width card ── */
@@ -1114,24 +1113,16 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   flex-direction: column !important;
   gap: 10px !important;
   width: 100% !important;
-  grid-column: 1 !important;
 }
 
-/* Summary cards - constrained to left column only */
+/* Summary cards - use display:contents to avoid nested grid */
 #analyticsTotals {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
-  width: 100% !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  order: 1 !important;
+  display: contents !important;
 }
 
 /* Payment records panel in left column */
 .an-layout-grid .exp-records-panel {
   width: 100% !important;
-  order: 2 !important;
 }
 
 /* Right column - chart only */
@@ -1139,9 +1130,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   display: flex !important;
   flex-direction: column !important;
   width: 100% !important;
-  order: 2 !important;
   min-width: 0 !important;
-  grid-column: 2 !important;
 }
 
 .an-layout-grid .exp-pie-panel {
@@ -1151,52 +1140,46 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 
 @media (max-width: 700px) {
   .an-layout-grid {
+    display: grid !important;
     grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
+  
+  /* Left column full width on mobile */
+  .an-layout-grid > div:first-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+    order: 1 !important;
+  }
+  
+  /* Summary cards stay 2-column on mobile */
+  .an-layout-grid > div:first-child > div:first-child {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+  }
+  
+  /* Chart stacks below table on mobile */
   .an-layout-grid .chart-col {
-    order: 2;
-    margin-top: 16px;
-  }
-}
-
-/* Match the Expenses tab's earlier stacking breakpoints so Payments doesn't
-   stay forced into 2 columns on tablets/phones between 701–1024px. */
-@media (max-width: 1024px) {
-  .an-layout-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .an-layout-grid .chart-col {
-    order: 2;
-  }
-}
-@media (max-width: 768px) {
-  .an-layout-grid {
-    grid-template-columns: 1fr !important;
-  }
-  .an-layout-grid .chart-col {
-    order: 2;
-    margin-top: 16px;
-  }
-  .an-layout-grid .chart-wrap {
-    height: 200px !important;
-  }
-}
-@media (max-width: 480px) {
-  .an-layout-grid .chart-wrap {
-    height: 160px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    order: 2 !important;
+    margin-top: 12px !important;
   }
 }
 
 /* Ensure table doesn't exceed grid container */
 .an-layout-grid .exp-records-panel > div:last-child {
-  max-height: 500px !important;
+  max-height: 420px !important;
   overflow-y: auto !important;
 }
 
-/* Prevent any parent flex/grid from affecting card and grid layout */
-#analyticsView > .an-layout-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 12px !important;
-  width: 100% !important;
+/* Smaller table height on mobile */
+@media (max-width: 700px) {
+  .an-layout-grid .exp-records-panel > div:last-child {
+    max-height: 300px !important;
+  }
 }
