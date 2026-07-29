@@ -267,7 +267,7 @@
 
       <!-- RIGHT COLUMN ROW 1-2: Payment Status Chart starting from top -->
       <div class="chart-col" style="grid-column:2;grid-row:1/3;width:100%;display:flex;flex-direction:column;">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:var(--r-lg);padding:14px;overflow:hidden;border:1px solid var(--border2);flex:1;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:var(--r-lg);padding:14px;overflow:hidden;border:1.5px solid var(--border2);flex:1;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
           </div>
@@ -280,7 +280,7 @@
       </div>
 
       <!-- LEFT COLUMN ROW 2: Payment Records Table -->
-      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
+      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
           <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
         </div>
