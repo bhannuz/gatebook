@@ -1,6 +1,6 @@
 /* ════════════════════════════════
    GATEBOOK — GLOBAL STYLES
-════════════════════════════════ */
+════════════════════════════════*/
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
   --bg:#F0F4FF;--bg2:#E8EDFF;--surface:#FFFFFF;--surface2:#F7F9FF;--surface3:#EDF0FB;
