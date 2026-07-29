@@ -335,7 +335,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   overflow:hidden;
   position:relative;
   border:1px solid var(--border2);
-  border-top:3px solid #6366F1;
 }
 /* applies to mem-table, veh-table, analytics inline tables */
 .mem-table,.veh-table{width:100%;border-collapse:collapse}
