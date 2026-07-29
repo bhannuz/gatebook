@@ -120,7 +120,7 @@
       <button class="vtab" data-v="president" onclick="switchView('president')"><i class="ti ti-receipt"></i> Expenses</button>
       <button class="vtab" data-v="structure" onclick="switchView('structure')"><i class="ti ti-users"></i> Residents</button>
       <button class="vtab" data-v="issues" onclick="switchView('issues')">
-        <i class="ti ti-alert-circle"></i> Services
+        <i class="ti ti-alert-circle"></i> Issues
         <span class="vtab-badge" id="openCnt">0</span>
       </button>
     </div>
@@ -129,73 +129,18 @@
   <div id="phAct" style="display:flex;gap:12px;justify-content:flex-start;align-items:center;margin-bottom:0;margin-top:0;flex-wrap:wrap;"></div>
   <div id="statsRow" style="display:none"></div>
 
-  <!-- SERVICES VIEW (with Issues / Contacts / Reports sub-tabs) -->
+  <!-- ISSUES VIEW -->
   <div id="iView" style="display:none">
-
-    <!-- Sub-tabs -->
-    <div style="display:flex;gap:6px;padding:0 12px;margin-bottom:10px">
-      <button id="issSubTabIssues" onclick="window._issSubTab('issues')"
-        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--indigo);background:var(--indigo);color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
-        <i class="ti ti-alert-circle" style="font-size:14px"></i> Issues
-      </button>
-      <button id="issSubTabContacts" onclick="window._issSubTab('contacts')"
-        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
-        <i class="ti ti-address-book" style="font-size:14px"></i> Contacts
-      </button>
-      <button id="issSubTabReports" onclick="window._issSubTab('reports')"
-        style="flex:1;height:34px;border-radius:9px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:12px;font-weight:700;cursor:pointer;font-family:var(--font);display:inline-flex;align-items:center;justify-content:center;gap:6px">
-        <i class="ti ti-file-text" style="font-size:14px"></i> Reports
-      </button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
+      <select id="issStatusFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="fIss(this.value)">
+        <option value="all">All Issues</option>
+        <option value="open">🔴 Open</option>
+        <option value="in-progress">🟡 In Progress</option>
+        <option value="resolved">🟢 Resolved</option>
+      </select>
+      <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
     </div>
-
-    <!-- ISSUES SUB-PANEL -->
-    <div id="issSubPanelIssues" style="padding:0 12px 12px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:1rem">
-        <select id="issStatusFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="fIss(this.value)">
-          <option value="all">All Issues</option>
-          <option value="open">🔴 Open</option>
-          <option value="in-progress">🟡 In Progress</option>
-          <option value="resolved">🟢 Resolved</option>
-        </select>
-        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oRI()"><i class="ti ti-plus"></i> Raise Issue</button>
-      </div>
-      <div class="tab-table-wrap red" id="iList"></div>
-    </div>
-
-    <!-- CONTACTS SUB-PANEL -->
-    <div id="issSubPanelContacts" style="display:none;padding:0 12px 12px">
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-        <select id="contactCatFilter" style="height:32px;font-size:12px;padding:0 10px;border-radius:6px;border:1px solid var(--border2);background:#fff;color:var(--text);font-family:var(--font);cursor:pointer" onchange="window._rContacts()">
-          <option value="all">All Categories</option>
-          <option value="Plumber">🔧 Plumber</option>
-          <option value="Electrician">⚡ Electrician</option>
-          <option value="Maid">🧹 Maid</option>
-          <option value="Security">🔒 Security</option>
-          <option value="Gardener">🌳 Gardener</option>
-          <option value="Carpenter">🪚 Carpenter</option>
-          <option value="Painter">🎨 Painter</option>
-          <option value="Pest Control">🐜 Pest Control</option>
-          <option value="AC Repair">❄️ AC Repair</option>
-          <option value="Other">📋 Other</option>
-        </select>
-        <button class="btn btn-indigo btn-sm" style="margin-left:auto" onclick="window._oAC()"><i class="ti ti-plus"></i> Add Contact</button>
-      </div>
-      <div id="contactsList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px"></div>
-    </div>
-
-    <!-- REPORTS SUB-PANEL -->
-    <div id="issSubPanelReports" style="display:none;padding:0 12px 12px">
-      <div style="background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);padding:28px 20px;text-align:center">
-        <div style="width:52px;height:52px;border-radius:14px;background:var(--indigo-bg);color:var(--indigo);display:flex;align-items:center;justify-content:center;font-size:24px;margin:0 auto 14px">
-          <i class="ti ti-file-text"></i>
-        </div>
-        <div style="font-size:14px;font-weight:800;color:var(--text);margin-bottom:6px">Monthly Report</div>
-        <div style="font-size:12px;color:var(--text2);max-width:320px;margin:0 auto 18px;line-height:1.6">
-          Generate a printable summary of payments collected and expenses for any month — ready to share with residents.
-        </div>
-        <button class="btn btn-indigo" onclick="window._oMonthlySummary()"><i class="ti ti-file-text"></i> Generate Monthly Report</button>
-      </div>
-    </div>
+    <div class="tab-table-wrap red" id="iList"></div>
   </div><!-- /#iView -->
 
   <!-- RESIDENTS VIEW (Members + Vehicles merged) -->
@@ -232,11 +177,11 @@
       <div class="chart-col" style="display:flex;flex-direction:column;gap:10px;">
 
         <!-- Chart panel -->
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-chart-pie" style="color:var(--indigo)"></i> By Category
           </div>
-          <div class="chart-wrap" style="width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;">
+          <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
             <canvas id="expTabPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
           <div id="expTabTooltip" style="display:none;position:fixed;background:rgba(0,0,0,0.82);color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;pointer-events:none;z-index:9999;white-space:nowrap;"></div>
@@ -255,22 +200,52 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important;gap:12px!important}.an-layout-grid .chart-col{grid-column:1!important;grid-row:3!important;margin-top:0!important}}</style>
-    
-    <!-- Main grid: 2 columns, 2 rows with 12px gap -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:12px;align-items:start;width:100%;" class="an-layout-grid">
+    <!-- Stat chips: always 2-col, above the main grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px" id="analyticsTotals"></div>
 
-      <!-- LEFT COLUMN ROW 1: Summary cards (Collected | Outstanding) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;grid-column:1;grid-row:1;width:100%;align-items:stretch;">
-        <div id="analyticsTotals"></div>
-      </div>
+    <!-- 2-col grid: left = table, right = chart -->
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important}.an-layout-grid .chart-col{order:2}}</style>
+    <div style="display:grid;grid-template-columns:55fr 45fr;gap:14px;align-items:start" class="an-layout-grid">
 
-      <!-- RIGHT COLUMN ROW 1-2: Payment Status Chart starting from top -->
-      <div class="chart-col" style="grid-column:2;grid-row:1/3;width:100%;display:flex;flex-direction:column;">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:var(--r-lg);padding:14px;overflow:hidden;border:1.5px solid var(--border2);flex:1;">
-          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
-            <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
+      <!-- LEFT: payment table -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- placeholder kept for structure -->
+
+        <!-- Payment Records Table -->
+        <div class="exp-records-panel tab-table-wrap">
+          <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px">
+            <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
           </div>
+          <div style="overflow-x:auto;max-height:420px;overflow-y:auto;">
+            <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+              <colgroup>
+                <col style="width:17%"/>
+                <col style="width:28%"/>
+                <col style="width:13%"/>
+                <col style="width:18%"/>
+                <col style="width:24%"/>
+              </colgroup>
+              <thead style="position:sticky;top:0;z-index:1">
+                <tr style="background:var(--surface3)">
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Flat</th>
+                  <th style="padding:7px 6px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Owner</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Status</th>
+                  <th style="padding:7px 4px;text-align:center;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">🏍/🚗</th>
+                  <th style="padding:7px 6px;text-align:right;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.3px;border-bottom:1.5px solid var(--border2);white-space:nowrap">Pending</th>
+                </tr>
+              </thead>
+              <tbody id="anPayTable"></tbody>
+            </table>
+          </div>
+        </div>
+
+      </div><!-- /left col -->
+
+      <!-- RIGHT: chart -->
+      <div class="chart-col" style="display:flex;flex-direction:column;gap:10px">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;">
+          <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px;"><i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status</div>
           <div class="chart-wrap" style="width:100%;height:200px;position:relative;margin-bottom:20px;">
             <canvas id="payPie" style="position:absolute;inset:0;width:100%;height:100%;cursor:pointer;"></canvas>
           </div>
@@ -279,35 +254,16 @@
         </div>
       </div>
 
-      <!-- LEFT COLUMN ROW 2: Payment Records Table -->
-      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;padding:0;margin:0;">
-        <div style="padding:12px 14px;border-bottom:1.5px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;">
-          <i class="ti ti-table" style="color:var(--indigo);margin-right:6px;"></i>Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;margin-left:8px;"></span>
-        </div>
-        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;width:100%;box-sizing:border-box;">
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
-            <colgroup>
-              <col style="width:16%"/>
-              <col style="width:34%"/>
-              <col style="width:14%"/>
-              <col style="width:22%"/>
-              <col style="width:14%"/>
-            </colgroup>
-            <thead style="position:sticky;top:0;z-index:2;background:var(--surface3);">
-              <tr>
-                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap;">Flat</th>
-                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;">Owner</th>
-                <th style="padding:10px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap;">Veh</th>
-                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap;">Balance</th>
-                <th style="padding:10px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;">Status</th>
-              </tr>
-            </thead>
-            <tbody id="anPayTable"></tbody>
-          </table>
-        </div>
-      </div>
+    </div><!-- /main grid -->
 
   </div><!-- /#analyticsView -->
+
+  <!-- STRUCTURE VIEW -->
+  <div id="structureView" style="display:none;padding:8px 14px 14px">
+
+    <!-- President banner (injected by rStructure) -->
+    <div id="presBanner" style="margin-bottom:10px;"></div>
+
     <!-- Residents toolbar: single row -->
     <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
       <button onclick="window._openStructureManager()"
@@ -758,28 +714,6 @@
   </div>
 </div>
 
-<!-- CORPUS FUND MODAL -->
-<div id="corpusM" style="display:none;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closeCorpusFund()">
-  <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:90vh;overflow-y:auto">
-    <div style="display:flex;align-items:center;justify-content:space-between;">
-      <div style="font-size:16px;font-weight:800;color:var(--text)"><i class="ti ti-coin" style="color:var(--indigo)"></i> Corpus Fund</div>
-      <button onclick="window._closeCorpusFund()" style="background:var(--surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
-    </div>
-    <div style="font-size:13px;color:var(--text2);line-height:1.5">
-      Set the society's corpus fund amount. This will be added to the outstanding balance.
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Amount (₹)</label>
-      <input type="number" id="corpusInput" placeholder="Enter amount" style="padding:10px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:var(--font);outline:none;background:var(--surface2)" />
-    </div>
-    <div id="corpusAlert" style="display:none;padding:10px 12px;background:var(--red-bg);color:var(--red);border-radius:6px;font-size:12px;font-weight:600"></div>
-    <div style="display:flex;gap:10px">
-      <button id="corpusSaveBtn" onclick="window._saveCorpusFund()" style="flex:1;padding:10px;background:var(--indigo);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Save</button>
-      <button onclick="window._closeCorpusFund()" style="flex:1;padding:10px;background:var(--surface2);color:var(--text);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Cancel</button>
-    </div>
-  </div>
-</div>
-
 <!-- BOTTOM NAV BAR (mobile only) -->
 <nav class="bottom-nav-bar" id="bottomNav" aria-label="Main navigation">
   <button class="bnav-item active" data-v="analytics" onclick="switchView('analytics')">
@@ -793,7 +727,7 @@
     <i class="ti ti-building"></i>Structure
   </button>
   <button class="bnav-item" data-v="issues" onclick="switchView('issues')" style="position:relative">
-    <i class="ti ti-alert-circle"></i>Services
+    <i class="ti ti-alert-circle"></i>Issues
     <span class="bnav-badge" id="bnavIssueCnt" style="display:none"></span>
   </button>
 </nav>

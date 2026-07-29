@@ -2558,7 +2558,7 @@ function rPresident() {
   const totalAllExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
 
   // Build period label for the chip
-  let periodLabel = 'Current Month';
+  let periodLabel = 'All Time';
   if (yf !== 'all' && mf !== 'all') {
     periodLabel = new Date(mf+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
   } else if (yf !== 'all') {
@@ -2570,7 +2570,7 @@ function rPresident() {
   }
 
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 red"><div class="fcard2-label">Total Expenses</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
+    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
     <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
@@ -3268,7 +3268,6 @@ async function boot(){
 
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
-    if(aptDoc.exists() && aptDoc.data().corpusFund) window._aptCorpusFund = aptDoc.data().corpusFund;
     await loadCats();
 
     // Check if society is already configured (registered via register.html)
@@ -3725,20 +3724,13 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 
   // Aggregate all payment transactions for the period from the expenses collection
   const byFlat = new Map();
-  exps.forEach((records, flatIdKey) => {
+  exps.forEach((records, fid) => {
     records.forEach(e => {
       if (!matchM(e.month)) return;
-      // Find the document ID for this flatId
-      let docId = flatIdKey; // fallback
-      flats.forEach((f, fid) => {
-        if (f.flatId === flatIdKey) {
-          docId = fid;
-        }
-      });
-      const f = flats.get(docId);
+      const f = flats.get(fid);
       if (!matchB(f?.block || e.block || '')) return;
-      if (!byFlat.has(flatIdKey)) byFlat.set(flatIdKey, { flatId:flatIdKey, docId, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
-      const rec = byFlat.get(flatIdKey);
+      if (!byFlat.has(fid)) byFlat.set(fid, { flatId:fid, paid:0, due:0, owner:'', resType:'owner', block:'', exps:[] });
+      const rec = byFlat.get(fid);
       rec.paid += (e.amt || 0);
       rec.exps.push(e);
     });
@@ -3746,7 +3738,7 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
 
   // Cross-reference with current flat records for owner/due/resType
   byFlat.forEach((rec, fid) => {
-    const f = flats.get(rec.docId);
+    const f = flats.get(fid);
     if (f) {
       rec.owner   = f.owner   || rec.owner;
       rec.due     = f.due     || rec.due;
@@ -3763,9 +3755,8 @@ function _buildFlatSummary(filterType, selMonth, selYear, selBlock) {
   if (filterType === 'month') {
     flats.forEach((f, fid) => {
       if (!matchB(f.block || '')) return;
-      const flatId = f.flatId || fid;
-      if (!byFlat.has(flatId)) {
-        byFlat.set(flatId, { flatId, docId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
+      if (!byFlat.has(fid)) {
+        byFlat.set(fid, { flatId:fid, paid:0, due:f.due||0, owner:f.owner||'', resType:f.resType||'owner', block:f.block||'', exps:[] });
       }
     });
   }
@@ -3993,10 +3984,9 @@ function _anRender() {
       due = due * (flatMonths.size || 1);
     }
 
-    // Collected: sum matching payment records (only positive amounts = payments)
+    // Collected: sum matching expense records
     const collected = (exps.get(fid) || [])
       .filter(inPeriod)
-      .filter(e => (e.amt || 0) > 0)  // Only count payments, not expenses
       .reduce((s, e) => s + (e.amt || 0), 0);
 
     totalDue       += due;
@@ -4009,29 +3999,6 @@ function _anRender() {
 
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
-
-  /* ── Calculate TOTAL outstanding (all dues - all payments) ── */
-  let totalAllDues = 0;
-  let totalAllPayments = 0;
-  
-  flats.forEach((f, fid) => {
-    if (!(f.owner || '').trim()) return; // skip vacant
-    const flatId = f.flatId || fid;
-    // Get all expenses/payments for this flat
-    const allFlatsExps = exps.get(flatId) || [];
-    // Count active months with data
-    const monthsWithData = new Set(allFlatsExps.map(e => (e.month || (e.rawDate || '').slice(0, 7)))).size;
-    const monthsCount = Math.max(1, monthsWithData);
-    // Total due = monthly amount × number of months
-    const dueTillNow = (f.due || 0) * monthsCount;
-    // Total paid = sum of all payments
-    const paidTillNow = allFlatsExps.reduce((sum, e) => sum + (e.amt || 0), 0);
-    
-    totalAllDues += dueTillNow;
-    totalAllPayments += paidTillNow;
-  });
-  
-  const totalOutstanding = Math.max(0, totalAllDues - totalAllPayments);
 
   /* ── Pie chart segments ── */
   const segments = [
@@ -4050,41 +4017,24 @@ function _anRender() {
 
   /* ── Summary cards ── */
   const cardsDiv = document.getElementById('analyticsTotals');
-  const aptCorpus = window._aptCorpusFund || 0;
-  
-  // Format month from "2026-07" to "July-26"
-  const formatMonthName = (monthStr) => {
-    if (!monthStr || monthStr.length < 7) return monthStr;
-    const [year, month] = monthStr.split('-');
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const monthIndex = parseInt(month) - 1;
-    const yearShort = year ? year.slice(-2) : '';
-    return `${monthNames[monthIndex]}-${yearShort}`;
-  };
-  const grandOutstanding = outstanding + aptCorpus;
-  
-  // For current month data
-  const curMonth = selectedMonth || AM;
-  const curMonthTotal = [...flats.values()].reduce((s,f) => s + (f.due||0), 0);
-  
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
       <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)} <span style="font-size:11px;font-weight:700;color:var(--text2)">/ ${inr(curMonthTotal)}</span></div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:4px">
-          ${selectedMonth ? formatMonthName(selectedMonth) : (selectedYear ? selectedYear : 'Current month')}
-          ${selBlock && selBlock !== 'all' ? ` · Block ${selBlock}` : ''}
-        </div>
+        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
+        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}</div>
       </div>
     </div>
-    <div class="vscard red" style="display:flex;align-items:center;justify-content:space-between">
-      <div style="flex:1">
-        <div class="vscard-label">Outstanding Bal</div>
-        <div class="vscard-val" style="color:var(--red);margin:0">${inr((outstanding || 0) + (aptCorpus || 0))}</div>
+    <div class="vscard red">
+      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
+      <div>
+        <div class="vscard-label">Outstanding</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
+        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
+        <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
       </div>
-      <button onclick="window._openCorpusFund();event.stopPropagation();" title="Edit Corpus Fund" style="background:none;border:none;cursor:pointer;color:#8B5CF6;font-size:24px;padding:8px;margin:0;z-index:10;pointer-events:auto"><i class="ti ti-wallet"></i></button>
     </div>`;
 
   /* ── Payment records table ── */
@@ -4164,72 +4114,6 @@ function closePending() {
 window._showPending  = showPending;
 window._closePending = closePending;
 
-/* Corpus Fund Modal */
-window._openCorpusFund = function() {
-  let modal = document.getElementById('corpusM');
-  
-  // If modal doesn't exist, create it
-  if (!modal) {
-    console.log('Creating corpus modal dynamically...');
-    const modalHTML = `<div id="corpusM" style="display:flex;position:fixed;inset:0;z-index:1500;background:rgba(0,0,0,0.5);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closeCorpusFund()">
-      <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:500px;padding:20px;display:flex;flex-direction:column;gap:16px;max-height:90vh;overflow-y:auto">
-        <div style="display:flex;align-items:center;justify-content:space-between;">
-          <div style="font-size:16px;font-weight:800;color:var(--text)"><i class="ti ti-wallet" style="color:var(--indigo);font-size:18px"></i> Corpus Fund</div>
-          <button onclick="window._closeCorpusFund()" style="background:var(--surface2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center"><i class="ti ti-x"></i></button>
-        </div>
-        <div style="font-size:13px;color:var(--text2);line-height:1.5">
-          Set the society's corpus fund amount. This will be added to the outstanding balance.
-        </div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <label style="font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Amount (₹)</label>
-          <input type="number" id="corpusInput" placeholder="Enter amount" style="padding:10px 12px;border:1.5px solid var(--border2);border-radius:8px;font-size:13px;font-family:var(--font);outline:none;background:var(--surface2)" />
-        </div>
-        <div id="corpusAlert" style="display:none;padding:10px 12px;background:var(--red-bg);color:var(--red);border-radius:6px;font-size:12px;font-weight:600"></div>
-        <div style="display:flex;gap:10px">
-          <button id="corpusSaveBtn" onclick="window._saveCorpusFund()" style="flex:1;padding:10px;background:var(--indigo);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Save</button>
-          <button onclick="window._closeCorpusFund()" style="flex:1;padding:10px;background:var(--surface2);color:var(--text);border:none;border-radius:8px;font-weight:700;cursor:pointer;font-family:var(--font);font-size:13px">Cancel</button>
-        </div>
-      </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    modal = document.getElementById('corpusM');
-  }
-  
-  const input = document.getElementById('corpusInput');
-  const alert = document.getElementById('corpusAlert');
-  if (input) input.value = window._aptCorpusFund || '';
-  if (alert) alert.style.display = 'none';
-  if (modal) {
-    modal.style.display = 'flex';
-    console.log('✅ Corpus modal opened');
-  }
-};
-window._closeCorpusFund = function() {
-  const modal = document.getElementById('corpusM');
-  if (modal) modal.style.display = 'none';
-};
-window._saveCorpusFund = async function() {
-  const val = parseInt(document.getElementById('corpusInput')?.value) || 0;
-  const alert = document.getElementById('corpusAlert');
-  const btn = document.getElementById('corpusSaveBtn');
-  if (!btn) return;
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
-  try {
-    await updateDoc(doc(db,'apartments',UID), { corpusFund: val });
-    window._aptCorpusFund = val;
-    window._closeCorpusFund();
-    toast('Corpus fund updated ✓');
-    rAll();
-  } catch(e) {
-    if(alert){ alert.textContent='Save failed. Check console.'; alert.style.display='block'; }
-    console.error('Corpus save error:', e);
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Save';
-  }
-};
-
 function anSetStatus(s) {
   _anStatus = s;
   const el = document.getElementById('anStatusFilter');
@@ -4288,12 +4172,16 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const s        = f._status || 'pending';
     const bal      = (f.due||0) - (f.paid||0);
     const balColor = bal > 0 ? 'var(--red)' : 'var(--green)';
-    const v        = vehicles.get(f.docId) || {};
+    const v        = vehicles.get(f.flatId) || {};
     const tw       = parseInt(v.tw) || 0;
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="font-size:12px;font-weight:700;color:var(--text)">${tw}/${fw}</span>`;
+      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
+           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
+           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
+           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
+         </span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
     const typeBadge = isVacant
@@ -4306,26 +4194,24 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:10px 8px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border2);vertical-align:middle;white-space:nowrap;text-align:left">${f.flatId}</td>
-      <td style="padding:10px 8px;border-bottom:1px solid var(--border2);overflow:hidden;vertical-align:middle;text-align:left">
+      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
+      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border2);vertical-align:middle;font-size:11px">${vehCell}</td>
-      <td style="padding:10px 8px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border2);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
-      <td style="padding:10px 8px;text-align:center;border-bottom:1px solid var(--border2);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
     </tr>`;
   }).join('');
 
   // Totals row
   const totBal = rows.reduce((s,f)=>s+((f.due||0)-(f.paid||0)),0);
-  const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).tw)||0),0);
-  const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.docId)||{}).fw)||0),0);
-  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2);font-weight:700">
-    <td style="padding:12px 8px;font-size:12px;font-weight:800;color:var(--text)" colspan="2">Total (${rows.length} ${rows.length===1?'flat':'flats'})</td>
-    <td style="padding:12px 8px;text-align:center;font-size:11px;color:var(--muted);font-weight:700">${totTw}/${totFw}</td>
-    <td style="padding:12px 8px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:14px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
-    <td style="padding:12px 8px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+  const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
+  const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
+  tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
+    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
   </tr>`;
 }
 
@@ -4900,11 +4786,9 @@ window._delContact = async function() {
 window._issSubTab = function(which) {
   const issuesBtn    = document.getElementById('issSubTabIssues');
   const contactsBtn  = document.getElementById('issSubTabContacts');
-  const reportsBtn   = document.getElementById('issSubTabReports');
   const issuesPanel  = document.getElementById('issSubPanelIssues');
   const contactsPanel= document.getElementById('issSubPanelContacts');
-  const reportsPanel = document.getElementById('issSubPanelReports');
-  if (!issuesBtn || !contactsBtn || !reportsBtn || !issuesPanel || !contactsPanel || !reportsPanel) return;
+  if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
 
   const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
   const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
@@ -4912,26 +4796,14 @@ window._issSubTab = function(which) {
   if (which === 'issues') {
     issuesPanel.style.display = '';
     contactsPanel.style.display = 'none';
-    reportsPanel.style.display = 'none';
     Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
     Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    Object.assign(reportsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { rIssues(); } catch(e) { console.error(e); }
-  } else if (which === 'contacts') {
+  } else {
     issuesPanel.style.display = 'none';
     contactsPanel.style.display = '';
-    reportsPanel.style.display = 'none';
     Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
     Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    Object.assign(reportsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { window._rContacts(); } catch(e) { console.error(e); }
-  } else if (which === 'reports') {
-    issuesPanel.style.display = 'none';
-    contactsPanel.style.display = 'none';
-    reportsPanel.style.display = '';
-    Object.assign(reportsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
-    try { if (typeof rReports === 'function') rReports(); } catch(e) { console.error(e); }
   }
 };
