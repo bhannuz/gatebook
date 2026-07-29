@@ -1113,8 +1113,6 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .exp-pie-panel,.exp-records-panel{ 
   overflow:hidden !important;
-  border: 1px solid var(--border2) !important;
-  border-radius: var(--r-lg) !important;
 }
 
 /* Add margin/gap to payment records panel */
@@ -1132,32 +1130,29 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 
 /* Cards container - MUST be 2-column grid */
+/* Summary cards container - 2 column grid with 12px gap */
 .an-layout-grid > div:first-child {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
-  gap: 10px !important;
+  gap: 12px !important;
   width: 100% !important;
-  grid-column: 1 !important;
-  grid-row: 1 !important;
-  align-items: stretch !important;
 }
 
-/* Summary cards - use display:contents to make children direct grid items */
+/* Summary cards - direct grid items */
 #analyticsTotals {
-  display: contents !important;
+  display: contents;
 }
 
-/* Vscard - must be full width grid items with proper styling */
-#analyticsTotals .vscard {
+/* Vscard elements - full width with proper borders */
+#analyticsTotals > .vscard {
   width: 100% !important;
   min-width: 0 !important;
-  flex-shrink: 0 !important;
   display: flex !important;
-  flex-wrap: nowrap !important;
+  border: 1px solid var(--border2) !important;
   border-radius: var(--r-lg) !important;
 }
 
-/* Force 2-column, 2-row grid layout for Payments tab on desktop */
+/* Main grid layout - 2 columns, 2 rows, 12px gap */
 .an-layout-grid {
   display: grid !important;
   grid-template-columns: 1fr 1fr !important;
@@ -1167,7 +1162,14 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   width: 100% !important;
 }
 
-/* Right column - chart spans rows 1-2 on desktop */
+/* Payment records panel - full width with border */
+.an-layout-grid .exp-records-panel {
+  width: 100% !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r-lg) !important;
+}
+
+/* Chart column - spans rows 1-2 */
 .an-layout-grid > .chart-col {
   display: flex !important;
   flex-direction: column !important;
@@ -1175,8 +1177,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   min-width: 0 !important;
 }
 
-.an-layout-grid .exp-records-panel {
+/* Pie panel - full width with border */
+.an-layout-grid .exp-pie-panel {
   width: 100% !important;
+  min-width: 0 !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r-lg) !important;
 }
 
 .an-layout-grid .exp-pie-panel {
