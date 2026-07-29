@@ -334,7 +334,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-radius:var(--r-lg);
   overflow:hidden;
   position:relative;
-  border:1px solid var(--border2);
+  border:1.5px solid var(--border2);
 }
 /* applies to mem-table, veh-table, analytics inline tables */
 .mem-table,.veh-table{width:100%;border-collapse:collapse}
@@ -422,11 +422,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Unified summary stat cards ── */
 .tab-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
 .vscard,.fcard2{
-  background:#fff;border-radius:var(--r-lg);
+  background:#fff;
+  border-radius:var(--r-lg);
   padding:14px 16px;
-  border:1px solid var(--border2);
-  display:flex;align-items:center;gap:12px;
-  position:relative;overflow:hidden;
+  border:1.5px solid var(--border2);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:relative;
+  overflow:hidden;
   min-width: 0;
 }
 
@@ -496,8 +500,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
 
 /* ── Analytics/Expenses shared panels ── */
-.exp-records-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;position:relative}
-.exp-pie-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
+.exp-records-panel{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;position:relative}
+.exp-pie-panel{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
 
 /* ── Residents tab toolbar ── */
 .str-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
@@ -1147,7 +1151,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   width: 100% !important;
   min-width: 0 !important;
   display: flex !important;
-  border: 1px solid var(--border2) !important;
+  border: 1.5px solid var(--border2) !important;
   border-radius: var(--r-lg) !important;
 }
 
@@ -1164,7 +1168,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* Payment records panel - full width with border */
 .an-layout-grid .exp-records-panel {
   width: 100% !important;
-  border: 1px solid var(--border2) !important;
+  border: 1.5px solid var(--border2) !important;
   border-radius: var(--r-lg) !important;
 }
 
@@ -1180,7 +1184,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .an-layout-grid .exp-pie-panel {
   width: 100% !important;
   min-width: 0 !important;
-  border: 1px solid var(--border2) !important;
+  border: 1.5px solid var(--border2) !important;
   border-radius: var(--r-lg) !important;
 }
 
