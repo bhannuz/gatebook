@@ -280,26 +280,26 @@
       </div>
 
       <!-- LEFT COLUMN ROW 2: Payment Records Table -->
-      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
-        <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
-          <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
+      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;padding:0;margin:0;">
+        <div style="padding:12px 14px;border-bottom:1.5px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px;">
+          <i class="ti ti-table" style="color:var(--indigo);margin-right:6px;"></i>Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0;margin-left:8px;"></span>
         </div>
-        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;width:100%;padding:0;margin:0;">
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:0;padding:0;">
+        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;width:100%;box-sizing:border-box;">
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed;">
             <colgroup>
+              <col style="width:16%"/>
+              <col style="width:34%"/>
               <col style="width:14%"/>
-              <col style="width:32%"/>
-              <col style="width:16%"/>
               <col style="width:22%"/>
-              <col style="width:16%"/>
+              <col style="width:14%"/>
             </colgroup>
-            <thead style="position:sticky;top:0;z-index:2;">
-              <tr style="background:var(--surface3)">
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap">Flat</th>
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left">Owner</th>
-                <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">🏍/🚗</th>
-                <th style="padding:8px 6px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap">Balance</th>
-                <th style="padding:8px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap">Status</th>
+            <thead style="position:sticky;top:0;z-index:2;background:var(--surface3);">
+              <tr>
+                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;white-space:nowrap;">Flat</th>
+                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:left;">Owner</th>
+                <th style="padding:10px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;white-space:nowrap;">Veh</th>
+                <th style="padding:10px 8px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:right;white-space:nowrap;">Balance</th>
+                <th style="padding:10px 4px;font-size:10px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;border-bottom:1.5px solid var(--border2);text-align:center;">Status</th>
               </tr>
             </thead>
             <tbody id="anPayTable"></tbody>
