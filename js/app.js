@@ -262,7 +262,7 @@
 
       <!-- LEFT COLUMN ROW 1: Summary cards only -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;grid-column:1;grid-row:1;">
-        <div id="analyticsTotals" style="display:contents;"></div>
+        <div id="analyticsTotals"></div>
       </div>
 
       <!-- RIGHT COLUMN ROW 1-2: Payment Status Chart spanning full height -->
