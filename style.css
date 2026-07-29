@@ -426,19 +426,24 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   background:#fff;border-radius:var(--r-lg);
   padding:14px 16px;
   border:1px solid var(--border2);
-  border-top:3px solid #6366F1;
   display:flex;align-items:center;gap:12px;
   position:relative;overflow:hidden;
+  min-width: 0;
 }
 
-/* Red top border for Outstanding card */
+/* Vscard inside grid */
+.an-layout-grid .vscard {
+  width: 100% !important;
+}
+
+/* Remove colored top borders - use standard border2 */
 .vscard.red {
-  border-top-color: var(--red) !important;
+  border-color: var(--border2) !important;
 }
 
 /* Green top border for Collected card */
 .vscard.green {
-  border-top-color: var(--green) !important;
+  border-color: var(--border2) !important;
 }
 .vscard-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .vscard-icon.tw {background:var(--indigo-bg);color:var(--indigo)}
@@ -492,8 +497,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
 
 /* ── Analytics/Expenses shared panels ── */
-.exp-records-panel{background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);overflow:hidden;position:relative}
-.exp-pie-panel{background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
+.exp-records-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;position:relative}
+.exp-pie-panel{background:#fff;border:1px solid var(--border2);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
 
 /* ── Residents tab toolbar ── */
 .str-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
@@ -1108,9 +1113,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 }
 .exp-pie-panel,.exp-records-panel{ overflow:hidden !important; }
 
-/* Summary cards - use display:contents to avoid nested grid */
+/* Add margin/gap to payment records panel */
+.an-layout-grid .exp-records-panel {
+  width: 100% !important;
+  margin-top: 0 !important;
+}
+
+/* Add margin/gap to pie panel */
+.an-layout-grid .chart-col {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+
+/* Summary cards - use display:contents to make children direct grid items */
 #analyticsTotals {
   display: contents !important;
+}
+
+/* Vscard - proper grid item sizing */
+#analyticsTotals .vscard {
+  width: 100% !important;
+  min-width: 0 !important;
+  display: flex !important;
 }
 
 /* Force 2-column, 2-row grid layout for Payments tab on desktop */
