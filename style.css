@@ -334,14 +334,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   border-radius:var(--r-lg);
   overflow:hidden;
   position:relative;
-  border:1.5px solid var(--border2);
+  border:1px solid var(--border2);
+  border-top:3px solid #6366F1;
 }
 /* applies to mem-table, veh-table, analytics inline tables */
 .mem-table,.veh-table{width:100%;border-collapse:collapse}
 .mem-table th,.veh-table th{
   background:var(--surface3);
   padding:9px 14px;
-  font-size:10px;font-weight:800;color:var(--text2);
+  font-size:10px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.6px;
   text-align:left;border-bottom:1px solid var(--border2);
 }
@@ -357,7 +358,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* Analytics records panel table (inline in app.html) also gets matching th/td via these rules */
 .exp-records-panel table th{
   background:var(--surface3);
-  font-size:10px;font-weight:800;color:var(--text2);
+  font-size:10px;font-weight:700;color:var(--muted);
   text-transform:uppercase;letter-spacing:.6px;
   padding:8px 6px;
   border-bottom:1px solid var(--border2);
@@ -422,31 +423,12 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ── Unified summary stat cards ── */
 .tab-stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:1.4rem}
 .vscard,.fcard2{
-  background:#fff;
-  border-radius:var(--r-lg);
+  background:#fff;border-radius:var(--r-lg);
   padding:14px 16px;
-  border:1.5px solid var(--border2);
-  display:flex;
-  align-items:center;
-  gap:12px;
-  position:relative;
-  overflow:hidden;
-  min-width: 0;
-}
-
-/* Vscard inside grid */
-.an-layout-grid .vscard {
-  width: 100% !important;
-}
-
-/* Remove colored top borders - use standard border2 */
-.vscard.red {
-  border-color: var(--border2) !important;
-}
-
-/* Green top border for Collected card */
-.vscard.green {
-  border-color: var(--border2) !important;
+  border:1px solid var(--border2);
+  border-top:3px solid #6366F1;
+  display:flex;align-items:center;gap:12px;
+  position:relative;overflow:hidden;
 }
 .vscard-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .vscard-icon.tw {background:var(--indigo-bg);color:var(--indigo)}
@@ -500,8 +482,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 .micon.veh{background:linear-gradient(135deg,rgba(2,132,199,.12),rgba(8,145,178,.08));color:var(--sky)}
 
 /* ── Analytics/Expenses shared panels ── */
-.exp-records-panel{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;position:relative}
-.exp-pie-panel{background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
+.exp-records-panel{background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);overflow:hidden;position:relative}
+.exp-pie-panel{background:#fff;border:1px solid var(--border2);border-top:3px solid #6366F1;border-radius:var(--r-lg);padding:16px;position:relative;overflow:hidden}
 
 /* ── Residents tab toolbar ── */
 .str-toolbar{display:flex;flex-direction:column;gap:8px;margin-bottom:12px;}
@@ -773,14 +755,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   .user-chip span{display:none}
   .vtab{min-height:60px;font-size:11px;padding:10px 6px}
   .vtab i{font-size:17px}
-  /* Stack expense layout grid to single column on tablet/mobile */
+  /* Stack both layout grids to single column */
   .exp-layout-grid{grid-template-columns:1fr!important}
+  .an-layout-grid{grid-template-columns:1fr!important}
   .exp-layout-grid #fundRow{grid-template-columns:1fr 1fr}
   .exp-records-panel{max-height:none!important}
-  /* Chart column comes FIRST on tablet/mobile for expenses */
-  .exp-layout-grid .chart-col { order:-1; }
-  /* Reduce canvas height on tablet for expenses only */
-  .exp-layout-grid .chart-wrap{height:260px!important}
+  /* Chart column comes FIRST on tablet/mobile */
+  .chart-col { order:-1; }
+  /* Reduce canvas height on tablet */
+  .chart-wrap{height:260px!important}
 }
 @media(min-width:601px){
   .bottom-nav-bar{display:none!important}
@@ -795,6 +778,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   #analyticsView,#presView,#structureView,#iView{padding-top:4px!important}
 
   /* ── Stat chips: 2-col on mobile ── */
+  #analyticsTotals{grid-template-columns:1fr 1fr!important;gap:8px!important;margin-bottom:8px!important}
   #fundRow{grid-template-columns:1fr 1fr!important}
 
   /* ── Chart panel: full-width card ── */
@@ -854,8 +838,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   /* ── Manage Buildings modal: bottom sheet, handled via inline styles ── */
 
   /* ── Expense records table: compact on mobile ── */
-  .exp-records-panel table th{padding:7px 5px!important;font-size:10px!important;font-weight:800!important;color:var(--muted)!important;text-transform:uppercase!important;letter-spacing:.3px!important}
-  .exp-records-panel table td{padding:7px 5px!important;font-size:11px!important}
+  .exp-records-panel table th{padding:7px 5px!important;font-size:10px!important;font-weight:800!important;color:var(--muted)!important;text-transform:uppercase!important;letter-spacing:.3px!important;text-align:unset!important}
+  .exp-records-panel table td{padding:7px 5px!important;font-size:11px!important;text-align:unset!important}
   /* Make action buttons smaller */
   .exp-records-panel table .act-btn{padding:4px 7px!important;font-size:11px!important}
   /* Toolbar stacks cleanly on mobile */
@@ -938,7 +922,7 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ════ RESPONSIVE LAYOUTS ════ */
 /* ════ RESPONSIVE LAYOUTS ════ */
 @media (max-width: 1024px) {
-  .exp-layout-grid {
+  .exp-layout-grid, .an-layout-grid {
     grid-template-columns: 1fr !important;
   }
   .chart-col {
@@ -1093,148 +1077,4 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     padding: 8px 16px;
     font-size: 12px;
   }
-}
-
-/* ════ FINAL OVERRIDE: donut chart must never exceed a fixed square ════
-   (placed last so it wins over the conflicting .chart-wrap rules above
-   at every breakpoint — this is the single source of truth for chart size) */
-.chart-wrap{
-  width:100% !important;
-  max-width:200px !important;
-  height:auto !important;
-  aspect-ratio:1/1 !important;
-  padding-bottom:0 !important;
-  position:relative !important;
-  margin:0 auto 20px !important;
-  overflow:hidden !important;
-}
-.chart-wrap canvas{
-  position:absolute !important;
-  inset:0 !important;
-  width:100% !important;
-  height:100% !important;
-}
-.exp-pie-panel,.exp-records-panel{ 
-  overflow:hidden !important;
-}
-
-/* Add margin/gap to payment records panel */
-.an-layout-grid .exp-records-panel {
-  width: 100% !important;
-  margin-top: 0 !important;
-}
-
-/* Add margin/gap to pie panel */
-.an-layout-grid .chart-col {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-/* Cards container - MUST be 2-column grid */
-/* Summary cards container - 2 column grid with 12px gap */
-.an-layout-grid > div:first-child {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  gap: 12px !important;
-  width: 100% !important;
-}
-
-/* Summary cards - direct grid items */
-#analyticsTotals {
-  display: contents;
-}
-
-/* Vscard elements - full width with proper borders */
-#analyticsTotals > .vscard {
-  width: 100% !important;
-  min-width: 0 !important;
-  display: flex !important;
-  border: 1.5px solid var(--border2) !important;
-  border-radius: var(--r-lg) !important;
-}
-
-/* Main grid layout - 2 columns, 2 rows, 12px gap */
-.an-layout-grid {
-  display: grid !important;
-  grid-template-columns: 1fr 1fr !important;
-  grid-template-rows: auto auto !important;
-  gap: 12px !important;
-  align-items: start !important;
-  width: 100% !important;
-}
-
-/* Payment records panel - full width with border */
-.an-layout-grid .exp-records-panel {
-  width: 100% !important;
-  border: 1.5px solid var(--border2) !important;
-  border-radius: var(--r-lg) !important;
-}
-
-/* Chart column - spans rows 1-2 */
-.an-layout-grid > .chart-col {
-  display: flex !important;
-  flex-direction: column !important;
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-/* Pie panel - full width with border */
-.an-layout-grid .exp-pie-panel {
-  width: 100% !important;
-  min-width: 0 !important;
-  border: 1.5px solid var(--border2) !important;
-  border-radius: var(--r-lg) !important;
-}
-
-.an-layout-grid .exp-pie-panel {
-  width: 100% !important;
-  min-width: 0 !important;
-}
-
-@media (max-width: 700px) {
-  /* Stack to 1 column on mobile with 3 rows */
-  .an-layout-grid {
-    display: grid !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: auto auto auto !important;
-    gap: 12px !important;
-  }
-  
-  /* Summary cards full width row 1 */
-  .an-layout-grid > div:first-child {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 10px !important;
-    grid-column: 1 !important;
-    grid-row: 1 !important;
-  }
-  
-  /* Payment records table full width row 2 */
-  .an-layout-grid .exp-records-panel {
-    grid-column: 1 !important;
-    grid-row: 2 !important;
-    width: 100% !important;
-  }
-  
-  /* Chart full width row 3 on mobile */
-  .an-layout-grid .chart-col {
-    grid-column: 1 !important;
-    grid-row: 3 !important;
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-  }
-  
-  /* Reduce table height on mobile */
-  .an-layout-grid .exp-records-panel > div:last-child {
-    max-height: 300px !important;
-  }
-}
-
-/* Table height on desktop */
-.an-layout-grid .exp-records-panel > div:last-child {
-  max-height: 420px !important;
-  overflow-y: auto !important;
 }
