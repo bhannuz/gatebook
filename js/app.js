@@ -280,12 +280,12 @@
       </div>
 
       <!-- LEFT COLUMN ROW 2: Payment Records Table -->
-      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1px solid var(--border2);border-radius:var(--r-lg);">
+      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1px solid var(--border2);border-radius:var(--r-lg);overflow:hidden;">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
           <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
         </div>
-        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;">
-          <table style="width:100%;border-collapse:collapse;table-layout:fixed">
+        <div style="max-height:420px;overflow-x:auto;overflow-y:auto;width:100%;padding:0;margin:0;">
+          <table style="width:100%;border-collapse:collapse;table-layout:fixed;margin:0;padding:0;">
             <colgroup>
               <col style="width:14%"/>
               <col style="width:32%"/>
