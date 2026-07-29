@@ -1111,7 +1111,11 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   width:100% !important;
   height:100% !important;
 }
-.exp-pie-panel,.exp-records-panel{ overflow:hidden !important; }
+.exp-pie-panel,.exp-records-panel{ 
+  overflow:hidden !important;
+  border: 1px solid var(--border2) !important;
+  border-radius: var(--r-lg) !important;
+}
 
 /* Add margin/gap to payment records panel */
 .an-layout-grid .exp-records-panel {
@@ -1127,16 +1131,30 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
   min-width: 0 !important;
 }
 
+/* Cards container - MUST be 2-column grid */
+.an-layout-grid > div:first-child {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 10px !important;
+  width: 100% !important;
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  align-items: stretch !important;
+}
+
 /* Summary cards - use display:contents to make children direct grid items */
 #analyticsTotals {
   display: contents !important;
 }
 
-/* Vscard - proper grid item sizing */
+/* Vscard - must be full width grid items with proper styling */
 #analyticsTotals .vscard {
   width: 100% !important;
   min-width: 0 !important;
+  flex-shrink: 0 !important;
   display: flex !important;
+  flex-wrap: nowrap !important;
+  border-radius: var(--r-lg) !important;
 }
 
 /* Force 2-column, 2-row grid layout for Payments tab on desktop */
