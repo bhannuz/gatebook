@@ -255,19 +255,19 @@
   <!-- ANALYTICS VIEW -->
   <div id="analyticsView" style="display:none;padding:0 12px 12px;">
 
-    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important}.an-layout-grid .chart-col{grid-column:1!important;grid-row:3!important;order:2!important;margin-top:12px!important}}</style>
+    <style>@media(max-width:700px){.an-layout-grid{grid-template-columns:1fr!important;grid-template-rows:auto auto auto!important;gap:12px!important}.an-layout-grid .chart-col{grid-column:1!important;grid-row:3!important;margin-top:0!important}}</style>
     
-    <!-- Main grid: 2 columns, 2 rows -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:12px;align-items:start;" class="an-layout-grid">
+    <!-- Main grid: 2 columns, 2 rows with 12px gap -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:12px;align-items:start;width:100%;" class="an-layout-grid">
 
-      <!-- LEFT COLUMN ROW 1: Summary cards only -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:stretch;grid-column:1;grid-row:1;">
+      <!-- LEFT COLUMN ROW 1: Summary cards (Collected | Outstanding) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;grid-column:1;grid-row:1;width:100%;align-items:stretch;">
         <div id="analyticsTotals"></div>
       </div>
 
-      <!-- RIGHT COLUMN ROW 1-2: Payment Status Chart spanning full height -->
-      <div class="chart-col" style="grid-column:2;grid-row:1/3;">
-        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:8px;padding:14px;overflow:hidden;">
+      <!-- RIGHT COLUMN ROW 1-2: Payment Status Chart starting from top -->
+      <div class="chart-col" style="grid-column:2;grid-row:1/3;width:100%;display:flex;flex-direction:column;">
+        <div class="exp-pie-panel" style="background:var(--surface2);border-radius:var(--r-lg);padding:14px;overflow:hidden;border:1px solid var(--border2);flex:1;">
           <div style="font-size:11px;font-weight:800;color:var(--text);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;">
             <i class="ti ti-credit-card" style="color:var(--indigo)"></i> Payment Status
           </div>
@@ -280,7 +280,7 @@
       </div>
 
       <!-- LEFT COLUMN ROW 2: Payment Records Table -->
-      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;">
+      <div class="exp-records-panel tab-table-wrap" style="grid-column:1;grid-row:2;width:100%;border:1px solid var(--border2);border-radius:var(--r-lg);">
         <div style="padding:10px 14px;border-bottom:1px solid var(--border2);font-size:11px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.4px;">
           <i class="ti ti-table" style="color:var(--indigo)"></i> Payment Records <span id="anPayCount" style="font-size:10px;color:var(--muted);font-weight:600;text-transform:none;letter-spacing:0"></span>
         </div>
@@ -306,8 +306,6 @@
           </table>
         </div>
       </div>
-
-    </div><!-- /main grid -->
 
   </div><!-- /#analyticsView -->
     <!-- Residents toolbar: single row -->
