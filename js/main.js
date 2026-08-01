@@ -824,7 +824,6 @@ async function saveExpEdit(eid, fid) {
     const totalPaid = allEx.reduce((s,e)=> (e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Saved ✓'); closeExpEdit(eid);
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
 }
 
@@ -840,7 +839,6 @@ async function delExp(expId, fid) {
     const totalPaid = allEx.reduce((s,e)=>s+(e.amt||0),0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Deleted ✓');
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
 }
 
@@ -877,7 +875,6 @@ async function sE(){
     if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(flatRef(fid),{paid:np});
     sync('live');cA();toast('Payment saved ✓');
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
@@ -2536,7 +2533,12 @@ function rPresident() {
         const lbl = new Date(m + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
         return `<option value="${m}">${lbl}</option>`;
       }).join('');
-    if (_savedMonth && filteredMonths.includes(_savedMonth)) mSel.value = _savedMonth;
+    // Default to current month (AM) if available
+    if (!_savedMonth) {
+      mSel.value = filteredMonths.includes(AM) ? AM : (filteredMonths[0] || 'all');
+    } else if (filteredMonths.includes(_savedMonth)) {
+      mSel.value = _savedMonth;
+    }
   }
 
   // Category dropdown — restore saved selection
@@ -2576,8 +2578,8 @@ function rPresident() {
   }
 
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>
-    <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>`;
+    <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>
+    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -2784,7 +2786,6 @@ async function sPresExp() {
     const mth = d.toISOString().slice(0,7);
     await addDoc(sexpColl(), { title, cat, amt, date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), rawDate:date, month:mth, paidBy, vendor, note, status:'pending', createdAt:serverTimestamp() });
     sync('live'); cPresExp(); toast('Society expense recorded ✓');
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
   finally { document.getElementById('peBtn').disabled=false; document.getElementById('peLbl').textContent='Save Expense'; }
 }
@@ -2797,7 +2798,6 @@ async function delSE(id) {
     const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
     await deleteDoc(sexpRef(id));
     sync('live'); toast('Expense deleted ✓');
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
 }
 
@@ -2825,7 +2825,6 @@ async function saveSEEdit(id) {
   try {
     await updateDoc(sexpRef(id), {title,cat,amt,date,rawDate,month,paidBy,vendor,note});
     sync('live'); toast('Saved ✓'); closeSEEdit(id);
-    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
 }
 
@@ -3939,8 +3938,8 @@ function _anPopulateMonths(sortedMonths) {
       return `<option value="${m}">${lbl}</option>`;
     }).join('');
 
-  // Default to first available month in the year
-  if (filtered.length) mSel.value = filtered[0];
+  // Default to current month (AM) if available, otherwise first available month
+  if (filtered.length) mSel.value = filtered.includes(AM) ? AM : filtered[0];
 }
 
 /* Core render: reads exps Map, no paymentHistory needed */
@@ -4010,7 +4009,7 @@ function _anRender() {
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
 
-  /* ── All-time calculations ── */
+  /* ── All-time outstanding (regardless of filter) ── */
   let allTimeCollected = 0, allTimeDue = 0;
   flats.forEach((f, fid) => {
     if (selBlock && f.block !== selBlock) return;
@@ -4029,12 +4028,7 @@ function _anRender() {
       .reduce((s, e) => s + (e.amt || 0), 0);
     allTimeCollected += collected;
   });
-  
-  /* ── Calculate total society expenses ── */
-  const totalSocietyExpenses = socExps.reduce((s, e) => s + (e.amt || 0), 0);
-  
-  /* ── Outstanding = Corpus Fund - Expenses + Payments ── */
-  const outstandingBalance = APT_CORPUS_FUND - totalSocietyExpenses + allTimeCollected;
+  const allTimeOutstanding = Math.max(0, allTimeDue - allTimeCollected);
 
   /* ── Pie chart segments ── */
   const segments = [
@@ -4053,18 +4047,17 @@ function _anRender() {
 
   /* ── Summary cards ── */
   const cardsDiv = document.getElementById('analyticsTotals');
-  if (cardsDiv) {
-    cardsDiv.innerHTML = `
+  if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(allTimeCollected)}</div>
+        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
       </div>
     </div>
     <div class="vscard red">
       <div>
         <div class="vscard-label">Outstanding</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(Math.max(0, outstandingBalance))}</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(allTimeOutstanding + APT_CORPUS_FUND)}</div>
       </div>
     </div>`;
   }
