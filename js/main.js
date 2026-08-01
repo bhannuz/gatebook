@@ -4786,24 +4786,34 @@ window._delContact = async function() {
 window._issSubTab = function(which) {
   const issuesBtn    = document.getElementById('issSubTabIssues');
   const contactsBtn  = document.getElementById('issSubTabContacts');
+  const reportsBtn   = document.getElementById('issSubTabReports');
   const issuesPanel  = document.getElementById('issSubPanelIssues');
   const contactsPanel= document.getElementById('issSubPanelContacts');
-  if (!issuesBtn || !contactsBtn || !issuesPanel || !contactsPanel) return;
+  const reportsPanel = document.getElementById('issSubPanelReports');
+  if (!issuesBtn || !contactsBtn || !reportsBtn || !issuesPanel || !contactsPanel || !reportsPanel) return;
 
   const active = { border:'var(--indigo)', bg:'var(--indigo)', color:'#fff' };
   const inactive = { border:'var(--border2)', bg:'#fff', color:'var(--text2)' };
 
+  // Reset all
+  issuesPanel.style.display = 'none';
+  contactsPanel.style.display = 'none';
+  reportsPanel.style.display = 'none';
+  Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+  Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+  Object.assign(reportsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
+
   if (which === 'issues') {
     issuesPanel.style.display = '';
-    contactsPanel.style.display = 'none';
     Object.assign(issuesBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(contactsBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { rIssues(); } catch(e) { console.error(e); }
-  } else {
-    issuesPanel.style.display = 'none';
+  } else if (which === 'contacts') {
     contactsPanel.style.display = '';
     Object.assign(contactsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
-    Object.assign(issuesBtn.style, { borderColor: inactive.border, background: inactive.bg, color: inactive.color });
     try { window._rContacts(); } catch(e) { console.error(e); }
+  } else if (which === 'reports') {
+    reportsPanel.style.display = '';
+    Object.assign(reportsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
+    // Add report initialization if needed
   }
 };
