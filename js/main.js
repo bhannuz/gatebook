@@ -74,7 +74,7 @@ const vehicles = new Map();   // flatId -> {tw,fw,nums,slot}
 const socExps  = [];          // society-level expenses
 let president  = null;        // current president object
 let customCats = { flat: [], soc: [] }; // user-defined expense categories
-const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Other'];
+const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Corpus Fund','Other'];
 const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
 let APT_NAME = 'Gatebook';
 
@@ -4019,21 +4019,15 @@ function _anRender() {
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) cardsDiv.innerHTML = `
     <div class="vscard green">
-      <div class="vscard-icon fw"><i class="ti ti-circle-check"></i></div>
       <div>
         <div class="vscard-label">Collected</div>
         <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${totalFlats} flats · ${pct}%</div>
-        <div style="font-size:10px;font-weight:700;color:var(--green);margin-top:1px">${periodLabel}</div>
       </div>
     </div>
     <div class="vscard red">
-      <div class="vscard-icon" style="background:var(--red-bg);color:var(--red)"><i class="ti ti-clock"></i></div>
       <div>
         <div class="vscard-label">Outstanding</div>
         <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
-        <div style="font-size:10px;color:var(--muted);margin-top:2px">${pending + partial} pending · ${totalFlats} total flats</div>
-        <div style="font-size:10px;font-weight:700;color:var(--red-txt);margin-top:1px">${periodLabel}</div>
       </div>
     </div>`;
 
