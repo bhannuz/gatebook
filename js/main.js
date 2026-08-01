@@ -4042,7 +4042,8 @@ function _anRender() {
 
   /* ── Summary cards ── */
   const cardsDiv = document.getElementById('analyticsTotals');
-  if (cardsDiv) cardsDiv.innerHTML = `
+  if (cardsDiv) {
+    cardsDiv.innerHTML = `
     <div class="vscard green">
       <div>
         <div class="vscard-label">Collected</div>
