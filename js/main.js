@@ -77,6 +77,7 @@ let customCats = { flat: [], soc: [] }; // user-defined expense categories
 const DEFAULT_FLAT_CATS = ['Maintenance','Water','Electricity','Parking','Lift','Security','Cleaning','Corpus Fund','Other'];
 const DEFAULT_SOC_CATS  = ['Maintenance','Water','Electricity','Security','Cleaning','Lift','Gardening','Painting','Other'];
 let APT_NAME = 'Gatebook';
+let APT_CORPUS_FUND = 0;
 
 /* ════════════════════════════════
    HELPERS
@@ -1861,8 +1862,10 @@ window._wizLaunch = async function() {
   btn.disabled = true;
   document.getElementById('wLaunchLbl').textContent = ' Creating…';
   try {
+    // Get corpus fund value from input
+    const corpusFundValue = parseFloat(document.getElementById('wCorpusFund')?.value || 0) || 0;
     // Save apt config (merge so name is preserved if set)
-    await setDoc(aptDocRef(), { name: APT_NAME, blocks: WIZ_BLOCKS }, { merge: true });
+    await setDoc(aptDocRef(), { name: APT_NAME, blocks: WIZ_BLOCKS, corpusFund: corpusFundValue }, { merge: true });
     // Create flats
     // Check if flats already exist (prevent duplicate creation on double-tap)
     const existingSnap = await getDocs(flatsColl());
@@ -3268,6 +3271,7 @@ async function boot(){
 
     if(aptDoc.exists() && aptDoc.data().name) applyAptName(aptDoc.data().name);
     if(aptDoc.exists() && aptDoc.data().president) president=aptDoc.data().president;
+    if(aptDoc.exists() && aptDoc.data().corpusFund) APT_CORPUS_FUND=aptDoc.data().corpusFund;
     await loadCats();
 
     // Check if society is already configured (registered via register.html)
@@ -4000,6 +4004,27 @@ function _anRender() {
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
 
+  /* ── All-time outstanding (regardless of filter) ── */
+  let allTimeCollected = 0, allTimeDue = 0;
+  flats.forEach((f, fid) => {
+    if (selBlock && f.block !== selBlock) return;
+    const isVacant = !(f.owner || '').trim();
+    if (isVacant) return;
+
+    const due = f.due || 0;
+    const flatMonths = new Set(
+      (exps.get(fid) || [])
+        .map(e => e.month || (e.rawDate || '').slice(0, 7))
+        .filter(Boolean)
+    );
+    allTimeDue += due * (flatMonths.size || 1);
+    
+    const collected = (exps.get(fid) || [])
+      .reduce((s, e) => s + (e.amt || 0), 0);
+    allTimeCollected += collected;
+  });
+  const allTimeOutstanding = Math.max(0, allTimeDue - allTimeCollected);
+
   /* ── Pie chart segments ── */
   const segments = [
     { label:'Paid',    value:paid,    color:'#22c55e', displayValue:`${paid} flats`    },
@@ -4027,9 +4052,10 @@ function _anRender() {
     <div class="vscard red">
       <div>
         <div class="vscard-label">Outstanding</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(outstanding)}</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(allTimeOutstanding + APT_CORPUS_FUND)}</div>
       </div>
     </div>`;
+  }
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
