@@ -824,6 +824,7 @@ async function saveExpEdit(eid, fid) {
     const totalPaid = allEx.reduce((s,e)=> (e.expId||e.id)===eid ? s+amt : s+(e.amt||0), 0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Saved ✓'); closeExpEdit(eid);
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e){ console.error(e);sync('error');toast('Save failed.','error'); }
 }
 
@@ -839,6 +840,7 @@ async function delExp(expId, fid) {
     const totalPaid = allEx.reduce((s,e)=>s+(e.amt||0),0);
     await updateDoc(flatRef(fid),{paid:totalPaid});
     sync('live'); toast('Deleted ✓');
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e){ console.error(e); sync('error'); toast('Delete failed.','error'); }
 }
 
@@ -875,6 +877,7 @@ async function sE(){
     if(s==='paid')np=f.due;else if(s==='partial')np=Math.min(f.paid+amt,f.due-1);
     await updateDoc(flatRef(fid),{paid:np});
     sync('live');cA();toast('Payment saved ✓');
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   }catch(e){console.error(e);sync('error');toast('Save failed. Check console.','error');}
   finally{btn.disabled=false;document.getElementById('svLbl').textContent='Save Payment';}
 }
@@ -2781,6 +2784,7 @@ async function sPresExp() {
     const mth = d.toISOString().slice(0,7);
     await addDoc(sexpColl(), { title, cat, amt, date:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}), rawDate:date, month:mth, paidBy, vendor, note, status:'pending', createdAt:serverTimestamp() });
     sync('live'); cPresExp(); toast('Society expense recorded ✓');
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
   finally { document.getElementById('peBtn').disabled=false; document.getElementById('peLbl').textContent='Save Expense'; }
 }
@@ -2793,6 +2797,7 @@ async function delSE(id) {
     const { deleteDoc } = await import('https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js');
     await deleteDoc(sexpRef(id));
     sync('live'); toast('Expense deleted ✓');
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Delete failed.', 'error'); }
 }
 
@@ -2820,6 +2825,7 @@ async function saveSEEdit(id) {
   try {
     await updateDoc(sexpRef(id), {title,cat,amt,date,rawDate,month,paidBy,vendor,note});
     sync('live'); toast('Saved ✓'); closeSEEdit(id);
+    if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
   } catch(e) { console.error(e); sync('error'); toast('Save failed.', 'error'); }
 }
 
