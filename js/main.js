@@ -4004,7 +4004,7 @@ function _anRender() {
   const outstanding = Math.max(0, totalDue - totalCollected);
   const pct = totalDue ? Math.round(totalCollected / totalDue * 100) : 0;
 
-  /* ── All-time outstanding (regardless of filter) ── */
+  /* ── All-time calculations ── */
   let allTimeCollected = 0, allTimeDue = 0;
   flats.forEach((f, fid) => {
     if (selBlock && f.block !== selBlock) return;
@@ -4023,7 +4023,12 @@ function _anRender() {
       .reduce((s, e) => s + (e.amt || 0), 0);
     allTimeCollected += collected;
   });
-  const allTimeOutstanding = Math.max(0, allTimeDue - allTimeCollected);
+  
+  /* ── Calculate total society expenses ── */
+  const totalSocietyExpenses = socExps.reduce((s, e) => s + (e.amt || 0), 0);
+  
+  /* ── Outstanding = Corpus Fund - Expenses + Payments ── */
+  const outstandingBalance = APT_CORPUS_FUND - totalSocietyExpenses + allTimeCollected;
 
   /* ── Pie chart segments ── */
   const segments = [
@@ -4047,13 +4052,13 @@ function _anRender() {
     <div class="vscard green">
       <div>
         <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(totalCollected)}</div>
+        <div class="vscard-val" style="color:var(--green)">${inr(allTimeCollected)}</div>
       </div>
     </div>
     <div class="vscard red">
       <div>
         <div class="vscard-label">Outstanding</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(allTimeOutstanding + APT_CORPUS_FUND)}</div>
+        <div class="vscard-val" style="color:var(--red)">${inr(Math.max(0, outstandingBalance))}</div>
       </div>
     </div>`;
   }
