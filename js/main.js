@@ -2561,24 +2561,19 @@ function rPresident() {
     return true;
   });
 
-  /* ── Summary cards (based on filtered vis data) ── */
-  const totalFilteredExp = vis.reduce((s,e)=>s+(e.amt||0),0);
-  const totalAllExp      = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  /* ── Calculate current month expenses ── */
+  const currentMonthExpenses = socExps.filter(e => {
+    const m = e.month || '';
+    return m === AM;
+  });
+  const totalCurrentMonthExp = currentMonthExpenses.reduce((s,e)=>s+(e.amt||0),0);
 
-  // Build period label for the chip
-  let periodLabel = 'All Time';
-  if (yf !== 'all' && mf !== 'all') {
-    periodLabel = new Date(mf+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-  } else if (yf !== 'all') {
-    periodLabel = `Year ${yf}`;
-  } else if (mf !== 'all') {
-    periodLabel = new Date(mf+'-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
-  } else if (cf !== 'all') {
-    periodLabel = cf;
-  }
+  /* ── Summary cards (Current Month vs All Time) ── */
+  const totalAllExp = socExps.reduce((s,e)=>s+(e.amt||0),0);
+  const currentMonthLabel = new Date(AM + '-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>
+    <div class="fcard2 indigo"><div class="fcard2-label">${currentMonthLabel}</div><div class="fcard2-val">${inr(totalCurrentMonthExp)}</div><div class="fcard2-sub">${currentMonthExpenses.length} record${currentMonthExpenses.length!==1?'s':''}</div></div>
     <div class="fcard2 indigo"><div class="fcard2-label">All Time</div><div class="fcard2-val">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
