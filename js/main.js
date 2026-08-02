@@ -2579,7 +2579,7 @@ function rPresident() {
 
   document.getElementById('fundRow').innerHTML = `
     <div class="fcard2 indigo"><div class="fcard2-label">${periodLabel}</div><div class="fcard2-val">${inr(totalFilteredExp)}</div><div class="fcard2-sub">${vis.length} record${vis.length!==1?'s':''}</div></div>
-    <div class="fcard2 red"><div class="fcard2-label">All Time</div><div class="fcard2-val" style="color:var(--red)">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
+    <div class="fcard2 indigo"><div class="fcard2-label">All Time</div><div class="fcard2-val">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -4029,6 +4029,22 @@ function _anRender() {
     allTimeCollected += collected;
   });
   
+  /* ── Calculate current month collected ── */
+  const currentMonthCollected = Array.from(exps.values())
+    .flat()
+    .filter(e => {
+      const m = e.month || (e.rawDate || '').slice(0, 7) || '';
+      return m === AM;
+    })
+    .reduce((s, e) => s + (e.amt || 0), 0);
+  
+  const currentMonthRecords = Array.from(exps.values())
+    .flat()
+    .filter(e => {
+      const m = e.month || (e.rawDate || '').slice(0, 7) || '';
+      return m === AM;
+    }).length;
+
   /* ── Calculate total society expenses ── */
   const totalSocietyExpenses = socExps.reduce((s, e) => s + (e.amt || 0), 0);
   
@@ -4050,20 +4066,23 @@ function _anRender() {
     buildLegend('payLegend', segments.map(s => ({ ...s, count: s.value })), totalFlats);
   });
 
-  /* ── Summary cards ── */
+  /* ── Summary cards: Current Month vs All Time ── */
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) {
+    const currentMonthLabel = new Date(AM + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     cardsDiv.innerHTML = `
-    <div class="vscard green">
+    <div class="vscard indigo">
       <div>
-        <div class="vscard-label">Collected</div>
-        <div class="vscard-val" style="color:var(--green)">${inr(allTimeCollected)}</div>
+        <div class="vscard-label">${currentMonthLabel}</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(currentMonthCollected)}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">${currentMonthRecords} record${currentMonthRecords!==1?'s':''}</div>
       </div>
     </div>
-    <div class="vscard red">
+    <div class="vscard indigo">
       <div>
-        <div class="vscard-label">Outstanding</div>
-        <div class="vscard-val" style="color:var(--red)">${inr(Math.max(0, outstandingBalance))}</div>
+        <div class="vscard-label">All Time</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(allTimeCollected)}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">${Array.from(exps.values()).flat().length} records</div>
       </div>
     </div>`;
   }
