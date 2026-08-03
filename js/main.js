@@ -2482,7 +2482,6 @@ function rPresident() {
       <div style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
         <button class="btn btn-indigo" onclick="window._oPresExp()"><i class="ti ti-receipt"></i> Add Expense</button>
-        <button class="btn btn-white" onclick="window._oMonthlySummary()" style="border:1.5px solid var(--border2)"><i class="ti ti-file-text"></i> Monthly Report</button>
       </div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <select id="histYearFilter"
@@ -4070,32 +4069,25 @@ function _anRender() {
     buildLegend('payLegend', segments.map(s => ({ ...s, count: s.value })), totalFlats);
   });
 
-  /* ── Summary cards: Current Month vs All Time ── */
+  /* ── Summary cards: Current Month and Outstanding Balance ── */
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) {
     const currentMonthLabel = new Date(AM + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     cardsDiv.innerHTML = `
     <div class="vscard indigo">
       <div>
-        <div class="vscard-label">${currentMonthLabel}</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(currentMonthCollected)}</div>
-        <div style="font-size:10px;color:var(--text2);margin-top:4px">${currentMonthRecords} record${currentMonthRecords!==1?'s':''}</div>
-      </div>
-    </div>
-    <div class="vscard indigo">
-      <div>
-        <div class="vscard-label">All Time</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(allTimeCollected)}</div>
-        <div style="font-size:10px;color:var(--text2);margin-top:4px">${Array.from(exps.values()).flat().length} records</div>
+        <div class="vscard-label" style="color:#000">${currentMonthLabel}</div>
+        <div class="vscard-val" style="color:#000">${inr(currentMonthCollected)}</div>
+        <div style="font-size:10px;color:#000;margin-top:4px">${currentMonthRecords} record${currentMonthRecords!==1?'s':''}</div>
       </div>
     </div>
     <div class="vscard indigo" style="position:relative">
       <div>
-        <div class="vscard-label">Outstanding Balance</div>
-        <div class="vscard-val" style="color:var(--indigo)">${inr(Math.max(0, outstandingBalance))}</div>
-        <div style="font-size:10px;color:var(--text2);margin-top:4px">Corpus: ${inr(APT_CORPUS_FUND)}</div>
+        <div class="vscard-label" style="color:#000">Outstanding Balance</div>
+        <div class="vscard-val" style="color:#000">${inr(Math.max(0, outstandingBalance))}</div>
+        <div style="font-size:10px;color:#000;margin-top:4px">Corpus: ${inr(APT_CORPUS_FUND)}</div>
       </div>
-      <button onclick="window._editCorpusFund()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--indigo);font-size:16px;padding:4px"><i class="ti ti-edit"></i></button>
+      <button onclick="window._editCorpusFund()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#000;font-size:16px;padding:4px"><i class="ti ti-edit"></i></button>
     </div>`;
   }
 
