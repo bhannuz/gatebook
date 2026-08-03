@@ -1946,6 +1946,7 @@ function listenVehicles(){
   vu=onSnapshot(vehColl(),snap=>{
     vehicles.clear();
     snap.forEach(d=>vehicles.set(d.id,{...d.data()}));
+    console.log('Vehicles loaded:', vehicles.size, 'items');
     rStats();
   },e=>console.error('veh listener',e));
 }
@@ -4219,7 +4220,7 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const s        = f._status || 'pending';
     const bal      = (f.due||0) - (f.paid||0);
     const balColor = bal > 0 ? 'var(--red)' : 'var(--green)';
-    const v        = vehicles.get(f.flatId) || {};
+    const v        = vehicles.get(f.flatId) || { tw: 0, fw: 0 };
     const tw       = parseInt(v.tw) || 0;
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
