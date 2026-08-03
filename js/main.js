@@ -4215,13 +4215,6 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   if (empty)   empty.style.display   = 'none';
   if (counter) counter.textContent   = `(${rows.length} flats)`;
 
-  const statusIcon = {
-    paid:    `<span title="Paid"    style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#dcfce7"><i class="ti ti-circle-check" style="color:#16a34a;font-size:15px"></i></span>`,
-    partial: `<span title="Partial" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fef9c3"><i class="ti ti-circle-half" style="color:#d97706;font-size:15px"></i></span>`,
-    pending: `<span title="Pending" style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#fee2e2"><i class="ti ti-clock" style="color:#dc2626;font-size:15px"></i></span>`,
-    vacant:  `<span title="Vacant"  style="display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:#f3f4f6"><i class="ti ti-door" style="color:#9ca3af;font-size:15px"></i></span>`,
-  };
-
   tbody.innerHTML = rows.map((f,i) => {
     const s        = f._status || 'pending';
     const bal      = (f.due||0) - (f.paid||0);
@@ -4231,10 +4224,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700">
-           ${tw > 0 ? `<span style="color:var(--indigo)">🏍 ${tw}</span>` : ''}
-           ${tw > 0 && fw > 0 ? `<span style="color:var(--border3)">·</span>` : ''}
-           ${fw > 0 ? `<span style="color:var(--green-txt)">🚗 ${fw}</span>` : ''}
+      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text)">
+           ${tw > 0 ? `<span>${tw}</span>` : ''}
+           ${tw > 0 && fw > 0 ? `<span style="color:var(--text2)">/ </span>` : ''}
+           ${fw > 0 ? `<span>${fw}</span>` : ''}
          </span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
@@ -4243,6 +4236,14 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       : resType === 'tenant'
         ? `<span style="font-size:9px;font-weight:700;color:var(--amber)">🔑 Tenant</span>`
         : `<span style="font-size:9px;font-weight:700;color:var(--indigo)">🏠 Owner</span>`;
+    
+    const statusText = {
+      paid: 'Paid',
+      partial: 'Partial',
+      pending: 'Pending',
+      vacant: 'Vacant'
+    }[s] || 'Pending';
+    
     return `<tr
       onclick="window._openPayHistory('${f.flatId}')"
       style="cursor:pointer;transition:background .12s"
@@ -4253,8 +4254,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">${statusIcon[s]||statusIcon.pending}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px">${vehCell}</td>
       <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">
+        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;${s==='paid'?'background:#dcfce7;color:#16a34a':s==='partial'?'background:#fef9c3;color:#d97706':s==='pending'?'background:#fee2e2;color:#dc2626':'background:#f3f4f6;color:#9ca3af'}">${statusText}</span>
+      </td>
     </tr>`;
   }).join('');
 
@@ -4264,8 +4268,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
     <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;color:var(--text)">${totTw>0?`${totTw}`:''} ${totTw>0&&totFw>0?'/ ':''} ${totFw>0?`${totFw}`:''}</td>
     <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
+    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
   </tr>`;
 }
 
