@@ -2572,9 +2572,18 @@ function rPresident() {
   const totalAllExp = socExps.reduce((s,e)=>s+(e.amt||0),0);
   const currentMonthLabel = new Date(AM + '-01').toLocaleDateString('en-IN',{month:'long',year:'numeric'});
 
+  /* ── Calculate total society expenses ── */
+  const totalSocietyExpenses = socExps.reduce((s, e) => s + (e.amt || 0), 0);
+  
+  /* ── Calculate all-time payments ── */
+  const allTimePayments = Array.from(exps.values())
+    .flat()
+    .reduce((s, e) => s + (e.amt || 0), 0);
+
   document.getElementById('fundRow').innerHTML = `
     <div class="fcard2 indigo"><div class="fcard2-label">${currentMonthLabel}</div><div class="fcard2-val">${inr(totalCurrentMonthExp)}</div><div class="fcard2-sub">${currentMonthExpenses.length} record${currentMonthExpenses.length!==1?'s':''}</div></div>
     <div class="fcard2 indigo"><div class="fcard2-label">All Time</div><div class="fcard2-val">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
+
 
   /* ── Build pie segments from filtered data ── */
   const catMap2 = new Map();
@@ -4079,6 +4088,14 @@ function _anRender() {
         <div class="vscard-val" style="color:var(--indigo)">${inr(allTimeCollected)}</div>
         <div style="font-size:10px;color:var(--text2);margin-top:4px">${Array.from(exps.values()).flat().length} records</div>
       </div>
+    </div>
+    <div class="vscard indigo" style="position:relative">
+      <div>
+        <div class="vscard-label">Outstanding Balance</div>
+        <div class="vscard-val" style="color:var(--indigo)">${inr(Math.max(0, outstandingBalance))}</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px">Corpus: ${inr(APT_CORPUS_FUND)}</div>
+      </div>
+      <button onclick="window._editCorpusFund()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--indigo);font-size:16px;padding:4px"><i class="ti ti-edit"></i></button>
     </div>`;
   }
 
@@ -4823,6 +4840,36 @@ window._delContact = async function() {
   } catch (e) {
     console.error(e); sync('error'); toast('Delete failed', 'error');
   }
+};
+
+/* ════════════════════════════════
+   EDIT CORPUS FUND
+════════════════════════════════ */
+window._editCorpusFund = function() {
+  const newAmount = prompt('Enter new Corpus Fund amount:', APT_CORPUS_FUND);
+  if (newAmount === null) return; // User cancelled
+  
+  const corpusValue = parseInt(newAmount) || 0;
+  if (corpusValue < 0) {
+    toast('Amount cannot be negative', 'error');
+    return;
+  }
+  
+  sync('saving');
+  updateDoc(aptDocRef(), { corpusFund: corpusValue })
+    .then(() => {
+      APT_CORPUS_FUND = corpusValue;
+      sync('live');
+      toast('Corpus Fund updated ✓');
+      // Refresh both tabs
+      if(document.getElementById('presidentView').style.display !== 'none') rPresident();
+      if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
+    })
+    .catch(e => {
+      console.error(e);
+      sync('error');
+      toast('Update failed', 'error');
+    });
 };
 
 /* ════════════════════════════════
