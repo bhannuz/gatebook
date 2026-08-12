@@ -1078,3 +1078,18 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
     font-size: 12px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   PAYMENTS TAB — STATUS COLUMN MOBILE OPTIMIZATION
+   Shows icons instead of text on mobile (max-width: 600px)
+═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 600px) {
+  /* Payments table: show icons instead of text for status column on mobile */
+  .status-col .status-text {
+    display: none !important;
+  }
+  .status-col .status-icon {
+    display: inline-flex !important;
+  }
+}
