@@ -4257,8 +4257,11 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       </td>
       <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px">${vehCell}</td>
       <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle">
-        <span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;${s==='paid'?'background:#dcfce7;color:#16a34a':s==='partial'?'background:#fef9c3;color:#d97706':s==='pending'?'background:#fee2e2;color:#dc2626':'background:#f3f4f6;color:#9ca3af'}">${statusText}</span>
+      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;position:relative" class="status-col">
+        <span class="status-text" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;${s==='paid'?'background:#dcfce7;color:#16a34a':s==='partial'?'background:#fef9c3;color:#d97706':s==='pending'?'background:#fee2e2;color:#dc2626':'background:#f3f4f6;color:#9ca3af'}">${statusText}</span>
+        <span class="status-icon" style="display:none;font-size:20px;${s==='paid'?'color:#16a34a':s==='partial'?'color:#d97706':'color:#dc2626'}" title="${statusText}">
+          <i class="ti ti-circle-filled"></i>
+        </span>
       </td>
     </tr>`;
   }).join('');
