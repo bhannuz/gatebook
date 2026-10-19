@@ -269,6 +269,7 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
 
 <script type="module">
 import { auth, db } from './js/firebase.js';
+import { createJoinCode } from './js/roles.js';
 import {
   createUserWithEmailAndPassword,
   updateProfile,
@@ -456,6 +457,10 @@ window.doLaunch = async function() {
       status: 'active',
       totalFlats,
     });
+
+    // 2b. Join code that flat members use to request access
+    try { await createJoinCode(uid, aptName); } catch(e) { console.warn('join code', e); }
+    sessionStorage.setItem('gb_intent','admin');
 
     // 3. Create all flats under apartments/{uid}/flats/{flatId}
     for (const b of blocks) {

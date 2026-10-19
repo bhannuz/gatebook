@@ -133,6 +133,19 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
 .lo-bar{width:200px;height:4px;background:var(--surface3);border-radius:99px;overflow:hidden}
 .lo-fill{height:100%;background:linear-gradient(90deg,#6366F1,#8B5CF6,#06B6D4);background-size:200%;animation:loSlide 1.6s ease-in-out infinite}
 @keyframes loSlide{0%{background-position:0%}100%{background-position:200%}}
+.role-toggle{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:20px}
+.rt-lbl{font-size:14px;font-weight:700;color:var(--text2);cursor:pointer;transition:color .2s;user-select:none}
+.rt-lbl.active{color:var(--text)}
+.rt-sw{position:relative;width:58px;height:34px;border-radius:99px;border:0;background:#C7CBE6;cursor:pointer;padding:0;transition:background .25s;flex-shrink:0}
+.rt-sw[aria-checked="true"]{background:var(--indigo2)}
+.rt-knob{position:absolute;top:2px;left:2px;width:30px;height:30px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.3);transition:transform .25s}
+.rt-sw[aria-checked="true"] .rt-knob{transform:translateX(24px)}
+.rt-sw:focus-visible{outline:3px solid var(--indigo-glow);outline-offset:2px}
+.opt-row{display:flex;gap:10px}
+.opt-btn{flex:1;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:12px 14px;background:#fff;border:1.5px solid var(--border2);border-radius:var(--r-md);text-decoration:none;color:var(--text);font-size:13px}
+.opt-btn i{font-size:20px;color:var(--indigo);margin-bottom:4px}
+.opt-btn span{font-size:11px;color:var(--text2);font-weight:500}
+.opt-btn:hover{border-color:var(--indigo);background:var(--indigo-bg)}
 </style>
 </head>
 <body>
@@ -156,26 +169,27 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
     <div class="brand-tag">Smart Society Management</div>
   </div>
 
-  <div class="tabs">
-    <button class="tab-btn active" id="tabLogin"  onclick="showTab('login')">Sign In</button>
-    <button class="tab-btn"        id="tabSignup" onclick="showTab('signup')">Create Account</button>
+  <div class="role-toggle" id="roleToggle">
+    <span class="rt-lbl active" id="rtAdmin" onclick="setRole('admin')">Admin</span>
+    <button type="button" class="rt-sw" id="rtSw" role="switch" aria-checked="false" aria-label="Flat member sign in" onclick="toggleRole()"><span class="rt-knob"></span></button>
+    <span class="rt-lbl" id="rtMember" onclick="setRole('member')">Flat member</span>
   </div>
 
   <!-- ── LOGIN FORM ── -->
   <div id="loginForm">
     <div class="card-title">Welcome back</div>
-    <div class="card-sub">Sign in with your mobile number or email.</div>
+    <div class="card-sub" id="loginSub">Sign in with your mobile number or email.</div>
 
     <div class="alert" id="loginAlert"><i class="ti ti-alert-circle"></i><span id="loginAlertMsg"></span></div>
 
     <div class="fg">
-      <label>Mobile number or Email</label>
+      <label id="loginIdLbl">Mobile number or Email</label>
       <input type="text" id="loginId" placeholder="9876543210 or you@example.com" autocomplete="username"/>
     </div>
     <div class="fg">
       <label style="display:flex;justify-content:space-between;align-items:center;">
-        Password
-        <a href="#" onclick="showForgot();return false;"
+        <span id="loginPwLbl">Password</span>
+        <a href="#" id="forgotLink" onclick="showForgot();return false;"
           style="font-size:11px;font-weight:600;color:var(--indigo);text-decoration:none;">Forgot password?</a>
       </label>
       <div class="pw-wrap">
@@ -189,7 +203,7 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
     </button>
 
     <div class="divider">or</div>
-    <div class="register-link">
+    <div class="register-link" id="loginAlt">
       New society? <a href="register.html">Register your apartment</a>
     </div>
   </div>
@@ -217,197 +231,143 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
       </a>
     </div>
   </div>
-
-  <!-- ── SIGNUP FORM ── -->
-  <div id="signupForm" style="display:none">
-    <div class="card-title">Create an account</div>
-    <div class="card-sub">Sign up with your mobile number or email.</div>
-
-    <div class="alert" id="signupAlert"><i class="ti ti-alert-circle"></i><span id="signupAlertMsg"></span></div>
-
-    <div class="fg">
-      <label>Full Name</label>
-      <input type="text" id="signupName" placeholder="Your full name"/>
-    </div>
-    <div class="fg">
-      <label>Mobile number or Email</label>
-      <input type="text" id="signupId" placeholder="9876543210 or you@example.com" autocomplete="username"/>
-    </div>
-    <div class="fg">
-      <label>Password</label>
-      <div class="pw-wrap">
-        <input type="password" id="signupPassword" placeholder="Min. 6 characters" autocomplete="new-password"/>
-        <button class="pw-toggle" type="button" onclick="togglePw('signupPassword',this)"><i class="ti ti-eye"></i></button>
-      </div>
-    </div>
-
-    <button class="btn-primary" id="signupBtn" onclick="doSignup()">
-      <i class="ti ti-user-plus"></i><span id="signupBtnLbl">Create Account</span>
-    </button>
-  </div>
 </div>
 
 <script type="module">
-import { auth } from './js/firebase.js';
+import { auth, db } from './js/firebase.js';
 import {
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged,
-  updateProfile,
-  sendPasswordResetEmail,
+  signInWithEmailAndPassword, onAuthStateChanged, sendPasswordResetEmail, signOut,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { resolveRole, pinToPassword, isValidMobile, isValidPin, PLATFORM_ADMIN_EMAIL } from './js/roles.js';
 
-/* ── Admin email — change this to your admin email ── */
-const ADMIN_EMAIL = 'admin@gatebook.app';
+let SEL = sessionStorage.getItem('gb_intent') === 'member' ? 'member' : 'admin';
+let busy = false;   // true while doLogin runs (blocks the auto-redirect)
 
-/* ── Mobile → email helper (resolves mobile or plain email) ── */
-function resolveEmail(input) {
-  const v = (input || '').trim();
-  // If it looks like a 10-digit number, convert to gatebook email
-  if (/^\d{10}$/.test(v)) return v + '@gatebook.app';
-  return v; // already an email
-}
-function validateInput(v) {
-  if (!v) return 'Please enter your mobile number or email.';
-  if (/^\d+$/.test(v) && v.length !== 10) return 'Mobile number must be exactly 10 digits.';
-  if (!v.includes('@') && !/^\d{10}$/.test(v)) return 'Enter a valid mobile number or email address.';
-  return null;
-}
+const $ = id => document.getElementById(id);
+const FORMS = ['loginForm', 'forgotForm'];
 
-/* ── Auth guard: redirect logged-in users straight to app ── */
-onAuthStateChanged(auth, user => {
-  document.getElementById('pageLoad').style.display = 'none';
-  if (user) {
-    if (user.email === ADMIN_EMAIL) {
-      window.location.replace('admin.html');
-    } else {
-      window.location.replace('app.html');
+function showAlert(id, msg, type='error') { $(id+'Msg').textContent = msg; $(id).className = 'alert show ' + type; }
+function hideAlert(id) { $(id).className = 'alert'; }
+function setLoading(btnId, lblId, on, text) { $(btnId).disabled = on; $(lblId).textContent = text; }
+function showCard() { const l = $('pageLoad'); if (l) l.style.display = 'none'; $('mainCard').style.display = ''; }
+function show(id) { FORMS.forEach(f => $(f).style.display = f === id ? '' : 'none'); }
+function chrome(on) { $('roleToggle').style.display = on ? '' : 'none'; }
+function toEmail(raw) { return /^\d{10}$/.test(raw) ? raw + '@gatebook.app' : raw; }
+
+/* ── Admin / Flat member toggle (iPhone-style) ── */
+window.setRole = function(sel) {
+  SEL = sel; sessionStorage.setItem('gb_intent', sel);
+  const m = sel === 'member';
+  $('rtSw').setAttribute('aria-checked', String(m));
+  $('rtAdmin').classList.toggle('active', !m);
+  $('rtMember').classList.toggle('active', m);
+  $('loginSub').textContent = m ? 'Use the mobile number and 6-character code your admin gave you.' : 'Sign in to manage your apartment.';
+  $('loginBtnLbl').textContent = m ? 'Sign in as Flat member' : 'Sign in as Admin';
+  $('loginIdLbl').textContent = m ? 'Mobile number' : 'Mobile number or Email';
+  $('loginId').placeholder = m ? '10-digit mobile number' : '9876543210 or you@example.com';
+  $('loginId').inputMode = m ? 'numeric' : 'text';
+  $('loginPwLbl').textContent = m ? '6-character code' : 'Password';
+  $('loginPassword').placeholder = m ? '• • • • • •' : 'Your password';
+  $('loginPassword').setAttribute('autocapitalize', m ? 'characters' : 'off');
+  if (m) $('loginPassword').setAttribute('maxlength', '6'); else $('loginPassword').removeAttribute('maxlength');
+  $('loginPassword').value = '';
+  $('forgotLink').style.display = m ? 'none' : '';
+  $('loginAlt').innerHTML = m
+    ? 'No code yet? Ask your apartment admin to add you.<br>Forgot your code? Your admin can reset it.'
+    : 'New society? <a href="register.html">Register your apartment</a>';
+  hideAlert('loginAlert');
+};
+window.toggleRole = () => window.setRole(SEL === 'admin' ? 'member' : 'admin');
+
+window.showTab = function(tab) { chrome(tab !== 'forgot'); show(tab === 'forgot' ? 'forgotForm' : 'loginForm'); hideAlert('loginAlert'); };
+window.showForgot = function() { chrome(false); show('forgotForm'); };
+window.togglePw = function(id, btn) {
+  const inp = $(id), showIt = inp.type === 'password';
+  inp.type = showIt ? 'text' : 'password';
+  btn.querySelector('i').className = showIt ? 'ti ti-eye-off' : 'ti ti-eye';
+};
+
+/* ── Routing once we know who the user is ── */
+async function route(user, fromLogin) {
+  if (user.email === PLATFORM_ADMIN_EMAIL) { window.location.replace('admin.html'); return; }
+  let r;
+  try { r = await resolveRole(user); } catch (e) { console.error(e); r = { role: 'new' }; }
+
+  // The toggle is only a label — verify it against the real account role.
+  if (fromLogin) {
+    const wrongAsMember = SEL === 'member' && r.role === 'admin';
+    const wrongAsAdmin  = SEL === 'admin'  && r.role === 'member';
+    if (wrongAsMember || wrongAsAdmin) {
+      await signOut(auth); showCard(); showTab('login');
+      showAlert('loginAlert', wrongAsMember
+        ? 'This is an admin account. Switch to “Admin” to sign in.'
+        : 'This is a flat member account. Switch to “Flat member” to sign in.');
+      return;
     }
-  } else {
-    document.getElementById('mainCard').style.display = '';
   }
+  if (r.role === 'admin' || r.role === 'member') { window.location.replace('app.html'); return; }
+  // signed in, but not an admin and not an added member
+  if (SEL === 'member') {
+    await signOut(auth); showCard(); showTab('login');
+    showAlert('loginAlert', 'You have not been added to an apartment yet. Ask your admin to add you.');
+    return;
+  }
+  window.location.replace('app.html');   // admin with no apartment yet → in-app setup wizard
+}
+
+onAuthStateChanged(auth, user => {
+  if (busy) return;
+  if (user) route(user, false);
+  else { showCard(); window.setRole(SEL); }
 });
 
-/* ── Tab switch ── */
-window.showTab = function(tab) {
-  const isLogin  = tab === 'login';
-  const isSignup = tab === 'signup';
-  document.getElementById('loginForm').style.display  = isLogin  ? '' : 'none';
-  document.getElementById('signupForm').style.display = isSignup ? '' : 'none';
-  document.getElementById('forgotForm').style.display = 'none';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabSignup').classList.toggle('active', isSignup);
-  clearAlerts();
-};
-
-/* ── Show forgot form ── */
-window.showForgot = function() {
-  document.getElementById('loginForm').style.display  = 'none';
-  document.getElementById('signupForm').style.display = 'none';
-  document.getElementById('forgotForm').style.display = '';
-  document.getElementById('tabLogin').classList.remove('active');
-  document.getElementById('tabSignup').classList.remove('active');
-  clearAlerts();
-};
-
-/* ── Password visibility toggle ── */
-window.togglePw = function(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  const show = inp.type === 'password';
-  inp.type = show ? 'text' : 'password';
-  btn.querySelector('i').className = show ? 'ti ti-eye-off' : 'ti ti-eye';
-};
-
-/* ── Helpers ── */
-function showAlert(id, msg, type = 'error') {
-  const el = document.getElementById(id);
-  document.getElementById(id + 'Msg').textContent = msg;
-  el.className = `alert ${type} show`;
-}
-function clearAlerts() {
-  ['loginAlert','signupAlert','forgotAlert'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.classList.remove('show');
-  });
-}
-function setLoading(btnId, lblId, loading, defaultLbl) {
-  document.getElementById(btnId).disabled = loading;
-  document.getElementById(lblId).textContent = loading ? 'Please wait…' : defaultLbl;
-}
-
-/* ── Login ── */
+/* ── Sign in ── */
 window.doLogin = async function() {
-  const raw = document.getElementById('loginId').value.trim();
-  const err = validateInput(raw);
-  if (err) { showAlert('loginAlert', err); return; }
-  const password = document.getElementById('loginPassword').value;
-  if (!password) { showAlert('loginAlert','Please enter your password.'); return; }
-  setLoading('loginBtn','loginBtnLbl', true, 'Sign In');
+  hideAlert('loginAlert');
+  const raw = $('loginId').value.trim(), pw = $('loginPassword').value;
+  const member = SEL === 'member';
+  if (member) {
+    if (!isValidMobile(raw)) { showAlert('loginAlert', 'Enter your 10-digit mobile number.'); return; }
+    if (!isValidPin(pw))     { showAlert('loginAlert', 'Enter your 6-character code (letters and digits).'); return; }
+  } else if (!raw || !pw) { showAlert('loginAlert', 'Enter your mobile/email and password.'); return; }
+
+  const lbl = $('loginBtnLbl').textContent;
+  busy = true; setLoading('loginBtn', 'loginBtnLbl', true, 'Signing in…');
   try {
-    await signInWithEmailAndPassword(auth, resolveEmail(raw), password);
-  } catch (e) {
-    const msgs = {
-      'auth/user-not-found':    'No account found. Please check your mobile number or email.',
-      'auth/wrong-password':    'Incorrect password. Please try again.',
-      'auth/invalid-credential':'Incorrect credentials. Please try again.',
-      'auth/too-many-requests': 'Too many attempts. Please try again later.',
+    let email, password = pw;
+    if (member) {
+      const s = await getDoc(doc(db, 'phoneLogins', raw));
+      if (!s.exists()) { showAlert('loginAlert', 'No flat member found for this number. Ask your admin to add you.'); return; }
+      email = s.data().email; password = pinToPassword(raw, pw);
+    } else email = toEmail(raw);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    await route(cred.user, true);
+  } catch (err) {
+    const m = {
+      'auth/invalid-credential': member ? 'Wrong mobile number or code.' : 'Wrong mobile/email or password.',
+      'auth/user-not-found': 'No account found.',
+      'auth/wrong-password': member ? 'Wrong code.' : 'Wrong password.',
+      'auth/too-many-requests': 'Too many attempts. Wait a few minutes and try again.',
+      'auth/invalid-email': 'Enter a valid mobile number or email.',
     };
-    showAlert('loginAlert', msgs[e.code] || 'Sign in failed. Please try again.');
-  } finally {
-    setLoading('loginBtn','loginBtnLbl', false, 'Sign In');
-  }
+    showAlert('loginAlert', m[err.code] || 'Sign in failed. Try again.');
+  } finally { busy = false; setLoading('loginBtn', 'loginBtnLbl', false, lbl); }
 };
 
-/* ── Forgot Password ── */
+/* ── Forgot password (admins only) ── */
 window.doForgot = async function() {
-  const email = document.getElementById('forgotId').value.trim();
-  if (!email || !email.includes('@')) { showAlert('forgotAlert', 'Please enter a valid email address.'); return; }
-  setLoading('forgotBtn','forgotBtnLbl', true, 'Send Reset Link');
-  try {
-    await sendPasswordResetEmail(auth, email);
-    showAlert('forgotAlert', 'Reset link sent! Check your email inbox.', 'success');
-  } catch (e) {
-    const msgs = {
-      'auth/user-not-found':    'No account found with this email.',
-      'auth/invalid-email':     'Please enter a valid email address.',
-      'auth/too-many-requests': 'Too many attempts. Please try again later.',
-    };
-    showAlert('forgotAlert', msgs[e.code] || 'Could not send reset link. Please try again.');
-  } finally {
-    setLoading('forgotBtn','forgotBtnLbl', false, 'Send Reset Link');
-  }
+  hideAlert('forgotAlert');
+  const email = $('forgotId').value.trim();
+  if (!email) { showAlert('forgotAlert', 'Enter your email address.'); return; }
+  setLoading('forgotBtn', 'forgotBtnLbl', true, 'Sending…');
+  try { await sendPasswordResetEmail(auth, email); showAlert('forgotAlert', 'Reset link sent. Check your inbox.', 'success'); }
+  catch (e) { showAlert('forgotAlert', 'Could not send reset link. Check the email address.'); }
+  finally { setLoading('forgotBtn', 'forgotBtnLbl', false, 'Send Reset Link'); }
 };
 
-/* ── Signup ── */
-window.doSignup = async function() {
-  const name     = document.getElementById('signupName').value.trim();
-  const raw      = document.getElementById('signupId').value.trim();
-  const password = document.getElementById('signupPassword').value;
-  if (!name) { showAlert('signupAlert','Please enter your full name.'); return; }
-  const err = validateInput(raw);
-  if (err) { showAlert('signupAlert', err); return; }
-  if (password.length < 6) { showAlert('signupAlert','Password must be at least 6 characters.'); return; }
-  setLoading('signupBtn','signupBtnLbl', true, 'Create Account');
-  try {
-    const cred = await createUserWithEmailAndPassword(auth, resolveEmail(raw), password);
-    await updateProfile(cred.user, { displayName: name });
-  } catch (e) {
-    const msgs = {
-      'auth/email-already-in-use':'An account with this mobile number or email already exists.',
-      'auth/weak-password':       'Password is too weak. Use at least 6 characters.',
-    };
-    showAlert('signupAlert', msgs[e.code] || 'Sign up failed. Please try again.');
-  } finally {
-    setLoading('signupBtn','signupBtnLbl', false, 'Create Account');
-  }
-};
-
-/* ── Enter key submit ── */
 document.addEventListener('keydown', e => {
-  if (e.key !== 'Enter') return;
-  if (document.getElementById('loginForm').style.display  !== 'none') window.doLogin();
-  else if (document.getElementById('signupForm').style.display !== 'none') window.doSignup();
-  else if (document.getElementById('forgotForm').style.display !== 'none') window.doForgot();
+  if (e.key === 'Enter' && $('loginForm').style.display !== 'none') window.doLogin();
 });
 </script>
 </body>
