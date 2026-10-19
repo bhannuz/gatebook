@@ -1,19 +1,37 @@
-import { auth, db } from './firebase.js';
-import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import { app, auth, db } from './firebase.js';
+import { initializeApp, deleteApp } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js';
 import {
-  collection, doc, getDocs, getDoc, addDoc, setDoc, updateDoc, deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp,
+  onAuthStateChanged, signOut, getAuth, createUserWithEmailAndPassword, updateProfile,
+  updatePassword, reauthenticateWithCredential, EmailAuthProvider,
+} from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
+import {
+  collection, doc, getDocs, getDoc, addDoc as _addDoc, setDoc as _setDoc, updateDoc as _updateDoc, deleteDoc as _deleteDoc,
+  onSnapshot, query, where, orderBy, serverTimestamp, getFirestore,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
+import { resolveRole, pinToPassword, randomPin, isValidPin, isValidMobile, normalizePin } from './roles.js';
 /* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
    AUTH GUARD
 ════════════════════════════════ */
-let UID = null;
+let UID = null;          // apartment id (the admin's uid) — for members it is NOT their own uid
+let ROLE = 'admin';      // 'admin' | 'member'
+let MY_FLAT = null, MY_NAME = '', MY_PHONE = '', MY_REL = '';
+const isAdmin  = () => ROLE === 'admin';
+const isMember = () => ROLE === 'member';
 let _booted = false; // prevent duplicate boot on auth token refresh
 
+/* Write guard (UX layer). The REAL enforcement is firestore.rules.
+   Admin: everything. Flat member: may only create documents in /issues and /contacts. */
+const _canWrite = ref => isAdmin() || (isMember() && /\/(issues|contacts)$/.test(ref.path || ''));
+const _deny = () => { toast('Only the apartment admin can make changes.', 'error'); throw new Error('read-only'); };
+const addDoc    = (ref, ...a) => _canWrite(ref) ? _addDoc(ref, ...a)    : _deny();
+const setDoc    = (ref, ...a) => _canWrite(ref) ? _setDoc(ref, ...a)    : _deny();
+const updateDoc = (ref, ...a) => _canWrite(ref) ? _updateDoc(ref, ...a) : _deny();
+const deleteDoc = (ref, ...a) => _canWrite(ref) ? _deleteDoc(ref, ...a) : _deny();
+
 const ADMIN_EMAIL = 'admin@gatebook.app';
-onAuthStateChanged(auth, user => {
+onAuthStateChanged(auth, async user => {
   if (!user) {
     window.location.replace('index.html');
     return;
@@ -31,7 +49,23 @@ onAuthStateChanged(auth, user => {
   // Only boot once — onAuthStateChanged can fire multiple times
   if (_booted) return;
   _booted = true;
-  UID = user.uid;
+
+  let r;
+  try { r = await resolveRole(user); } catch (e) { console.error(e); r = { role: 'new' }; }
+  // A flat member who was removed (or never added) goes back to the login page
+  if (r.role === 'new' && sessionStorage.getItem('gb_intent') === 'member') {
+    await signOut(auth);
+    window.location.replace('index.html');
+    return;
+  }
+  ROLE    = r.role === 'member' ? 'member' : 'admin';
+  UID     = r.aptId || user.uid;
+  MY_FLAT = r.flatId || null;
+  MY_NAME = r.name || user.displayName || '';
+  MY_PHONE = r.phone || '';
+  MY_REL   = r.relation || '';
+  console.info('Gatebook roles build r7 · role:', ROLE);
+  applyRoleUI();
   boot();
 });
 
@@ -67,6 +101,7 @@ const contacts = [];          // service contacts (plumber, electrician etc)
 
 let AB='', FS='all', SQ='', RTF='all', FLF='all', MF='all', AM=new Date().toISOString().slice(0,7), AV='analytics', IF='all', STRVIEW='floor';
 // Analytics tab state — declared here to avoid TDZ errors
+let _anQ='', _expQ='', _expQT=0;   // search text for Payments / Expenses
 let _anStatus='all', _anFilterType='month', _anSelMonth=AM, _anSelYear=new Date().getFullYear().toString(), _anBlock='all';
 const _pieSegs={};
 let eu=null, iu=null, vu=null, pu=null;
@@ -910,6 +945,13 @@ function oRI(){
   document.getElementById('iBl').innerHTML=bks().map(b=>`<option value="${b}">Block ${b}</option>`).join('')+'<option value="Common">Common Area</option>';
   const btn=document.getElementById('issBtn');btn.disabled=false;
   document.getElementById('issBtnL').textContent='Submit Complaint';
+  const _lock=isMember();
+  if(_lock){
+    document.getElementById('iRe').value=MY_NAME||'';
+    document.getElementById('iFl').value=MY_FLAT||'';
+    const _f=flats.get(MY_FLAT); if(_f&&_f.block) document.getElementById('iBl').value=_f.block;
+  }
+  ['iRe','iFl','iBl'].forEach(id=>{document.getElementById(id).disabled=_lock;});
   document.getElementById('rIM').classList.add('open');
 }
 function cRI(){
@@ -935,6 +977,7 @@ async function sI(){
     const now=new Date().toISOString();
     await addDoc(issuesColl(),{
       title,cat,priority,block,flat,desc,reporter,
+      reporterUid:auth.currentUser?.uid||null,
       status:'open',month:AM,
       timeline:[{action:'Issue reported',by:reporter,status:'open',ts:now}],
       createdAt:serverTimestamp(),
@@ -1005,7 +1048,7 @@ function oID(id){
       <label style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:3px">Description</label>
       <textarea id="ie_desc" rows="3"
         style="width:100%;box-sizing:border-box;padding:8px;background:var(--surface);border:1.5px solid var(--border);color:var(--text);font-family:var(--font);font-size:12px;border-radius:var(--r-md);outline:none;resize:vertical;line-height:1.6"
-        onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'">${iss.desc||''}</textarea>
+        onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border)'">${_esc(iss.desc||'')}</textarea>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end;padding-top:4px;border-top:1px solid var(--border)">
       <button onclick="window._delIssue('${id}')"
@@ -1032,11 +1075,12 @@ function oID(id){
           ${i<tl.length-1?'<div class="itl-line"></div>':''}
         </div>
         <div class="itl-body">
-          <div class="itl-action">${t.action}</div>
-          <div class="itl-by">By ${t.by||'System'} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
+          <div class="itl-action">${_esc(t.action)}</div>
+          <div class="itl-by">By ${_esc(t.by||'System')} · ${t.ts?new Date(t.ts).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}):fdt(iss.createdAt)}</div>
         </div>
       </div>`).join('')}
   `;
+  if(isMember()) document.querySelectorAll('#idC input,#idC select,#idC textarea').forEach(el=>{el.disabled=true;});
   document.getElementById('idM').classList.add('open');
 }
 function cID(){document.getElementById('idM').classList.remove('open');}
@@ -2184,19 +2228,19 @@ function rIssues() {
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
               <div style="font-size:13px;font-weight:600;color:var(--text);display:flex;align-items:center;gap:7px">
                 <i class="ti ${icons[iss.cat] || 'ti-clipboard'}" style="font-size:14px;color:var(--indigo);flex-shrink:0"></i>
-                ${iss.title}
+                ${_esc(iss.title)}
               </div>
-              ${iss.desc ? `<div style="font-size:11px;color:var(--text2);margin-top:2px">${iss.desc.length > 80 ? iss.desc.slice(0,80)+'…' : iss.desc}</div>` : ''}
+              ${iss.desc ? `<div style="font-size:11px;color:var(--text2);margin-top:2px">${_esc(iss.desc.length > 80 ? iss.desc.slice(0,80)+'…' : iss.desc)}</div>` : ''}
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-              <span class="tab-chip indigo">${iss.flat || iss.block}</span>
+              <span class="tab-chip indigo">${_esc(iss.flat || iss.block)}</span>
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
-              <span class="tab-chip purple">${iss.cat}</span>
+              <span class="tab-chip purple">${_esc(iss.cat)}</span>
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px;color:var(--text2);white-space:nowrap">
               <div>${fdt(iss.createdAt)}</div>
-              <div style="font-size:11px;color:var(--muted);margin-top:1px">By ${iss.reporter}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:1px">By ${_esc(iss.reporter)}</div>
             </td>
             <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;text-align:center">
               <div title="${pLabel} Priority" style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:${pColor}18;color:${pColor}">
@@ -2471,6 +2515,30 @@ const CAT_CLR = {
   Gardening:'var(--green)', Painting:'var(--amber)', Other:'var(--text2)'
 };
 
+/* Expenses: summary line + removable tags + search/clear handlers */
+function _expRenderSummary(vis, total, f) {
+  const el = document.getElementById('expSummary'); if (!el) return;
+  const tag = (label, key) => `<span class="ftag">${_esc(label)}<button type="button" aria-label="Remove filter ${_esc(label)}" onclick="window._expClear('${key}')">✕</button></span>`;
+  const tags = [];
+  if (f.yf !== 'all') tags.push(tag(f.yf, 'year'));
+  if (f.mf !== 'all') tags.push(tag(new Date(f.mf + '-01').toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }), 'month'));
+  if (f.cf !== 'all') tags.push(tag(f.cf, 'cat'));
+  const q = (_expQ || '').trim();
+  if (q) tags.push(tag(`“${q}”`, 'q'));
+  const tot = vis.reduce((t, e) => t + (e.amt || 0), 0);
+  el.innerHTML = `<span>Showing <b>${vis.length}</b> of ${total} record${total!==1?'s':''} · <b>${inr(tot)}</b></span>${tags.join('')}` +
+    (tags.length > 1 ? `<button type="button" class="fclear" onclick="window._expClear('all')">Clear all</button>` : '');
+}
+window._expSearch = v => { _expQ = v || ''; clearTimeout(_expQT); _expQT = setTimeout(() => rPresident(), 120); };
+window._expClear = key => {
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  if (key === 'year' || key === 'all') { set('histYearFilter', 'all'); set('histMonthFilter', 'all'); }
+  if (key === 'month' || key === 'all') set('histMonthFilter', 'all');
+  if (key === 'cat'   || key === 'all') set('histCatFilter', 'all');
+  if (key === 'q'     || key === 'all') { _expQ = ''; set('expSearch', ''); }
+  rPresident();
+};
+
 function rPresident() {
   /* ── Save filter selections BEFORE rebuilding DOM ── */
   const _savedYear  = document.getElementById('histYearFilter')?.value  || 'all';
@@ -2510,54 +2578,52 @@ function rPresident() {
   const catIcon = c => CAT_ICONS2[c]||'ti-clipboard';
   const allCatNames = [...new Set(socExps.map(e=>e.cat).filter(Boolean))].sort();
 
-  /* ── Filter dropdowns ── */
-  const allMonths = [...new Set(socExps.map(e=>e.month).filter(Boolean))].sort().reverse();
-  const allYears  = [...new Set(allMonths.map(m=>m.slice(0,4)))].sort().reverse();
-  const allCats   = [...new Set(socExps.map(e=>e.cat).filter(Boolean))].sort();
+  /* ── Filter dropdowns: dynamic — only values that have data, with counts ── */
+  const q = (_expQ || '').trim().toLowerCase();
+  const countBy = (rows, keyFn) => { const m = new Map(); rows.forEach(e => { const k = keyFn(e); if (k) m.set(k, (m.get(k) || 0) + 1); }); return m; };
+  const allMonths  = [...new Set(socExps.map(e=>e.month).filter(Boolean))].sort().reverse();
+  const allYears   = [...new Set(allMonths.map(m=>m.slice(0,4)))].sort().reverse();
+  const yearCounts = countBy(socExps, e => (e.month || '').slice(0, 4));
 
-  // Year dropdown — restore saved selection
+  // Year
   const ySel = document.getElementById('histYearFilter');
   if (ySel) {
     ySel.innerHTML = `<option value="all">All Years</option>` +
-      allYears.map(y => `<option value="${y}">${y}</option>`).join('');
-    if (_savedYear && allYears.includes(_savedYear)) ySel.value = _savedYear;
+      allYears.map(y => `<option value="${y}">${y} (${yearCounts.get(y) || 0})</option>`).join('');
+    if (allYears.includes(_savedYear)) ySel.value = _savedYear;
   }
+  const yf = ySel?.value || 'all';
 
-  // Month dropdown — cascade by selected year, restore saved selection
-  const selectedYear = ySel?.value || 'all';
-  const filteredMonths = selectedYear === 'all' ? allMonths : allMonths.filter(m => m.startsWith(selectedYear));
+  // Month — only the months of the chosen year
+  const filteredMonths = yf === 'all' ? allMonths : allMonths.filter(m => m.startsWith(yf));
+  const monthCounts = countBy(socExps, e => e.month);
   const mSel = document.getElementById('histMonthFilter');
   if (mSel) {
     mSel.innerHTML = `<option value="all">All Months</option>` +
       filteredMonths.map(m => {
         const lbl = new Date(m + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
-        return `<option value="${m}">${lbl}</option>`;
+        return `<option value="${m}">${lbl} (${monthCounts.get(m) || 0})</option>`;
       }).join('');
-    // Default to current month (AM) if available
-    if (!_savedMonth) {
-      mSel.value = filteredMonths.includes(AM) ? AM : (filteredMonths[0] || 'all');
-    } else if (filteredMonths.includes(_savedMonth)) {
-      mSel.value = _savedMonth;
-    }
+    if (filteredMonths.includes(_savedMonth)) mSel.value = _savedMonth;
   }
+  const mf = mSel?.value || 'all';
 
-  // Category dropdown — restore saved selection
+  // Category — only the categories used in the chosen year / month
+  const scopeRows = socExps.filter(e => (yf === 'all' || (e.month || '').startsWith(yf)) && (mf === 'all' || e.month === mf));
+  const catCounts = countBy(scopeRows, e => e.cat);
+  const allCats = [...catCounts.keys()].sort();
   const cSel = document.getElementById('histCatFilter');
   if (cSel) {
     cSel.innerHTML = `<option value="all">All Categories</option>` +
-      allCats.map(c => `<option value="${c}">${c}</option>`).join('');
-    if (_savedCat && allCats.includes(_savedCat)) cSel.value = _savedCat;
+      allCats.map(c => `<option value="${_esc(c)}">${_esc(c)} (${catCounts.get(c)})</option>`).join('');
+    if (allCats.includes(_savedCat)) cSel.value = _savedCat;
   }
+  const cf = cSel?.value || 'all';
 
-  /* ── Filter expense rows using saved values ── */
-  const yf = _savedYear;
-  const mf = (_savedMonth && filteredMonths.includes(_savedMonth)) ? _savedMonth : (mSel?.value || 'all');
-  const cf = (_savedCat  && allCats.includes(_savedCat))           ? _savedCat  : (cSel?.value || 'all');
-
-  const vis = socExps.filter(e => {
-    if (yf !== 'all' && !(e.month||'').startsWith(yf)) return false;
-    if (mf !== 'all' && e.month !== mf)                return false;
-    if (cf !== 'all' && e.cat   !== cf)                return false;
+  /* ── Rows that pass every filter (year, month, category, search) ── */
+  const vis = scopeRows.filter(e => {
+    if (cf !== 'all' && e.cat !== cf) return false;
+    if (q && ![e.title, e.paidBy, e.cat, e.note].some(x => String(x || '').toLowerCase().includes(q))) return false;
     return true;
   });
 
@@ -2580,8 +2646,17 @@ function rPresident() {
     .flat()
     .reduce((s, e) => s + (e.amt || 0), 0);
 
+  // First card: the current month while nothing is filtered, otherwise exactly what is filtered
+  const anyFilter = yf !== 'all' || mf !== 'all' || cf !== 'all' || !!q;
+  const scopeLabel = anyFilter
+    ? [ mf !== 'all' ? new Date(mf + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : (yf !== 'all' ? `Year ${yf}` : null),
+        cf !== 'all' ? cf : null,
+        q ? `“${(_expQ || '').trim()}”` : null ].filter(Boolean).join(' · ')
+    : currentMonthLabel;
+  const card1Total = anyFilter ? vis.reduce((t, e) => t + (e.amt || 0), 0) : totalCurrentMonthExp;
+  const card1Count = anyFilter ? vis.length : currentMonthExpenses.length;
   document.getElementById('fundRow').innerHTML = `
-    <div class="fcard2 indigo"><div class="fcard2-label">${currentMonthLabel}</div><div class="fcard2-val">${inr(totalCurrentMonthExp)}</div><div class="fcard2-sub">${currentMonthExpenses.length} record${currentMonthExpenses.length!==1?'s':''}</div></div>
+    <div class="fcard2 indigo"><div class="fcard2-label">${_esc(scopeLabel)}</div><div class="fcard2-val">${inr(card1Total)}</div><div class="fcard2-sub">${card1Count} record${card1Count!==1?'s':''}</div></div>
     <div class="fcard2 indigo"><div class="fcard2-label">All Time</div><div class="fcard2-val">${inr(totalAllExp)}</div><div class="fcard2-sub">${socExps.length} records</div></div>`;
 
 
@@ -2602,8 +2677,11 @@ function rPresident() {
     }));
   }
 
+  _expRenderSummary(vis, socExps.length, { yf, mf, cf });
   if(!vis.length){
-    document.getElementById('presExpList').innerHTML=`<div class="exp-empty"><i class="ti ti-receipt-off"></i>No expenses recorded yet.</div>`;
+    document.getElementById('presExpList').innerHTML = socExps.length
+      ? `<div class="fempty">No expenses match these filters.<br><button type="button" class="btn btn-white btn-sm" onclick="window._expClear('all')">Clear filters</button></div>`
+      : `<div class="exp-empty"><i class="ti ti-receipt-off"></i>No expenses recorded yet.</div>`;
     return;
   }
 
@@ -3292,7 +3370,7 @@ async function boot(){
     // Also check flat count
     const snap = await getDocs(flatsColl());
 
-    if (!snap.empty || hasAptBlocks) {
+    if (!snap.empty || hasAptBlocks || isMember()) {
       // Society already set up — go straight to app
       listenFlats();
       listenExp();
@@ -3300,6 +3378,7 @@ async function boot(){
       listenVehicles();
       listenSocExp();
       listenContacts();
+      if (isAdmin()) initMembershipUI(); else { showMemberBanner(); initChangeCode(); }
       // Reveal the app UI — this was previously only done in the wizard branch,
       // causing a permanently blank page on refresh for already-configured societies.
       document.getElementById('lo').style.display = 'none';
@@ -3890,10 +3969,12 @@ function rAnalytics() {
   // Populate block dropdown
   const blkSel = document.getElementById('payFilterBlock');
   if (blkSel) {
-    const prevBlk = blkSel.value || '';
+    const prevBlk = (_anBlock && _anBlock !== 'all') ? _anBlock : '';
     const blks = [...new Set([...flats.values()].map(f=>f.block||'').filter(Boolean))].sort();
+    const flatsIn = b => [...flats.values()].filter(f => (f.block||'') === b).length;
     blkSel.innerHTML = '<option value="">All Blocks</option>' +
-      blks.map(b=>`<option value="${b}"${prevBlk===b?' selected':''}>Block ${b}</option>`).join('');
+      blks.map(b=>`<option value="${b}"${prevBlk===b?' selected':''}>Block ${b} (${flatsIn(b)})</option>`).join('');
+    if (prevBlk && !blks.includes(prevBlk)) _anBlock = 'all';
   }
 
   // Restore month selection
@@ -3908,6 +3989,7 @@ function rAnalytics() {
 
 /* Called when year dropdown changes */
 window._anOnYearChange = function () {
+  _anExpandOnMobile();
   const monthSet = new Set();
   exps.forEach(records => records.forEach(e => { if (e.month) monthSet.add(e.month); }));
   monthSet.add(AM);
@@ -3916,9 +3998,10 @@ window._anOnYearChange = function () {
 };
 
 /* Called when month dropdown changes */
-window._anOnMonthChange = function () { _anRender(); };
+window._anOnMonthChange = function () { _anExpandOnMobile(); _anRender(); };
 
 window._anOnBlockChange = function () {
+  _anExpandOnMobile();
   const b = document.getElementById('payFilterBlock')?.value || '';
   _anBlock = b || 'all';
   ['anBlockFilter','anBlockFilter2'].forEach(id => { const el=document.getElementById(id); if(el) el.value=_anBlock; });
@@ -3935,11 +4018,13 @@ function _anPopulateMonths(sortedMonths) {
     ? sortedMonths.filter(m => m.startsWith(selectedYear))
     : sortedMonths;
 
+  const perMonth = {};
+  exps.forEach(rs => rs.forEach(e => { const k = e.month || (e.rawDate || '').slice(0, 7); if (k) perMonth[k] = (perMonth[k] || 0) + 1; }));
   mSel.innerHTML = `<option value="">All months</option>` +
     filtered.map(m => {
       const lbl = new Date(m + '-01').toLocaleDateString('en-IN',
         { month: 'long', year: 'numeric' });
-      return `<option value="${m}">${lbl}</option>`;
+      return `<option value="${m}">${lbl}${perMonth[m] ? ` (${perMonth[m]})` : ''}</option>`;
     }).join('');
 
   // Default to current month (AM) if available, otherwise first available month
@@ -3947,6 +4032,29 @@ function _anPopulateMonths(sortedMonths) {
 }
 
 /* Core render: reads exps Map, no paymentHistory needed */
+/* Payment records + chart: collapsed by default on mobile (up to 768px), always open on desktop */
+const _anMobile = () => window.matchMedia('(max-width:768px)').matches;
+function _anSyncColl() {
+  ['anRecPanel', 'anChartPanel'].forEach(id => {
+    const p = document.getElementById(id); const h = p && p.querySelector('.coll-head'); if (!h) return;
+    if (_anMobile()) {
+      h.setAttribute('role', 'button'); h.setAttribute('tabindex', '0');
+      h.setAttribute('aria-expanded', String(!p.classList.contains('is-collapsed')));
+    } else { h.removeAttribute('role'); h.removeAttribute('tabindex'); h.removeAttribute('aria-expanded'); }
+  });
+}
+window._anToggle = id => {
+  if (!_anMobile()) return;                          // desktop: nothing to collapse
+  const p = document.getElementById(id); if (!p) return;
+  p.classList.toggle('is-collapsed');
+  _anSyncColl();
+  if (id === 'anChartPanel' && !p.classList.contains('is-collapsed')) _anRender();   // redraw the chart now that it is visible
+};
+function _anExpandOnMobile() {                       // choosing a filter means "show me the results"
+  const p = document.getElementById('anRecPanel');
+  if (_anMobile() && p && p.classList.contains('is-collapsed')) { p.classList.remove('is-collapsed'); _anSyncColl(); }
+}
+
 function _anRender() {
   const selectedYear  = document.getElementById('payFilterYear')?.value  || '';
   const selectedMonth = document.getElementById('payFilterMonth')?.value || '';
@@ -4070,30 +4178,28 @@ function _anRender() {
     buildLegend('payLegend', segments.map(s => ({ ...s, count: s.value })), totalFlats);
   });
 
-  /* ── Summary cards: Current Month and Outstanding Balance ── */
+  /* ── Collected in the SELECTED period / block (drives the first summary card) ── */
+  let periodCollected = 0, periodRecords = 0;
+  flats.forEach((f, fid) => {
+    if (selBlock && f.block !== selBlock) return;
+    (exps.get(fid) || []).filter(inPeriod).forEach(e => { periodCollected += (e.amt || 0); periodRecords++; });
+  });
+  const cardLabel = periodLabel + (selBlock ? ` · Block ${selBlock}` : '');
+
+  /* ── Summary cards: selected period + Outstanding Balance ── */
   const cardsDiv = document.getElementById('analyticsTotals');
   if (cardsDiv) {
     const currentMonthLabel = new Date(AM + '-01').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     cardsDiv.innerHTML = `
-    <div class="vscard indigo">
-      <div>
-        <div class="vscard-label" style="color:#000">${currentMonthLabel}</div>
-        <div class="vscard-val" style="color:#000">${inr(currentMonthCollected)}</div>
-        <div style="font-size:10px;color:#000;margin-top:4px">${currentMonthRecords} record${currentMonthRecords!==1?'s':''}</div>
-      </div>
-    </div>
-    <div class="vscard indigo" style="position:relative">
-      <div>
-        <div class="vscard-label" style="color:#000">Outstanding Balance</div>
-        <div class="vscard-val" style="color:#000">${inr(Math.max(0, outstandingBalance))}</div>
-        <div style="font-size:10px;color:#000;margin-top:4px">Corpus: ${inr(APT_CORPUS_FUND)}</div>
-      </div>
-      <button onclick="window._editCorpusFund()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#000;font-size:16px;padding:4px"><i class="ti ti-edit"></i></button>
+    <div class="fcard2 indigo"><div><div class="fcard2-label">${_esc(cardLabel)}</div><div class="fcard2-val dual"><span style="color:var(--green)">${inr(totalCollected)}</span><span class="sep">/</span><span style="color:var(--red)">${inr(outstanding)}</span></div><div class="fcard2-sub"><b style="color:var(--green)">Paid</b> / <b style="color:var(--red)">Pending</b> · ${periodRecords} record${periodRecords!==1?'s':''}</div></div></div>
+    <div class="fcard2 indigo"><div><div class="fcard2-label">Outstanding Balance</div><div class="fcard2-val">${inr(Math.max(0, outstandingBalance))}</div><div class="fcard2-sub">Corpus: ${inr(APT_CORPUS_FUND)}</div></div>
+      <button onclick="window._editCorpusFund()" style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:var(--text2);font-size:16px;padding:4px"><i class="ti ti-edit"></i></button>
     </div>`;
   }
 
   /* ── Payment records table ── */
   renderAnPayTable('month', selectedMonth || AM, selectedYear, selBlock || 'all');
+  _anSyncColl();
 }
 window.rAnalytics = rAnalytics;
 
@@ -4188,6 +4294,30 @@ function anSetBlock(b) {
 }
 window.anSetBlock = anSetBlock;
 
+/* Status buttons (with live counts) + summary line + removable tags */
+function _anRenderToolbar(counts, shown, total, block, q) {
+  const names = { all:'All', paid:'Paid', partial:'Partial', pending:'Pending', vacant:'Vacant' };
+  const pills = document.getElementById('anPills');
+  if (pills) pills.innerHTML = Object.keys(names).map(k =>
+    `<button type="button" class="fpill${_anStatus===k?' on':''}" aria-pressed="${_anStatus===k}" onclick="window.anSetStatus('${k}')">${names[k]} <b>${counts[k]||0}</b></button>`).join('');
+  const sum = document.getElementById('anSummary'); if (!sum) return;
+  const tag = (label, key) => `<span class="ftag">${_esc(label)}<button type="button" aria-label="Remove filter ${_esc(label)}" onclick="window._anClear('${key}')">✕</button></span>`;
+  const tags = [];
+  if (block && block !== 'all') tags.push(tag(`Block ${block}`, 'block'));
+  if (_anStatus !== 'all')      tags.push(tag(names[_anStatus] || _anStatus, 'status'));
+  if (q)                        tags.push(tag(`“${(_anQ||'').trim()}”`, 'q'));
+  sum.innerHTML = `<span>Showing <b>${shown}</b> of ${total} flat${total!==1?'s':''}</span>${tags.join('')}` +
+    (tags.length > 1 ? `<button type="button" class="fclear" onclick="window._anClear('all')">Clear all</button>` : '');
+}
+window._anSearch = v => { _anQ = v || ''; renderAnPayTable(); };
+window._anClear = key => {
+  const blk = document.getElementById('payFilterBlock');
+  if (key === 'status' || key === 'all') _anStatus = 'all';
+  if (key === 'q' || key === 'all') { _anQ = ''; const i = document.getElementById('anSearch'); if (i) i.value = ''; }
+  if ((key === 'block' || key === 'all') && blk && blk.value) { blk.value = ''; window._anOnBlockChange(); return; }
+  renderAnPayTable();
+};
+
 function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   if (filterType !== undefined) _anFilterType = filterType;
   if (selMonth   !== undefined) _anSelMonth   = selMonth || AM;
@@ -4199,8 +4329,15 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const sy = _anSelYear    || new Date().getFullYear().toString();
   const sb = _anBlock      || 'all';
 
-  let rows = _buildFlatSummary(ft, sm, sy, sb);
-  if (_anStatus !== 'all') rows = rows.filter(f => f._status === _anStatus);
+  const everyFlat = _buildFlatSummary(ft, sm, sy, sb);                 // block + period
+  const q = (_anQ || '').trim().toLowerCase();
+  const searched = q
+    ? everyFlat.filter(f => (f.flatId || '').toLowerCase().includes(q) || (f.owner || '').toLowerCase().includes(q))
+    : everyFlat;
+  const counts = { all: searched.length, paid: 0, partial: 0, pending: 0, vacant: 0 };
+  searched.forEach(f => { counts[f._status] = (counts[f._status] || 0) + 1; });
+  const rows = _anStatus !== 'all' ? searched.filter(f => f._status === _anStatus) : searched;
+  _anRenderToolbar(counts, rows.length, everyFlat.length, sb, q);
 
   const tbody   = document.getElementById('anPayTable');
   const empty   = document.getElementById('anPayEmpty');
@@ -4209,12 +4346,17 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
 
   if (!rows.length) {
     tbody.innerHTML = '';
-    if (empty)   empty.style.display   = 'block';
-    if (counter) counter.textContent   = '';
+    if (empty) {
+      empty.style.display = 'block';
+      empty.innerHTML = everyFlat.length
+        ? 'No flats match these filters.<br><button type="button" class="btn btn-white btn-sm" onclick="window._anClear(\'all\')">Clear filters</button>'
+        : 'No flats found for this period.';
+    }
+    if (counter) counter.textContent = '';
     return;
   }
   if (empty)   empty.style.display   = 'none';
-  if (counter) counter.textContent   = `(${rows.length} flats)`;
+  if (counter) counter.textContent   = rows.length === everyFlat.length ? `(${rows.length} flats)` : `(${rows.length} of ${everyFlat.length} flats)`;
 
   tbody.innerHTML = rows.map((f,i) => {
     const s        = f._status || 'pending';
@@ -4250,14 +4392,14 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
       style="cursor:pointer;transition:background .12s"
       onmouseover="this.style.background='var(--indigo-bg)'"
       onmouseout="this.style.background=''">
-      <td style="padding:10px 12px;font-weight:800;color:var(--indigo);font-size:12px;border-bottom:1px solid var(--border);vertical-align:middle;white-space:nowrap">${f.flatId}</td>
-      <td style="padding:10px 12px;border-bottom:1px solid var(--border);overflow:hidden;vertical-align:middle">
+      <td class="c-flat" style="font-weight:800;color:var(--indigo);font-size:12px">${f.flatId}</td>
+      <td class="c-owner">
         <div style="font-size:12px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <div style="margin-top:2px">${typeBadge}</div>
       </td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;font-size:12px">${vehCell}</td>
-      <td style="padding:10px 12px;text-align:right;font-weight:800;color:${balColor};font-size:13px;border-bottom:1px solid var(--border);white-space:nowrap;vertical-align:middle">${f.due?inr(Math.abs(bal)):'—'}</td>
-      <td style="padding:10px 12px;text-align:center;border-bottom:1px solid var(--border);vertical-align:middle;position:relative" class="status-col">
+      <td class="c-veh" style="font-size:12px">${vehCell}</td>
+      <td class="c-bal" style="font-weight:800;color:${balColor};font-size:13px">${f.due?inr(Math.abs(bal)):'—'}</td>
+      <td class="c-st status-col" style="position:relative">
         <span class="status-text" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;${s==='paid'?'background:#dcfce7;color:#16a34a':s==='partial'?'background:#fef9c3;color:#d97706':s==='pending'?'background:#fee2e2;color:#dc2626':'background:#f3f4f6;color:#9ca3af'}">${statusText}</span>
         <span class="status-icon" style="display:none;font-size:20px;${s==='paid'?'color:#16a34a':s==='partial'?'color:#d97706':'color:#dc2626'}" title="${statusText}">
           <i class="ti ti-circle-filled"></i>
@@ -4271,10 +4413,10 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
   const totTw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).tw)||0),0);
   const totFw  = rows.reduce((s,f)=>s+(parseInt((vehicles.get(f.flatId)||{}).fw)||0),0);
   tbody.innerHTML += `<tr style="background:var(--surface3);border-top:2px solid var(--border2)">
-    <td style="padding:10px 12px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
-    <td style="padding:10px 12px;text-align:center;font-size:12px;font-weight:700;color:var(--text)">${totTw>0?`${totTw}`:''} ${totTw>0&&totFw>0?'/ ':''} ${totFw>0?`${totFw}`:''}</td>
-    <td style="padding:10px 12px;text-align:right;font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px;white-space:nowrap">${inr(Math.abs(totBal))}</td>
-    <td style="padding:10px 12px;text-align:center;font-size:10px;color:var(--muted)">—</td>
+    <td style="padding-left:18px;font-size:11px;font-weight:800;color:var(--text2)" colspan="2">Total — ${rows.length} flats</td>
+    <td class="c-veh" style="font-size:12px;font-weight:700;color:var(--text)">${totTw>0?`${totTw}`:''} ${totTw>0&&totFw>0?'/ ':''} ${totFw>0?`${totFw}`:''}</td>
+    <td class="c-bal" style="font-weight:800;color:${totBal>0?'var(--red)':'var(--green)'};font-size:13px">${inr(Math.abs(totBal))}</td>
+    <td class="c-st" style="font-size:10px;color:var(--muted)">—</td>
   </tr>`;
 }
 
@@ -4722,6 +4864,8 @@ window._rContacts = function() {
   const vis = filter === 'all' ? contacts : contacts.filter(c => c.cat === filter);
   const el = document.getElementById('contactsList');
   if (!el) return;
+  el.style.gridTemplateColumns = 'repeat(auto-fill,minmax(min(100%,230px),1fr))';
+  el.style.gap = '10px';
 
   if (!vis.length) {
     el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
@@ -4735,28 +4879,30 @@ window._rContacts = function() {
   el.innerHTML = vis.map(c => {
     const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
-    const phone = (c.phone || '').replace(/\D/g, '');
+    const digits = (c.phone || '').replace(/\D/g, '');
+    const btn = 'flex:1 1 96px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;padding:0 10px;';
     return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--border2);
-        border-radius:10px;padding:7px 8px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
+      style="display:flex;flex-direction:column;gap:10px;min-width:0;background:#fff;border:1.5px solid var(--border2);
+        border-radius:12px;padding:12px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
       onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
       onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="width:30px;height:30px;border-radius:8px;background:${color}18;color:${color};
-        display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">
-        <i class="ti ${icon}"></i>
+      <div style="display:flex;align-items:center;gap:10px;min-width:0">
+        <div style="width:38px;height:38px;border-radius:10px;background:${color}18;color:${color};
+          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
+          <i class="ti ${icon}"></i>
+        </div>
+        <div style="min-width:0;flex:1">
+          <div class="ct-name" style="font-size:14px;font-weight:700;color:var(--text);line-height:1.25;overflow-wrap:anywhere;
+            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_esc(c.name || 'Unnamed')}</div>
+          <div class="ct-meta" style="font-size:12px;font-weight:600;color:var(--text2);margin-top:2px">${_esc(c.cat || 'Other')}</div>
+        </div>
       </div>
-      <div style="flex:1;min-width:0">
-        <div style="font-size:12px;font-weight:700;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${c.name || 'Unnamed'}</div>
-        <div style="font-size:9px;font-weight:600;color:${color};margin-top:1px">${c.cat || 'Other'}${c.phone ? ' · '+c.phone : ''}</div>
-      </div>
-      <div style="display:flex;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
-        <a href="tel:${phone}" title="Call" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:var(--indigo-bg);color:var(--indigo);border-radius:6px;text-decoration:none">
-          <i class="ti ti-phone" style="font-size:12px"></i>
-        </a>
-        ${phone ? `<a href="https://wa.me/91${phone}" target="_blank" title="WhatsApp" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;background:#D1FAE5;color:#065F46;border-radius:6px;text-decoration:none">
-          <i class="ti ti-brand-whatsapp" style="font-size:13px"></i>
-        </a>` : ''}
-      </div>
+      ${c.phone ? `<div data-t style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.2px;overflow-wrap:anywhere">${_esc(c.phone)}${c.phone2 ? ` <span style="color:var(--text2);font-weight:600">· ${_esc(c.phone2)}</span>` : ''}</div>` : ''}
+      ${c.note ? `<div data-t style="font-size:12px;color:var(--text2);line-height:1.35;overflow-wrap:anywhere">${_esc(c.note)}</div>` : ''}
+      ${digits ? `<div style="display:flex;gap:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
+        <a href="tel:${digits}" title="Call" style="${btn}background:var(--indigo-bg);color:#4338CA"><i class="ti ti-phone" style="font-size:15px"></i>Call</a>
+        <a href="https://wa.me/91${digits}" target="_blank" rel="noopener" title="WhatsApp" style="${btn}background:#D1FAE5;color:#065F46"><i class="ti ti-brand-whatsapp" style="font-size:16px"></i>WhatsApp</a>
+      </div>` : ''}
     </div>`;
   }).join('');
 };
@@ -4813,6 +4959,8 @@ window._sContact = async function() {
       await updateDoc(contactRef(id), payload);
     } else {
       payload.createdAt = serverTimestamp();
+      payload.createdByUid = auth.currentUser?.uid || null;
+      payload.addedBy = isMember() ? `${MY_NAME}${MY_FLAT ? ' (' + MY_FLAT + ')' : ''}` : 'Admin';
       await addDoc(contactsColl(), payload);
     }
     sync('live'); toast(id ? 'Contact updated ✓' : 'Contact added ✓');
@@ -4909,4 +5057,330 @@ window._issSubTab = function(which) {
     Object.assign(reportsBtn.style, { borderColor: active.border, background: active.bg, color: active.color });
     // Add report initialization if needed
   }
+};
+
+
+/* ═══════════════════════════════════════════════════════════
+   ROLES — admin vs flat member
+   (guards, read-only UI, member banner, admin approval screen)
+═══════════════════════════════════════════════════════════ */
+
+// Buttons wired to these handlers are hidden for flat members.
+// Add a handler name here if you add a new write feature.
+const ADMIN_ONLY_HANDLERS = [
+  '_oA','_oAFor','_oAF','_sNF','_sE','_oPresExp','_sPresExp','_oPresM','_sPres',
+  '_oContact(?=\\s*\\(\\s*[^)\\s])','_delContact','_delIssue','_saveIss','_delExp','_delCat',
+  '_addCat','_addInlineCat','_oVehM','_oVehFor','_sVeh','_delVeh',
+  '_delPresHist','_editPresHist','_savePresHistEdit','_delSEModal','_openSEModal','_saveSEModal',
+  '_deletePayment','_deleteStayPeriod','_addPayment','_addStayPeriod','_addNewFlatRow','_editPayment',
+  '_editCorpusFund','_saveFlat','_saveResEdit','_saveExpEdit','_openExpEdit',
+  '_saveNewStructure','_openStructureManager','_renameBlockPrompt','_toggleResEdit','_setResidentStatus',
+  '_toggleStayingEdit','_updateStayingDates','_togglePaymentEdit','_phSave','_phEdit','_phDelete','_wizLaunch',
+  '_deleteBlock','_deleteFlat','_wizAddBlock','wizRemoveBlock',
+];
+const _esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+function applyRoleUI() {
+  if (!isMember()) return;
+  document.body.classList.add('role-member');
+  const re = new RegExp('(?<![\\w$])(?:window\\.)?(?:' + ADMIN_ONLY_HANDLERS.join('|') + ')\\s*\\(');
+  const sweep = () => {
+    document.querySelectorAll('[onclick]').forEach(el => {
+      if (!re.test(el.getAttribute('onclick') || '')) return;
+      // A whole row or card that is clickable to edit (expense row, contact card): keep it
+      // visible so members can read it, just make it non-clickable. Buttons are hidden.
+      if (['TR', 'TD', 'LI', 'DIV'].includes(el.tagName)) { el.removeAttribute('onclick'); el.style.cursor = 'default'; }
+      else {
+        el.style.setProperty('display', 'none', 'important');
+        if (/_oPresM\s*\(/.test(el.getAttribute('onclick') || '') && !el.dataset.roHist) {
+          el.dataset.roHist = '1';
+          el.insertAdjacentHTML('afterend', el.classList.contains('pres-chip-edit')
+            ? '<button class="pres-chip-edit" onclick="window._viewPresHistory()" title="President history"><i class="ti ti-history"></i></button>'
+            : '<button class="btn btn-white btn-sm" onclick="window._viewPresHistory()"><i class="ti ti-history"></i> President history</button>');
+        }
+      }
+    });
+    document.querySelectorAll('[id^="redit_"] input, [id^="redit_"] select').forEach(el => { el.disabled = true; });
+    // Flat details window: show everything, allow nothing to be typed or changed
+    const dBody = document.getElementById('dBody');
+    if (dBody) {
+      dBody.querySelectorAll('input, select, textarea').forEach(el => {
+        if (!el.classList.contains('hist-search') && !el.classList.contains('hist-cat-sel')) el.disabled = true;
+      });
+      if (dBody.firstElementChild && !dBody.querySelector('.ro-note'))
+        dBody.insertAdjacentHTML('afterbegin', '<div class="ro-note" style="background:#CCFBF1;color:#115E59;border-radius:8px;padding:8px 12px;margin:0 0 10px;font-size:12px;font-weight:700;display:flex;gap:6px;align-items:center"><i class="ti ti-eye"></i>View only. Only the admin can make changes.</div>');
+    }
+  };
+  sweep();
+  let raf = 0;
+  new MutationObserver(() => { if (raf) return; raf = requestAnimationFrame(() => { raf = 0; sweep(); }); })
+    .observe(document.body, { childList: true, subtree: true });
+}
+
+// Flat members: open the Society President window on the History tab only (no Elect tab)
+window._viewPresHistory = () => {
+  const t1 = document.getElementById('presTab1'); if (t1) t1.style.display = 'none';
+  const sub = document.querySelector('#presM .msub'); if (sub) sub.textContent = 'Past presidents (view only)';
+  window._presSwTab(2);
+  document.getElementById('presM').classList.add('open');
+};
+
+function showMemberBanner() {
+  const nav = document.querySelector('.navbar'); if (!nav) return;
+  nav.insertAdjacentHTML('afterend',
+    `<div style="background:#CCFBF1;color:#115E59;padding:9px 24px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center">
+       <i class="ti ti-eye"></i>View-only access${MY_FLAT ? ' · Flat ' + _esc(MY_FLAT) + (MY_REL ? ' (' + (MY_REL === 'tenant' ? 'Tenant' : 'Owner') + ')' : '') : ''}. You can see all details, raise issues and add service contacts from the Services tab. Only the admin can make other changes.
+     </div>`);
+}
+
+/* ── Admin: add / reset / remove flat members (mobile + 6-character code) ── */
+let MEMBERS = [], _deduping = false, _memBusy = 0;   // _memBusy: pause duplicate clean-up while an add / reset is in progress
+
+async function initMembershipUI() {
+  const right = document.querySelector('.nav-right'); if (!right) return;
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-white btn-sm'; btn.id = 'memBtn';
+  btn.innerHTML = '<i class="ti ti-users-group"></i> Flat members';
+  btn.onclick = () => { fillMemberForm(); document.getElementById('memM').classList.add('open'); };
+  right.insertBefore(btn, right.firstChild);
+
+  const m = document.createElement('div'); m.className = 'mbg'; m.id = 'memM';
+  m.innerHTML = `<div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-users-group"></i></div>
+        <div><div class="mtitle">Flat members</div><div class="msub">Owner and tenant can each have their own login for the same flat</div></div>
+      </div>
+      <button class="mclose" onclick="document.getElementById('memM').classList.remove('open');document.getElementById('memCode').innerHTML=''"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg2">
+      <div class="fg"><label>Flat</label><select id="mmFlat" onchange="window._memPick(true)"></select></div>
+      <div class="fg"><label>Login for</label><select id="mmRole" onchange="window._memPick()"><option value="owner">Owner</option><option value="tenant">Tenant</option></select></div>
+    </div>
+    <div id="mmHint" style="font-size:11px;color:var(--text2);margin:-2px 0 10px;line-height:1.5"></div>
+    <div class="fg2">
+      <div class="fg"><label>Name</label><input type="text" id="mmName" placeholder="Resident name"/></div>
+      <div class="fg"><label>Mobile number</label><input type="tel" id="mmMobile" inputmode="numeric" maxlength="10" placeholder="10 digits"/></div>
+    </div>
+    <div class="fg"><label>6-character code</label>
+      <div style="display:flex;gap:6px"><input type="text" id="mmPin" maxlength="6" autocapitalize="characters" style="flex:1;text-transform:uppercase"/>
+      <button class="btn btn-white btn-sm" type="button" onclick="document.getElementById('mmPin').value=window._randomPin()" title="New random code"><i class="ti ti-refresh"></i></button></div></div>
+    <button class="btn btn-indigo" id="mmAdd" style="width:100%;justify-content:center;margin-bottom:12px" onclick="window._memAdd()"><i class="ti ti-user-plus"></i> Add member</button>
+    <div id="memCode"></div>
+    <div id="memList"></div></div>`;
+  document.body.appendChild(m);
+  window._randomPin = randomPin;
+
+  onSnapshot(collection(db, 'apartments', UID, 'members'), s => {
+    MEMBERS = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => String(a.flatId).localeCompare(String(b.flatId), undefined, { numeric: true }) || ((a.relation === 'tenant') - (b.relation === 'tenant')));
+    renderMembers();
+    dedupeMembers();
+  }, e => console.error(e));
+}
+
+function fillMemberForm() {
+  const sel = document.getElementById('mmFlat'); if (!sel) return;
+  document.getElementById('memCode').innerHTML = '';
+  const keep = sel.value;
+  sel.innerHTML = [...flats.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(id => {
+    const f = flats.get(id) || {};
+    const who = f.owner ? ' — ' + _esc(f.owner) + (f.resType === 'tenant' ? ' (Tenant)' : '') : '';
+    const n = MEMBERS.filter(m => m.flatId === id).length;
+    return `<option value="${_esc(id)}">${_esc(id)}${who}${n ? ` · ${n} login${n > 1 ? 's' : ''}` : ''}</option>`;
+  }).join('');
+  if (keep && flats.has(keep)) sel.value = keep;
+  document.getElementById('mmPin').value = randomPin();
+  window._memPick(true);
+}
+// Pre-fill name + mobile for the chosen flat and role. A tenant flat stores the tenant as the resident
+// and the real owner in ownerName / ownerPhone; an owner-occupied flat stores the owner as the resident.
+window._memPick = (flatChanged) => {
+  const fid = document.getElementById('mmFlat').value, f = flats.get(fid) || {};
+  const roleSel = document.getElementById('mmRole');
+  const here = MEMBERS.filter(m => m.flatId === fid);
+  if (flatChanged) roleSel.value = here.some(m => m.relation === 'owner') ? 'tenant' : 'owner';   // offer the one who has no login yet
+  const tenantFlat = (f.resType || 'owner') === 'tenant';
+  let name = '', phone = '', note = '';
+  if (roleSel.value === 'tenant') {
+    if (tenantFlat) { name = f.owner || ''; phone = f.phone || f.ownerPhone || ''; }
+    else note = 'No tenant is recorded for this flat. Type the tenant\'s details.';
+  } else if (tenantFlat) { name = f.ownerName || ''; phone = f.ownerPhone || ''; if (!name) note = 'The owner\'s details are not recorded for this flat. Type them in.'; }
+  else { name = f.owner || ''; phone = f.phone || f.ownerPhone || ''; }
+  document.getElementById('mmName').value = name;
+  document.getElementById('mmMobile').value = String(phone).replace(/\D/g, '').slice(-10);
+  const lab = r => r === 'tenant' ? 'Tenant' : r === 'owner' ? 'Owner' : 'Resident';
+  const hint = document.getElementById('mmHint');
+  if (hint) hint.innerHTML = (here.length ? 'Logins for this flat: ' + here.map(m => `<b>${_esc(m.name)}</b> (${lab(m.relation)})`).join(', ') + '. ' : 'No login for this flat yet. ') + _esc(note);
+};
+
+// Shows the code once, right after Add / Reset. It is never stored, so it cannot be viewed later.
+function showCodeOnce(name, mobile, pin) {
+  const el = document.getElementById('memCode'); if (!el) return;
+  el.innerHTML = `<div style="background:var(--indigo-bg);border-radius:12px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px">
+    <div style="flex:1"><div style="font-size:12px;font-weight:700">${_esc(name)}: note this code now</div>
+    <div style="font-size:18px;font-weight:800;letter-spacing:1px;margin-top:2px">${_esc(mobile)} · ${_esc(pin)}</div>
+    <div style="font-size:11px;color:var(--text2);margin-top:2px">Shown only once. It cannot be viewed again later.</div></div>
+    <button class="btn btn-white btn-sm" onclick="document.getElementById('memCode').innerHTML=''">Done</button></div>`;
+}
+
+function renderMembers() {
+  const list = document.getElementById('memList'); if (!list) return;
+  const row = r => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
+      <div style="flex:1"><div style="font-size:13px;font-weight:700">${_esc(r.name || '—')} ${r.relation ? `<span class="fc-type ${r.relation === 'tenant' ? 'tenant' : 'owner'}" style="margin-left:4px">${r.relation === 'tenant' ? 'Tenant' : 'Owner'}</span>` : ''}</div>
+      <div style="font-size:11px;color:var(--text2)">Flat ${_esc(r.flatId)} · ${_esc(r.phone || '')}</div></div>
+      <button class="btn btn-white btn-sm" onclick="window._memReset('${_esc(r.id)}')">Reset code</button>
+      <button class="btn btn-white btn-sm" onclick="window._memRemove('${_esc(r.id)}')">Remove</button></div>`;
+  list.innerHTML = `<div style="font-size:12px;font-weight:700;margin:6px 0 4px">Members (${MEMBERS.length})</div>` +
+    (MEMBERS.length ? MEMBERS.map(row).join('') : '<div style="font-size:12px;color:var(--text2);padding:8px 0">No members yet.</div>');
+}
+
+// One mobile number = one member. If duplicates exist (e.g. from retries), keep the one that
+// the login lookup points to (otherwise the newest) and delete the rest.
+async function dedupeMembers() {
+  if (_deduping || _memBusy) return;
+  const groups = {};
+  MEMBERS.forEach(m => { if (m.phone) (groups[m.phone] = groups[m.phone] || []).push(m); });
+  const dups = Object.entries(groups).filter(([, g]) => g.length > 1);
+  if (!dups.length) return;
+  _deduping = true;
+  try {
+    for (const [phone, g] of dups) {
+      let liveEmail = null;
+      try { liveEmail = (await getDoc(doc(db, 'phoneLogins', phone))).data()?.email || null; } catch (e) {}
+      const keep = g.find(x => x.email === liveEmail) ||
+        [...g].sort((a, b) => String(b.createdAt || '').localeCompare(String(a.createdAt || '')))[0];
+      for (const x of g) if (x.id !== keep.id) await deleteDoc(doc(db, 'apartments', UID, 'members', x.id));
+    }
+  } catch (e) { console.error('dedupe', e); }
+  finally { _deduping = false; }
+}
+
+// Creates the member's sign-in WITHOUT signing the admin out (uses a temporary second Firebase app).
+async function provisionMember(flatId, name, mobile, pin) {
+  const email = `m${mobile}-${Math.random().toString(36).slice(2, 8)}@gatebook.app`;
+  const secApp = initializeApp(app.options, 'sec-' + Date.now());
+  try {
+    const secAuth = getAuth(secApp), secDb = getFirestore(secApp);
+    const cred = await createUserWithEmailAndPassword(secAuth, email, pinToPassword(mobile, pin));
+    await updateProfile(cred.user, { displayName: name });
+    await _setDoc(doc(secDb, 'users', cred.user.uid), { aptId: UID, flatId, name, role: 'member' });
+    await signOut(secAuth);
+    return { uid: cred.user.uid, email };
+  } finally { await deleteApp(secApp).catch(() => {}); }
+}
+
+function memberErr(e, step) {
+  const c = e.code || '';
+  if (c.includes('permission-denied')) return `Permission denied (${step}). Publish the latest firestore.rules in Firebase.`;
+  if (c === 'auth/email-already-in-use') return 'This mobile number already has a login. Use "Reset code" on the member.';
+  if (c === 'auth/operation-not-allowed') return 'Email/Password sign-in is not enabled in Firebase.';
+  if (c === 'auth/network-request-failed') return 'Network error. Check your internet and try again.';
+  return `Could not ${step}: ${c || e.message}`;
+}
+
+window._memAdd = async () => {
+  const flatId = document.getElementById('mmFlat').value;
+  const name = document.getElementById('mmName').value.trim();
+  const mobile = document.getElementById('mmMobile').value.trim();
+  const pin = normalizePin(document.getElementById('mmPin').value);
+  const relation = document.getElementById('mmRole').value === 'tenant' ? 'tenant' : 'owner';
+  if (!flatId) { toast('Pick a flat.', 'error'); return; }
+  if (!name) { toast('Enter the resident name.', 'error'); return; }
+  if (!isValidMobile(mobile)) { toast('Enter a 10-digit mobile number.', 'error'); return; }
+  if (!isValidPin(pin)) { toast('The code must be 6 letters or digits.', 'error'); return; }
+  if (MEMBERS.some(m => m.phone === mobile)) { toast('This mobile number is already added. Use "Reset code" to change its code.', 'error'); return; }
+  if (MEMBERS.some(m => m.flatId === flatId && m.relation === relation) && !confirm(`Flat ${flatId} already has a ${relation} login. Add another ${relation} login anyway?`)) return;
+  const btn = document.getElementById('mmAdd'); btn.disabled = true;
+  let step = 'check the mobile number';
+  _memBusy++;
+  try {
+    if ((await getDoc(doc(db, 'phoneLogins', mobile))).exists()) { toast('This mobile number is already registered.', 'error'); return; }
+    step = 'create the sign-in';
+    const { uid, email } = await provisionMember(flatId, name, mobile, pin);
+    step = 'save the member';
+    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId, name, phone: mobile, email, relation, createdAt: new Date().toISOString() });
+    step = 'save the mobile lookup';
+    await setDoc(doc(db, 'phoneLogins', mobile), { email, aptId: UID });
+    document.getElementById('mmPin').value = randomPin();
+    document.getElementById('mmRole').value = relation === 'owner' ? 'tenant' : 'owner';   // next: the other person on this flat
+    window._memPick();
+    toast(`${name} added ✓`);
+    showCodeOnce(name, mobile, pin);
+  } catch (e) { console.error('Add member failed at:', step, e); toast(memberErr(e, step), 'error'); }
+  finally { _memBusy--; btn.disabled = false; dedupeMembers(); }
+};
+
+window._memReset = async oldUid => {
+  const m = MEMBERS.find(x => x.id === oldUid); if (!m) return;
+  const pin = normalizePin(prompt(`New 6-character code for ${m.name}:`, randomPin()) || '');
+  if (!pin) return;
+  if (!isValidPin(pin)) { toast('The code must be 6 letters or digits.', 'error'); return; }
+  let step = 'create the sign-in';
+  _memBusy++;
+  try {
+    const { uid, email } = await provisionMember(m.flatId, m.name, m.phone, pin);
+    step = 'save the member';
+    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId: m.flatId, name: m.name, phone: m.phone, email, relation: m.relation || '', createdAt: new Date().toISOString() });
+    step = 'remove the old record';
+    for (const x of MEMBERS.filter(x => x.phone === m.phone && x.id !== uid)) await deleteDoc(doc(db, 'apartments', UID, 'members', x.id));
+    step = 'save the mobile lookup';
+    await setDoc(doc(db, 'phoneLogins', m.phone), { email, aptId: UID });
+    toast(`Code reset for ${m.name} ✓`);
+    showCodeOnce(m.name, m.phone, pin);
+  } catch (e) { console.error('Reset code failed at:', step, e); toast(memberErr(e, step), 'error'); }
+  finally { _memBusy--; dedupeMembers(); }
+};
+
+window._memRemove = async uid => {
+  const m = MEMBERS.find(x => x.id === uid); if (!m) return;
+  if (!confirm(`Remove ${m.name}? They will lose access.`)) return;
+  try {
+    await deleteDoc(doc(db, 'apartments', UID, 'members', uid));
+    await deleteDoc(doc(db, 'phoneLogins', m.phone));
+    toast('Member removed');
+  } catch (e) { console.error(e); toast('Remove failed.', 'error'); }
+};
+/* ── Flat member: change own code ── */
+function initChangeCode() {
+  const right = document.querySelector('.nav-right'); if (!right) return;
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-white btn-sm'; btn.innerHTML = '<i class="ti ti-key"></i> Change code';
+  btn.onclick = () => document.getElementById('ccM').classList.add('open');
+  right.insertBefore(btn, right.firstChild);
+
+  const m = document.createElement('div'); m.className = 'mbg'; m.id = 'ccM';
+  m.innerHTML = `<div class="modal">
+    <div class="mhead">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="micon detail"><i class="ti ti-key"></i></div>
+        <div><div class="mtitle">Change your code</div><div class="msub">Choose a new 6-character code (letters and digits)</div></div>
+      </div>
+      <button class="mclose" onclick="document.getElementById('ccM').classList.remove('open')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="fg"><label>Current code</label><input type="password" id="ccOld" maxlength="6" autocapitalize="characters" autocomplete="off"/></div>
+    <div class="fg2">
+      <div class="fg"><label>New code</label><input type="password" id="ccNew" maxlength="6" autocapitalize="characters" autocomplete="off"/></div>
+      <div class="fg"><label>Confirm new code</label><input type="password" id="ccNew2" maxlength="6" autocapitalize="characters" autocomplete="off"/></div>
+    </div>
+    <button class="btn btn-indigo" id="ccSave" style="width:100%;justify-content:center" onclick="window._changeCode()"><i class="ti ti-check"></i> Save new code</button></div>`;
+  document.body.appendChild(m);
+}
+
+window._changeCode = async () => {
+  const o = normalizePin(document.getElementById('ccOld').value), n = normalizePin(document.getElementById('ccNew').value), n2 = normalizePin(document.getElementById('ccNew2').value);
+  if (!isValidPin(o) || !isValidPin(n)) { toast('Codes must be 6 letters or digits.', 'error'); return; }
+  if (n !== n2) { toast('The new codes do not match.', 'error'); return; }
+  if (n === o) { toast('Choose a different code.', 'error'); return; }
+  const btn = document.getElementById('ccSave'); btn.disabled = true;
+  try {
+    const u = auth.currentUser;
+    await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pinToPassword(MY_PHONE, o)));
+    await updatePassword(u, pinToPassword(MY_PHONE, n));
+    ['ccOld', 'ccNew', 'ccNew2'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('ccM').classList.remove('open');
+    toast('Code changed ✓');
+  } catch (e) {
+    console.error(e);
+    toast(e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' ? 'Current code is wrong.' : 'Could not change the code. Try again.', 'error');
+  } finally { btn.disabled = false; }
 };
