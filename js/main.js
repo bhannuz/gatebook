@@ -5011,8 +5011,9 @@ window._editCorpusFund = function() {
       sync('live');
       toast('Corpus Fund updated ✓');
       // Refresh both tabs
-      if(document.getElementById('presidentView').style.display !== 'none') rPresident();
-      if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
+      const pv = document.getElementById('presView'), av = document.getElementById('analyticsView');
+      if(pv && pv.style.display !== 'none') rPresident();
+      if(av && av.style.display !== 'none') rAnalytics();
     })
     .catch(e => {
       console.error(e);
