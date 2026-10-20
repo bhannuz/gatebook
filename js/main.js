@@ -3611,7 +3611,7 @@ function rStructure() {
     let blk   = f.block || (m ? m[1] : '');
     const num = (m && (!f.block || m[1].toLowerCase() === String(f.block).toLowerCase())) ? m[2] : id;
     if (String(blk).length > 3) blk = '';
-    const fs  = num.length <= 4 ? 21 : num.length <= 6 ? 16 : 12;
+    const fs  = num.length <= 4 ? 19 : num.length <= 6 ? 15 : 11;
     const typeLbl = isVacant ? 'Vacant' : rType === 'tenant' ? 'Tenant' : 'Owner';
     const stLbl   = { paid:'paid', partial:'partly paid', pending:'payment pending', vacant:'vacant' }[status];
     const tip     = `Flat ${_esc(id)} · ${isVacant ? 'Vacant' : _esc(f.owner) + ' (' + typeLbl + ')'} · ${stLbl}`;
@@ -4859,8 +4859,8 @@ window._rContacts = function() {
   const vis = filter === 'all' ? contacts : contacts.filter(c => c.cat === filter);
   const el = document.getElementById('contactsList');
   if (!el) return;
-  el.style.gridTemplateColumns = 'repeat(auto-fill,minmax(min(100%,230px),1fr))';
-  el.style.gap = '10px';
+  el.className = 'ft-grid';                       // compact iPhone-style app-icon grid
+  el.style.gridTemplateColumns = ''; el.style.gap = '';
 
   if (!vis.length) {
     el.innerHTML = `<div style="grid-column:1/-1;padding:40px 20px;text-align:center;color:var(--muted)">
@@ -4874,32 +4874,59 @@ window._rContacts = function() {
   el.innerHTML = vis.map(c => {
     const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
     const color = CONTACT_COLORS[c.cat] || '#6B7280';
-    const digits = (c.phone || '').replace(/\D/g, '');
-    const btn = 'flex:1 1 96px;min-height:38px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:8px;font-size:13px;font-weight:700;text-decoration:none;padding:0 10px;';
-    return `<div onclick="window._oContact('${c.id}')"
-      style="display:flex;flex-direction:column;gap:10px;min-width:0;background:#fff;border:1.5px solid var(--border2);
-        border-radius:12px;padding:12px;cursor:pointer;transition:box-shadow .12s,border-color .12s"
-      onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,.06)';this.style.borderColor='${color}'"
-      onmouseout="this.style.boxShadow='';this.style.borderColor='var(--border2)'">
-      <div style="display:flex;align-items:center;gap:10px;min-width:0">
-        <div style="width:38px;height:38px;border-radius:10px;background:${color}18;color:${color};
-          display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">
-          <i class="ti ${icon}"></i>
-        </div>
-        <div style="min-width:0;flex:1">
-          <div class="ct-name" style="font-size:14px;font-weight:700;color:var(--text);line-height:1.25;overflow-wrap:anywhere;
-            display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${_esc(c.name || 'Unnamed')}</div>
-          <div class="ct-meta" style="font-size:12px;font-weight:600;color:var(--text2);margin-top:2px">${_esc(c.cat || 'Other')}</div>
-        </div>
-      </div>
-      ${c.phone ? `<div data-t style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.2px;overflow-wrap:anywhere">${_esc(c.phone)}${c.phone2 ? ` <span style="color:var(--text2);font-weight:600">· ${_esc(c.phone2)}</span>` : ''}</div>` : ''}
-      ${c.note ? `<div data-t style="font-size:12px;color:var(--text2);line-height:1.35;overflow-wrap:anywhere">${_esc(c.note)}</div>` : ''}
-      ${digits ? `<div style="display:flex;gap:8px;flex-wrap:wrap" onclick="event.stopPropagation()">
-        <a href="tel:${digits}" title="Call" style="${btn}background:var(--indigo-bg);color:#4338CA"><i class="ti ti-phone" style="font-size:15px"></i>Call</a>
-        <a href="https://wa.me/91${digits}" target="_blank" rel="noopener" title="WhatsApp" style="${btn}background:#D1FAE5;color:#065F46"><i class="ti ti-brand-whatsapp" style="font-size:16px"></i>WhatsApp</a>
-      </div>` : ''}
-    </div>`;
+    const tip   = `${_esc(c.name || 'Unnamed')} · ${_esc(c.cat || 'Other')}${c.phone ? ' · ' + _esc(c.phone) : ''}`;
+    return `<button type="button" class="ft-tile" onclick="window._viewContact('${c.id}')" title="${tip}" aria-label="${tip}">
+      <span class="ft-ico" style="background:linear-gradient(160deg,${color},${_shade(color, -0.45)})"><i class="ti ${icon}" style="font-size:23px" aria-hidden="true"></i></span>
+      <span class="ft-lbl two">${_esc(c.name || 'Unnamed')}</span>
+    </button>`;
   }).join('');
+};
+
+/* ── Contact sheet: tap a tile to see the numbers with Call / WhatsApp (admin also gets Edit) ── */
+function _shade(hex, p) {                                // darken a #rrggbb colour by p (e.g. -0.45)
+  const n = parseInt(hex.slice(1), 16), f = v => Math.max(0, Math.min(255, Math.round(v * (1 + p))));
+  return '#' + ((1 << 24) + (f(n >> 16) << 16) + (f((n >> 8) & 255) << 8) + f(n & 255)).toString(16).slice(1);
+}
+let _ctLastFocus = null;
+function _ensureContactSheet() {
+  if (document.getElementById('ctSheet')) return;
+  const d = document.createElement('div'); d.id = 'ctSheet'; d.className = 'ct-sheet';
+  d.innerHTML = `<div class="ct-sheet-bg" onclick="window._closeContact()"></div>
+    <div class="ct-sheet-card" role="dialog" aria-modal="true" aria-labelledby="ctName"><div class="ct-grab"></div><div id="ctBody"></div></div>`;
+  document.body.appendChild(d);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') window._closeContact(); });
+}
+window._viewContact = id => {
+  const c = contacts.find(x => x.id === id); if (!c) return;
+  _ensureContactSheet();
+  _ctLastFocus = document.activeElement;
+  const color = CONTACT_COLORS[c.cat] || '#6B7280', icon = CONTACT_ICONS[c.cat] || 'ti-tool';
+  const row = num => {
+    const d = String(num || '').replace(/\D/g, ''); if (!d) return '';
+    return `<div class="ct-row"><div class="ct-num">${_esc(num)}</div>
+      <a class="ct-act call" href="tel:${d}"><i class="ti ti-phone" aria-hidden="true"></i>Call</a>
+      <a class="ct-act wa" href="https://wa.me/91${d.slice(-10)}" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp" aria-hidden="true"></i>WhatsApp</a></div>`;
+  };
+  document.getElementById('ctBody').innerHTML = `
+    <div class="ct-head">
+      <div class="ct-big" style="background:linear-gradient(160deg,${color},${_shade(color, -0.45)})"><i class="ti ${icon}" aria-hidden="true"></i></div>
+      <div style="min-width:0"><div class="ct-name" id="ctName">${_esc(c.name || 'Unnamed')}</div>
+        <div class="ct-cat">${_esc(c.cat || 'Other')}${c.addedBy ? ' · added by ' + _esc(c.addedBy) : ''}</div></div>
+    </div>
+    ${row(c.phone)}${row(c.phone2)}
+    ${(!c.phone && !c.phone2) ? '<div class="ct-note">No phone number saved for this contact.</div>' : ''}
+    ${c.note ? `<div class="ct-note">${_esc(c.note)}</div>` : ''}
+    <div class="ct-foot">
+      ${isAdmin() ? `<button type="button" class="ct-btn" onclick="window._closeContact();window._oContact('${_esc(c.id)}')"><i class="ti ti-pencil" aria-hidden="true"></i> Edit</button>` : ''}
+      <button type="button" class="ct-btn pri" id="ctDone" onclick="window._closeContact()">Done</button>
+    </div>`;
+  document.getElementById('ctSheet').classList.add('open');
+  document.getElementById('ctDone').focus();
+};
+window._closeContact = () => {
+  const d = document.getElementById('ctSheet'); if (!d || !d.classList.contains('open')) return;
+  d.classList.remove('open');
+  if (_ctLastFocus && document.contains(_ctLastFocus)) _ctLastFocus.focus();
 };
 
 window._oContact = function(id) {
