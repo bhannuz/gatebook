@@ -374,13 +374,8 @@ function oFlEdit(fid) {
           <option value="tenant" ${isTenant?'selected':''}>🔑 Tenant</option>
         </select>`)}
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div style="display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px;">
         ${_fld('📱 Mobile Number', _inp('edPhone','tel',(f.phone||f.ownerPhone||'').replace(/"/g,'&quot;'),'10-digit mobile no.'))}
-        ${_fld('WhatsApp', `<div style="display:flex;align-items:center;height:38px;gap:8px;">
-          <input type="checkbox" id="edWA" ${f.waEnabled!==false?'checked':''}
-            style="width:18px;height:18px;accent-color:var(--indigo);cursor:pointer;"/>
-          <label for="edWA" style="font-size:12px;font-weight:600;color:var(--text);cursor:pointer;">WhatsApp enabled</label>
-        </div>`)}
       </div>
 
       <!-- Owner fields (tenant only) -->
@@ -769,7 +764,6 @@ async function saveFlat(fid) {
   const ownerName  = (document.getElementById('edOwnerName')?.value||'').trim();
   const ownerPhone = (document.getElementById('edOwnerPhone')?.value||'').trim();
   const phone      = (document.getElementById('edPhone')?.value||'').trim();
-  const waEnabled  = document.getElementById('edWA')?.checked !== false;
   
   // Handle block - preserve existing block/floor if fields not present in drawer
   const existingFlat = flats.get(fid) || {};
@@ -798,7 +792,7 @@ async function saveFlat(fid) {
   sync('saving');
   try {
     // Build update payload — always include block/floor to ensure they're preserved
-    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone, waEnabled };
+    const updatePayload = { owner, resType, due, sft, moveIn, moveOut, ownerName, ownerPhone, phone };
     // Only write block/floor if they have valid values (prevent wiping with empty string)
     if (block !== undefined && block !== null) updatePayload.block = block;
     if (floor !== undefined) updatePayload.floor = floor;
@@ -3534,7 +3528,7 @@ function rStructure() {
         <div style="display:flex;flex-direction:column;gap:8px;">
         ${floors.map(([floor, fts]) => {
           const paidCnt = fts.filter(f => paidAM(f.flatId, AM) >= (f.due||0)).length;
-          return `<div>
+          return `<div class="ft-fold">
             <div style="font-size:12px;font-weight:800;color:var(--text);text-transform:uppercase;
               letter-spacing:.5px;padding:4px 6px;margin-bottom:5px;display:flex;align-items:center;gap:5px;">
               <i class="ti ti-stairs" style="font-size:13px;color:var(--indigo);"></i>
@@ -3545,7 +3539,7 @@ function rStructure() {
                 ${paidCnt}/${fts.length}
               </span>
             </div>
-            <div style="display:flex;flex-direction:column;gap:5px;">
+            <div class="ft-grid">
               ${fts.map(f => makeChip(f)).join('')}
             </div>
           </div>`;
@@ -3584,7 +3578,7 @@ function rStructure() {
             <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:${paidCnt===fts.length?'var(--green)':paidCnt>0?'var(--amber)':'var(--red)'};color:#fff;">${paidCnt}/${fts.length}</span>
             <i class="ti ti-chevron-down blk-toggle-icon" style="color:var(--indigo);font-size:13px;transition:transform .2s;"></i>
           </div>
-          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+          <div class="ft-grid">
             ${fts.map(f => makeChip(f)).join('')}
           </div>
         </div>`
@@ -3592,42 +3586,43 @@ function rStructure() {
 
   } else {
     // All flats in one grid
-    chipsEl.innerHTML = `<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+    chipsEl.innerHTML = `<div class="ft-grid">
       ${rows.map(f => makeChip(f)).join('')}
     </div>`;
   }
 
+  // Each flat is drawn like an iPhone app icon: a rounded tile coloured by payment status, the flat number
+  // inside, an Owner / Tenant badge on the corner, and the resident's name underneath like an app label.
   function makeChip(f) {
     const isVacant = !(f.owner||'').trim();
     const rType    = isVacant ? 'vacant' : (f.resType||'owner');
     const paid     = paidAM(f.flatId, AM);
     const due      = f.due || 0;
-    const status   = paid >= due && due > 0 ? 'paid' : paid > 0 ? 'partial' : due > 0 ? 'pending' : 'vacant';
+    const status   = isVacant ? 'vacant'                    // an empty flat is always grey, like the Payments table
+                   : paid >= due && due > 0 ? 'paid' : paid > 0 ? 'partial' : due > 0 ? 'pending' : 'vacant';
 
     let fid = '';
     for (const [key, flat] of flats.entries()) {
       if (flat.flatId === f.flatId && flat.block === f.block) { fid = key; break; }
     }
 
-    // Option 4 — Icon chip: status dot + flat ID + type (3-col grid)
-    const dotClr  = {paid:'#22c55e', partial:'#f59e0b', pending:'#ef4444', vacant:'#d1d5db'}[status];
-    const typeLbl = isVacant ? 'Vacant' : rType==='tenant' ? 'Tenant' : 'Owner';
-    const typeClr = isVacant ? '#9ca3af' : rType==='tenant' ? '#d97706' : '#6366f1';
-    const borderClr = {paid:'#bbf7d0', partial:'#fde68a', pending:'#fecaca', vacant:'#e5e7eb'}[status];
-    const bgClr   = {paid:'#f0fdf4', partial:'#fffbeb', pending:'#fff1f2', vacant:'#fafafa'}[status];
+    const id  = String(f.flatId || '');
+    const m   = id.match(/^([A-Za-z]+)[-\s]?(\S+)$/);                    // "A-102" -> block "A", number "102"
+    let blk   = f.block || (m ? m[1] : '');
+    const num = (m && (!f.block || m[1].toLowerCase() === String(f.block).toLowerCase())) ? m[2] : id;
+    if (String(blk).length > 3) blk = '';
+    const fs  = num.length <= 4 ? 21 : num.length <= 6 ? 16 : 12;
+    const typeLbl = isVacant ? 'Vacant' : rType === 'tenant' ? 'Tenant' : 'Owner';
+    const stLbl   = { paid:'paid', partial:'partly paid', pending:'payment pending', vacant:'vacant' }[status];
+    const tip     = `Flat ${_esc(id)} · ${isVacant ? 'Vacant' : _esc(f.owner) + ' (' + typeLbl + ')'} · ${stLbl}`;
 
-    return `<button onclick="window.oFlEdit('${fid}')"
-      style="background:${bgClr};border:1px solid ${borderClr};border-radius:8px;
-        padding:7px 8px;cursor:pointer;font-family:var(--font);text-align:left;
-        display:flex;align-items:center;gap:7px;width:100%;
-        transition:box-shadow .12s,border-color .12s;box-shadow:0 1px 2px rgba(0,0,0,.04);"
-      onmouseover="this.style.boxShadow='0 3px 8px rgba(0,0,0,.1)';this.style.borderColor='${dotClr}'"
-      onmouseout="this.style.boxShadow='0 1px 2px rgba(0,0,0,.04)';this.style.borderColor='${borderClr}'">
-      <span style="width:8px;height:8px;border-radius:50%;background:${dotClr};flex-shrink:0;display:inline-block;"></span>
-      <div style="min-width:0;overflow:hidden;">
-        <div style="font-size:11px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">${f.flatId}</div>
-        <div style="font-size:9px;font-weight:600;color:${typeClr};margin-top:1px;white-space:nowrap">${typeLbl}</div>
-      </div>
+    return `<button type="button" class="ft-tile" onclick="window.oFlEdit('${fid}')" title="${tip}" aria-label="${tip}">
+      <span class="ft-ico ${status}">
+        ${blk ? `<span class="ft-b">${_esc(blk)}</span>` : ''}
+        <span class="ft-n" style="font-size:${fs}px">${_esc(num)}</span>
+        ${isVacant ? '' : `<span class="ft-bdg" aria-hidden="true">${rType === 'tenant' ? '🔑' : '🏠'}</span>`}
+      </span>
+      <span class="ft-lbl${isVacant ? ' vac' : ''}">${isVacant ? 'Vacant' : _esc(f.owner)}</span>
     </button>`;
   }
 }
@@ -5011,9 +5006,8 @@ window._editCorpusFund = function() {
       sync('live');
       toast('Corpus Fund updated ✓');
       // Refresh both tabs
-      const pv = document.getElementById('presView'), av = document.getElementById('analyticsView');
-      if(pv && pv.style.display !== 'none') rPresident();
-      if(av && av.style.display !== 'none') rAnalytics();
+      if(document.getElementById('presidentView').style.display !== 'none') rPresident();
+      if(document.getElementById('analyticsView').style.display !== 'none') rAnalytics();
     })
     .catch(e => {
       console.error(e);
