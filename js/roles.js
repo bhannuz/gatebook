@@ -37,7 +37,7 @@ export async function resolveRole(user) {
   if (u.exists() && u.data().aptId) {
     const aptId = u.data().aptId;
     const m = await getDoc(doc(db, 'apartments', aptId, 'members', user.uid));
-    if (m.exists()) return { role: 'member', aptId, flatId: m.data().flatId, name: m.data().name, phone: m.data().phone, relation: m.data().relation || '' };
+    if (m.exists()) return { role: 'member', aptId, flatId: m.data().flatId, flatIds: (m.data().flatIds && m.data().flatIds.length) ? m.data().flatIds : (m.data().flatId ? [m.data().flatId] : []), name: m.data().name, phone: m.data().phone, relation: m.data().relation || '' };
   }
   return { role: 'new' };
 }
