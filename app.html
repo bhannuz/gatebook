@@ -10,6 +10,28 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate"/>
+<!-- RES-TILES -->
+<style>
+/* Residents tab: flats as iPhone-style app-icon tiles */
+.ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:18px 8px;justify-items:center;padding:4px 0 2px}
+.ft-fold{background:rgba(255,255,255,.78);border:1.5px solid var(--border);border-radius:22px;padding:12px 12px 16px}
+.ft-tile{background:none;border:0;padding:0;margin:0;cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;min-width:0;-webkit-tap-highlight-color:transparent;transition:transform .12s}
+.ft-tile:active{transform:scale(.93)}
+.ft-ico{position:relative;width:100%;max-width:64px;aspect-ratio:1/1;border-radius:22.4%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s}
+.ft-tile:hover .ft-ico{transform:translateY(-2px);box-shadow:0 7px 16px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.35)}
+.ft-tile:focus-visible{outline:none}
+.ft-tile:focus-visible .ft-ico{outline:3px solid var(--indigo-glow,rgba(99,102,241,.5));outline-offset:3px}
+.ft-ico.paid{background:linear-gradient(160deg,#16A34A,#166534)}
+.ft-ico.partial{background:linear-gradient(160deg,#D97706,#92400E)}
+.ft-ico.pending{background:linear-gradient(160deg,#DC2626,#991B1B)}
+.ft-ico.vacant{background:linear-gradient(160deg,#7B8494,#4B5563)}
+.ft-b{font-size:10px;font-weight:800;letter-spacing:.6px;line-height:1;margin-bottom:2px;text-shadow:0 1px 1px rgba(0,0,0,.45)}
+.ft-n{font-weight:800;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.ft-bdg{position:absolute;top:-6px;right:-6px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1}
+.ft-lbl{font-size:11px;font-weight:600;color:var(--text);max-width:100%;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ft-lbl.vac{color:var(--muted);font-style:italic}
+</style>
+<!-- /RES-TILES -->
 <!-- PAY-TAB-UX -->
 <style>
 /* 1) A small gap between the Add Payment / Add Expense buttons and what sits below them */
@@ -82,7 +104,7 @@
 </style>
 <!-- /NAVBAR-MOBILE-FIX -->
 
-<link rel="stylesheet" href="style.css?v=r14"/>
+<link rel="stylesheet" href="style.css?v=r15"/>
 </head>
 <body>
 
@@ -923,8 +945,8 @@
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
-<script>console.info("Gatebook app.html build r14 · payments tab: spacing, paid/pending card, mobile collapse");</script>
-<script type="module" src="js/main.js?v=r14"></script>
+<script>console.info("Gatebook app.html build r15 · iPhone-style flat tiles, no WhatsApp field");</script>
+<script type="module" src="js/main.js?v=r15"></script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
