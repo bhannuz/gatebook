@@ -10,14 +10,45 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate"/>
+<!-- CONTACT-SHEET -->
+<style>
+/* Services > Contacts: iPhone-style bottom sheet (centred dialog on desktop) */
+.ct-sheet{position:fixed;inset:0;z-index:1300;display:none}
+.ct-sheet.open{display:block}
+.ct-sheet-bg{position:absolute;inset:0;background:rgba(15,18,40,.38);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);animation:ctFade .2s}
+.ct-sheet-card{position:absolute;left:50%;bottom:0;width:100%;max-width:440px;transform:translateX(-50%);background:#fff;border-radius:26px 26px 0 0;padding:10px 20px calc(22px + env(safe-area-inset-bottom,0px));box-shadow:0 -10px 40px rgba(0,0,0,.2);animation:ctUp .28s cubic-bezier(.2,.9,.3,1);max-height:88vh;overflow:auto;box-sizing:border-box}
+@keyframes ctUp{from{transform:translate(-50%,100%)}to{transform:translate(-50%,0)}}
+@keyframes ctFade{from{opacity:0}to{opacity:1}}
+.ct-grab{width:40px;height:5px;border-radius:99px;background:#D5D9EA;margin:0 auto 14px}
+.ct-head{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.ct-big{width:64px;height:64px;border-radius:22.4%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:30px;box-shadow:0 3px 10px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);flex-shrink:0}
+.ct-name{font-size:18px;font-weight:800;color:var(--text);line-height:1.2;overflow-wrap:anywhere}
+.ct-cat{font-size:12px;font-weight:600;color:var(--text2);margin-top:3px}
+.ct-row{display:flex;align-items:center;gap:8px;padding:12px 0;border-top:1px solid var(--border);flex-wrap:wrap}
+.ct-num{flex:1 1 100%;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.2px}
+.ct-act{flex:1 1 120px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border-radius:12px;font-size:13px;font-weight:700;text-decoration:none}
+.ct-act.call{background:var(--indigo-bg);color:#4338CA}
+.ct-act.wa{background:#D1FAE5;color:#065F46}
+.ct-note{margin-top:6px;padding:10px 12px;border-radius:12px;background:var(--surface2);font-size:12px;color:var(--text2);line-height:1.45;overflow-wrap:anywhere}
+.ct-foot{display:flex;gap:8px;margin-top:16px}
+.ct-btn{flex:1;min-height:44px;border-radius:12px;border:1.5px solid var(--border2);background:#fff;font:700 13px var(--font);color:var(--text);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.ct-btn.pri{background:var(--indigo);border-color:var(--indigo);color:#fff}
+@media (min-width:769px){
+  .ct-grab{display:none}
+  .ct-sheet-card{bottom:auto;top:50%;border-radius:26px;transform:translate(-50%,-50%);animation:ctPop .2s ease-out;padding-bottom:22px}
+  @keyframes ctPop{from{opacity:0;transform:translate(-50%,-48%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
+}
+@media (prefers-reduced-motion:reduce){.ct-sheet-bg,.ct-sheet-card{animation:none}}
+</style>
+<!-- /CONTACT-SHEET -->
 <!-- RES-TILES -->
 <style>
 /* Residents tab: flats as iPhone-style app-icon tiles */
-.ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:18px 8px;justify-items:center;padding:4px 0 2px}
+.ft-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:16px 6px;justify-items:center;padding:4px 0 2px}
 .ft-fold{background:rgba(255,255,255,.78);border:1.5px solid var(--border);border-radius:22px;padding:12px 12px 16px}
 .ft-tile{background:none;border:0;padding:0;margin:0;cursor:pointer;font-family:var(--font);display:flex;flex-direction:column;align-items:center;gap:7px;width:100%;min-width:0;-webkit-tap-highlight-color:transparent;transition:transform .12s}
 .ft-tile:active{transform:scale(.93)}
-.ft-ico{position:relative;width:100%;max-width:64px;aspect-ratio:1/1;border-radius:22.4%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s}
+.ft-ico{position:relative;width:100%;max-width:52px;aspect-ratio:1/1;border-radius:22.4%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;box-shadow:0 3px 8px rgba(0,0,0,.2),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .15s,box-shadow .15s}
 .ft-tile:hover .ft-ico{transform:translateY(-2px);box-shadow:0 7px 16px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.35)}
 .ft-tile:focus-visible{outline:none}
 .ft-tile:focus-visible .ft-ico{outline:3px solid var(--indigo-glow,rgba(99,102,241,.5));outline-offset:3px}
@@ -25,11 +56,13 @@
 .ft-ico.partial{background:linear-gradient(160deg,#D97706,#92400E)}
 .ft-ico.pending{background:linear-gradient(160deg,#DC2626,#991B1B)}
 .ft-ico.vacant{background:linear-gradient(160deg,#7B8494,#4B5563)}
-.ft-b{font-size:10px;font-weight:800;letter-spacing:.6px;line-height:1;margin-bottom:2px;text-shadow:0 1px 1px rgba(0,0,0,.45)}
+.ft-b{font-size:9px;font-weight:800;letter-spacing:.6px;line-height:1;margin-bottom:2px;text-shadow:0 1px 1px rgba(0,0,0,.45)}
 .ft-n{font-weight:800;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,.35)}
-.ft-bdg{position:absolute;top:-6px;right:-6px;width:21px;height:21px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:11px;line-height:1}
-.ft-lbl{font-size:11px;font-weight:600;color:var(--text);max-width:100%;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ft-bdg{position:absolute;top:-5px;right:-5px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.28);display:flex;align-items:center;justify-content:center;font-size:10px;line-height:1}
+.ft-lbl{font-size:10.5px;font-weight:600;color:var(--text);max-width:100%;text-align:center;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ft-lbl.vac{color:var(--muted);font-style:italic}
+.ft-lbl.two{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow-wrap:anywhere}
+.ft-tile .ft-ico i{line-height:1}
 </style>
 <!-- /RES-TILES -->
 <!-- PAY-TAB-UX -->
@@ -104,7 +137,7 @@
 </style>
 <!-- /NAVBAR-MOBILE-FIX -->
 
-<link rel="stylesheet" href="style.css?v=r15"/>
+<link rel="stylesheet" href="style.css?v=r16"/>
 </head>
 <body>
 
@@ -945,8 +978,8 @@
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
-<script>console.info("Gatebook app.html build r15 · iPhone-style flat tiles, no WhatsApp field");</script>
-<script type="module" src="js/main.js?v=r15"></script>
+<script>console.info("Gatebook app.html build r16 · compact app-icon tiles for flats and contacts");</script>
+<script type="module" src="js/main.js?v=r16"></script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
