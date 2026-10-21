@@ -10,27 +10,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
 <meta http-equiv="Cache-Control" content="no-cache, must-revalidate"/>
-<!-- CONTACT-CATS -->
-<style>
-/* Add Contact form: create a new category */
-.nc-panel{padding:12px 12px 4px;border:1.5px dashed var(--border2);border-radius:12px;background:var(--surface2)}
-.fg2 > .nc-panel{grid-column:1/-1}
-@media (max-width:768px){   /* phone: the panel sits right under Category, Phone comes after it */
-  .fg2:has(> .nc-panel) > .fg:nth-child(2){order:2}
-  .fg2 > .nc-panel{order:1}
-}
-.nc-icons{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:6px}
-.nc-ico{height:40px;border-radius:10px;border:1.5px solid var(--border2);background:#fff;color:var(--text2);font-size:18px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}
-.nc-ico:hover{border-color:var(--indigo)}
-.nc-ico[aria-checked="true"]{border-color:var(--indigo);background:var(--indigo-bg);color:var(--indigo)}
-.nc-colors{display:flex;flex-wrap:wrap;gap:10px}
-.nc-sw{width:30px;height:30px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1.5px var(--border2);cursor:pointer;padding:0}
-.nc-sw[aria-checked="true"]{box-shadow:0 0 0 2.5px var(--indigo)}
-.nc-ico:focus-visible,.nc-sw:focus-visible{outline:2px solid var(--indigo);outline-offset:2px}
-.nc-prev{display:flex;align-items:center;gap:12px;padding:6px 0 10px}
-.nc-prevname{font-size:13px;font-weight:700;color:var(--text);overflow-wrap:anywhere}
-</style>
-<!-- /CONTACT-CATS -->
 <!-- CONTACT-SHEET -->
 <style>
 /* Services > Contacts: iPhone-style bottom sheet (centred dialog on desktop) */
@@ -999,7 +978,7 @@
 <div id="toast"><i id="tIco" class="ti ti-check"></i><span id="tMsg"></span></div>
 
 
-<script>console.info("Gatebook app.html build r17 · custom contact categories");</script>
+<script>console.info("Gatebook app.html build r16 · compact app-icon tiles for flats and contacts");</script>
 <script type="module" src="js/main.js?v=r17"></script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
