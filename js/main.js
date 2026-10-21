@@ -9,6 +9,7 @@ import {
   onSnapshot, query, where, orderBy, serverTimestamp, getFirestore,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 import { resolveRole, pinToPassword, randomPin, isValidPin, isValidMobile, normalizePin } from './roles.js';
+import { initBackup } from './backup.js';
 /* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
@@ -16,7 +17,7 @@ import { resolveRole, pinToPassword, randomPin, isValidPin, isValidMobile, norma
 ════════════════════════════════ */
 let UID = null;          // apartment id (the admin's uid) — for members it is NOT their own uid
 let ROLE = 'admin';      // 'admin' | 'member'
-let MY_FLAT = null, MY_NAME = '', MY_PHONE = '', MY_REL = '';
+let MY_FLAT = null, MY_FLATS = [], MY_NAME = '', MY_PHONE = '', MY_REL = '';
 const isAdmin  = () => ROLE === 'admin';
 const isMember = () => ROLE === 'member';
 let _booted = false; // prevent duplicate boot on auth token refresh
@@ -60,7 +61,8 @@ onAuthStateChanged(auth, async user => {
   }
   ROLE    = r.role === 'member' ? 'member' : 'admin';
   UID     = r.aptId || user.uid;
-  MY_FLAT = r.flatId || null;
+  MY_FLATS = (r.flatIds && r.flatIds.length) ? r.flatIds : (r.flatId ? [r.flatId] : []);
+  MY_FLAT = MY_FLATS[0] || null;
   MY_NAME = r.name || user.displayName || '';
   MY_PHONE = r.phone || '';
   MY_REL   = r.relation || '';
@@ -89,7 +91,6 @@ const vehRef      = id => doc(db, 'apartments', UID, 'vehicles', id);
 const sexpColl    = () => collection(db, 'apartments', UID, 'soc_expenses');
 const sexpRef     = id => doc(db, 'apartments', UID, 'soc_expenses', id);
 const contactsColl= () => collection(db, 'apartments', UID, 'contacts');
-const contactCatsColl = () => collection(db, 'apartments', UID, 'contactCats');   // custom contact categories
 const contactRef  = id => doc(db, 'apartments', UID, 'contacts', id);
 
 /* ════════════════════════════════
@@ -256,11 +257,12 @@ async function saveResEdit(fid) {
   const due     = parseInt(document.getElementById('re_due_'+fid)?.value)||0;
   const moveIn  = document.getElementById('re_movein_'+fid)?.value||'';
   const moveOut = document.getElementById('re_moveout_'+fid)?.value||'';
+  const phone   = (document.getElementById('re_phone_'+fid)?.value||'').replace(/\D/g,'').slice(-10);
   const tw      = parseInt(document.getElementById('re_tw_'+fid)?.value)||0;
   const fw      = parseInt(document.getElementById('re_fw_'+fid)?.value)||0;
   sync('saving');
   try {
-    await updateDoc(flatRef(fid), { owner:name, resType, due, moveIn, moveOut });
+    await updateDoc(flatRef(fid), { owner:name, resType, due, moveIn, moveOut, phone });
     await setDoc(vehRef(fid), { flatId:fid, tw, fw, updatedAt:serverTimestamp() }, {merge:true});
     sync('live');
     toast('Saved ✓');
@@ -943,10 +945,20 @@ function oRI(){
   const _lock=isMember();
   if(_lock){
     document.getElementById('iRe').value=MY_NAME||'';
-    document.getElementById('iFl').value=MY_FLAT||'';
-    const _f=flats.get(MY_FLAT); if(_f&&_f.block) document.getElementById('iBl').value=_f.block;
+    if(MY_FLATS.length>1){
+      // member with several flats: pick which flat the complaint is for
+      let sel=document.getElementById('iFl');
+      if(sel.tagName!=='SELECT'){const s=document.createElement('select');s.id='iFl';sel.replaceWith(s);sel=s;}
+      sel.innerHTML=MY_FLATS.map(id=>`<option value="${_esc(id)}">${_esc(id)}</option>`).join('');
+      sel.value=MY_FLATS[0];
+      const _syncBl=()=>{const f=flats.get(sel.value); if(f&&f.block) document.getElementById('iBl').value=f.block;};
+      sel.onchange=_syncBl; _syncBl();
+    } else {
+      document.getElementById('iFl').value=MY_FLAT||'';
+      const _f=flats.get(MY_FLAT); if(_f&&_f.block) document.getElementById('iBl').value=_f.block;
+    }
   }
-  ['iRe','iFl','iBl'].forEach(id=>{document.getElementById(id).disabled=_lock;});
+  ['iRe','iFl','iBl'].forEach(id=>{document.getElementById(id).disabled=_lock&&!(id==='iFl'&&MY_FLATS.length>1);});
   document.getElementById('rIM').classList.add('open');
 }
 function cRI(){
@@ -2001,10 +2013,9 @@ function listenSocExp(){
   });
 }
 
-let cu=null, cuc=null; // contacts + custom-category listener unsubscribe handles
+let cu=null; // contacts listener unsubscribe handle
 function listenContacts(){
   if(cu)cu();
-  _listenContactCats();
   cu=onSnapshot(contactsColl(),snap=>{
     contacts.length=0;
     snap.forEach(d=>contacts.push({id:d.id,...d.data()}));
@@ -2955,7 +2966,14 @@ function rResidents() {
   }
   function fmtD(d){return d?new Date(d).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):'—';}
 
+  // Owners with several flats: group by owner mobile number
+  const _dg = s => String(s||'').replace(/\D/g,'').slice(-10);
+  const _ownPh = f => _dg((f.resType||'owner')==='tenant' ? f.ownerPhone : (f.phone||f.ownerPhone));
+  const _byPh = {};
+  all.forEach(f=>{const p=_ownPh(f); if(p.length===10) (_byPh[p]=_byPh[p]||[]).push(f.flatId);});
+
   document.getElementById('resBody').innerHTML = rows.map(f=>{
+    const _op=_ownPh(f), _also=(_byPh[_op]||[]).filter(x=>x!==f.flatId).sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
     const isVacant=(!(f.owner||'').trim());
     const rType=isVacant?'vacant':(f.resType||'owner');
     const isTenant=rType==='tenant';
@@ -2972,6 +2990,8 @@ function rResidents() {
       <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">
         <div style="font-size:13px;font-weight:700;color:var(--text)">${f.owner||'<em style="color:var(--muted);font-weight:400">Vacant</em>'}</div>
         <span class="mem-type ${rType}" style="margin-top:3px;display:inline-block">${isVacant?'Vacant':isTenant?'🔑 Tenant':'🏠 Owner'}</span>
+        ${(f.phone||'')?`<span style="font-size:11px;color:var(--text2);margin-left:6px">📱 ${f.phone}</span>`:''}
+        ${_also.length?`<div style="font-size:10px;font-weight:700;color:var(--indigo);margin-top:3px">🏘️ Owner also has: ${_also.join(', ')}</div>`:''}
       </td>
       <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${twB}</td>
       <td style="padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle">${fwB}</td>
@@ -2993,6 +3013,12 @@ function rResidents() {
             <div>
               <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Name</div>
               <input id="re_name_${fid}" type="text" value="${(f.owner||'').replace(/"/g,'&quot;')}" placeholder="Full name"
+                style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
+                onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">Mobile</div>
+              <input id="re_phone_${fid}" type="tel" inputmode="numeric" maxlength="10" value="${(f.phone||'').replace(/"/g,'&quot;')}" placeholder="10 digits"
                 style="width:100%;box-sizing:border-box;height:32px;padding:0 8px;background:#fff;border:1px solid var(--border2);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;border-radius:6px;outline:none"
                 onfocus="this.style.borderColor='var(--indigo)'" onblur="this.style.borderColor='var(--border2)'"/>
             </div>
@@ -3374,7 +3400,7 @@ async function boot(){
       listenVehicles();
       listenSocExp();
       listenContacts();
-      if (isAdmin()) initMembershipUI(); else { showMemberBanner(); initChangeCode(); }
+      if (isAdmin()) { initMembershipUI(); initBackup(() => UID); } else { showMemberBanner(); initChangeCode(); }
       // Reveal the app UI — this was previously only done in the wizard branch,
       // causing a permanently blank page on refresh for already-configured societies.
       document.getElementById('lo').style.display = 'none';
@@ -4846,7 +4872,7 @@ window._printMonthlySummary = _printMonthlySummary;
    SERVICE CONTACTS
 ════════════════════════════════ */
 const CONTACT_ICONS = {
-  Plumber:'ti-droplet', Electrician:'ti-bolt', Maid:'ti-spray', Security:'ti-shield-lock',
+  Plumber:'ti-droplet', Electrician:'ti-bolt', Maid:'ti-broom', Security:'ti-shield-lock',
   Gardener:'ti-plant-2', Carpenter:'ti-hammer', Painter:'ti-paint', 'Pest Control':'ti-bug',
   'AC Repair':'ti-air-conditioning', Other:'ti-tool'
 };
@@ -4856,118 +4882,7 @@ const CONTACT_COLORS = {
   'AC Repair':'#06B6D4', Other:'#6B7280'
 };
 
-const CONTACT_EMOJI = { Plumber:'🔧', Electrician:'⚡', Maid:'🧹', Security:'🔒', Gardener:'🌳', Carpenter:'🪚', Painter:'🎨', 'Pest Control':'🐜', 'AC Repair':'❄️', Other:'📋' };
-
-/* ── Custom contact categories: anyone adding a contact can create one (name + icon + colour) ── */
-const CUSTOM_CATS = new Map();                                     // doc id (slug) -> { id, name, icon, color, ... }
-const CAT_ICON_CHOICES = ['ti-tag','ti-droplet','ti-bolt','ti-spray','ti-plant-2','ti-hammer','ti-paint','ti-bug','ti-air-conditioning','ti-tool','ti-car','ti-truck-delivery','ti-wifi','ti-flame','ti-shopping-cart','ti-stethoscope','ti-pill','ti-scissors','ti-key','ti-paw','ti-device-tv','ti-ambulance','ti-school','ti-milk','ti-bike','ti-wash-machine'];
-const CAT_COLOR_CHOICES = [['#6366F1','Indigo'],['#0EA5E9','Sky blue'],['#14B8A6','Teal'],['#22C55E','Green'],['#F59E0B','Amber'],['#F97316','Orange'],['#EF4444','Red'],['#EC4899','Pink'],['#A855F7','Purple'],['#6B7280','Grey']];
-const _catSlug = n => String(n || '').toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 30);
-
-function _catInfo(name) {                                          // icon + colour for any category name
-  if (CONTACT_ICONS[name]) return { icon: CONTACT_ICONS[name], color: CONTACT_COLORS[name] };
-  const c = [...CUSTOM_CATS.values()].find(x => x.name === name);
-  if (c) return { icon: c.icon, color: c.color };
-  let h = 0; for (const ch of String(name || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;   // category was deleted: stable fallback
-  return { icon: 'ti-tag', color: CAT_COLOR_CHOICES[h % CAT_COLOR_CHOICES.length][0] };
-}
-function _allCatNames() {
-  const builtIn = Object.keys(CONTACT_ICONS).filter(n => n !== 'Other');
-  const custom  = [...CUSTOM_CATS.values()].map(c => c.name).sort((a, b) => a.localeCompare(b));
-  return [...builtIn, ...custom, 'Other'];
-}
-function _listenContactCats() {
-  if (cuc) cuc();
-  cuc = onSnapshot(contactCatsColl(), snap => {
-    CUSTOM_CATS.clear();
-    snap.forEach(d => CUSTOM_CATS.set(d.id, { id: d.id, ...d.data() }));
-    try { window._rContacts(); } catch (e) { console.error(e); }
-  }, e => console.error('contact categories listener error', e));
-}
-
-// Filter above the tiles: only categories that have contacts, with counts
-function _fillContactFilter() {
-  const sel = document.getElementById('contactCatFilter'); if (!sel) return;
-  const keep = sel.value || 'all';
-  const counts = new Map(); contacts.forEach(c => counts.set(c.cat || 'Other', (counts.get(c.cat || 'Other') || 0) + 1));
-  const known = _allCatNames();
-  const names = [...new Set([...known.filter(n => counts.has(n) || n === keep), ...[...counts.keys()].filter(n => !known.includes(n))])];
-  sel.innerHTML = `<option value="all">All Categories (${contacts.length})</option>` +
-    names.map(n => `<option value="${_esc(n)}">${CONTACT_EMOJI[n] || '🏷️'} ${_esc(n)} (${counts.get(n) || 0})</option>`).join('');
-  sel.value = [...sel.options].some(o => o.value === keep) ? keep : 'all';
-  let b = document.getElementById('ctManageBtn');                   // admin: manage the custom ones
-  if (isAdmin() && CUSTOM_CATS.size) {
-    if (!b) {
-      b = document.createElement('button'); b.id = 'ctManageBtn'; b.type = 'button'; b.className = 'btn btn-white btn-sm';
-      b.innerHTML = '<i class="ti ti-settings"></i> Categories'; b.onclick = () => window._openManageCats();
-      sel.insertAdjacentElement('afterend', b);
-    }
-  } else if (b) b.remove();
-}
-
-// Category list inside the Add / Edit Contact form, ending with "➕ New category…"
-let _ncIcon = 'ti-tag', _ncColor = '#6366F1';
-function _fillContactCatSelect(selected) {
-  const sel = document.getElementById('contactCat'); if (!sel) return;
-  const names = _allCatNames();
-  if (selected && !names.includes(selected)) names.splice(names.length - 1, 0, selected);   // an old, deleted category still shows
-  sel.innerHTML = names.map(n => `<option value="${_esc(n)}">${CONTACT_EMOJI[n] || '🏷️'} ${_esc(n)}</option>`).join('') + '<option value="__new">➕ New category…</option>';
-  _ensureNewCatPanel();
-  const nm = document.getElementById('ncName'); if (nm) nm.value = '';
-  _ncIcon = 'ti-tag'; _ncColor = '#6366F1';
-  const p = document.getElementById('ncPanel'); if (p) p.style.display = 'none';
-}
-function _ensureNewCatPanel() {
-  if (document.getElementById('ncPanel')) return;
-  const sel = document.getElementById('contactCat'); const row = sel && sel.closest('.fg2'); if (!row) return;
-  const p = document.createElement('div'); p.id = 'ncPanel'; p.className = 'nc-panel'; p.style.display = 'none';
-  p.innerHTML = `
-    <div class="fg"><label for="ncName">New category name</label><input type="text" id="ncName" maxlength="24" placeholder="e.g. Milk delivery" autocomplete="off"/></div>
-    <div class="fg"><label>Icon</label><div class="nc-icons" id="ncIcons" role="radiogroup" aria-label="Icon">${CAT_ICON_CHOICES.map(i =>
-      `<button type="button" class="nc-ico" role="radio" data-i="${i}" aria-label="${i.slice(3).replace(/-/g, ' ')}"><i class="ti ${i}" aria-hidden="true"></i></button>`).join('')}</div></div>
-    <div class="fg"><label>Colour</label><div class="nc-colors" id="ncColors" role="radiogroup" aria-label="Colour">${CAT_COLOR_CHOICES.map(([c, n]) =>
-      `<button type="button" class="nc-sw" role="radio" data-c="${c}" aria-label="${n}" style="background:${c}"></button>`).join('')}</div></div>
-    <div class="nc-prev"><span class="ft-ico" id="ncPrevIco" style="max-width:44px"><i class="ti" style="font-size:20px" aria-hidden="true"></i></span><span id="ncPrevName" class="nc-prevname">New category</span></div>`;
-  row.appendChild(p);                       // inside the Category / Phone grid, so CSS can place it
-  p.querySelector('#ncIcons').addEventListener('click',  e => { const b = e.target.closest('.nc-ico'); if (b) { _ncIcon  = b.dataset.i; _ncRefresh(); } });
-  p.querySelector('#ncColors').addEventListener('click', e => { const b = e.target.closest('.nc-sw');  if (b) { _ncColor = b.dataset.c; _ncRefresh(); } });
-  p.querySelector('#ncName').addEventListener('input', _ncRefresh);
-  sel.addEventListener('change', () => {
-    const on = sel.value === '__new'; p.style.display = on ? '' : 'none';
-    if (on) { _ncRefresh(); setTimeout(() => p.querySelector('#ncName').focus(), 30); }
-  });
-}
-function _ncRefresh() {
-  document.querySelectorAll('#ncIcons .nc-ico').forEach(b => b.setAttribute('aria-checked', String(b.dataset.i === _ncIcon)));
-  document.querySelectorAll('#ncColors .nc-sw').forEach(b => b.setAttribute('aria-checked', String(b.dataset.c === _ncColor)));
-  const ico = document.getElementById('ncPrevIco'); if (!ico) return;
-  ico.style.background = `linear-gradient(160deg,${_ncColor},${_shade(_ncColor, -0.45)})`;
-  ico.firstElementChild.className = 'ti ' + _ncIcon;
-  document.getElementById('ncPrevName').textContent = (document.getElementById('ncName').value || '').trim() || 'New category';
-}
-// Validate the "new category" panel. Returns { name, icon, color, existing } or null (and shows why).
-function _ncRead() {
-  const name = (document.getElementById('ncName').value || '').replace(/\s+/g, ' ').trim();
-  if (name.length < 2) { toast('Enter a name for the new category (at least 2 letters).', 'error'); return null; }
-  const slug = _catSlug(name);
-  if (!slug) { toast('Use letters or numbers in the category name.', 'error'); return null; }
-  const builtIn = Object.keys(CONTACT_ICONS).find(n => _catSlug(n) === slug);
-  if (builtIn) return { name: builtIn, existing: true };               // "plumber" -> the existing Plumber
-  const custom = CUSTOM_CATS.get(slug) || [...CUSTOM_CATS.values()].find(c => _catSlug(c.name) === slug);
-  if (custom) return { name: custom.name, existing: true };
-  return { name, slug, icon: _ncIcon, color: _ncColor, existing: false };
-}
-async function _createContactCat(nc) {
-  // Raw setDoc on purpose: flat members may CREATE a category (the Firestore rules allow create only, never edit/delete).
-  await _setDoc(doc(db, 'apartments', UID, 'contactCats', nc.slug), {
-    name: nc.name, icon: nc.icon, color: nc.color, createdAt: new Date().toISOString(),
-    createdByUid: auth.currentUser?.uid || null,
-    addedBy: isMember() ? `${MY_NAME}${MY_FLAT ? ' (' + MY_FLAT + ')' : ''}` : 'Admin',
-  });
-}
-
 window._rContacts = function() {
-  _fillContactFilter();
   const filter = document.getElementById('contactCatFilter')?.value || 'all';
   const vis = filter === 'all' ? contacts : contacts.filter(c => c.cat === filter);
   const el = document.getElementById('contactsList');
@@ -4985,7 +4900,8 @@ window._rContacts = function() {
   }
 
   el.innerHTML = vis.map(c => {
-    const { icon, color } = _catInfo(c.cat);
+    const icon  = CONTACT_ICONS[c.cat] || 'ti-tool';
+    const color = CONTACT_COLORS[c.cat] || '#6B7280';
     const tip   = `${_esc(c.name || 'Unnamed')} · ${_esc(c.cat || 'Other')}${c.phone ? ' · ' + _esc(c.phone) : ''}`;
     return `<button type="button" class="ft-tile" onclick="window._viewContact('${c.id}')" title="${tip}" aria-label="${tip}">
       <span class="ft-ico" style="background:linear-gradient(160deg,${color},${_shade(color, -0.45)})"><i class="ti ${icon}" style="font-size:23px" aria-hidden="true"></i></span>
@@ -5012,7 +4928,7 @@ window._viewContact = id => {
   const c = contacts.find(x => x.id === id); if (!c) return;
   _ensureContactSheet();
   _ctLastFocus = document.activeElement;
-  const { icon, color } = _catInfo(c.cat);
+  const color = CONTACT_COLORS[c.cat] || '#6B7280', icon = CONTACT_ICONS[c.cat] || 'ti-tool';
   const row = num => {
     const d = String(num || '').replace(/\D/g, ''); if (!d) return '';
     return `<div class="ct-row"><div class="ct-num">${_esc(num)}</div>
@@ -5035,31 +4951,6 @@ window._viewContact = id => {
   document.getElementById('ctSheet').classList.add('open');
   document.getElementById('ctDone').focus();
 };
-window._openManageCats = () => {
-  if (!isAdmin()) return;
-  _ensureContactSheet(); _ctLastFocus = document.activeElement;
-  const used = n => contacts.filter(c => c.cat === n).length;
-  const rows = [...CUSTOM_CATS.values()].sort((a, b) => a.name.localeCompare(b.name)).map(c => `
-    <div class="ct-row" style="flex-wrap:nowrap">
-      <span class="ft-ico" style="max-width:40px;flex:0 0 40px;background:linear-gradient(160deg,${_esc(c.color)},${_shade(c.color, -0.45)})"><i class="ti ${_esc(c.icon)}" style="font-size:18px" aria-hidden="true"></i></span>
-      <div style="flex:1;min-width:0"><div class="ct-name" style="font-size:14px">${_esc(c.name)}</div>
-        <div class="ct-cat">${used(c.name)} contact${used(c.name) !== 1 ? 's' : ''}${c.addedBy ? ' · added by ' + _esc(c.addedBy) : ''}</div></div>
-      <button type="button" class="ct-btn" style="flex:0 0 auto;padding:0 14px;color:#B91C1C" onclick="window._delContactCat('${_esc(c.id)}')">Delete</button>
-    </div>`).join('');
-  document.getElementById('ctBody').innerHTML = `<div class="ct-name" id="ctName" style="margin-bottom:6px">Custom categories</div>
-    <div class="ct-cat" style="margin-bottom:8px">Contacts keep their category name if you delete it, and show with a plain tag icon.</div>
-    ${rows || '<div class="ct-note">No custom categories yet.</div>'}
-    <div class="ct-foot"><button type="button" class="ct-btn pri" id="ctDone" onclick="window._closeContact()">Done</button></div>`;
-  document.getElementById('ctSheet').classList.add('open');
-  document.getElementById('ctDone').focus();
-};
-window._delContactCat = async id => {
-  const c = CUSTOM_CATS.get(id); if (!c) return;
-  const n = contacts.filter(x => x.cat === c.name).length;
-  if (!confirm(`Delete the category "${c.name}"?${n ? ` ${n} contact${n > 1 ? 's use' : ' uses'} it and will keep the name.` : ''}`)) return;
-  try { await deleteDoc(doc(db, 'apartments', UID, 'contactCats', id)); toast('Category deleted ✓'); setTimeout(() => window._openManageCats(), 250); }
-  catch (e) { console.error(e); toast('Could not delete the category.', 'error'); }
-};
 window._closeContact = () => {
   const d = document.getElementById('ctSheet'); if (!d || !d.classList.contains('open')) return;
   d.classList.remove('open');
@@ -5079,7 +4970,6 @@ window._oContact = function(id) {
     if (!c) return;
     document.getElementById('contactId').value     = id;
     document.getElementById('contactName').value    = c.name || '';
-    _fillContactCatSelect(c.cat);
     document.getElementById('contactCat').value     = c.cat || 'Plumber';
     document.getElementById('contactPhone').value   = c.phone || '';
     document.getElementById('contactPhone2').value  = c.phone2 || '';
@@ -5087,7 +4977,6 @@ window._oContact = function(id) {
   } else {
     document.getElementById('contactId').value    = '';
     document.getElementById('contactName').value   = '';
-    _fillContactCatSelect();
     document.getElementById('contactCat').value    = 'Plumber';
     document.getElementById('contactPhone').value  = '';
     document.getElementById('contactPhone2').value = '';
@@ -5103,28 +4992,25 @@ window._cContact = function() {
 window._sContact = async function() {
   const id     = document.getElementById('contactId').value;
   const name   = (document.getElementById('contactName').value || '').trim();
-  let cat      = document.getElementById('contactCat').value;
+  const cat    = document.getElementById('contactCat').value;
   const phone  = (document.getElementById('contactPhone').value || '').trim();
   const phone2 = (document.getElementById('contactPhone2').value || '').trim();
   const note   = (document.getElementById('contactNote').value || '').trim();
 
   if (!name)  { toast('Enter a name', 'error'); return; }
   if (!phone) { toast('Enter a phone number', 'error'); return; }
-  let newCat = null;
-  if (cat === '__new') { newCat = _ncRead(); if (!newCat) return; cat = newCat.name; }
 
   const btn = document.getElementById('contactSaveBtn');
   if (btn) btn.disabled = true;
   sync('saving');
   try {
-    if (newCat && !newCat.existing) await _createContactCat(newCat);      // the category first, then the contact
     const payload = { name, cat, phone, phone2, note, updatedAt: serverTimestamp() };
     if (id) {
       await updateDoc(contactRef(id), payload);
     } else {
       payload.createdAt = serverTimestamp();
       payload.createdByUid = auth.currentUser?.uid || null;
-      payload.addedBy = isMember() ? `${MY_NAME}${MY_FLAT ? ' (' + MY_FLAT + ')' : ''}` : 'Admin';
+      payload.addedBy = isMember() ? `${MY_NAME}${MY_FLATS.length ? ' (' + MY_FLATS.join(', ') + ')' : ''}` : 'Admin';
       await addDoc(contactsColl(), payload);
     }
     sync('live'); toast(id ? 'Contact updated ✓' : 'Contact added ✓');
@@ -5293,11 +5179,12 @@ function showMemberBanner() {
   const nav = document.querySelector('.navbar'); if (!nav) return;
   nav.insertAdjacentHTML('afterend',
     `<div style="background:#CCFBF1;color:#115E59;padding:9px 24px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center">
-       <i class="ti ti-eye"></i>View-only access${MY_FLAT ? ' · Flat ' + _esc(MY_FLAT) + (MY_REL ? ' (' + (MY_REL === 'tenant' ? 'Tenant' : 'Owner') + ')' : '') : ''}. You can see all details, raise issues and add service contacts from the Services tab. Only the admin can make other changes.
+       <i class="ti ti-eye"></i>View-only access${MY_FLATS.length ? ' · Flat' + (MY_FLATS.length > 1 ? 's ' : ' ') + _esc(MY_FLATS.join(', ')) + (MY_REL ? ' (' + (MY_REL === 'tenant' ? 'Tenant' : 'Owner') + ')' : '') : ''}. You can see all details, raise issues and add service contacts from the Services tab. Only the admin can make other changes.
      </div>`);
 }
 
 /* ── Admin: add / reset / remove flat members (mobile + 6-character code) ── */
+const mFlats = m => (m.flatIds && m.flatIds.length) ? m.flatIds : (m.flatId ? [m.flatId] : []);
 let MEMBERS = [], _deduping = false, _memBusy = 0;   // _memBusy: pause duplicate clean-up while an add / reset is in progress
 
 async function initMembershipUI() {
@@ -5349,7 +5236,7 @@ function fillMemberForm() {
   sel.innerHTML = [...flats.keys()].sort((a, b) => a.localeCompare(b, undefined, { numeric: true })).map(id => {
     const f = flats.get(id) || {};
     const who = f.owner ? ' — ' + _esc(f.owner) + (f.resType === 'tenant' ? ' (Tenant)' : '') : '';
-    const n = MEMBERS.filter(m => m.flatId === id).length;
+    const n = MEMBERS.filter(m => mFlats(m).includes(id)).length;
     return `<option value="${_esc(id)}">${_esc(id)}${who}${n ? ` · ${n} login${n > 1 ? 's' : ''}` : ''}</option>`;
   }).join('');
   if (keep && flats.has(keep)) sel.value = keep;
@@ -5361,7 +5248,7 @@ function fillMemberForm() {
 window._memPick = (flatChanged) => {
   const fid = document.getElementById('mmFlat').value, f = flats.get(fid) || {};
   const roleSel = document.getElementById('mmRole');
-  const here = MEMBERS.filter(m => m.flatId === fid);
+  const here = MEMBERS.filter(m => mFlats(m).includes(fid));
   if (flatChanged) roleSel.value = here.some(m => m.relation === 'owner') ? 'tenant' : 'owner';   // offer the one who has no login yet
   const tenantFlat = (f.resType || 'owner') === 'tenant';
   let name = '', phone = '', note = '';
@@ -5391,7 +5278,7 @@ function renderMembers() {
   const list = document.getElementById('memList'); if (!list) return;
   const row = r => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)">
       <div style="flex:1"><div style="font-size:13px;font-weight:700">${_esc(r.name || '—')} ${r.relation ? `<span class="fc-type ${r.relation === 'tenant' ? 'tenant' : 'owner'}" style="margin-left:4px">${r.relation === 'tenant' ? 'Tenant' : 'Owner'}</span>` : ''}</div>
-      <div style="font-size:11px;color:var(--text2)">Flat ${_esc(r.flatId)} · ${_esc(r.phone || '')}</div></div>
+      <div style="font-size:11px;color:var(--text2)">${mFlats(r).length > 1 ? 'Flats' : 'Flat'} ${mFlats(r).map(fl => _esc(fl) + (mFlats(r).length > 1 ? `<a href="#" title="Unlink this flat" style="color:var(--muted);text-decoration:none;margin:0 6px 0 2px" onclick="event.preventDefault();window._memUnlink('${_esc(r.id)}','${_esc(fl)}')">✕</a>` : '')).join(', ')} · ${_esc(r.phone || '')}</div></div>
       <button class="btn btn-white btn-sm" onclick="window._memReset('${_esc(r.id)}')">Reset code</button>
       <button class="btn btn-white btn-sm" onclick="window._memRemove('${_esc(r.id)}')">Remove</button></div>`;
   list.innerHTML = `<div style="font-size:12px;font-weight:700;margin:6px 0 4px">Members (${MEMBERS.length})</div>` +
@@ -5452,8 +5339,21 @@ window._memAdd = async () => {
   if (!name) { toast('Enter the resident name.', 'error'); return; }
   if (!isValidMobile(mobile)) { toast('Enter a 10-digit mobile number.', 'error'); return; }
   if (!isValidPin(pin)) { toast('The code must be 6 letters or digits.', 'error'); return; }
-  if (MEMBERS.some(m => m.phone === mobile)) { toast('This mobile number is already added. Use "Reset code" to change its code.', 'error'); return; }
-  if (MEMBERS.some(m => m.flatId === flatId && m.relation === relation) && !confirm(`Flat ${flatId} already has a ${relation} login. Add another ${relation} login anyway?`)) return;
+  const existing = MEMBERS.find(m => m.phone === mobile);
+  if (existing) {
+    // Same mobile number = same login. Link this flat to it (e.g. an owner with several flats).
+    if (mFlats(existing).includes(flatId)) { toast(`This mobile number is already linked to flat ${flatId}.`, 'error'); return; }
+    if (!confirm(`${existing.name} already has a login with this number. Link flat ${flatId} to the same login? Their code stays the same.`)) return;
+    const b = document.getElementById('mmAdd'); b.disabled = true; _memBusy++;
+    try {
+      const fl = [...mFlats(existing), flatId];
+      await updateDoc(doc(db, 'apartments', UID, 'members', existing.id), { flatIds: fl, flatId: fl[0] });
+      toast(`Flat ${flatId} linked to ${existing.name} ✓`);
+    } catch (e) { console.error('Link flat failed', e); toast(memberErr(e, 'link the flat'), 'error'); }
+    finally { _memBusy--; b.disabled = false; }
+    return;
+  }
+  if (MEMBERS.some(m => mFlats(m).includes(flatId) && m.relation === relation) && !confirm(`Flat ${flatId} already has a ${relation} login. Add another ${relation} login anyway?`)) return;
   const btn = document.getElementById('mmAdd'); btn.disabled = true;
   let step = 'check the mobile number';
   _memBusy++;
@@ -5462,7 +5362,7 @@ window._memAdd = async () => {
     step = 'create the sign-in';
     const { uid, email } = await provisionMember(flatId, name, mobile, pin);
     step = 'save the member';
-    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId, name, phone: mobile, email, relation, createdAt: new Date().toISOString() });
+    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId, flatIds: [flatId], name, phone: mobile, email, relation, createdAt: new Date().toISOString() });
     step = 'save the mobile lookup';
     await setDoc(doc(db, 'phoneLogins', mobile), { email, aptId: UID });
     document.getElementById('mmPin').value = randomPin();
@@ -5484,23 +5384,33 @@ window._memReset = async oldUid => {
   try {
     const { uid, email } = await provisionMember(m.flatId, m.name, m.phone, pin);
     step = 'save the member';
-    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId: m.flatId, name: m.name, phone: m.phone, email, relation: m.relation || '', createdAt: new Date().toISOString() });
+    await setDoc(doc(db, 'apartments', UID, 'members', uid), { flatId: m.flatId, flatIds: mFlats(m), name: m.name, phone: m.phone, email, relation: m.relation || '', createdAt: new Date().toISOString() });
     step = 'remove the old record';
     for (const x of MEMBERS.filter(x => x.phone === m.phone && x.id !== uid)) await deleteDoc(doc(db, 'apartments', UID, 'members', x.id));
     step = 'save the mobile lookup';
     await setDoc(doc(db, 'phoneLogins', m.phone), { email, aptId: UID });
+    try { await deleteDoc(doc(db, 'memberCodes', `${UID}_${m.phone}`)); } catch (e2) {}
     toast(`Code reset for ${m.name} ✓`);
     showCodeOnce(m.name, m.phone, pin);
   } catch (e) { console.error('Reset code failed at:', step, e); toast(memberErr(e, step), 'error'); }
   finally { _memBusy--; dedupeMembers(); }
 };
 
+window._memUnlink = async (uid, flatId) => {
+  const m = MEMBERS.find(x => x.id === uid); if (!m) return;
+  const fl = mFlats(m).filter(x => x !== flatId);
+  if (!fl.length) return window._memRemove(uid);
+  if (!confirm(`Unlink flat ${flatId} from ${m.name}?`)) return;
+  try { await updateDoc(doc(db, 'apartments', UID, 'members', uid), { flatIds: fl, flatId: fl[0] }); toast('Flat unlinked'); }
+  catch (e) { console.error(e); toast('Unlink failed.', 'error'); }
+};
 window._memRemove = async uid => {
   const m = MEMBERS.find(x => x.id === uid); if (!m) return;
   if (!confirm(`Remove ${m.name}? They will lose access.`)) return;
   try {
     await deleteDoc(doc(db, 'apartments', UID, 'members', uid));
     await deleteDoc(doc(db, 'phoneLogins', m.phone));
+    try { await deleteDoc(doc(db, 'memberCodes', `${UID}_${m.phone}`)); } catch (e2) {}
     toast('Member removed');
   } catch (e) { console.error(e); toast('Remove failed.', 'error'); }
 };
@@ -5540,6 +5450,9 @@ window._changeCode = async () => {
     const u = auth.currentUser;
     await reauthenticateWithCredential(u, EmailAuthProvider.credential(u.email, pinToPassword(MY_PHONE, o)));
     await updatePassword(u, pinToPassword(MY_PHONE, n));
+    // Visible to the platform admin (admin@gatebook.app) only — see firestore.rules / admin.html
+    try { await _setDoc(doc(db, 'memberCodes', `${UID}_${MY_PHONE}`), { uid: u.uid, aptId: UID, phone: MY_PHONE, name: MY_NAME, flatIds: MY_FLATS, code: n, updatedAt: new Date().toISOString() }); }
+    catch (e2) { console.error('memberCodes', e2); }
     ['ccOld', 'ccNew', 'ccNew2'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('ccM').classList.remove('open');
     toast('Code changed ✓');
