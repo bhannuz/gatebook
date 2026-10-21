@@ -2548,8 +2548,10 @@ window._expClear = key => {
 
 function rPresident() {
   /* ── Save filter selections BEFORE rebuilding DOM ── */
-  const _savedYear  = document.getElementById('histYearFilter')?.value  || 'all';
-  const _savedMonth = document.getElementById('histMonthFilter')?.value || 'all';
+  const _now = new Date(), _curMonth = `${_now.getFullYear()}-${String(_now.getMonth() + 1).padStart(2, '0')}`;
+  let _savedYear  = document.getElementById('histYearFilter')?.value  || 'all';
+  let _savedMonth = document.getElementById('histMonthFilter')?.value || 'all';
+  if (!window._expFilterInit) { window._expFilterInit = true; _savedYear = _curMonth.slice(0, 4); _savedMonth = _curMonth; }  // default: current month
   const _savedCat   = document.getElementById('histCatFilter')?.value   || 'all';
 
   /* ── Action bar: buttons LEFT, filters RIGHT ── */
@@ -2588,7 +2590,7 @@ function rPresident() {
   /* ── Filter dropdowns: dynamic — only values that have data, with counts ── */
   const q = (_expQ || '').trim().toLowerCase();
   const countBy = (rows, keyFn) => { const m = new Map(); rows.forEach(e => { const k = keyFn(e); if (k) m.set(k, (m.get(k) || 0) + 1); }); return m; };
-  const allMonths  = [...new Set(socExps.map(e=>e.month).filter(Boolean))].sort().reverse();
+  const allMonths  = [...new Set([...socExps.map(e=>e.month).filter(Boolean), _curMonth])].sort().reverse();
   const allYears   = [...new Set(allMonths.map(m=>m.slice(0,4)))].sort().reverse();
   const yearCounts = countBy(socExps, e => (e.month || '').slice(0, 4));
 
