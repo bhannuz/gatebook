@@ -10,6 +10,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 import { resolveRole, pinToPassword, randomPin, isValidPin, isValidMobile, normalizePin } from './roles.js';
 import { initBackup } from './backup.js';
+import { initEstimates } from './estimates.js';
 /* payments, issues, members inlined below — see functions below */
 
 /* ════════════════════════════════
@@ -3412,6 +3413,7 @@ async function boot(){
       listenSocExp();
       listenContacts();
       if (isAdmin()) { initMembershipUI(); initBackup(() => UID); } else { showMemberBanner(); initChangeCode(); }
+      initEstimates({ getUID: () => UID, isAdmin, toast, getWho: () => ({ name: isAdmin() ? 'Admin' : MY_NAME, flats: MY_FLATS }) });
       // Reveal the app UI — this was previously only done in the wizard branch,
       // causing a permanently blank page on refresh for already-configured societies.
       document.getElementById('lo').style.display = 'none';
@@ -3684,9 +3686,82 @@ function _getCanvasSize(canvas) {
   return { W: rect.width, H: rect.height };
 }
 
+/* ── Pie ⇄ Bar toggle (remembered per chart) ── */
+const _pieArgs = {};
+function _chartMode(id){ try { return localStorage.getItem('gb_chart_'+id) === 'bar' ? 'bar' : 'pie'; } catch { return 'pie'; } }
+window._setChartMode = (id, mode) => {
+  try { localStorage.setItem('gb_chart_'+id, mode); } catch {}
+  const a = _pieArgs[id]; if (a) drawPie(id, a.segments, a.tooltipId);
+};
+function _ensureChartToggle(canvas, id, mode) {
+  const wrap = canvas.parentElement; if (!wrap || !wrap.parentElement) return;
+  let tg = document.getElementById(id + '_tg');
+  if (!tg) {
+    tg = document.createElement('div');
+    tg.id = id + '_tg';
+    tg.style.cssText = 'display:flex;justify-content:center;gap:4px;margin:0 auto 10px';
+    tg.innerHTML = ['pie','bar'].map(m => `<button type="button" data-m="${m}" onclick="event.stopPropagation();window._setChartMode('${id}','${m}')" style="display:inline-flex;align-items:center;gap:4px;height:26px;padding:0 10px;border-radius:99px;border:1px solid var(--border2);font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer"><i class="ti ti-chart-${m==='pie'?'pie':'bar'}"></i>${m==='pie'?'Pie':'Bar'}</button>`).join('');
+    wrap.parentElement.insertBefore(tg, wrap);
+  }
+  tg.querySelectorAll('button').forEach(b => {
+    const on = b.dataset.m === mode;
+    b.style.background = on ? 'var(--indigo)' : '#fff';
+    b.style.color = on ? '#fff' : 'var(--text2)';
+    b.style.borderColor = on ? 'var(--indigo)' : 'var(--border2)';
+  });
+}
+
+function drawBars(canvas, canvasId, segments, tooltipId) {
+  const wrap = canvas.parentElement;
+  const rowH = 30, n = Math.max(segments.length, 1);
+  wrap.style.cssText = `width:100%;max-width:100%;height:${n*rowH+8}px;aspect-ratio:auto;position:relative;margin:0 auto 20px;`;
+  const rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const W = rect.width || 260, H = n*rowH + 8;
+  canvas.width = W*dpr; canvas.height = H*dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+  const cs = getComputedStyle(document.documentElement);
+  const text = cs.getPropertyValue('--text').trim() || '#111', muted = cs.getPropertyValue('--muted').trim() || '#888';
+  const total = segments.reduce((s,g)=>s+g.value, 0);
+  if (!total) { ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('No data', W/2, H/2); _pieSegs[canvasId] = []; return; }
+  const max = Math.max(...segments.map(g=>g.value));
+  const labelW = Math.min(88, W*0.32), valW = Math.min(78, W*0.28), barX = labelW + 6, barMax = Math.max(20, W - barX - valW - 6);
+  ctx.textBaseline = 'middle';
+  const geom = [];
+  segments.forEach((g, i) => {
+    const y = 4 + i*rowH + rowH/2, bw = Math.max(3, g.value/max*barMax);
+    ctx.fillStyle = text; ctx.font = '600 11px sans-serif'; ctx.textAlign = 'left';
+    let lbl = String(g.label); while (lbl.length > 3 && ctx.measureText(lbl).width > labelW) lbl = lbl.slice(0,-2);
+    ctx.fillText(lbl === String(g.label) ? lbl : lbl + '…', 0, y);
+    ctx.fillStyle = g.color; ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(barX, y-8, bw, 16, 4); else ctx.rect(barX, y-8, bw, 16);
+    ctx.fill();
+    ctx.fillStyle = muted; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(Math.round(g.value/total*100) + '%', W, y);
+    geom.push({ ...g, total });
+  });
+  _pieSegs[canvasId] = geom;
+  if (tooltipId) {
+    const show = ev => {
+      const tip = document.getElementById(tooltipId); if (!tip) return;
+      const cr = canvas.getBoundingClientRect();
+      const i = Math.floor((ev.clientY - cr.top - 4) / rowH), hit = geom[i];
+      if (!hit) { tip.style.display = 'none'; return; }
+      tip.textContent = `${hit.label}: ${hit.displayValue || hit.value} (${Math.round(hit.value/hit.total*100)}%)`;
+      tip.style.display = 'block'; tip.style.left = (ev.clientX+12)+'px'; tip.style.top = (ev.clientY-28)+'px';
+    };
+    canvas.onmousemove = show; canvas.onclick = show;
+    canvas.onmouseleave = () => { const t = document.getElementById(tooltipId); if (t) t.style.display = 'none'; };
+  }
+}
+
 function drawPie(canvasId, segments, tooltipId) {
   const canvas = document.getElementById(canvasId);
   if (!canvas) return;
+  _pieArgs[canvasId] = { segments, tooltipId };
+  const _mode = _chartMode(canvasId);
+  _ensureChartToggle(canvas, canvasId, _mode);
+  if (_mode === 'bar') { canvas.onclick = null; return drawBars(canvas, canvasId, segments, tooltipId); }
+  canvas.parentElement.style.cssText = 'width:100%;max-width:200px;aspect-ratio:1/1;height:auto;position:relative;margin:0 auto 20px;';
   // Responsive: set canvas pixel size to display size
   const rect = canvas.getBoundingClientRect();
   const dpr  = window.devicePixelRatio||1;
