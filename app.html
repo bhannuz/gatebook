@@ -979,7 +979,7 @@
 
 
 <script>console.info("Gatebook app.html build r16 · compact app-icon tiles for flats and contacts");</script>
-<script type="module" src="js/main.js?v=r17"></script>
+<script type="module" src="js/main.js?v=r18"></script>
 <!-- PENDING FLATS MODAL -->
 <div id="pendingModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,0.45);align-items:flex-end;justify-content:center" onclick="if(event.target===this)window._closePending()">
   <div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:600px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden">
@@ -1095,7 +1095,7 @@
 
 <!-- EXPENSE ACTION MODAL -->
 <div id="seActionModal" style="display:none;position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,0.5);align-items:flex-end;" onclick="if(event.target===this)window._closeSEModal()">
-  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:0 0 32px;max-height:90vh;overflow-y:auto;">
+  <div style="background:#fff;border-radius:20px 20px 0 0;width:100%;padding:0 0 calc(20px + env(safe-area-inset-bottom));max-height:90vh;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;">
     <!-- Handle -->
     <div style="display:flex;justify-content:center;padding:10px 0 0"><div style="width:40px;height:4px;background:var(--border2);border-radius:2px;"></div></div>
     <!-- Header -->
@@ -1113,7 +1113,16 @@
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Category</label>
-          <input id="seam_cat" type="text" placeholder="e.g. Maintenance" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;"/>
+          <select id="seam_cat" onchange="if(this.value!=='__new__')window._seamCatPrev=this.value;window._catSelChange('seam_cat','soc')" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:var(--font);font-size:14px;box-sizing:border-box;background:#fff;"></select>
+          <div id="seam_cat_new" style="display:none;margin-top:5px">
+            <div style="display:flex;gap:6px">
+              <input type="text" id="seam_cat_input" placeholder="New category…" maxlength="30"
+                style="flex:1;min-width:0;height:36px;padding:0 10px;border:1.5px solid var(--indigo);border-radius:8px;font-family:var(--font);font-size:14px;outline:none"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();window._addInlineCat('seam_cat','soc')}"/>
+              <button class="btn btn-indigo btn-sm" style="height:36px;padding:0 10px" onclick="window._addInlineCat('seam_cat','soc')"><i class="ti ti-check"></i></button>
+              <button class="btn btn-white btn-sm" style="height:36px;padding:0 10px" onclick="window._hideInlineCat('seam_cat');window._seamCatReset()"><i class="ti ti-x"></i></button>
+            </div>
+          </div>
         </div>
         <div>
           <label style="font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;">Amount (₹)</label>
