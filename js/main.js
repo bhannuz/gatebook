@@ -1773,7 +1773,14 @@ window._openSEModal = (id) => {
   if (!modal) return;
   document.getElementById('seam_id').value    = id;
   document.getElementById('seam_title').value = e.title||'';
-  document.getElementById('seam_cat').value   = e.cat||'';
+  { // category: pick from the list (current one pre-selected)
+    const sel = document.getElementById('seam_cat');
+    renderCatOpts('seam_cat','soc');
+    if (e.cat && !getCats('soc').includes(e.cat)) sel.insertBefore(new Option(e.cat, e.cat), sel.firstChild);
+    sel.value = e.cat || getCats('soc')[0];
+    window._hideInlineCat('seam_cat');
+    window._seamCatPrev = sel.value;
+  }
   document.getElementById('seam_amt').value   = e.amt||'';
   document.getElementById('seam_date').value  = e.rawDate||'';
   document.getElementById('seam_note').value  = e.note||'';
@@ -1784,6 +1791,7 @@ window._openSEModal = (id) => {
   if (sub) sub.textContent = (e.cat||'') + (e.date ? ' · ' + e.date : '');
   modal.style.display = 'flex';
 };
+window._seamCatReset = () => { const s=document.getElementById('seam_cat'); if(s && window._seamCatPrev) s.value=window._seamCatPrev; };
 window._closeSEModal = () => {
   const m = document.getElementById('seActionModal');
   if (m) m.style.display = 'none';
@@ -1792,6 +1800,7 @@ window._saveSEModal = async () => {
   const id     = document.getElementById('seam_id').value;
   const title  = document.getElementById('seam_title').value.trim();
   const cat    = document.getElementById('seam_cat').value.trim();
+  if (!cat || cat === '__new__') { toast('Select a category.','error'); return; }
   const amt    = parseInt(document.getElementById('seam_amt').value)||0;
   const rawDate= document.getElementById('seam_date').value;
   const note   = document.getElementById('seam_note').value.trim();
