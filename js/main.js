@@ -3712,46 +3712,92 @@ function _ensureChartToggle(canvas, id, mode) {
 }
 
 function drawBars(canvas, canvasId, segments, tooltipId) {
+  /* Vertical column chart: gridlines, rounded bars, value labels, tap/hover highlight */
   const wrap = canvas.parentElement;
-  const rowH = 30, n = Math.max(segments.length, 1);
-  wrap.style.cssText = `width:100%;max-width:100%;height:${n*rowH+8}px;aspect-ratio:auto;position:relative;margin:0 auto 20px;`;
+  wrap.style.cssText = 'width:100%;max-width:100%;height:230px;aspect-ratio:auto;position:relative;margin:0 auto 20px;';
   const rect = canvas.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
-  const W = rect.width || 260, H = n*rowH + 8;
+  const W = rect.width || 280, H = 230;
   canvas.width = W*dpr; canvas.height = H*dpr;
-  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr); ctx.clearRect(0, 0, W, H);
+  const ctx = canvas.getContext('2d');
   const cs = getComputedStyle(document.documentElement);
   const text = cs.getPropertyValue('--text').trim() || '#111', muted = cs.getPropertyValue('--muted').trim() || '#888';
+  const grid = cs.getPropertyValue('--border2').trim() || '#e5e7eb';
   const total = segments.reduce((s,g)=>s+g.value, 0);
-  if (!total) { ctx.fillStyle = muted; ctx.font = '11px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('No data', W/2, H/2); _pieSegs[canvasId] = []; return; }
-  const max = Math.max(...segments.map(g=>g.value));
-  const labelW = Math.min(88, W*0.32), valW = Math.min(78, W*0.28), barX = labelW + 6, barMax = Math.max(20, W - barX - valW - 6);
-  ctx.textBaseline = 'middle';
-  const geom = [];
-  segments.forEach((g, i) => {
-    const y = 4 + i*rowH + rowH/2, bw = Math.max(3, g.value/max*barMax);
-    ctx.fillStyle = text; ctx.font = '600 11px sans-serif'; ctx.textAlign = 'left';
-    let lbl = String(g.label); while (lbl.length > 3 && ctx.measureText(lbl).width > labelW) lbl = lbl.slice(0,-2);
-    ctx.fillText(lbl === String(g.label) ? lbl : lbl + '…', 0, y);
-    ctx.fillStyle = g.color; ctx.beginPath();
-    if (ctx.roundRect) ctx.roundRect(barX, y-8, bw, 16, 4); else ctx.rect(barX, y-8, bw, 16);
-    ctx.fill();
-    ctx.fillStyle = muted; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'right';
-    ctx.fillText(Math.round(g.value/total*100) + '%', W, y);
-    geom.push({ ...g, total });
-  });
-  _pieSegs[canvasId] = geom;
-  if (tooltipId) {
-    const show = ev => {
-      const tip = document.getElementById(tooltipId); if (!tip) return;
-      const cr = canvas.getBoundingClientRect();
-      const i = Math.floor((ev.clientY - cr.top - 4) / rowH), hit = geom[i];
-      if (!hit) { tip.style.display = 'none'; return; }
-      tip.textContent = `${hit.label}: ${hit.displayValue || hit.value} (${Math.round(hit.value/hit.total*100)}%)`;
-      tip.style.display = 'block'; tip.style.left = (ev.clientX+12)+'px'; tip.style.top = (ev.clientY-28)+'px';
-    };
-    canvas.onmousemove = show; canvas.onclick = show;
-    canvas.onmouseleave = () => { const t = document.getElementById(tooltipId); if (t) t.style.display = 'none'; };
+  const isMoney = segments.some(g => String(g.displayValue||'').trim().startsWith('₹'));
+  const cmp = v => {
+    if (!isMoney) return String(Math.round(v));
+    const f = (x, u) => (x.toFixed(x >= 100 ? 0 : 1).replace(/\.0$/, '')) + u;
+    return v >= 1e7 ? f(v/1e7,'Cr') : v >= 1e5 ? f(v/1e5,'L') : v >= 1e3 ? f(v/1e3,'K') : String(Math.round(v));
+  };
+  if (!total) {
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = muted; ctx.font = '12px sans-serif'; ctx.textAlign = 'center'; ctx.fillText('No data', W/2, H/2);
+    _pieSegs[canvasId] = []; return;
   }
+  // nice axis maximum
+  const maxV = Math.max(...segments.map(g=>g.value));
+  const raw = maxV/4, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw/mag;
+  const step = (norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 2.5 ? 2.5 : norm <= 5 ? 5 : 10) * mag;
+  const yMax = Math.ceil(maxV/step) * step, ticks = Math.round(yMax/step);
+
+  const n = segments.length, padL = 36, padR = 6, padT = 20;
+  const slot = (W - padL - padR) / n, rotate = slot < 46;
+  const padB = rotate ? 52 : 24, plotH = H - padT - padB, base = padT + plotH;
+  const bw = Math.min(40, slot * 0.64);
+  const yOf = v => base - (v / yMax) * plotH;
+  const geom = segments.map((g, i) => ({ ...g, total, x: padL + slot*i + (slot-bw)/2, w: bw, slotX: padL + slot*i }));
+  _pieSegs[canvasId] = geom;
+
+  const draw = hover => {
+    ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,W,H);
+    ctx.textBaseline = 'middle';
+    // gridlines + y labels
+    ctx.font = '10px sans-serif'; ctx.lineWidth = 1;
+    for (let t = 0; t <= ticks; t++) {
+      const y = Math.round(yOf(step*t)) + .5;
+      ctx.strokeStyle = t === 0 ? muted : grid; ctx.setLineDash(t === 0 ? [] : [3,3]);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
+      ctx.setLineDash([]); ctx.fillStyle = muted; ctx.textAlign = 'right'; ctx.fillText(cmp(step*t), padL - 6, y);
+    }
+    geom.forEach((g, i) => {
+      const top = yOf(g.value), h = Math.max(2, base - top), on = hover === i;
+      ctx.globalAlpha = hover === null || on ? 1 : .45;
+      const grad = ctx.createLinearGradient(0, top, 0, base);
+      grad.addColorStop(0, g.color); grad.addColorStop(1, g.color + 'bb');
+      ctx.fillStyle = on ? g.color : grad; ctx.beginPath();
+      const r = Math.min(7, g.w/2);
+      if (ctx.roundRect) ctx.roundRect(g.x, base - h, g.w, h, [r, r, 0, 0]); else ctx.rect(g.x, base - h, g.w, h);
+      ctx.fill(); ctx.globalAlpha = 1;
+      // value above bar
+      ctx.fillStyle = text; ctx.font = '700 10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(cmp(g.value), g.x + g.w/2, base - h - 9);
+      // category label
+      const cx = g.slotX + slot/2;
+      let lbl = String(g.label), maxChars = rotate ? 11 : Math.max(3, Math.floor(slot/6.2));
+      if (lbl.length > maxChars) lbl = lbl.slice(0, maxChars - 1) + '…';
+      ctx.font = (on ? '700 ' : '600 ') + '10px sans-serif'; ctx.fillStyle = on ? text : muted;
+      if (rotate) { ctx.save(); ctx.translate(cx + 3, base + 8); ctx.rotate(-Math.PI/4); ctx.textAlign = 'right'; ctx.fillText(lbl, 0, 0); ctx.restore(); }
+      else { ctx.textAlign = 'center'; ctx.fillText(lbl, cx, base + 13); }
+    });
+  };
+  draw(null);
+
+  const hit = ev => {
+    const cr = canvas.getBoundingClientRect();
+    const i = Math.floor((ev.clientX - cr.left - padL) / slot);
+    return i >= 0 && i < n ? i : null;
+  };
+  const show = ev => {
+    const tip = tooltipId && document.getElementById(tooltipId), i = hit(ev);
+    draw(i);
+    if (!tip) return;
+    if (i === null) { tip.style.display = 'none'; return; }
+    const g = geom[i];
+    tip.textContent = `${g.label}: ${g.displayValue || g.value} (${Math.round(g.value/g.total*100)}%)`;
+    tip.style.display = 'block'; tip.style.left = Math.min(ev.clientX + 12, window.innerWidth - 190) + 'px'; tip.style.top = (ev.clientY - 34) + 'px';
+  };
+  canvas.onmousemove = show; canvas.onclick = show;
+  canvas.onmouseleave = () => { draw(null); const t = tooltipId && document.getElementById(tooltipId); if (t) t.style.display = 'none'; };
 }
 
 function drawPie(canvasId, segments, tooltipId) {
