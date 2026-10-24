@@ -206,7 +206,9 @@ function rStats() {
   const totTw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.tw)||0),0);
   const totFw=[...vehicles.values()].reduce((s,v)=>s+(parseInt(v.fw)||0),0);
   // Only set phAct if not on president/analytics tab (those tabs set their own phAct)
-  if (AV !== 'president' && AV !== 'analytics') {
+  if (AV === 'issues' || AV === 'structure') {
+    document.getElementById('phAct').innerHTML = '';
+  } else if (AV !== 'president' && AV !== 'analytics') {
     document.getElementById('phAct').innerHTML=`
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-indigo" onclick="window._oA()"><i class="ti ti-plus"></i> Add Payment</button>
@@ -1982,9 +1984,11 @@ function switchView(v) {
     rPresHistory().catch(e => console.error('rPresHistory', e));
   }
   if(v==='payments')  try{ rBTabs(); rBlock(); } catch(e){ console.error(e); }
+  if(v==='issues' || v==='structure') document.getElementById('phAct').innerHTML = '';   // Add Payment / Add Expense belong to Payments & Expenses only
   // Re-draw charts after layout settles (needed after CSS reorder on mobile)
   if(v==='analytics'||v==='president'){
     setTimeout(()=>{
+      if(AV!==v) return;   // user already moved to another tab
       try{ if(v==='analytics') rAnalytics(); else rPresident(); }catch(e){}
     },120);
   }
@@ -5308,10 +5312,20 @@ window._viewPresHistory = () => {
 };
 
 function showMemberBanner() {
-  const nav = document.querySelector('.navbar'); if (!nav) return;
+  const nav = document.querySelector('.navbar'); if (!nav || document.getElementById('memberBanner')) return;
+  const flatTxt = MY_FLATS.length ? 'Flat' + (MY_FLATS.length > 1 ? 's ' : ' ') + _esc(MY_FLATS.join(', ')) + (MY_REL ? ' (' + (MY_REL === 'tenant' ? 'Tenant' : 'Owner') + ')' : '') : '';
+  const who = _esc(MY_NAME || 'Resident');
   nav.insertAdjacentHTML('afterend',
-    `<div style="background:#CCFBF1;color:#115E59;padding:9px 24px;font-size:13px;font-weight:600;display:flex;gap:8px;align-items:center">
-       <i class="ti ti-eye"></i>View-only access${MY_FLATS.length ? ' · Flat' + (MY_FLATS.length > 1 ? 's ' : ' ') + _esc(MY_FLATS.join(', ')) + (MY_REL ? ' (' + (MY_REL === 'tenant' ? 'Tenant' : 'Owner') + ')' : '') : ''}. You can see all details, raise issues and add service contacts from the Services tab. Only the admin can make other changes.
+    `<div id="memberBanner" onclick="const d=document.getElementById('memberBannerMore'),o=d.style.display==='none';d.style.display=o?'block':'none';document.getElementById('memberBannerArr').style.transform=o?'rotate(180deg)':'';document.getElementById('memberBannerLine').style.whiteSpace=o?'normal':'nowrap'"
+       style="background:#CCFBF1;color:#115E59;padding:8px 16px;font-size:13px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent">
+       <div style="display:flex;gap:8px;align-items:center">
+         <i class="ti ti-hand-stop" style="flex-shrink:0"></i>
+         <div id="memberBannerLine" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Welcome, ${who}${flatTxt ? ' · ' + flatTxt : ''} · View-only access</div>
+         <i id="memberBannerArr" class="ti ti-chevron-down" style="flex-shrink:0;transition:transform .2s"></i>
+       </div>
+       <div id="memberBannerMore" style="display:none;font-weight:500;font-size:12px;line-height:1.5;margin-top:6px;padding-left:24px">
+         <i class="ti ti-eye"></i> View-only access${flatTxt ? ' · ' + flatTxt : ''}. You can see all details, raise issues and add service contacts from the Services tab. Only the admin can make other changes.
+       </div>
      </div>`);
 }
 
