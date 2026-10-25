@@ -4526,10 +4526,9 @@ function renderAnPayTable(filterType, selMonth, selYear, selBlock) {
     const fw       = parseInt(v.fw) || 0;
     const vehCell  = (tw === 0 && fw === 0)
       ? `<span style="font-size:11px;color:var(--muted)">—</span>`
-      : `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text)">
-           ${tw > 0 ? `<span>${tw}</span>` : ''}
-           ${tw > 0 && fw > 0 ? `<span style="color:var(--text2)">/ </span>` : ''}
-           ${fw > 0 ? `<span>${fw}</span>` : ''}
+      : `<span style="display:inline-flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px">
+           ${tw > 0 ? `<span class="vbadge tw" style="padding:2px 6px;font-size:11px" title="${tw} two-wheeler${tw > 1 ? 's' : ''}"><i class="ti ti-motorbike"></i>${tw}</span>` : ''}
+           ${fw > 0 ? `<span class="vbadge fw" style="padding:2px 6px;font-size:11px" title="${fw} four-wheeler${fw > 1 ? 's' : ''}"><i class="ti ti-car"></i>${fw}</span>` : ''}
          </span>`;
     const isVacant = !(f.owner||'').trim();
     const resType  = isVacant ? 'vacant' : (f.resType||'owner');
