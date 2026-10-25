@@ -1125,3 +1125,31 @@ html body #anPayTable th{
   color:var(--th-color)!important;
   font-weight:800!important;
 }
+
+/* ── SUMMARY CARDS: small labels & sub-text (e.g. OCTOBER 2026, OUTSTANDING BALANCE, "9 records") ── */
+html body .fcard2 .fcard2-label,
+html body .vscard .vscard-label,
+html body .scard .sc-label{
+  color:var(--th-color)!important;
+  font-weight:800!important;
+}
+html body .fcard2 .fcard2-sub,
+html body .scard .sc-sub{
+  color:var(--th-color)!important;
+  font-weight:800!important;
+}
+
+/* ── EXTRA BOLD: the font tops out at weight 800, so a hairline stroke makes these look heavier ── */
+html body .fcard2 .fcard2-label,
+html body .vscard .vscard-label,
+html body .scard .sc-label,
+html body .fcard2 .fcard2-sub,
+html body .scard .sc-sub,
+html body table th,
+html body table thead th,
+html body .mem-table th,
+html body .veh-table th,
+html body .exp-records-panel table th,
+html body #anPayTable th{
+  -webkit-text-stroke:.4px currentColor;
+}
