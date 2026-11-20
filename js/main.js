@@ -1155,6 +1155,7 @@ function listenFlats(){
       _firstLoad = false;
       document.getElementById('lo').style.display  = 'none';
       document.getElementById('app').style.display = '';
+      try { switchView('analytics'); } catch(e) { console.error(e); }   // always open on the Payments tab
     }
     try { refreshAPP(); rAll(); } catch(e) { console.error('rAll error:', e); }
     sync('live');
@@ -3422,6 +3423,7 @@ async function boot(){
       // causing a permanently blank page on refresh for already-configured societies.
       document.getElementById('lo').style.display = 'none';
       document.getElementById('app').style.display = '';
+      try { switchView('analytics'); } catch(e) { console.error(e); }   // always open on the Payments tab
     } else {
       // Brand new society with no config — show in-app setup wizard
       document.getElementById('lo').style.display = 'none';
