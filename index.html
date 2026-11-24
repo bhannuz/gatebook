@@ -193,6 +193,8 @@ img[alt="SmartSplit"]{border-radius:22%;}
 .sumbox.c .stats2 .sc:first-child,.sumbox.c .per-row{display:none;}
 .sumbox.c .stats2{grid-template-columns:1fr;}
 .lnk{background:none;border:none;color:#b8a8ff;font:700 12px 'Plus Jakarta Sans',sans-serif;cursor:pointer;padding:2px 0 10px;display:block;margin:0 auto;}
+#dchips{display:none !important;}
+#fcat,#fpaid,#fdate{flex:1;min-width:0;font-size:12px;padding-left:10px;padding-right:20px;}
 .fc .fhide{display:none !important;}
 .ei{cursor:pointer;}.ei .xd{display:none;}.ei.open .xd{display:block;}
 .mrow{display:flex;align-items:center;gap:12px;width:100%;padding:14px;margin-bottom:8px;border-radius:12px;border:1px solid var(--rim);background:var(--ink3);color:var(--txt);font:700 14px 'Plus Jakarta Sans',sans-serif;cursor:pointer;text-align:left;}
@@ -739,10 +741,10 @@ img[alt="SmartSplit"]{border-radius:22%;}
 
     <!-- ══ EXPENSES TAB ══ -->
     <div id="t-exp" class="sec">
-      <div class="pnl fc">
+      <div class="pnl">
         <div class="ph" style="flex-wrap:wrap;gap:6px">
           <span class="pt">All Expenses</span>
-          <button class="btn bg bsm" onclick="this.closest('.pnl').classList.toggle('fc')">🔍 Filter</button>
+          <button class="btn bg bsm" onclick="this.closest('.pnl').classList.toggle('fc')">🔍 Hide/Show</button>
           <div class="fhide" style="display:flex;gap:6px;flex-wrap:wrap;width:100%">
             <select id="fcat" class="fsel" onchange="renderUI()">
               <option value="">All Categories</option>
@@ -751,6 +753,9 @@ img[alt="SmartSplit"]{border-radius:22%;}
             </select>
             <select id="fpaid" class="fsel" onchange="renderUI()">
               <option value="">All Members</option>
+            </select>
+            <select id="fdate" class="fsel" onchange="setDRange(document.querySelector('[data-range='+this.value+']'),this.value)">
+              <option value="5d">Last 5 days</option><option value="7d">Last 7 days</option><option value="30d">Last 30 days</option><option value="all">All dates</option><option value="custom">📅 Custom</option>
             </select>
           </div>
         </div>
@@ -764,7 +769,7 @@ img[alt="SmartSplit"]{border-radius:22%;}
           </select>
         </div>
         <!-- DATE RANGE FILTER -->
-        <div style="padding:10px 14px 10px;display:flex;flex-direction:column;gap:8px">
+        <div style="padding:0 14px 4px;display:flex;flex-direction:column;gap:8px">
           <div style="display:flex;gap:6px;flex-wrap:wrap" id="dchips">
             <button class="dchip on" data-range="5d" onclick="setDRange(this,'5d')">Last 5 days</button>
             <button class="dchip" data-range="7d" onclick="setDRange(this,'7d')">7 days</button>
@@ -1702,6 +1707,7 @@ window.renderUI = () => {
 
 window.setDRange = (btn, range) => {
   S.dateRange = range;
+  const fd = document.getElementById('fdate'); if (fd) fd.value = range;
   document.querySelectorAll('.dchip').forEach(c => c.classList.remove('on'));
   btn.classList.add('on');
   const cdiv = document.getElementById('custom-drange');
