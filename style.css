@@ -1153,3 +1153,8 @@ html body .exp-records-panel table th,
 html body #anPayTable th{
   -webkit-text-stroke:.4px currentColor;
 }
+
+/* ── Block / Floors / Flats steppers (setup wizard) ── */
+.stp{display:flex;align-items:center;gap:4px}
+.stp button{width:32px;height:40px;border:1.5px solid #D9DEF5;background:#fff;border-radius:8px;font-size:18px;font-weight:800;line-height:1;color:#4F46E5;cursor:pointer;flex-shrink:0;padding:0}
+.stp input{text-align:center;min-width:0;flex:1;width:100%}
