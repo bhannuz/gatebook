@@ -88,6 +88,9 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
   margin-bottom:10px;padding:12px;background:var(--surface2);
   border-radius:var(--r-md);border:1px solid var(--border);
 }
+.stp{display:flex;align-items:center;gap:4px}
+.stp button{width:32px;height:40px;border:1.5px solid #D9DEF5;background:#fff;border-radius:8px;font-size:18px;font-weight:800;line-height:1;color:#4F46E5;cursor:pointer;flex-shrink:0;padding:0}
+.stp input{text-align:center;min-width:0;flex:1;width:100%}
 .block-row label{font-size:13px;font-weight:700;color:var(--text);margin-bottom:4px;display:block}
 .block-row input{
   height:36px;padding:0 10px;border:1.5px solid var(--border2);
@@ -235,8 +238,8 @@ body{font-family:var(--font);background:linear-gradient(135deg,#EEF2FF 0%,#F0F9F
   <div class="step" id="s2">
     <div class="wiz-head">
       <div class="wiz-icon"><i class="ti ti-building"></i></div>
-      <h2>Configure Floors & Flats</h2>
-      <p>If your building has no named blocks, leave Block Name blank. Set the number of floors and flats per floor.</p>
+      <h2>Configure Block, Floors & Flats</h2>
+      <p>If your building has no named blocks, leave Block blank. Set the number of floors and the number of flats on each floor.</p>
     </div>
 
     <div id="blockRows"></div>
@@ -361,29 +364,44 @@ window.addBlock = function() {
 };
 
 function renderBlockRows() {
+  const stp = (i,k,label,max) => `
+      <div>
+        <label>${label}</label>
+        <div class="stp">
+          <button type="button" onclick="blkStep(${i},'${k}',-1)" aria-label="Decrease ${label}">−</button>
+          <input id="blk_${i}_${k}" type="number" inputmode="numeric" value="${blocks[i][k]}" min="1" max="${max}"
+            onfocus="this.select()" oninput="blkLive(${i},'${k}',this.value)" onchange="this.value=blkSet(${i},'${k}',this.value)"/>
+          <button type="button" onclick="blkStep(${i},'${k}',1)" aria-label="Increase ${label}">+</button>
+        </div>
+      </div>`;
   document.getElementById('blockRows').innerHTML = blocks.map((b,i)=>`
     <div class="block-row">
       <div>
-        <label>Block Name</label>
+        <label>Block</label>
         <input type="text" value="${b.name}" maxlength="3" placeholder="A"
           oninput="blocks[${i}].name=this.value.toUpperCase();updatePreview()"/>
       </div>
-      <div>
-        <label>Floors</label>
-        <input type="number" value="${b.floors}" min="1" max="50"
-          oninput="blocks[${i}].floors=parseInt(this.value)||1;updatePreview()"/>
-      </div>
-      <div>
-        <label>Flats / Floor</label>
-        <input type="number" value="${b.flatsPerFloor}" min="1" max="20"
-          oninput="blocks[${i}].flatsPerFloor=parseInt(this.value)||1;updatePreview()"/>
-      </div>
+      ${stp(i,'floors','Floors',50)}
+      ${stp(i,'flatsPerFloor','Flats',20)}
       ${blocks.length>1
         ?`<button class="rm-btn" onclick="removeBlock(${i})"><i class="ti ti-trash"></i></button>`
         :'<div></div>'}
     </div>`).join('');
   updatePreview();
 }
+
+const BLK_MAX = { floors:50, flatsPerFloor:20 };
+window.blkSet = function(i,k,v) {
+  let n = parseInt(v); if (!n || n < 1) n = 1; n = Math.min(n, BLK_MAX[k]);
+  blocks[i][k] = n; updatePreview(); return n;
+};
+window.blkLive = function(i,k,v) {            // while typing: update the total, don't rewrite the field
+  const n = parseInt(v); if (n >= 1) { blocks[i][k] = Math.min(n, BLK_MAX[k]); updatePreview(); }
+};
+window.blkStep = function(i,k,d) {
+  const n = blkSet(i,k,(blocks[i][k]||1)+d);
+  const el = document.getElementById(`blk_${i}_${k}`); if (el) el.value = n;
+};
 
 window.removeBlock = function(i) { blocks.splice(i,1); renderBlockRows(); };
 
@@ -393,7 +411,7 @@ window.updatePreview = function() {
     const cnt = b.floors*(b.flatsPerFloor||1);
     total+=cnt;
     const label = b.name.trim() ? `Block ${b.name}` : 'Building';
-    lines.push(`<strong>${label}</strong> — ${b.floors} floor${b.floors!==1?'s':''}, ${b.flatsPerFloor} flat${b.flatsPerFloor!==1?'s':''}/floor = <strong>${cnt} flats</strong>`);
+    lines.push(`<strong>${label}</strong> — ${b.floors} floor${b.floors!==1?'s':''} × ${b.flatsPerFloor} flat${b.flatsPerFloor!==1?'s':''} = <strong>${cnt} flats</strong>`);
   });
   document.getElementById('blockPreview').innerHTML =
     lines.join('<br>') + `<br><br>🏠 <strong>Total: ${total} flat${total!==1?'s':''}</strong> will be created`;
