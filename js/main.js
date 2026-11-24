@@ -6,7 +6,7 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-auth.js';
 import {
   collection, doc, getDocs, getDoc, addDoc as _addDoc, setDoc as _setDoc, updateDoc as _updateDoc, deleteDoc as _deleteDoc,
-  onSnapshot, query, where, orderBy, serverTimestamp, getFirestore,
+  onSnapshot, query, where, orderBy, serverTimestamp, getFirestore, writeBatch as _writeBatch,
 } from 'https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js';
 import { resolveRole, pinToPassword, randomPin, isValidPin, isValidMobile, normalizePin } from './roles.js';
 import { initBackup } from './backup.js';
@@ -1445,17 +1445,69 @@ window._openStructureManager = () => {
   window._smSwitchTab(1);
 };
 window._renameBlockPrompt = async (oldName) => {
-  const newName = prompt('Rename block:', oldName);
-  if (!newName || newName.trim() === oldName) return;
-  const nn = newName.trim();
-  const toUpdate = [...flats.entries()].filter(([,f]) => f.block === oldName);
+  if (!isAdmin()) return;
+  const input = prompt('Rename block:', oldName);
+  if (input === null) return;
+  const nn = input.trim();
+  if (!nn || nn === oldName) return;
+  if (/[\/\\\s]/.test(nn) || nn.length > 10) { toast('Block name: no spaces or slashes, max 10 characters.', 'error'); return; }
+  if (bks().includes(nn)) { toast(`Block ${nn} already exists.`, 'error'); return; }
+
+  // old flat id -> new flat id  (A-101 -> B-101; plain "101" -> "B-101")
+  const inBlock = [...flats.entries()].filter(([, f]) => f.block === oldName);
+  const map = new Map();
+  inBlock.forEach(([fid]) => {
+    const suffix = (oldName && fid.startsWith(oldName + '-')) ? fid.slice(oldName.length + 1) : fid;
+    map.set(fid, `${nn}-${suffix}`);
+  });
+  const newIds = [...map.values()];
+  const clash = newIds.filter(id => flats.has(id) && !map.has(id));
+  if (clash.length || new Set(newIds).size !== newIds.length) { toast('Rename would clash with existing flat names: ' + clash.slice(0, 4).join(', '), 'error'); return; }
+  const sample = [...map.entries()].slice(0, 3).map(([o, n]) => `${o} → ${n}`).join(', ');
+  if (!confirm(`Rename block "${oldName || '(no name)'}" to "${nn}"?\n\n${map.size} flats will be renamed, e.g. ${sample}.\nPayments, vehicles, issues and member logins for these flats are updated too.`)) return;
+
   sync('saving');
   try {
-    await Promise.all(toUpdate.map(([fid]) => updateDoc(doc(db,'apartments',UID,'flats',fid), {block: nn})));
-    toUpdate.forEach(([fid, f]) => { f.block = nn; flats.set(fid, f); });
-    sync('live'); toast('Block renamed ✓');
+    const A = ['apartments', UID];
+    const sets = [], deletes = [];
+    inBlock.forEach(([fid, f]) => {
+      const nid = map.get(fid), data = { ...f, block: nn }; delete data.flatId; delete data.id;
+      sets.push(b => b.set(doc(db, ...A, 'flats', nid), data));
+      deletes.push(b => b.delete(doc(db, ...A, 'flats', fid)));
+      const v = vehicles.get(fid);
+      if (v) {
+        const vd = { ...v, flatId: nid };
+        sets.push(b => b.set(doc(db, ...A, 'vehicles', nid), vd));
+        deletes.push(b => b.delete(doc(db, ...A, 'vehicles', fid)));
+      }
+      (exps.get(fid) || []).forEach(e => sets.push(b => b.update(doc(db, ...A, 'expenses', e.expId), { flatId: nid, block: nn })));
+      issues.filter(i => i.flat === fid).forEach(i => sets.push(b => b.update(doc(db, ...A, 'issues', i.id), { flat: nid, block: nn })));
+    });
+    // member logins that point at these flats
+    const mSnap = await getDocs(collection(db, ...A, 'members'));
+    mSnap.forEach(md => {
+      const m = md.data(), list = (m.flatIds && m.flatIds.length) ? m.flatIds : (m.flatId ? [m.flatId] : []);
+      if (!list.some(x => map.has(x))) return;
+      const nl = list.map(x => map.get(x) || x);
+      sets.push(b => b.update(md.ref, { flatIds: nl, flatId: nl[0] }));
+    });
+    // society config (register-time block list), if present
+    const aSnap = await getDoc(doc(db, ...A));
+    const cfg = aSnap.exists() ? aSnap.data().blocks : null;
+    if (Array.isArray(cfg) && cfg.some(x => x && x.name === oldName))
+      sets.push(b => b.update(doc(db, ...A), { blocks: cfg.map(x => x && x.name === oldName ? { ...x, name: nn } : x) }));
+
+    // copies/updates first, deletes last — so a failure never loses data
+    const ops = [...sets, ...deletes];
+    for (let k = 0; k < ops.length; k += 400) {
+      const b = _writeBatch(db); ops.slice(k, k + 400).forEach(fn => fn(b)); await b.commit();
+    }
+    sync('live'); toast(`Block renamed to ${nn} ✓ (${map.size} flats)`);
     window._renderStructureList(); rStructure();
-  } catch(e) { sync('error'); toast('Rename failed','error'); }
+  } catch (e) {
+    console.error('rename block', e); sync('error');
+    toast('Rename failed part-way. Reload and check the flat list before trying again.', 'error');
+  }
 };
 window._closeStructureManager = () => {
   document.getElementById('structureModal').style.display = 'none';
