@@ -1847,29 +1847,42 @@ function wizSetStep(n) {
 }
 
 function wizRenderBlocks() {
+  const stp = (i,k,label,max) => `
+      <div>
+        <label>${label}</label>
+        <div class="stp">
+          <button type="button" onclick="wizStep(${i},'${k}',-1)" aria-label="Decrease ${label}">−</button>
+          <input id="wblk_${i}_${k}" type="number" inputmode="numeric" value="${WIZ_BLOCKS[i][k]}" min="1" max="${max}"
+            onfocus="this.select()" oninput="wizLive(${i},'${k}',this.value)" onchange="this.value=wizSet(${i},'${k}',this.value)"/>
+          <button type="button" onclick="wizStep(${i},'${k}',1)" aria-label="Increase ${label}">+</button>
+        </div>
+      </div>`;
   document.getElementById('wBlocks').innerHTML = WIZ_BLOCKS.map((b,i) => `
     <div class="wiz-block-row">
       <div>
-        <label>Block Name</label>
+        <label>Block</label>
         <input type="text" value="${b.name}" maxlength="3" placeholder="A"
           oninput="WIZ_BLOCKS[${i}].name=this.value.toUpperCase();wizUpdatePreview()"/>
       </div>
-      <div>
-        <label>Floors</label>
-        <input type="number" value="${b.floors}" min="1" max="50"
-          oninput="WIZ_BLOCKS[${i}].floors=parseInt(this.value)||1;wizUpdatePreview()"/>
-      </div>
-      <div>
-        <label>Flats / Floor</label>
-        <input type="number" value="${b.flatsPerFloor}" min="1" max="20"
-          oninput="WIZ_BLOCKS[${i}].flatsPerFloor=parseInt(this.value)||1;wizUpdatePreview()"/>
-      </div>
+      ${stp(i,'floors','Floors',50)}
+      ${stp(i,'flatsPerFloor','Flats',20)}
       ${WIZ_BLOCKS.length > 1
         ? `<button class="wiz-rm" onclick="wizRemoveBlock(${i})"><i class="ti ti-trash"></i></button>`
         : '<div></div>'}
     </div>`).join('');
   wizUpdatePreview();
 }
+
+const WIZ_MAX = { floors:50, flatsPerFloor:20 };
+window.wizSet = function(i,k,v) {
+  let n = parseInt(v); if (!n || n < 1) n = 1; n = Math.min(n, WIZ_MAX[k]);
+  WIZ_BLOCKS[i][k] = n; wizUpdatePreview(); return n;
+};
+window.wizLive = function(i,k,v) { const n = parseInt(v); if (n >= 1) { WIZ_BLOCKS[i][k] = Math.min(n, WIZ_MAX[k]); wizUpdatePreview(); } };
+window.wizStep = function(i,k,d) {
+  const n = wizSet(i,k,(WIZ_BLOCKS[i][k]||1)+d);
+  const el = document.getElementById(`wblk_${i}_${k}`); if (el) el.value = n;
+};
 
 function wizRemoveBlock(i) { WIZ_BLOCKS.splice(i,1); wizRenderBlocks(); }
 
@@ -1879,7 +1892,7 @@ window.wizUpdatePreview = function() {
   WIZ_BLOCKS.forEach(b => {
     const cnt = b.floors * (b.flatsPerFloor||1);
     total += cnt;
-    lines.push(`<strong>Block ${b.name||'?'}</strong> — ${b.floors} floor${b.floors!==1?'s':''}, ${b.flatsPerFloor} flat${b.flatsPerFloor!==1?'s':''}/floor = ${cnt} flats`);
+    lines.push(`<strong>Block ${b.name||'?'}</strong> — ${b.floors} floor${b.floors!==1?'s':''} × ${b.flatsPerFloor} flat${b.flatsPerFloor!==1?'s':''} = ${cnt} flats`);
   });
   const p = document.getElementById('wPreview');
   if(p) p.innerHTML = lines.join('<br>') + `<br><strong>Total: ${total} flats</strong> will be created`;
